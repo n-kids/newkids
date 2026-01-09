@@ -4,7 +4,7 @@
 const SHEET_URL = "https://script.google.com/macros/s/AKfycbxSplFkhOWrcL9CQbdXThqKJ4InlADs3gurAU3MORok5Xh7Q_dUAi3slQprB5wfQ40Y/exec";
 const LOGO_IMAGE_URL = "https://newkids331.github.io/newkids/logo.png";
 const SUPABASE_URL = "https://jmdyqdckclgfyimqpqce.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImptZHlxZGNrY2xnZnlpbXFwcWNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTA5NzksImV4cCI6MjA4MzUyNjk3OX0.hcYPN3Iz5es4Ksye5QMF83yVQVzRHQUw0cxFCAvMV";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImptZHlxZGNrY2xnZnlpbXFwcWNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTA5NzksImV4cCI6MjA4MzUyNjk3OX0.hcYPN3Iz5es4Ksye5QMF83yVQVzRHQUw0cxFCAvMVrw";
 // (참고: 키 뒷부분이 살짝 잘린 것 같으면 원본을 다시 확인해주세요. 위 코드는 보내주신 그대로 넣었습니다.)
 
 const DEFAULT_INFO = {

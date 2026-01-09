@@ -5,43 +5,105 @@
     <title>뉴키즈 - 원어민 문화 체험</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        /* [페이지 전용 스타일] */
+
+        /* 1. 서브 배너 배경 이미지 설정 */
         .sub-hero {
             background-image: linear-gradient(rgba(26,60,110,0.85), rgba(26,60,110,0.85)), url('https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1600&q=80');
         }
+
+        /* 2. (선택사항) 소개 박스 스타일 - manager.js에 없다면 여기에 유지 */
+        .intro-summary {
+            background-color: #fff;
+            text-align: center;
+            padding: 60px 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .intro-box {
+            max-width: 800px;
+            margin: 0 auto;
+            border: 2px solid var(--primary-color);
+            padding: 40px;
+            border-radius: 15px;
+            background-color: #fff;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+        }
+
+            .intro-box h3 {
+                font-size: 1.6rem;
+                color: var(--primary-color);
+                margin-bottom: 20px;
+            }
+
+            .intro-box p {
+                font-size: 1.1rem;
+                color: #555;
+                word-break: keep-all;
+            }
     </style>
 </head>
 <body>
-    <header></header>
-    <section class="sub-hero">
+
+    <header></header> <section class="sub-hero">
         <div class="container">
             <h1>원어민 문화 체험</h1>
             <p>세계 여러 나라의 문화를 원어민 선생님과 생생하게 경험해요!</p>
         </div>
     </section>
+
+    <section class="intro-summary">
+        <div class="intro-box">
+            <h3>🌍 글로벌 리더로 자라나는 첫걸음</h3>
+            <p>
+                매달 새로운 나라의 문화를 체험하며, 아이들의 시야를 넓혀줍니다.<br>
+                원어민 선생님과 함께하는 즐거운 놀이 활동을 통해<br>
+                자연스럽게 영어를 접하고 다문화 감수성을 키울 수 있습니다.
+            </p>
+        </div>
+    </section>
+
     <section style="background-color: var(--bg-light);">
         <div class="container">
             <h2 style="text-align: left; margin-bottom: 30px;">📸 체험 활동 현장</h2>
-            <div id="post-list" class="gallery-grid"><div style="text-align:center; width:100%; grid-column: 1/-1; padding:50px;">로딩 중...</div></div>
+            <div id="post-list" class="gallery-grid">
+                <div style="text-align:center; width:100%; grid-column: 1/-1; padding:50px; color:#666;">
+                    로딩 중...
+                </div>
+            </div>
         </div>
     </section>
+
     <footer></footer>
     <script src="manager.js"></script>
     <script>
-        const CATEGORY_NAME = 'culture';
+        const CATEGORY_NAME = 'culture'; // 이 페이지는 'culture' 카테고리 글만 불러옵니다.
 
         document.addEventListener("DOMContentLoaded", function () {
-            const checkSb = setInterval(() => { if (window.sb) { clearInterval(checkSb); loadPosts(window.sb); } }, 100);
+            // manager.js의 Supabase 연결을 기다림
+            const checkSb = setInterval(() => {
+                if (window.sb) {
+                    clearInterval(checkSb);
+                    loadPosts(window.sb);
+                }
+            }, 100);
         });
 
-        // [추가된 함수] 유튜브 주소에서 ID만 뽑아내는 기능
+        // 유튜브 ID 추출 함수
         function getYoutubeId(url) {
             if (!url) return null;
             const match = url.match(/^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/);
             return (match && match[7].length === 11) ? match[7] : null;
         }
 
+        // 게시글 불러오기 함수
         async function loadPosts(sb) {
-            const { data } = await sb.from('total_posts').select('*').eq('category', CATEGORY_NAME).order('created_at', { ascending: false });
+            const { data } = await sb
+                .from('total_posts')
+                .select('*')
+                .eq('category', CATEGORY_NAME)
+                .order('created_at', { ascending: false });
+
             const list = document.getElementById('post-list');
             list.innerHTML = "";
 
@@ -51,7 +113,7 @@
             }
 
             data.forEach(item => {
-                // 1. 썸네일이나 상세 이미지가 있는지 확인
+                // 1. 대표 이미지 결정
                 let displayImg = item.thumbnail_url;
                 if (!displayImg) {
                     try {
@@ -63,20 +125,24 @@
                     }
                 }
 
-                // 2. [핵심 수정] 만약 유튜브 링크라면 -> 썸네일 이미지 주소로 변환
+                // 2. 유튜브 썸네일 처리
                 const yId = getYoutubeId(displayImg);
                 let isVideo = false;
                 if (yId) {
                     displayImg = `https://img.youtube.com/vi/${yId}/hqdefault.jpg`;
-                    isVideo = true; // 재생 아이콘 표시용
+                    isVideo = true;
                 } else if (!displayImg) {
                     displayImg = 'https://via.placeholder.com/400x300?text=No+Image';
                 }
 
+                // 3. 링크 아이콘 유무
                 const linkIcon = item.link_url ? `<div class="link-icon">🔗</div>` : '';
 
+                // 4. 카드 생성
                 const div = document.createElement('div');
-                div.className = 'card';
+                div.className = 'card'; // manager.js의 공통 스타일 사용
+
+                // 클릭 이벤트 (외부 링크 vs 상세 페이지)
                 div.onclick = () => {
                     if (item.link_url && item.link_url.trim() !== "") {
                         let url = item.link_url;
@@ -87,10 +153,11 @@
                     }
                 };
 
+                // 5. HTML 주입 (썸네일 비율 고정 fix 적용됨)
                 div.innerHTML = `
                         ${linkIcon}
-                        <div class="card-img-wrap" style="position:relative; width:100%; height:220px; overflow:hidden; background:#f0f0f0;">
-                            <img src="${displayImg}" class="card-img" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://via.placeholder.com/400x300?text=Error'">
+                        <div class="card-img-wrap" style="position:relative; width:100%; height:220px; overflow:hidden; background:#ffffff; border-bottom:1px solid #eee;">
+                            <img src="${displayImg}" class="card-img" style="width:100%; height:100%; object-fit:contain;" onerror="this.src='https://via.placeholder.com/400x300?text=Error'">
                             <div style="display:${isVideo ? 'block' : 'none'}; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:white; font-size:3rem; text-shadow:0 0 10px rgba(0,0,0,0.5);">▶</div>
                         </div>
                         <div class="card-body">

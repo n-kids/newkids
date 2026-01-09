@@ -2,289 +2,537 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>뉴키즈 - 맞춤 제안서 신청</title>
+    <title>뉴키즈 - 통합 관리자</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* [기본 스타일] */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
             font-family: 'Pretendard', sans-serif;
+            background: #f4f6f8;
             color: #333;
-            line-height: 1.6;
-            background: #fff;
-        }
-
-        a {
-            text-decoration: none;
-            color: inherit;
-        }
-
-        :root {
-            --primary-color: #1a3c6e;
-            --accent-color: #f4a261;
-            --bg-light: #f8f9fa;
+            margin: 0;
         }
 
         .container {
-            max-width: 800px;
+            max-width: 1000px;
             margin: 0 auto;
-            padding: 0 20px;
+            padding: 40px 20px 80px;
         }
 
-        section {
-            padding: 80px 0;
-        }
-
-        header {
-            width: 100%;
-            height: 70px;
-            background-color: #fff;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            position: fixed;
-            top: 0;
-            z-index: 1000;
-        }
-
-        .sub-hero {
-            height: 300px;
-            background: linear-gradient(rgba(26,60,110,0.8), rgba(26,60,110,0.8)), url('https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1600&q=80') center/center no-repeat;
-            background-size: cover;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            color: #fff;
-            margin-top: 70px;
-        }
-
-            .sub-hero h1 {
-                font-size: 2.5rem;
-                font-weight: 800;
-                margin-bottom: 15px;
-            }
-
-            .sub-hero p {
-                font-size: 1.2rem;
-                color: #ffdca8;
-            }
-
-        .form-box {
-            background: #fff;
+        #login-section {
+            max-width: 400px;
+            margin: 80px auto;
+            background: white;
             padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
-            border: 1px solid #eee;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            text-align: center;
         }
 
-        .form-group {
-            margin-bottom: 25px;
+            #login-section input {
+                width: 100%;
+                padding: 12px;
+                margin-bottom: 10px;
+                border: 1px solid #ddd;
+                border-radius: 5px;
+                box-sizing: border-box;
+            }
+
+        #admin-section {
+            display: none;
         }
 
-        .form-label {
+        .panel-box {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: #1a3c6e;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        label {
             display: block;
             font-weight: bold;
-            margin-bottom: 10px;
-            color: #1a3c6e;
-            font-size: 1.1rem;
+            margin-bottom: 5px;
+            margin-top: 15px;
         }
 
-        .form-input {
+        input[type="text"], input[type="number"], textarea, input[type="file"], select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+
+        textarea {
+            height: 150px;
+            resize: vertical;
+        }
+
+        .btn-action {
+            display: block;
             width: 100%;
             padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: 0.3s;
-            font-family: inherit;
+            background: #1a3c6e;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin-top: 20px;
         }
 
-            .form-input:focus {
-                border-color: var(--primary-color);
-                outline: none;
+            .btn-action:hover {
+                background: #142d53;
             }
 
-        .checkbox-group {
+        .btn-logout {
+            background: #666;
+            margin-top: 10px;
+        }
+
+        .btn-cancel {
+            background: #999;
+            margin-top: 10px;
+            display: none;
+        }
+
+        #manage-list {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 15px;
-            background: var(--bg-light);
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        .post-card {
+            background: white;
+            border: 1px solid #eee;
+            border-radius: 10px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .post-thumb {
+            width: 100%;
+            height: 140px;
+            object-fit: cover;
+            background: #f0f0f0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .post-info {
+            padding: 15px;
+            flex: 1;
+        }
+
+        .post-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            font-size: 0.95rem;
+        }
+
+        .category-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: white;
+            margin-bottom: 8px;
+        }
+
+        .post-actions {
+            padding: 10px;
+            background: #fafafa;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .btn-edit, .btn-del {
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            color: white;
+            font-size: 0.85rem;
+        }
+
+        .btn-edit {
+            background: #28a745;
+        }
+
+        .btn-del {
+            background: #ff4d4d;
+        }
+
+        .filter-area {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            background: white;
             padding: 20px;
             border-radius: 10px;
+            border-bottom: 1px solid #eee;
         }
 
-        .checkbox-item {
-            display: flex;
-            align-items: center;
-            cursor: pointer;
+        .filter-select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            width: 200px;
         }
 
-            .checkbox-item input {
-                margin-right: 10px;
-                transform: scale(1.2);
-                accent-color: var(--primary-color);
-            }
-
-        .group-title {
-            font-size: 0.95rem;
-            color: #666;
-            margin-bottom: 10px;
-            margin-top: 20px;
-            font-weight: bold;
-            border-bottom: 2px solid #eee;
-            padding-bottom: 5px;
-        }
-
-        .btn-submit {
-            display: block;
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
-            padding: 18px;
-            background-color: var(--primary-color);
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            font-size: 1.2rem;
+            height: 100%;
+            background: rgba(255,255,255,0.8);
+            z-index: 999;
+            text-align: center;
+            padding-top: 200px;
             font-weight: bold;
-            cursor: pointer;
-            transition: 0.3s;
-            margin-top: 30px;
+            color: #1a3c6e;
+            font-size: 1.5rem;
         }
 
-            .btn-submit:hover {
-                background-color: #0f2546;
-            }
-
-            .btn-submit:disabled {
-                background-color: #ccc;
-                cursor: not-allowed;
-            }
-
-        footer {
-            background: #222;
-            color: #888;
-            padding: 40px 0;
-            text-align: center;
+        .thumb-label {
+            color: #e76f51;
         }
     </style>
 </head>
 <body>
-    <header></header> <section class="sub-hero">
-        <div class="container">
-            <h1>견적 및 샘플 신청</h1>
-            <p>우리 원에 딱 맞는 교육 프로그램, 뉴키즈가 제안해 드립니다.</p>
+    <header></header> <div id="loading" class="loading-overlay">처리 중입니다...</div>
+
+    <div class="container">
+        <div id="login-section">
+            <h2>🔒 관리자 로그인</h2>
+            <input type="email" id="admin-email" placeholder="이메일">
+            <input type="password" id="admin-password" placeholder="비밀번호">
+            <button onclick="adminLogin()" class="btn-action">로그인</button>
         </div>
-    </section>
 
-    <section style="background-color: #f8f9fa;">
-        <div class="container">
-            <div class="form-box">
-                <form id="proposalForm">
-                    <div class="form-group">
-                        <label class="form-label">원명 (어린이집/유치원)</label>
-                        <input type="text" name="wonName" class="form-input" placeholder="예) 해피어린이집" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">담당자 성함 / 직함</label>
-                        <input type="text" name="manager" class="form-input" placeholder="예) 김뉴키 원장" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">연락처 (휴대전화)</label>
-                        <input type="tel" name="phone" class="form-input" placeholder="010-0000-0000 (상담용)" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">이메일 (제안서 받으실 곳)</label>
-                        <input type="email" name="email" class="form-input" placeholder="example@naver.com">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">지역 (시/구)</label>
-                        <input type="text" name="area" class="form-input" placeholder="예) 김포시 구래동">
-                    </div>
+        <div id="admin-section">
+            <div class="panel-box">
+                <h2 id="form-title">📝 새 글 작성하기</h2>
 
-                    <div class="form-group">
-                        <label class="form-label">관심 프로그램 (중복 선택 가능)</label>
+                <label>카테고리 선택</label>
+                <select id="post-category">
+                    <optgroup label="행사 프로그램">
+                        <option value="season">🎉 시즌 테마 행사</option>
+                        <option value="culture">🌍 원어민 행사</option>
+                        <option value="performance">👨‍👩‍👧‍👦 부모 참여 행사</option>
+                    </optgroup>
+                    <optgroup label="교재 프로그램">
+                        <option value="korean">📚 한글 & 독서</option>
+                        <option value="art">🎨 미술 & 자연 환경</option>
+                        <option value="science">🔬 수학 & 과학</option>
+                        <option value="coding">💻 코딩 & 직업교육</option>
+                        <option value="english">🔤 영어 & 지도</option>
+                        <option value="integrated">👶 통합보육 & 누리과정</option>
+                    </optgroup>
+                </select>
 
-                        <div class="group-title">📚 교재 프로그램</div>
-                        <div class="checkbox-group">
-                            <label class="checkbox-item"><input type="checkbox" name="interests" value="한글/독서"> 한글 & 독서</label>
-                            <label class="checkbox-item"><input type="checkbox" name="interests" value="미술/자연"> 미술 & 자연 환경</label>
-                            <label class="checkbox-item"><input type="checkbox" name="interests" value="과학/수학"> 과학/수학</label>
-                            <label class="checkbox-item"><input type="checkbox" name="interests" value="코딩/직업"> 코딩 & 직업교육</label>
-                            <label class="checkbox-item"><input type="checkbox" name="interests" value="영어/지도"> 영어 & 지도</label>
-                            <label class="checkbox-item"><input type="checkbox" name="interests" value="통합보육/누리"> 통합보육 & 누리과정</label>
-                        </div>
+                <label>순서 설정 (선택사항)</label>
+                <input type="number" id="post-order" placeholder="숫자가 작을수록 앞에 나옵니다. (예: 1, 2, 3...) / 기본값 0" style="border-color: #2a9d8f;">
 
-                        <div class="group-title">🎉 행사 프로그램</div>
-                        <div class="checkbox-group">
-                            <label class="checkbox-item"><input type="checkbox" name="interests" value="시즌행사"> 시즌 테마 행사</label>
-                            <label class="checkbox-item"><input type="checkbox" name="interests" value="원어민행사"> 원어민 행사</label>
-                            <label class="checkbox-item"><input type="checkbox" name="interests" value="부모참여"> 부모 참여 행사</label>
-                        </div>
-                    </div>
+                <label>제목</label>
+                <input type="text" id="post-title" placeholder="제목을 입력하세요">
 
-                    <div class="form-group">
-                        <label class="form-label">📅 방문 및 전화 상담 희망 날짜</label>
-                        <input type="date" name="visitDate" class="form-input">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">문의사항 (시간대 등)</label>
-                        <textarea name="inquiry" class="form-input" style="height: 120px; resize: vertical;" placeholder="원하시는 시간대나 궁금하신 점을 자유롭게 적어주세요."></textarea>
-                    </div>
-                    <button type="submit" class="btn-submit">견적 및 상담 신청하기</button>
-                </form>
+                <label class="thumb-label">🖼️ 대표 썸네일 (목록용 사진 1장)</label>
+                <input type="file" id="post-thumb-file" accept="image/*">
+                <p style="font-size:0.8rem; color:#888; margin-top:5px;">※ 비워두면 상세 내용의 첫 번째 사진이 자동으로 사용됩니다.</p>
+
+                <label>📄 상세 내용 사진 (여러 장 선택 가능)</label>
+                <input type="file" id="post-file" accept="image/*" multiple>
+
+                <input type="text" id="youtube-url" placeholder="유튜브 링크 (https://youtu.be/...)" style="margin-top:10px;">
+                <input type="text" id="post-link" placeholder="🔗 관련 외부 사이트 링크 (예: https://naver.com)" style="margin-top:10px; border-color: #4cc9f0;">
+
+                <label>내용</label>
+                <textarea id="post-content" placeholder="내용을 입력하세요"></textarea>
+
+                <button id="btn-submit" onclick="savePost()" class="btn-action">업로드</button>
+                <button id="btn-cancel-edit" onclick="cancelEdit()" class="btn-action btn-cancel">수정 취소</button>
+                <button onclick="logout()" class="btn-action btn-logout">로그아웃</button>
+            </div>
+
+            <div class="panel-box" style="background:transparent; padding:0; box-shadow:none;">
+                <div class="filter-area">
+                    <h2 style="margin:0; border:none; padding:0;">🗑️ 전체 게시글 관리</h2>
+                    <select id="filter-category" class="filter-select" onchange="filterList()">
+                        <option value="all">📂 전체 보기</option>
+                        <optgroup label="행사 프로그램">
+                            <option value="season">🎉 시즌 테마</option>
+                            <option value="culture">🌍 원어민</option>
+                            <option value="performance">👨‍👩‍👧‍👦 부모 참여</option>
+                        </optgroup>
+                        <optgroup label="교재 프로그램">
+                            <option value="korean">📚 한글 & 독서</option>
+                            <option value="art">🎨 미술 & 자연 환경</option>
+                            <option value="science">🔬 과학</option>
+                            <option value="coding">💻 코딩 & 직업교육</option>
+                            <option value="english">🔤 영어 & 지도</option>
+                            <option value="integrated">👶 통합보육 & 누리과정</option>
+                        </optgroup>
+                    </select>
+                </div>
+                <div id="manage-list"></div>
             </div>
         </div>
-    </section>
+    </div>
 
     <footer></footer>
     <script src="manager.js"></script>
+
     <script>
-        const GOOGLE_SCRIPT_URL = SHEET_URL;
-        const form = document.getElementById('proposalForm');
+        let editingId = null;
+        let originalDetailUrl = null;
+        let originalThumbUrl = null;
 
-        form.addEventListener('submit', function (e) {
-            e.preventDefault();
-            const btn = form.querySelector('.btn-submit');
-            const originalText = btn.innerText;
-            btn.disabled = true;
-            btn.innerText = "전송 중입니다...";
+        document.addEventListener("DOMContentLoaded", function () {
+            const checkSb = setInterval(() => {
+                if (window.sb) {
+                    clearInterval(checkSb);
+                    checkSession(window.sb);
+                }
+            }, 100);
+        });
 
-            const formData = new FormData(form);
-            let interestsArray = [];
-            form.querySelectorAll('input[name="interests"]:checked').forEach(chk => {
-                interestsArray.push(chk.value);
-            });
+        async function checkSession(sb) {
+            const { data: { session } } = await sb.auth.getSession();
+            if (session) {
+                document.getElementById('login-section').style.display = 'none';
+                document.getElementById('admin-section').style.display = 'block';
+                loadManageList(sb);
+            } else {
+                document.getElementById('login-section').style.display = 'block';
+                document.getElementById('admin-section').style.display = 'none';
+            }
+        }
 
-            const data = {
-                wonName: formData.get("wonName"),
-                manager: formData.get("manager"),
-                phone: formData.get("phone"),
-                email: formData.get("email"),
-                area: formData.get("area"),
-                interests: interestsArray.join(", "),
-                visitDate: formData.get("visitDate"),
-                inquiry: formData.get("inquiry"),
-                timestamp: new Date().toLocaleString()
+        async function adminLogin() {
+            const email = document.getElementById('admin-email').value;
+            const password = document.getElementById('admin-password').value;
+            if (!email || !password) return alert("이메일과 비밀번호를 입력해주세요.");
+            const { error } = await window.sb.auth.signInWithPassword({ email, password });
+            if (error) alert("로그인 오류: " + error.message);
+            else location.reload();
+        }
+
+        async function logout() {
+            await window.sb.auth.signOut();
+            location.reload();
+        }
+
+        function getSafeFileName(originalName, prefix) {
+            const ext = originalName.split('.').pop();
+            return `${prefix}_${Date.now()}_${Math.random().toString(36).substring(2, 10)}.${ext}`;
+        }
+
+        async function savePost() {
+            const sb = window.sb;
+            const category = document.getElementById('post-category').value;
+            const title = document.getElementById('post-title').value;
+            const content = document.getElementById('post-content').value;
+            const orderNum = document.getElementById('post-order').value || 0;
+
+            const thumbInput = document.getElementById('post-thumb-file');
+            const detailInput = document.getElementById('post-file');
+            const youtube = document.getElementById('youtube-url').value;
+            const linkUrl = document.getElementById('post-link').value;
+
+            if (!title || !content) return alert("제목과 내용은 필수입니다.");
+            document.getElementById('loading').style.display = 'block';
+
+            let finalThumbUrl = originalThumbUrl;
+            let finalDetailUrl = originalDetailUrl;
+
+            try {
+                if (thumbInput.files.length > 0) {
+                    const file = thumbInput.files[0];
+                    const fileName = getSafeFileName(file.name, 'thumb');
+                    const { error } = await sb.storage.from('images').upload(fileName, file);
+                    if (error) throw error;
+                    const { data } = sb.storage.from('images').getPublicUrl(fileName);
+                    finalThumbUrl = data.publicUrl;
+                }
+                if (detailInput.files.length > 0) {
+                    let uploadedUrls = [];
+                    for (let i = 0; i < detailInput.files.length; i++) {
+                        const file = detailInput.files[i];
+                        const fileName = getSafeFileName(file.name, `detail_${i}`);
+                        const { error } = await sb.storage.from('images').upload(fileName, file);
+                        if (error) throw error;
+                        const { data } = sb.storage.from('images').getPublicUrl(fileName);
+                        uploadedUrls.push(data.publicUrl);
+                    }
+                    finalDetailUrl = JSON.stringify(uploadedUrls);
+                } else if (youtube) {
+                    finalDetailUrl = youtube;
+                }
+                if (!editingId) {
+                    if (thumbInput.files.length === 0) finalThumbUrl = null;
+                    if (detailInput.files.length === 0 && !youtube) finalDetailUrl = null;
+                }
+
+                const postData = {
+                    category, title, content,
+                    thumbnail_url: finalThumbUrl,
+                    image_url: finalDetailUrl,
+                    link_url: linkUrl,
+                    order_num: orderNum
+                };
+
+                if (editingId) {
+                    await sb.from('total_posts').update(postData).eq('id', editingId);
+                    alert("수정되었습니다!");
+                } else {
+                    await sb.from('total_posts').insert([postData]);
+                    alert("업로드 완료!");
+                }
+                cancelEdit();
+                filterList();
+            } catch (e) {
+                console.error(e);
+                alert("오류 발생: " + e.message);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        function filterList() { loadManageList(window.sb); }
+
+        function getYoutubeId(url) {
+            if (!url) return null;
+            const match = url.match(/^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/);
+            return (match && match[7].length === 11) ? match[7] : null;
+        }
+
+        async function loadManageList(sb) {
+            const filterValue = document.getElementById('filter-category').value;
+            const listDiv = document.getElementById('manage-list');
+            listDiv.innerHTML = "<p style='grid-column:1/-1;text-align:center;'>데이터를 불러오는 중...</p>";
+
+            let query = sb.from('total_posts').select('*');
+            if (filterValue !== 'all') query = query.eq('category', filterValue);
+
+            const { data, error } = await query
+                .order('order_num', { ascending: true })
+                .order('created_at', { ascending: false });
+
+            if (error || !data) {
+                listDiv.innerHTML = "<p>목록을 불러올 수 없습니다.</p>";
+                return;
+            }
+
+            listDiv.innerHTML = "";
+            const badgeColors = {
+                'season': '#4cc9f0', 'culture': '#1a3c6e', 'performance': '#f4a261',
+                'korean': '#e76f51', 'art': '#f4a261', 'science': '#457b9d', 'coding': '#7209b7', 'english': '#1a3c6e',
+                'integrated': '#2a9d8f'
             };
 
-            fetch(GOOGLE_SCRIPT_URL, {
-                method: "POST",
-                body: JSON.stringify(data)
-            })
-                .then(response => {
-                    alert("신청이 완료되었습니다! 담당자가 확인 후 빠르게 연락드리겠습니다.");
-                    window.location.href = 'index.html';
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert("전송 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
-                    btn.disabled = false;
-                    btn.innerText = originalText;
-                });
-        });
+            // [수정됨] 목록 배지 이름 업데이트
+            const catNames = {
+                'season': '시즌', 'culture': '원어민', 'performance': '부모참여',
+                'korean': '한글 & 독서', 'art': '미술 & 자연 환경', 'science': '과학',
+                'coding': '코딩 & 직업교육', 'english': '영어 & 지도', 'integrated': '통합보육 & 누리과정'
+            };
+
+            data.forEach(item => {
+                const color = badgeColors[item.category] || '#999';
+                const catName = catNames[item.category] || item.category;
+                let displayImg = item.thumbnail_url;
+                if (!displayImg) {
+                    try { const parsed = JSON.parse(item.image_url); if (Array.isArray(parsed) && parsed.length > 0) displayImg = parsed[0]; else displayImg = item.image_url; } catch (e) { displayImg = item.image_url; }
+                }
+                const yId = getYoutubeId(displayImg);
+                let imgHtml = "";
+                if (yId) imgHtml = `<img src="https://img.youtube.com/vi/${yId}/hqdefault.jpg" class="post-thumb">`;
+                else if (displayImg) imgHtml = `<img src="${displayImg}" class="post-thumb" onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">`;
+                else imgHtml = `<div class="post-thumb" style="display:flex;align-items:center;justify-content:center;color:#999;font-size:0.8rem;">이미지 없음</div>`;
+
+                let linkBadge = item.link_url ? '<span style="font-size:12px; margin-left:5px;">🔗</span>' : '';
+                let orderBadge = (item.order_num && item.order_num > 0)
+                    ? `<span style="background:#222; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; margin-right:5px;">${item.order_num}</span>`
+                    : '';
+
+                const itemStr = encodeURIComponent(JSON.stringify(item));
+
+                listDiv.innerHTML += `
+                        <div class="post-card">
+                            ${imgHtml}
+                            <div class="post-info">
+                                <div>${orderBadge}<span class="category-badge" style="background:${color}">${catName}</span> ${linkBadge}</div>
+                                <div class="post-title">${item.title}</div>
+                            </div>
+                            <div class="post-actions">
+                                <button onclick="startEdit('${itemStr}')" class="btn-edit">수정</button>
+                                <button onclick="deletePost(${item.id})" class="btn-del">삭제</button>
+                            </div>
+                        </div>`;
+            });
+        }
+
+        function startEdit(itemStr) {
+            const item = JSON.parse(decodeURIComponent(itemStr));
+            editingId = item.id;
+            originalDetailUrl = item.image_url;
+            originalThumbUrl = item.thumbnail_url;
+            document.getElementById('post-category').value = item.category;
+            document.getElementById('post-title').value = item.title;
+            document.getElementById('post-content').value = item.content;
+            document.getElementById('post-link').value = item.link_url || "";
+            document.getElementById('post-order').value = item.order_num || 0;
+
+            document.getElementById('post-file').value = "";
+            document.getElementById('post-thumb-file').value = "";
+            document.getElementById('youtube-url').value = "";
+            document.getElementById('form-title').innerText = "✏️ 게시글 수정 중";
+            document.getElementById('form-title').style.color = "#e76f51";
+            document.getElementById('btn-submit').innerText = "수정 완료";
+            document.getElementById('btn-cancel-edit').style.display = 'block';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function cancelEdit() {
+            editingId = null; originalDetailUrl = null; originalThumbUrl = null;
+            document.getElementById('post-title').value = ""; document.getElementById('post-content').value = "";
+            document.getElementById('post-file').value = ""; document.getElementById('post-thumb-file').value = "";
+            document.getElementById('youtube-url').value = ""; document.getElementById('post-link').value = "";
+            document.getElementById('post-order').value = "";
+
+            document.getElementById('form-title').innerText = "📝 새 글 작성하기";
+            document.getElementById('form-title').style.color = "#1a3c6e";
+            document.getElementById('btn-submit').innerText = "업로드";
+            document.getElementById('btn-cancel-edit').style.display = 'none';
+        }
+
+        async function deletePost(id) {
+            if (confirm("정말 삭제하시겠습니까? 복구할 수 없습니다.")) {
+                const sb = window.sb;
+                const { error } = await sb.from('total_posts').delete().eq('id', id);
+                if (error) alert("삭제 실패: " + error.message);
+                else { if (editingId === id) cancelEdit(); loadManageList(sb); }
+            }
+        }
     </script>
 </body>
 </html>

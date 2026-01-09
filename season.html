@@ -5,7 +5,6 @@
     <title>뉴키즈 - 시즌 테마 행사</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* 배경 이미지만 개별 설정 */
         .sub-hero {
             background-image: linear-gradient(rgba(26,60,110,0.85), rgba(26,60,110,0.85)), url('https://images.unsplash.com/photo-1547638375-ebf04735d792?auto=format&fit=crop&w=1600&q=80');
         }
@@ -41,22 +40,36 @@
             const checkSb = setInterval(() => { if (window.sb) { clearInterval(checkSb); loadPosts(window.sb); } }, 100);
         });
 
+        function getYoutubeId(url) {
+            if (!url) return null;
+            const match = url.match(/^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/);
+            return (match && match[7].length === 11) ? match[7] : null;
+        }
+
         async function loadPosts(sb) {
             const { data } = await sb.from('total_posts').select('*').eq('category', CATEGORY_NAME).order('created_at', { ascending: false });
             const list = document.getElementById('post-list');
             list.innerHTML = "";
-            if (!data || data.length === 0) { list.innerHTML = `<div style="text-align:center; grid-column:1/-1; padding:50px;">등록된 게시글이 없습니다.</div>`; return; }
+
+            if (!data || data.length === 0) {
+                list.innerHTML = `<div style="text-align:center; grid-column:1/-1; padding:50px;">등록된 게시글이 없습니다.</div>`;
+                return;
+            }
 
             data.forEach(item => {
                 let displayImg = item.thumbnail_url;
                 if (!displayImg) {
                     try { const parsed = JSON.parse(item.image_url); if (Array.isArray(parsed) && parsed.length > 0) displayImg = parsed[0]; else displayImg = item.image_url; } catch (e) { displayImg = item.image_url; }
                 }
-                if (!displayImg) displayImg = 'https://via.placeholder.com/400x300?text=No+Image';
 
-                // 유튜브 썸네일 처리
-                const match = displayImg.match(/^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/);
-                if (match && match[7].length === 11) displayImg = `https://img.youtube.com/vi/${match[7]}/hqdefault.jpg`;
+                const yId = getYoutubeId(displayImg);
+                let isVideo = false;
+                if (yId) {
+                    displayImg = `https://img.youtube.com/vi/${yId}/hqdefault.jpg`;
+                    isVideo = true;
+                } else if (!displayImg) {
+                    displayImg = 'https://via.placeholder.com/400x300?text=No+Image';
+                }
 
                 const linkIcon = item.link_url ? `<div class="link-icon">🔗</div>` : '';
 
@@ -71,9 +84,14 @@
                         location.href = `view.html?id=${item.id}`;
                     }
                 };
+
+                // [수정됨] object-fit: contain 적용
                 div.innerHTML = `
                         ${linkIcon}
-                        <img src="${displayImg}" class="card-img" onerror="this.src='https://via.placeholder.com/400x300?text=Error'">
+                        <div class="card-img-wrap" style="position:relative; width:100%; height:220px; overflow:hidden; background:#ffffff; border-bottom:1px solid #eee;">
+                            <img src="${displayImg}" class="card-img" style="width:100%; height:100%; object-fit:contain;" onerror="this.src='https://via.placeholder.com/400x300?text=Error'">
+                            <div style="display:${isVideo ? 'block' : 'none'}; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:white; font-size:3rem; text-shadow:0 0 10px rgba(0,0,0,0.5);">▶</div>
+                        </div>
                         <div class="card-body">
                             <div class="card-title">${item.title}</div>
                             <div class="card-text">${item.content}</div>

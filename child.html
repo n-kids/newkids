@@ -46,6 +46,12 @@
             const checkSb = setInterval(() => { if (window.sb) { clearInterval(checkSb); loadAllSections(window.sb); } }, 100);
         });
 
+        function getYoutubeId(url) {
+            if (!url) return null;
+            const match = url.match(/^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/);
+            return (match && match[7].length === 11) ? match[7] : null;
+        }
+
         async function loadAllSections(sb) {
             const { data, error } = await sb.from('total_posts').select('*').order('created_at', { ascending: false });
             const categories = ['korean', 'art', 'science', 'coding', 'english'];
@@ -61,15 +67,20 @@
                 if (!displayImg) {
                     try { const parsed = JSON.parse(item.image_url); if (Array.isArray(parsed) && parsed.length > 0) displayImg = parsed[0]; else displayImg = item.image_url; } catch (e) { displayImg = item.image_url; }
                 }
-                if (!displayImg) displayImg = 'https://via.placeholder.com/400x300?text=No+Image';
 
-                const match = displayImg.match(/^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/);
-                if (match && match[7].length === 11) displayImg = `https://img.youtube.com/vi/${match[7]}/hqdefault.jpg`;
+                const yId = getYoutubeId(displayImg);
+                let isVideo = false;
+                if (yId) {
+                    displayImg = `https://img.youtube.com/vi/${yId}/hqdefault.jpg`;
+                    isVideo = true;
+                } else if (!displayImg) {
+                    displayImg = 'https://via.placeholder.com/400x300?text=No+Image';
+                }
 
                 const linkIcon = item.link_url ? `<div class="link-icon">🔗</div>` : '';
 
                 const div = document.createElement('div');
-                div.className = 'product-card'; // manager.js 공통 스타일 사용
+                div.className = 'product-card';
                 div.onclick = () => {
                     if (item.link_url && item.link_url.trim() !== "") {
                         let url = item.link_url;
@@ -79,9 +90,14 @@
                         location.href = `view.html?id=${item.id}`;
                     }
                 };
+
+                // [수정됨] object-fit: contain 적용
                 div.innerHTML = `
                         ${linkIcon}
-                        <img src="${displayImg}" class="product-img" onerror="this.src='https://via.placeholder.com/400x300?text=Error'">
+                        <div class="product-img-wrap" style="position:relative; width:100%; height:220px; overflow:hidden; background:#ffffff; border-bottom:1px solid #eee;">
+                            <img src="${displayImg}" class="product-img" style="width:100%; height:100%; object-fit:contain;" onerror="this.src='https://via.placeholder.com/400x300?text=Error'">
+                            <div style="display:${isVideo ? 'block' : 'none'}; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:white; font-size:3rem; text-shadow:0 0 10px rgba(0,0,0,0.5);">▶</div>
+                        </div>
                         <div class="product-info">
                             <h3 class="product-title">${item.title}</h3>
                             <div class="product-desc">${item.content}</div>
@@ -89,7 +105,6 @@
                 targetDiv.appendChild(div);
             });
 
-            // 데이터 없는 섹션 처리
             categories.forEach(cat => {
                 const div = document.getElementById(`list-${cat}`);
                 if (div.innerHTML === "") div.innerHTML = `<div style="text-align:center; padding:30px; color:#999; grid-column:1/-1;">등록된 내용이 없습니다.</div>`;

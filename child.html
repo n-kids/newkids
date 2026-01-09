@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>뉴키즈 - 전체 교재 라인업</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* [기본 스타일] */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Pretendard', sans-serif;
+            color: #333;
+            line-height: 1.6;
+            background: #fff;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        :root {
+            --primary-color: #1a3c6e;
+            --accent-color: #f4a261;
+            --bg-light: #f8f9fa;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        section {
+            padding: 80px 0;
+        }
+
+        h2 {
+            font-size: 2.2rem;
+            text-align: center;
+            margin-bottom: 20px;
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+
+        .section-desc {
+            text-align: center;
+            color: #666;
+            margin-bottom: 50px;
+            font-size: 1.1rem;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background-color: var(--accent-color);
+            color: #fff;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+            .btn:hover {
+                background-color: #e76f51;
+            }
+
+        header {
+            width: 100%;
+            height: 70px;
+            background-color: #fff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            position: fixed;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .sub-hero {
+            height: 350px;
+            background: linear-gradient(rgba(26,60,110,0.85), rgba(26,60,110,0.85)), url('https://images.unsplash.com/photo-1503919545889-aef636e10ad4?auto=format&fit=crop&w=1600&q=80') center/center no-repeat;
+            background-size: cover;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #fff;
+            margin-top: 70px;
+        }
+
+            .sub-hero h1 {
+                font-size: 3.2rem;
+                font-weight: 800;
+                margin-bottom: 20px;
+                text-shadow: 0 4px 10px rgba(0,0,0,0.8);
+            }
+
+            .sub-hero p {
+                font-size: 1.4rem;
+                font-weight: 600;
+                color: #ffdca8;
+                text-shadow: 0 2px 5px rgba(0,0,0,0.8);
+            }
+
+        /* 카드 그리드 */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+        }
+
+        .product-card {
+            background: #fff;
+            border-radius: 15px;
+            overflow: hidden;
+            border: 1px solid #eee;
+            transition: 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+        }
+
+            .product-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+                border-color: var(--accent-color);
+            }
+
+        .product-img-wrap {
+            width: 100%;
+            height: 200px;
+            position: relative;
+            background: #ddd;
+            overflow: hidden;
+        }
+
+        .product-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .play-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3rem;
+            color: rgba(255,255,255,0.9);
+            display: none;
+        }
+
+        .product-info {
+            padding: 30px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .product-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .product-desc {
+            color: #666;
+            font-size: 0.95rem;
+            margin-bottom: 15px;
+            line-height: 1.5;
+            flex: 1;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+        }
+
+        @media (max-width: 768px) {
+            .sub-hero h1 {
+                font-size: 2.2rem;
+            }
+        }
+
+        footer {
+            background: #222;
+            color: #888;
+            padding: 40px 0;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <header></header> <section class="sub-hero">
+        <div class="container">
+            <h1>뉴키즈 교재 라인업</h1>
+            <p>영아부터 유아까지, 아이들의 꿈을 키우는 단계별 통합 프로그램</p>
+        </div>
+    </section>
+
+    <section id="korean">
+        <div class="container">
+            <h2>한글 & 누리과정</h2>
+            <p class="section-desc">언어 능력과 인성을 기르는 기초 교육 프로그램</p>
+            <div id="list-korean" class="product-grid"><p style="text-align:center; width:100%;">게시글을 불러오는 중...</p></div>
+        </div>
+    </section>
+
+    <section id="art" style="background-color: var(--bg-light);">
+        <div class="container">
+            <h2>창의 미술</h2>
+            <p class="section-desc">오감을 자극하고 표현력을 기르는 예술 활동</p>
+            <div id="list-art" class="product-grid"><p style="text-align:center; width:100%;">게시글을 불러오는 중...</p></div>
+        </div>
+    </section>
+
+    <section id="science">
+        <div class="container">
+            <h2>수학 & 과학</h2>
+            <p class="section-desc">호기심을 해결하고 논리적 사고를 키우는 탐구 활동</p>
+            <div id="list-science" class="product-grid"><p style="text-align:center; width:100%;">게시글을 불러오는 중...</p></div>
+        </div>
+    </section>
+
+    <section id="coding" style="background-color: var(--bg-light);">
+        <div class="container">
+            <h2>미래형 코딩</h2>
+            <p class="section-desc">컴퓨터 없이 배우는 논리적 사고력 (Computational Thinking)</p>
+            <div id="list-coding" class="product-grid"><p style="text-align:center; width:100%;">게시글을 불러오는 중...</p></div>
+        </div>
+    </section>
+
+    <section id="english">
+        <div class="container">
+            <h2>글로벌 영어</h2>
+            <p class="section-desc">말하기, 읽기, 쓰기가 즐거워지는 통합 영어 프로그램</p>
+            <div id="list-english" class="product-grid"><p style="text-align:center; width:100%;">게시글을 불러오는 중...</p></div>
+        </div>
+    </section>
+
+    <section style="text-align: center; background-color: var(--primary-color); color: #fff;">
+        <div class="container">
+            <h2 style="color: #fff;">우리 원에 딱 맞는 교재를 찾고 계신가요?</h2>
+            <p style="margin-bottom: 20px;">원장님께 최적의 구성을 제안해 드립니다.</p>
+            <a href="proposal.html" class="btn" style="background: #fff; color: var(--primary-color);">📋 견적 및 샘플 신청</a>
+        </div>
+    </section>
+
+    <footer></footer>
+    <script src="manager.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const checkSb = setInterval(() => {
+                if (window.sb) {
+                    clearInterval(checkSb);
+                    loadAllSections(window.sb);
+                }
+            }, 100);
+        });
+
+        function getYoutubeId(url) {
+            if (!url) return null;
+            const match = url.match(/^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/);
+            return (match && match[7].length === 11) ? match[7] : null;
+        }
+
+        async function loadAllSections(sb) {
+            const { data, error } = await sb.from('total_posts').select('*').order('created_at', { ascending: false });
+
+            const categories = ['korean', 'art', 'science', 'coding', 'english'];
+            categories.forEach(cat => { document.getElementById(`list-${cat}`).innerHTML = ""; });
+
+            if (!data || data.length === 0) return;
+
+            data.forEach(item => {
+                const targetDiv = document.getElementById(`list-${item.category}`);
+                if (!targetDiv) return;
+
+                let imgUrl = item.image_url;
+                let isVideo = false;
+                const yId = getYoutubeId(imgUrl);
+
+                if (yId) { imgUrl = `https://img.youtube.com/vi/${yId}/hqdefault.jpg`; isVideo = true; }
+                else if (!imgUrl) { imgUrl = 'https://via.placeholder.com/400x300?text=No+Image'; }
+
+                const div = document.createElement('div');
+                div.className = 'product-card';
+                // [수정된 부분] 팝업이 아니라 상세 페이지로 이동
+                div.onclick = () => { location.href = `view.html?id=${item.id}`; };
+
+                div.innerHTML = `
+                        <div class="product-img-wrap">
+                            <img src="${imgUrl}" class="product-img">
+                            <div class="play-icon" style="display:${isVideo ? 'block' : 'none'}">▶</div>
+                        </div>
+                        <div class="product-info">
+                            <h3 class="product-title">${item.title}</h3>
+                            <div class="product-desc">${item.content}</div>
+                        </div>`;
+                targetDiv.appendChild(div);
+            });
+
+            categories.forEach(cat => {
+                const div = document.getElementById(`list-${cat}`);
+                if (div.innerHTML === "") div.innerHTML = `<div style="text-align:center; padding:30px; color:#999; grid-column:1/-1;">등록된 내용이 없습니다.</div>`;
+            });
+        }
+    </script>
+</body>
+</html>

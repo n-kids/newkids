@@ -1,0 +1,213 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>뉴키즈 - 상세 정보</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* [스타일 정의] */
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background: #f9f9f9;
+            color: #333;
+            padding-top: 100px;
+            padding-bottom: 80px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* 상세 페이지 박스 */
+        .view-box {
+            background: #fff;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        }
+
+        /* 헤더 (카테고리/제목/날짜) */
+        .view-header {
+            border-bottom: 2px solid #eee;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .view-category {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 5px;
+            background: #eee;
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 10px;
+        }
+
+        .view-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #1a3c6e;
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+
+        .view-date {
+            font-size: 0.9rem;
+            color: #999;
+        }
+
+        /* 미디어 (사진/영상) */
+        .view-media {
+            margin-bottom: 40px;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+            .view-media img {
+                width: 100%;
+                height: auto;
+                display: block;
+            }
+
+            .view-media iframe {
+                width: 100%;
+                aspect-ratio: 16 / 9;
+                display: block;
+            }
+
+        /* 본문 내용 */
+        .view-content {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: #444;
+            white-space: pre-wrap; /* 줄바꿈 유지 */
+            min-height: 200px;
+        }
+
+        /* 버튼 */
+        .btn-list {
+            display: block;
+            width: 100%;
+            max-width: 200px;
+            margin: 50px auto 0;
+            padding: 15px;
+            background: #1a3c6e;
+            color: #fff;
+            text-align: center;
+            border-radius: 50px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+            .btn-list:hover {
+                background: #0f2546;
+            }
+
+        @media (max-width: 768px) {
+            .view-box {
+                padding: 25px;
+            }
+
+            .view-title {
+                font-size: 1.4rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header></header> <div class="container">
+        <div id="loading" style="text-align:center; padding:100px;">상세 정보를 불러오는 중입니다...</div>
+
+        <div id="view-area" class="view-box" style="display:none;">
+            <div class="view-header">
+                <span id="v-category" class="view-category">카테고리</span>
+                <h1 id="v-title" class="view-title">제목</h1>
+                <div id="v-date" class="view-date">2026.01.01</div>
+            </div>
+
+            <div id="v-media-wrap" class="view-media">
+            </div>
+
+            <div id="v-content" class="view-content">
+            </div>
+
+            <a href="javascript:history.back()" class="btn-list">목록으로 돌아가기</a>
+        </div>
+    </div>
+
+    <footer></footer>
+    <script src="manager.js"></script>
+    <script>
+        // URL에서 글 ID 가져오기
+        const params = new URLSearchParams(window.location.search);
+        const POST_ID = params.get('id');
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const checkSb = setInterval(() => {
+                if (window.sb) {
+                    clearInterval(checkSb);
+                    loadDetail(window.sb);
+                }
+            }, 100);
+        });
+
+        function getYoutubeId(url) {
+            if(!url) return null;
+            const match=url.match(/^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/);
+            return (match&&match[7].length===11)?match[7]:null;
+        }
+
+        async function loadDetail(sb) {
+            if (!POST_ID) {
+                alert("잘못된 접근입니다.");
+                location.href = 'index.html';
+                return;
+            }
+
+            const { data, error } = await sb.from('total_posts').select('*').eq('id', POST_ID).single();
+
+            if (error || !data) {
+                alert("글을 찾을 수 없습니다.");
+                history.back();
+                return;
+            }
+
+            // 카테고리 한글 변환
+            const catNames = {
+                'season': '시즌행사', 'culture': '원어민행사', 'performance': '부모참여',
+                'korean': '한글/누리', 'art': '미술', 'science': '과학/수학', 'coding': '코딩', 'english': '영어'
+            };
+
+            // 데이터 채우기
+            document.getElementById('v-category').innerText = catNames[data.category] || data.category;
+            document.getElementById('v-title').innerText = data.title;
+            document.getElementById('v-date').innerText = data.created_at.split('T')[0];
+            document.getElementById('v-content').innerText = data.content;
+
+            // 미디어 처리
+            const mediaWrap = document.getElementById('v-media-wrap');
+            const yId = getYoutubeId(data.image_url);
+
+            if (yId) {
+                mediaWrap.innerHTML = `<iframe src="https://www.youtube.com/embed/${yId}" frameborder="0" allowfullscreen></iframe>`;
+            } else if (data.image_url) {
+                mediaWrap.innerHTML = `<img src="${data.image_url}" alt="상세 이미지">`;
+            } else {
+                mediaWrap.style.display = 'none'; // 이미지 없으면 숨김
+            }
+
+            // 화면 표시
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('view-area').style.display = 'block';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,278 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>뉴키즈 - 교재/교구 발주 요청</title>
+    <style>
+        /* [기본 스타일] */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Pretendard', sans-serif;
+            color: #333;
+            line-height: 1.6;
+            background: #fff;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        :root {
+            --primary-color: #1a3c6e;
+            --accent-color: #f4a261;
+            --bg-light: #f8f9fa;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        section {
+            padding: 80px 0;
+        }
+
+        /* 헤더 공간 (manager.js 연동) */
+        header {
+            width: 100%;
+            height: 70px;
+            background-color: #fff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            position: fixed;
+            top: 0;
+            z-index: 1000;
+        }
+
+        /* 서브 배너 */
+        .sub-hero {
+            height: 250px;
+            background: linear-gradient(rgba(26,60,110,0.8), rgba(26,60,110,0.8)), url('https://images.unsplash.com/photo-1586769852044-692d6e3703f0?auto=format&fit=crop&w=1600&q=80') center/center no-repeat;
+            background-size: cover;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #fff;
+            margin-top: 70px;
+        }
+
+            .sub-hero h1 {
+                font-size: 2.2rem;
+                font-weight: 800;
+                margin-bottom: 10px;
+            }
+
+            .sub-hero p {
+                font-size: 1.1rem;
+                color: #ffdca8;
+            }
+
+        /* 폼 박스 스타일 */
+        .form-box {
+            background: #fff;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            border: 1px solid #eee;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #1a3c6e;
+            font-size: 1rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: 0.3s;
+            font-family: inherit;
+        }
+
+            .form-input:focus {
+                border-color: var(--primary-color);
+                outline: none;
+            }
+
+        /* 반반 나누기 (PC에서) */
+        .half-group {
+            display: flex;
+            gap: 15px;
+        }
+
+            .half-group .form-group {
+                flex: 1;
+            }
+
+        /* 버튼 */
+        .btn-submit {
+            display: block;
+            width: 100%;
+            padding: 18px;
+            background-color: var(--primary-color);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 30px;
+        }
+
+            .btn-submit:hover {
+                background-color: #0f2546;
+            }
+
+            .btn-submit:disabled {
+                background-color: #ccc;
+                cursor: not-allowed;
+            }
+
+        @media (max-width: 600px) {
+            .half-group {
+                flex-direction: column;
+                gap: 0;
+            }
+        }
+
+        footer {
+            background: #222;
+            color: #888;
+            padding: 40px 0;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <header></header> <section class="sub-hero">
+        <div class="container">
+            <h1>교재/교구 발주 요청</h1>
+            <p>필요하신 물품을 빠르고 정확하게 배송해 드립니다.</p>
+        </div>
+    </section>
+
+    <section style="background-color: #f8f9fa;">
+        <div class="container">
+            <div class="form-box">
+                <form id="orderForm">
+
+                    <h3 style="margin-bottom:20px; border-bottom:2px solid #eee; padding-bottom:10px;">📦 주문자 정보</h3>
+
+                    <div class="half-group">
+                        <div class="form-group">
+                            <label class="form-label">원명 (기관명)</label>
+                            <input type="text" name="orgName" class="form-input" placeholder="예) 뉴키즈어린이집" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">주문자 성함</label>
+                            <input type="text" name="orderer" class="form-input" placeholder="예) 김선생" required>
+                        </div>
+                    </div>
+
+                    <div class="half-group">
+                        <div class="form-group">
+                            <label class="form-label">연락처</label>
+                            <input type="tel" name="phone" class="form-input" placeholder="010-0000-0000" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">이메일 (선택)</label>
+                            <input type="email" name="email" class="form-input" placeholder="계산서 발행용">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">배송 받으실 주소</label>
+                        <input type="text" name="address" class="form-input" placeholder="주소를 상세하게 입력해주세요" required>
+                    </div>
+
+                    <h3 style="margin-bottom:20px; border-bottom:2px solid #eee; padding-bottom:10px; margin-top:40px;">📝 주문 내역</h3>
+
+                    <div class="form-group">
+                        <label class="form-label">주문 상품명 및 수량</label>
+                        <textarea name="productDetails" class="form-input" style="height: 120px;" placeholder="[상품명 / 수량 / 옵션] 을 적어주세요.&#10;예) 한글 1단계 / 10권&#10;예) 미술 펀아트 키트 / 20개 / 5세용" required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">배송 요청사항 / 비고</label>
+                        <input type="text" name="notes" class="form-input" placeholder="예) 부재시 경비실에 맡겨주세요.">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">희망 납기일</label>
+                        <input type="date" name="deliveryDate" class="form-input">
+                    </div>
+
+                    <button type="submit" class="btn-submit">발주 요청하기</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <footer></footer>
+    <script src="manager.js"></script>
+    <script>
+        // manager.js에 있는 엑셀 스크립트 주소 활용
+        const GOOGLE_SCRIPT_URL = SHEET_URL;
+
+        const form = document.getElementById('orderForm');
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const btn = form.querySelector('.btn-submit');
+            const originalText = btn.innerText;
+            btn.disabled = true;
+            btn.innerText = "주문 전송 중...";
+
+            const formData = new FormData(form);
+
+            // 전송 데이터 구성 (구글 시트 열 이름과 매칭됨)
+            const data = {
+                type: "ORDER", // 엑셀에서 발주 주문임을 표시
+                orgName: formData.get("orgName"),
+                orderer: formData.get("orderer"),
+                phone: formData.get("phone"),
+                email: formData.get("email"),
+                address: formData.get("address"),
+                productDetails: formData.get("productDetails"),
+                notes: formData.get("notes"),
+                deliveryDate: formData.get("deliveryDate"),
+                timestamp: new Date().toLocaleString()
+            };
+
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: "POST",
+                body: JSON.stringify(data)
+            })
+                .then(response => {
+                    alert("발주 요청이 정상적으로 접수되었습니다! 담당자가 확인 후 연락드리겠습니다.");
+                    window.location.reload(); // 페이지 새로고침
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert("접수 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+                    btn.disabled = false;
+                    btn.innerText = originalText;
+                });
+        });
+    </script>
+</body>
+</html>

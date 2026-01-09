@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>뉴키즈 - 맞춤 제안서 신청</title>
+    <style>
+        /* [기본 스타일] */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Pretendard', sans-serif;
+            color: #333;
+            line-height: 1.6;
+            background: #fff;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        :root {
+            --primary-color: #1a3c6e;
+            --accent-color: #f4a261;
+            --bg-light: #f8f9fa;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        section {
+            padding: 80px 0;
+        }
+
+        /* 헤더 스타일 (manager.js와 연동) */
+        header {
+            width: 100%;
+            height: 70px;
+            background-color: #fff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            position: fixed;
+            top: 0;
+            z-index: 1000;
+        }
+
+        /* 서브 배너 */
+        .sub-hero {
+            height: 300px;
+            background: linear-gradient(rgba(26,60,110,0.8), rgba(26,60,110,0.8)), url('https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1600&q=80') center/center no-repeat;
+            background-size: cover;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #fff;
+            margin-top: 70px;
+        }
+
+            .sub-hero h1 {
+                font-size: 2.5rem;
+                font-weight: 800;
+                margin-bottom: 15px;
+            }
+
+            .sub-hero p {
+                font-size: 1.2rem;
+                color: #ffdca8;
+            }
+
+        /* 폼 스타일 */
+        .form-box {
+            background: #fff;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            border: 1px solid #eee;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #1a3c6e;
+            font-size: 1.1rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: 0.3s;
+            font-family: inherit;
+        }
+
+            .form-input:focus {
+                border-color: var(--primary-color);
+                outline: none;
+            }
+
+        /* 체크박스 그룹 */
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 15px;
+            background: var(--bg-light);
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+            .checkbox-item input {
+                margin-right: 10px;
+                transform: scale(1.2);
+                accent-color: var(--primary-color);
+            }
+
+        .group-title {
+            font-size: 0.95rem;
+            color: #666;
+            margin-bottom: 10px;
+            margin-top: 20px;
+            font-weight: bold;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 5px;
+        }
+
+        /* 버튼 */
+        .btn-submit {
+            display: block;
+            width: 100%;
+            padding: 18px;
+            background-color: var(--primary-color);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 30px;
+        }
+
+            .btn-submit:hover {
+                background-color: #0f2546;
+            }
+
+            .btn-submit:disabled {
+                background-color: #ccc;
+                cursor: not-allowed;
+            }
+
+        footer {
+            background: #222;
+            color: #888;
+            padding: 40px 0;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <header></header> <section class="sub-hero">
+        <div class="container">
+            <h1>견적 및 샘플 신청</h1>
+            <p>우리 원에 딱 맞는 교육 프로그램, 뉴키즈가 제안해 드립니다.</p>
+        </div>
+    </section>
+
+    <section style="background-color: #f8f9fa;">
+        <div class="container">
+            <div class="form-box">
+                <form id="proposalForm">
+                    <div class="form-group">
+                        <label class="form-label">원명 (어린이집/유치원)</label>
+                        <input type="text" name="wonName" class="form-input" placeholder="예) 해피어린이집" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">담당자 성함 / 직함</label>
+                        <input type="text" name="manager" class="form-input" placeholder="예) 김뉴키 원장" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">연락처 (휴대전화)</label>
+                        <input type="tel" name="phone" class="form-input" placeholder="010-0000-0000 (상담용)" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">이메일 (제안서 받으실 곳)</label>
+                        <input type="email" name="email" class="form-input" placeholder="example@naver.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">지역 (시/구)</label>
+                        <input type="text" name="area" class="form-input" placeholder="예) 김포시 구래동">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">관심 프로그램 (중복 선택 가능)</label>
+
+                        <div class="group-title">📚 교재 프로그램</div>
+                        <div class="checkbox-group">
+                            <label class="checkbox-item"><input type="checkbox" name="interests" value="한글/누리과정"> 한글/누리과정</label>
+                            <label class="checkbox-item"><input type="checkbox" name="interests" value="미술교재"> 창의 미술</label>
+                            <label class="checkbox-item"><input type="checkbox" name="interests" value="과학/수학"> 과학/수학</label>
+                            <label class="checkbox-item"><input type="checkbox" name="interests" value="코딩교재"> 미래형 코딩</label>
+                            <label class="checkbox-item"><input type="checkbox" name="interests" value="영어교재"> 글로벌 영어</label>
+                        </div>
+
+                        <div class="group-title">🎉 행사 프로그램</div>
+                        <div class="checkbox-group">
+                            <label class="checkbox-item"><input type="checkbox" name="interests" value="시즌행사"> 시즌 테마 행사</label>
+                            <label class="checkbox-item"><input type="checkbox" name="interests" value="원어민행사"> 원어민 행사</label>
+                            <label class="checkbox-item"><input type="checkbox" name="interests" value="부모참여"> 부모 참여 행사</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">📅 방문 및 전화 상담 희망 날짜</label>
+                        <input type="date" name="visitDate" class="form-input">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">문의사항 (시간대 등)</label>
+                        <textarea name="inquiry" class="form-input" style="height: 120px; resize: vertical;" placeholder="원하시는 시간대나 궁금하신 점을 자유롭게 적어주세요."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn-submit">견적 및 상담 신청하기</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <footer></footer>
+    <script src="manager.js"></script>
+    <script>
+        const GOOGLE_SCRIPT_URL = SHEET_URL;
+
+        const form = document.getElementById('proposalForm');
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const btn = form.querySelector('.btn-submit');
+            const originalText = btn.innerText;
+            btn.disabled = true;
+            btn.innerText = "전송 중입니다...";
+
+            const formData = new FormData(form);
+
+            let interestsArray = [];
+            form.querySelectorAll('input[name="interests"]:checked').forEach(chk => {
+                interestsArray.push(chk.value);
+            });
+
+            const data = {
+                wonName: formData.get("wonName"),
+                manager: formData.get("manager"),
+                phone: formData.get("phone"),
+                // [추가] 이메일 전송
+                email: formData.get("email"),
+                area: formData.get("area"),
+                interests: interestsArray.join(", "),
+                visitDate: formData.get("visitDate"),
+                inquiry: formData.get("inquiry"),
+                timestamp: new Date().toLocaleString()
+            };
+
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: "POST",
+                body: JSON.stringify(data)
+            })
+                .then(response => {
+                    alert("신청이 완료되었습니다! 담당자가 확인 후 빠르게 연락드리겠습니다.");
+                    window.location.href = 'index.html';
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert("전송 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+                    btn.disabled = false;
+                    btn.innerText = originalText;
+                });
+        });
+    </script>
+</body>
+</html>

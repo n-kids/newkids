@@ -4,106 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>상세 정보</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        body {
-            font-family: 'Pretendard', sans-serif;
-            background: #f9f9f9;
-            color: #333;
-            padding-top: 100px;
-            padding-bottom: 80px;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-
-        .view-box {
-            background: #fff;
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
-        }
-
-        .view-header {
-            border-bottom: 2px solid #eee;
-            padding-bottom: 20px;
-            margin-bottom: 30px;
-        }
-
-        .view-category {
-            display: inline-block;
-            padding: 6px 12px;
-            border-radius: 5px;
-            background: #eee;
-            font-size: 0.9rem;
-            font-weight: bold;
-            color: #555;
-            margin-bottom: 10px;
-        }
-
-        .view-title {
-            font-size: 1.8rem;
-            font-weight: 800;
-            color: #1a3c6e;
-            margin-bottom: 10px;
-            line-height: 1.4;
-        }
-
-        .view-date {
-            font-size: 0.9rem;
-            color: #999;
-        }
-
-        .view-media {
-            margin-bottom: 40px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-            .view-media img {
-                width: 100%;
-                height: auto;
-                display: block;
-                border-radius: 10px;
-            }
-
-            .view-media iframe {
-                width: 100%;
-                aspect-ratio: 16 / 9;
-                display: block;
-                border-radius: 10px;
-            }
-
-        .view-content {
-            font-size: 1.1rem;
-            line-height: 1.8;
-            color: #444;
-            white-space: pre-wrap;
-            min-height: 200px;
-        }
-
-        .btn-list {
-            display: block;
-            width: 100%;
-            max-width: 200px;
-            margin: 50px auto 0;
-            padding: 15px;
-            background: #1a3c6e;
-            color: #fff;
-            text-align: center;
-            border-radius: 50px;
-            font-weight: bold;
-            transition: 0.3s;
-        }
-
-            .btn-list:hover {
-                background: #0f2546;
-            }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <header></header>
@@ -121,6 +22,8 @@
         </div>
     </div>
     <footer></footer>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
     <script src="manager.js"></script>
     <script>
         const params = new URLSearchParams(window.location.search);
@@ -130,18 +33,11 @@
             const checkSb = setInterval(() => { if (window.sb) { clearInterval(checkSb); loadDetail(window.sb); } }, 100);
         });
 
-        function getYoutubeId(url) {
-            if (!url) return null;
-            const match = url.match(/^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/);
-            return (match && match[7].length === 11) ? match[7] : null;
-        }
-
         async function loadDetail(sb) {
             if (!POST_ID) return alert("잘못된 접근입니다.");
             const { data, error } = await sb.from('total_posts').select('*').eq('id', POST_ID).single();
             if (error || !data) return alert("글을 찾을 수 없습니다.");
 
-            // [수정됨] 상세 페이지 카테고리 이름 변경
             const catNames = {
                 'season': '시즌행사', 'culture': '원어민행사', 'performance': '부모참여',
                 'korean': '한글 & 독서', 'art': '미술 & 자연 환경', 'science': '과학',
@@ -149,28 +45,20 @@
             };
             document.getElementById('v-category').innerText = catNames[data.category] || data.category;
             document.getElementById('v-title').innerText = data.title;
-            document.getElementById('v-date').innerText = data.created_at.split('T')[0];
+            document.getElementById('v-date').innerText = window.formatDate(data.created_at);
             document.getElementById('v-content').innerText = data.content;
 
             const mediaWrap = document.getElementById('v-media-wrap');
             let imgList = [];
-            try {
-                const parsed = JSON.parse(data.image_url);
-                if (Array.isArray(parsed)) imgList = parsed;
-                else imgList = [data.image_url];
-            } catch (e) { imgList = [data.image_url]; }
+            try { const parsed = JSON.parse(data.image_url); if (Array.isArray(parsed)) imgList = parsed; else imgList = [data.image_url]; } catch (e) { imgList = [data.image_url]; }
 
             let mediaHtml = "";
             imgList.forEach(url => {
                 if (!url) return;
-                const yId = getYoutubeId(url);
-                if (yId) {
-                    mediaHtml += `<iframe src="https://www.youtube.com/embed/${yId}" frameborder="0" allowfullscreen></iframe>`;
-                } else {
-                    mediaHtml += `<img src="${url}" alt="이미지">`;
-                }
+                const yId = window.getYoutubeId(url);
+                if (yId) mediaHtml += `<iframe src="https://www.youtube.com/embed/${yId}" frameborder="0" allowfullscreen></iframe>`;
+                else mediaHtml += `<img src="${url}" alt="이미지">`;
             });
-
             mediaWrap.innerHTML = mediaHtml;
             document.getElementById('loading').style.display = 'none';
             document.getElementById('view-area').style.display = 'block';

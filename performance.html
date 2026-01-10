@@ -2,78 +2,96 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>뉴키즈 - 부모 참여 행사</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        .sub-hero {
-            background-image: linear-gradient(rgba(26,60,110,0.85), rgba(26,60,110,0.85)), url('https://images.unsplash.com/photo-1566222829713-5f9518526308?auto=format&fit=crop&w=1600&q=80');
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <header></header>
-    <section class="sub-hero">
+
+    <section class="sub-hero bg-performance">
         <div class="container">
             <h1>부모 참여 행사</h1>
             <p>아이들의 잠재된 창의력과 감성을 깨워주는 특별한 시간</p>
         </div>
     </section>
+
     <section style="background-color: var(--bg-light);">
         <div class="container">
             <h2 style="text-align: left; margin-bottom: 30px;">📸 활동 갤러리</h2>
-            <div id="post-list" class="gallery-grid"><div style="text-align:center; width:100%; grid-column: 1/-1; padding:50px;">로딩 중...</div></div>
+            <div id="post-list" class="gallery-grid">
+                <div style="text-align:center; width:100%; grid-column: 1/-1; padding:50px;">로딩 중...</div>
+            </div>
         </div>
     </section>
+
     <section style="text-align: center; background-color: var(--primary-color); color: #fff;">
         <div class="container">
             <h2 style="color: #fff;">부모님도 아이들도 만족하는 참여 수업!</h2>
             <p style="margin-bottom: 20px;">원장님께 딱 맞는 행사 프로그램을 제안해 드립니다.</p>
-            <a href="proposal.html" class="btn">📋 견적 및 상담 신청</a>
+            <a href="proposal.html" class="btn" style="background: #fff; color: var(--primary-color);">📋 견적 및 상담 신청</a>
         </div>
     </section>
+
     <footer></footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
     <script src="manager.js"></script>
+
     <script>
-        const CATEGORY_NAME = 'performance';
+        const CATEGORY_NAME = 'performance'; // 카테고리 설정
 
         document.addEventListener("DOMContentLoaded", function () {
-            const checkSb = setInterval(() => { if (window.sb) { clearInterval(checkSb); loadPosts(window.sb); } }, 100);
+            // manager.js에서 sb(Supabase Client)가 초기화될 때까지 대기
+            const checkSb = setInterval(() => {
+                if (window.sb) {
+                    clearInterval(checkSb);
+                    loadPosts(window.sb);
+                }
+            }, 100);
         });
 
-        function getYoutubeId(url) {
-            if (!url) return null;
-            const match = url.match(/^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/);
-            return (match && match[7].length === 11) ? match[7] : null;
-        }
-
         async function loadPosts(sb) {
-            const { data } = await sb.from('total_posts').select('*').eq('category', CATEGORY_NAME).order('order_num', { ascending: true }) // 번호 작은 순서 먼저
-                .order('created_at', { ascending: false }); // 그 다음 최신순
+            // 해당 카테고리의 게시글 가져오기 (순서: 지정된 번호순 -> 최신순)
+            const { data } = await sb.from('total_posts')
+                .select('*')
+                .eq('category', CATEGORY_NAME)
+                .order('order_num', { ascending: true })
+                .order('created_at', { ascending: false });
+
             const list = document.getElementById('post-list');
             list.innerHTML = "";
 
             if (!data || data.length === 0) {
-                list.innerHTML = `<div style="text-align:center; grid-column:1/-1; padding:50px;">등록된 게시글이 없습니다.</div>`;
+                list.innerHTML = `<div style="text-align:center; grid-column:1/-1; padding:50px; color:#666;">등록된 게시글이 없습니다.</div>`;
                 return;
             }
 
             data.forEach(item => {
+                // 1. 대표 이미지 처리
                 let displayImg = item.thumbnail_url;
                 if (!displayImg) {
-                    try { const parsed = JSON.parse(item.image_url); if (Array.isArray(parsed) && parsed.length > 0) displayImg = parsed[0]; else displayImg = item.image_url; } catch (e) { displayImg = item.image_url; }
+                    try {
+                        const parsed = JSON.parse(item.image_url);
+                        if (Array.isArray(parsed) && parsed.length > 0) displayImg = parsed[0];
+                        else displayImg = item.image_url;
+                    } catch (e) {
+                        displayImg = item.image_url;
+                    }
                 }
 
-                const yId = getYoutubeId(displayImg);
-                let isVideo = false;
+                // 2. 유튜브 썸네일 처리 (manager.js의 유틸리티 사용)
+                const yId = window.getYoutubeId(displayImg);
+                let isVideo = !!yId;
                 if (yId) {
                     displayImg = `https://img.youtube.com/vi/${yId}/hqdefault.jpg`;
-                    isVideo = true;
                 } else if (!displayImg) {
                     displayImg = 'https://via.placeholder.com/400x300?text=No+Image';
                 }
 
+                // 3. 카드 생성
                 const linkIcon = item.link_url ? `<div class="link-icon">🔗</div>` : '';
-
                 const div = document.createElement('div');
                 div.className = 'card';
                 div.onclick = () => {
@@ -86,11 +104,10 @@
                     }
                 };
 
-                // [수정됨] object-fit: contain 적용
                 div.innerHTML = `
                         ${linkIcon}
-                        <div class="card-img-wrap" style="position:relative; width:100%; height:220px; overflow:hidden; background:#ffffff; border-bottom:1px solid #eee;">
-                            <img src="${displayImg}" class="card-img" style="width:100%; height:100%; object-fit:contain;" onerror="this.src='https://via.placeholder.com/400x300?text=Error'">
+                        <div class="card-img-wrap">
+                            <img src="${displayImg}" class="card-img" onerror="this.src='https://via.placeholder.com/400x300?text=Error'">
                             <div style="display:${isVideo ? 'block' : 'none'}; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:white; font-size:3rem; text-shadow:0 0 10px rgba(0,0,0,0.5);">▶</div>
                         </div>
                         <div class="card-body">

@@ -3,284 +3,171 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>뉴키즈 - 맞춤 제안서 신청</title>
-    <style>
-        /* [기본 스타일] */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Pretendard', sans-serif;
-            color: #333;
-            line-height: 1.6;
-            background: #fff;
-        }
-
-        a {
-            text-decoration: none;
-            color: inherit;
-        }
-
-        :root {
-            --primary-color: #1a3c6e;
-            --accent-color: #f4a261;
-            --bg-light: #f8f9fa;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-
-        section {
-            padding: 80px 0;
-        }
-
-        header {
-            width: 100%;
-            height: 70px;
-            background-color: #fff;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            position: fixed;
-            top: 0;
-            z-index: 1000;
-        }
-
-        .sub-hero {
-            height: 300px;
-            background: linear-gradient(rgba(26,60,110,0.8), rgba(26,60,110,0.8)), url('https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1600&q=80') center/center no-repeat;
-            background-size: cover;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            color: #fff;
-            margin-top: 70px;
-        }
-
-            .sub-hero h1 {
-                font-size: 2.5rem;
-                font-weight: 800;
-                margin-bottom: 15px;
-            }
-
-            .sub-hero p {
-                font-size: 1.2rem;
-                color: #ffdca8;
-            }
-
-        .form-box {
-            background: #fff;
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
-            border: 1px solid #eee;
-        }
-
-        .form-group {
-            margin-bottom: 25px;
-        }
-
-        .form-label {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 10px;
-            color: #1a3c6e;
-            font-size: 1.1rem;
-        }
-
-        .form-input {
-            width: 100%;
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: 0.3s;
-            font-family: inherit;
-        }
-
-            .form-input:focus {
-                border-color: var(--primary-color);
-                outline: none;
-            }
-
-        .checkbox-group {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 15px;
-            background: var(--bg-light);
-            padding: 20px;
-            border-radius: 10px;
-        }
-
-        .checkbox-item {
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-        }
-
-            .checkbox-item input {
-                margin-right: 10px;
-                transform: scale(1.2);
-                accent-color: var(--primary-color);
-            }
-
-        .group-title {
-            font-size: 0.95rem;
-            color: #666;
-            margin-bottom: 10px;
-            margin-top: 20px;
-            font-weight: bold;
-            border-bottom: 2px solid #eee;
-            padding-bottom: 5px;
-        }
-
-        .btn-submit {
-            display: block;
-            width: 100%;
-            padding: 18px;
-            background-color: var(--primary-color);
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.3s;
-            margin-top: 30px;
-        }
-
-            .btn-submit:hover {
-                background-color: #0f2546;
-            }
-
-            .btn-submit:disabled {
-                background-color: #ccc;
-                cursor: not-allowed;
-            }
-
-        footer {
-            background: #222;
-            color: #888;
-            padding: 40px 0;
-            text-align: center;
-        }
-    </style>
+    <title>뉴키즈 - 제안/견적 요청</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header></header> <section class="sub-hero">
+    <header></header>
+
+    <section class="sub-hero bg-proposal">
         <div class="container">
-            <h1>견적 및 샘플 신청</h1>
-            <p>우리 원에 딱 맞는 교육 프로그램, 뉴키즈가 제안해 드립니다.</p>
+            <h1>제안서 및 견적 요청</h1>
+            <p>원하시는 프로그램을 선택해주시면 맞춤형 제안서를 보내드립니다.</p>
         </div>
     </section>
 
     <section style="background-color: #f8f9fa;">
         <div class="container">
-            <div class="form-box">
-                <form id="proposalForm">
-                    <div class="form-group">
-                        <label class="form-label">원명 (어린이집/유치원)</label>
-                        <input type="text" name="wonName" class="form-input" placeholder="예) 해피어린이집" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">담당자 성함 / 직함</label>
-                        <input type="text" name="manager" class="form-input" placeholder="예) 김뉴키 원장" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">연락처 (휴대전화)</label>
-                        <input type="tel" name="phone" class="form-input" placeholder="010-0000-0000 (상담용)" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">이메일 (제안서 받으실 곳)</label>
-                        <input type="email" name="email" class="form-input" placeholder="example@naver.com">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">지역 (시/구)</label>
-                        <input type="text" name="area" class="form-input" placeholder="예) 김포시 구래동">
-                    </div>
 
+            <form id="proposalForm" class="proposal-box">
+                <h3 class="form-section-title">👤 신청자 정보</h3>
+                <div class="form-grid">
                     <div class="form-group">
-                        <label class="form-label">관심 프로그램 (중복 선택 가능)</label>
-
-                        <div class="group-title">📚 교재 프로그램</div>
-                        <div class="checkbox-group">
-                            <label class="checkbox-item"><input type="checkbox" name="interests" value="한글/독서"> 한글 & 독서</label>
-                            <label class="checkbox-item"><input type="checkbox" name="interests" value="미술/자연"> 미술 & 자연 환경</label>
-                            <label class="checkbox-item"><input type="checkbox" name="interests" value="과학/수학"> 과학 & 수학</label>
-                            <label class="checkbox-item"><input type="checkbox" name="interests" value="코딩/직업"> 코딩 & 직업교육</label>
-                            <label class="checkbox-item"><input type="checkbox" name="interests" value="영어/지도"> 영어 & 지도</label>
-                            <label class="checkbox-item"><input type="checkbox" name="interests" value="통합보육/누리"> 통합보육 & 누리과정</label>
-                        </div>
-
-                        <div class="group-title">🎉 행사 프로그램</div>
-                        <div class="checkbox-group">
-                            <label class="checkbox-item"><input type="checkbox" name="interests" value="시즌행사"> 시즌 테마 행사</label>
-                            <label class="checkbox-item"><input type="checkbox" name="interests" value="원어민행사"> 원어민 행사</label>
-                            <label class="checkbox-item"><input type="checkbox" name="interests" value="부모참여"> 부모 참여 행사</label>
-                        </div>
+                        <label class="form-label">원명 (필수)</label>
+                        <input type="text" name="wonName" class="form-input" placeholder="예: 해바라기 어린이집" required>
                     </div>
-
                     <div class="form-group">
-                        <label class="form-label">📅 방문 및 전화 상담 희망 날짜</label>
+                        <label class="form-label">담당자 성함 (필수)</label>
+                        <input type="text" name="manager" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">연락처 (필수)</label>
+                        <input type="tel" name="phone" class="form-input" placeholder="010-0000-0000" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">방문 희망 날짜 (선택)</label>
                         <input type="date" name="visitDate" class="form-input">
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">문의사항 (시간대 등)</label>
-                        <textarea name="inquiry" class="form-input" style="height: 120px; resize: vertical;" placeholder="원하시는 시간대나 궁금하신 점을 자유롭게 적어주세요."></textarea>
+                </div>
+
+                <h3 class="form-section-title" style="margin-top: 30px;">📚 관심 프로그램 (중복 선택 가능)</h3>
+                <p style="font-size:0.9rem; color:#666; margin-bottom:15px;">아래 카테고리를 클릭하여 세부 프로그램을 선택해 주세요.</p>
+
+                <div class="proposal-list-box">
+
+                    <div class="category-wrapper">
+                        <div class="proposal-category-header" onclick="toggleProposalCategory(this)">
+                            <span>🎓 교육 프로그램</span> <span class="toggle-icon">▼</span>
+                        </div>
+                        <div class="proposal-category-content">
+                            <div class="proposal-check-grid">
+                                <label class="proposal-item">
+                                    <input type="checkbox" name="interest" value="한글/독서"> 📚 한글 & 독서
+                                </label>
+                                <label class="proposal-item">
+                                    <input type="checkbox" name="interest" value="미술/자연"> 🎨 미술 & 자연 환경
+                                </label>
+                                <label class="proposal-item">
+                                    <input type="checkbox" name="interest" value="수학/과학"> 🔬 수학 & 과학
+                                </label>
+                                <label class="proposal-item">
+                                    <input type="checkbox" name="interest" value="코딩/직업"> 💻 코딩 & 직업교육
+                                </label>
+                                <label class="proposal-item">
+                                    <input type="checkbox" name="interest" value="영어/지도"> 🔤 영어 & 지도
+                                </label>
+                                <label class="proposal-item">
+                                    <input type="checkbox" name="interest" value="통합/누리"> 👶 통합보육 & 누리과정
+                                </label>
+                            </div>
+                        </div>
                     </div>
-                    <button type="submit" class="btn-submit">견적 및 상담 신청하기</button>
-                </form>
-            </div>
+
+                    <div class="category-wrapper">
+                        <div class="proposal-category-header" onclick="toggleProposalCategory(this)">
+                            <span>🎉 행사 프로그램</span> <span class="toggle-icon">▼</span>
+                        </div>
+                        <div class="proposal-category-content">
+                            <div class="proposal-check-grid">
+                                <label class="proposal-item">
+                                    <input type="checkbox" name="interest" value="시즌행사"> 🎅 시즌 테마 행사 
+                                </label>
+                                <label class="proposal-item">
+                                    <input type="checkbox" name="interest" value="원어민행사"> 🌍 원어민 행사 
+                                </label>
+                                <label class="proposal-item">
+                                    <input type="checkbox" name="interest" value="부모참여"> 👨‍👩‍👧‍👦 부모 참여 행사
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="form-group full-width" style="margin-top: 30px;">
+                    <label class="form-label">문의사항 및 요청 내용</label>
+                    <textarea name="inquiry" class="form-input" placeholder="궁금하신 점이나 특별히 요청하실 내용을 자유롭게 적어주세요."></textarea>
+                </div>
+
+                <button type="submit" class="btn-submit">견적 및 상담 요청하기</button>
+            </form>
+
         </div>
     </section>
 
     <footer></footer>
+    <script src="config.js"></script>
     <script src="manager.js"></script>
-    <script>
-        const GOOGLE_SCRIPT_URL = SHEET_URL;
-        const form = document.getElementById('proposalForm');
 
+    <script>
+        // [신규] 제안서 카테고리 토글 함수
+        function toggleProposalCategory(header) {
+            header.classList.toggle('active');
+            header.nextElementSibling.classList.toggle('show');
+        }
+
+        const form = document.getElementById('proposalForm');
         form.addEventListener('submit', function (e) {
             e.preventDefault();
             const btn = form.querySelector('.btn-submit');
             const originalText = btn.innerText;
-            btn.disabled = true;
-            btn.innerText = "전송 중입니다...";
 
-            const formData = new FormData(form);
-            let interestsArray = [];
-            form.querySelectorAll('input[name="interests"]:checked').forEach(chk => {
-                interestsArray.push(chk.value);
+            // 관심 프로그램 수집 (숨겨져 있어도 체크된 값은 가져옴)
+            const interests = [];
+            form.querySelectorAll('input[name="interest"]:checked').forEach(cb => {
+                interests.push(cb.value);
             });
 
+            btn.disabled = true;
+            btn.innerText = "전송 중...";
+
+            const formData = new FormData(form);
             const data = {
+                type: "PROPOSAL",
                 wonName: formData.get("wonName"),
                 manager: formData.get("manager"),
                 phone: formData.get("phone"),
-                email: formData.get("email"),
-                area: formData.get("area"),
-                interests: interestsArray.join(", "),
-                visitDate: formData.get("visitDate"),
-                inquiry: formData.get("inquiry"),
+                // orderDetails 필드에 관심분야 저장 (DB 호환성)
+                orderDetails: "관심분야: " + (interests.join(", ") || "선택 없음"),
+                deliveryDate: formData.get("visitDate") || "미지정",
+                remarks: formData.get("inquiry"),
+                email: "",
                 timestamp: new Date().toLocaleString()
             };
 
-            fetch(GOOGLE_SCRIPT_URL, {
+            // [중요] PROPOSAL_SHEET_URL 사용
+            if (typeof CONFIG === 'undefined' || !CONFIG.PROPOSAL_SHEET_URL) {
+                alert("설정 오류: config.js에 PROPOSAL_SHEET_URL이 없습니다.");
+                btn.disabled = false; btn.innerText = originalText;
+                return;
+            }
+
+            fetch(CONFIG.PROPOSAL_SHEET_URL, {
                 method: "POST",
                 body: JSON.stringify(data)
             })
-                .then(response => {
-                    alert("신청이 완료되었습니다! 담당자가 확인 후 빠르게 연락드리겠습니다.");
-                    window.location.href = 'index.html';
+                .then(res => res.json())
+                .then(res => {
+                    if (res.result === 'success') {
+                        alert("상담 요청이 성공적으로 접수되었습니다.\n담당자가 확인 후 연락드리겠습니다.");
+                        window.location.reload();
+                    } else {
+                        throw new Error(res.error);
+                    }
                 })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert("전송 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+                .catch(err => {
+                    console.error(err);
+                    alert("전송 중 오류가 발생했습니다.");
                     btn.disabled = false;
                     btn.innerText = originalText;
                 });

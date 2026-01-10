@@ -2,17 +2,11 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>뉴키즈 - 원어민 문화 체험</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="style.css">
+
     <style>
-        /* [페이지 전용 스타일] */
-
-        /* 1. 서브 배너 배경 이미지 설정 */
-        .sub-hero {
-            background-image: linear-gradient(rgba(26,60,110,0.85), rgba(26,60,110,0.85)), url('https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1600&q=80');
-        }
-
-        /* 2. (선택사항) 소개 박스 스타일 - manager.js에 없다면 여기에 유지 */
         .intro-summary {
             background-color: #fff;
             text-align: center;
@@ -34,6 +28,7 @@
                 font-size: 1.6rem;
                 color: var(--primary-color);
                 margin-bottom: 20px;
+                font-weight: bold;
             }
 
             .intro-box p {
@@ -44,8 +39,9 @@
     </style>
 </head>
 <body>
+    <header></header>
 
-    <header></header> <section class="sub-hero">
+    <section class="sub-hero bg-culture">
         <div class="container">
             <h1>원어민 문화 체험</h1>
             <p>세계 여러 나라의 문화를 원어민 선생님과 생생하게 경험해요!</p>
@@ -67,20 +63,21 @@
         <div class="container">
             <h2 style="text-align: left; margin-bottom: 30px;">📸 체험 활동 현장</h2>
             <div id="post-list" class="gallery-grid">
-                <div style="text-align:center; width:100%; grid-column: 1/-1; padding:50px; color:#666;">
-                    로딩 중...
-                </div>
+                <div style="text-align:center; width:100%; grid-column: 1/-1; padding:50px; color:#666;">로딩 중...</div>
             </div>
         </div>
     </section>
 
     <footer></footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
     <script src="manager.js"></script>
+
     <script>
-        const CATEGORY_NAME = 'culture'; // 이 페이지는 'culture' 카테고리 글만 불러옵니다.
+        const CATEGORY_NAME = 'culture'; // 카테고리 설정
 
         document.addEventListener("DOMContentLoaded", function () {
-            // manager.js의 Supabase 연결을 기다림
             const checkSb = setInterval(() => {
                 if (window.sb) {
                     clearInterval(checkSb);
@@ -89,32 +86,22 @@
             }, 100);
         });
 
-        // 유튜브 ID 추출 함수
-        function getYoutubeId(url) {
-            if (!url) return null;
-            const match = url.match(/^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/);
-            return (match && match[7].length === 11) ? match[7] : null;
-        }
-
-        // 게시글 불러오기 함수
         async function loadPosts(sb) {
-            const { data } = await sb
-                .from('total_posts')
+            const { data } = await sb.from('total_posts')
                 .select('*')
                 .eq('category', CATEGORY_NAME)
-                .order('order_num', { ascending: true }) // 번호 작은 순서 먼저
-                .order('created_at', { ascending: false }); // 그 다음 최신순
+                .order('order_num', { ascending: true })
+                .order('created_at', { ascending: false });
 
             const list = document.getElementById('post-list');
             list.innerHTML = "";
 
             if (!data || data.length === 0) {
-                list.innerHTML = `<div style="text-align:center; grid-column:1/-1; padding:50px;">등록된 게시글이 없습니다.</div>`;
+                list.innerHTML = `<div style="text-align:center; grid-column:1/-1; padding:50px; color:#666;">등록된 게시글이 없습니다.</div>`;
                 return;
             }
 
             data.forEach(item => {
-                // 1. 대표 이미지 결정
                 let displayImg = item.thumbnail_url;
                 if (!displayImg) {
                     try {
@@ -126,24 +113,17 @@
                     }
                 }
 
-                // 2. 유튜브 썸네일 처리
-                const yId = getYoutubeId(displayImg);
-                let isVideo = false;
+                const yId = window.getYoutubeId(displayImg);
+                let isVideo = !!yId;
                 if (yId) {
                     displayImg = `https://img.youtube.com/vi/${yId}/hqdefault.jpg`;
-                    isVideo = true;
                 } else if (!displayImg) {
                     displayImg = 'https://via.placeholder.com/400x300?text=No+Image';
                 }
 
-                // 3. 링크 아이콘 유무
                 const linkIcon = item.link_url ? `<div class="link-icon">🔗</div>` : '';
-
-                // 4. 카드 생성
                 const div = document.createElement('div');
-                div.className = 'card'; // manager.js의 공통 스타일 사용
-
-                // 클릭 이벤트 (외부 링크 vs 상세 페이지)
+                div.className = 'card';
                 div.onclick = () => {
                     if (item.link_url && item.link_url.trim() !== "") {
                         let url = item.link_url;
@@ -154,11 +134,10 @@
                     }
                 };
 
-                // 5. HTML 주입 (썸네일 비율 고정 fix 적용됨)
                 div.innerHTML = `
                         ${linkIcon}
-                        <div class="card-img-wrap" style="position:relative; width:100%; height:220px; overflow:hidden; background:#ffffff; border-bottom:1px solid #eee;">
-                            <img src="${displayImg}" class="card-img" style="width:100%; height:100%; object-fit:contain;" onerror="this.src='https://via.placeholder.com/400x300?text=Error'">
+                        <div class="card-img-wrap">
+                            <img src="${displayImg}" class="card-img" onerror="this.src='https://via.placeholder.com/400x300?text=Error'">
                             <div style="display:${isVideo ? 'block' : 'none'}; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:white; font-size:3rem; text-shadow:0 0 10px rgba(0,0,0,0.5);">▶</div>
                         </div>
                         <div class="card-body">

@@ -2,24 +2,13 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>뉴키즈 - 전체 교재 라인업</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        .sub-hero {
-            background-image: linear-gradient(rgba(26,60,110,0.85), rgba(26,60,110,0.85)), url('https://images.unsplash.com/photo-1503919545889-aef636e10ad4?auto=format&fit=crop&w=1600&q=80');
-        }
-
-        .section-desc {
-            text-align: center;
-            color: #666;
-            margin-bottom: 50px;
-            font-size: 1.1rem;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <header></header>
-    <section class="sub-hero">
+    <section class="sub-hero bg-child">
         <div class="container">
             <h1>뉴키즈 교재 라인업</h1>
             <p>영아부터 유아까지, 아이들의 꿈을 키우는 단계별 통합 프로그램</p>
@@ -27,13 +16,10 @@
     </section>
 
     <section id="korean"><div class="container"><h2>한글 & 독서</h2><p class="section-desc">언어 능력과 인성을 기르는 기초 교육 프로그램</p><div id="list-korean" class="product-grid"><p style="text-align:center;width:100%;">로딩 중...</p></div></div></section>
-
     <section id="art" style="background-color:var(--bg-light);"><div class="container"><h2>미술 & 자연 환경</h2><p class="section-desc">오감을 자극하고 자연을 배우는 예술 활동</p><div id="list-art" class="product-grid"><p style="text-align:center;width:100%;">로딩 중...</p></div></div></section>
     <section id="science"><div class="container"><h2>수학 & 과학</h2><p class="section-desc">호기심을 해결하고 논리적 사고를 키우는 탐구 활동</p><div id="list-science" class="product-grid"><p style="text-align:center;width:100%;">로딩 중...</p></div></div></section>
     <section id="coding" style="background-color:var(--bg-light);"><div class="container"><h2>코딩 & 직업교육</h2><p class="section-desc">논리적 사고력과 미래 직업을 미리 체험하는 융합 교육</p><div id="list-coding" class="product-grid"><p style="text-align:center;width:100%;">로딩 중...</p></div></div></section>
-
     <section id="english"><div class="container"><h2>영어 & 지도</h2><p class="section-desc">말하기, 읽기, 쓰기가 즐거워지는 통합 영어 프로그램</p><div id="list-english" class="product-grid"><p style="text-align:center;width:100%;">로딩 중...</p></div></div></section>
-
     <section id="integrated" style="background-color:var(--bg-light);"><div class="container"><h2>통합보육 & 누리과정</h2><p class="section-desc">영유아의 균형 잡힌 성장을 돕는 표준보육과정 통합 프로그램</p><div id="list-integrated" class="product-grid"><p style="text-align:center;width:100%;">로딩 중...</p></div></div></section>
 
     <section style="text-align: center; background-color: var(--primary-color); color: #fff;">
@@ -43,24 +29,18 @@
             <a href="proposal.html" class="btn">📋 견적 및 샘플 신청</a>
         </div>
     </section>
+
     <footer></footer>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
     <script src="manager.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             const checkSb = setInterval(() => { if (window.sb) { clearInterval(checkSb); loadAllSections(window.sb); } }, 100);
         });
 
-        function getYoutubeId(url) {
-            if (!url) return null;
-            const match = url.match(/^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/);
-            return (match && match[7].length === 11) ? match[7] : null;
-        }
-
         async function loadAllSections(sb) {
-            const { data, error } = await sb.from('total_posts').select('*')
-                .order('order_num', { ascending: true })
-                .order('created_at', { ascending: false });
-
+            const { data } = await sb.from('total_posts').select('*').order('order_num', { ascending: true }).order('created_at', { ascending: false });
             const categories = ['korean', 'art', 'science', 'coding', 'english', 'integrated'];
             categories.forEach(cat => { document.getElementById(`list-${cat}`).innerHTML = ""; });
 
@@ -75,14 +55,10 @@
                     try { const parsed = JSON.parse(item.image_url); if (Array.isArray(parsed) && parsed.length > 0) displayImg = parsed[0]; else displayImg = item.image_url; } catch (e) { displayImg = item.image_url; }
                 }
 
-                const yId = getYoutubeId(displayImg);
-                let isVideo = false;
-                if (yId) {
-                    displayImg = `https://img.youtube.com/vi/${yId}/hqdefault.jpg`;
-                    isVideo = true;
-                } else if (!displayImg) {
-                    displayImg = 'https://via.placeholder.com/400x300?text=No+Image';
-                }
+                const yId = window.getYoutubeId(displayImg);
+                let isVideo = !!yId;
+                if (yId) displayImg = `https://img.youtube.com/vi/${yId}/hqdefault.jpg`;
+                else if (!displayImg) displayImg = 'https://via.placeholder.com/400x300?text=No+Image';
 
                 const linkIcon = item.link_url ? `<div class="link-icon">🔗</div>` : '';
 
@@ -90,18 +66,14 @@
                 div.className = 'product-card';
                 div.onclick = () => {
                     if (item.link_url && item.link_url.trim() !== "") {
-                        let url = item.link_url;
-                        if (!url.startsWith('http')) url = 'https://' + url;
-                        window.open(url, '_blank');
-                    } else {
-                        location.href = `view.html?id=${item.id}`;
-                    }
+                        let url = item.link_url; if (!url.startsWith('http')) url = 'https://' + url; window.open(url, '_blank');
+                    } else { location.href = `view.html?id=${item.id}`; }
                 };
 
                 div.innerHTML = `
                         ${linkIcon}
-                        <div class="product-img-wrap" style="position:relative; width:100%; height:220px; overflow:hidden; background:#ffffff; border-bottom:1px solid #eee;">
-                            <img src="${displayImg}" class="product-img" style="width:100%; height:100%; object-fit:contain;" onerror="this.src='https://via.placeholder.com/400x300?text=Error'">
+                        <div class="product-img-wrap">
+                            <img src="${displayImg}" class="product-img" onerror="this.src='https://via.placeholder.com/400x300?text=Error'">
                             <div style="display:${isVideo ? 'block' : 'none'}; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:white; font-size:3rem; text-shadow:0 0 10px rgba(0,0,0,0.5);">▶</div>
                         </div>
                         <div class="product-info">
@@ -110,7 +82,6 @@
                         </div>`;
                 targetDiv.appendChild(div);
             });
-
             categories.forEach(cat => {
                 const div = document.getElementById(`list-${cat}`);
                 if (div.innerHTML === "") div.innerHTML = `<div style="text-align:center; padding:30px; color:#999; grid-column:1/-1;">등록된 내용이 없습니다.</div>`;

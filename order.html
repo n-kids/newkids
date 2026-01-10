@@ -3,272 +3,233 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>뉴키즈 - 교재/교구 발주 요청</title>
-    <style>
-        /* [기본 스타일] */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Pretendard', sans-serif;
-            color: #333;
-            line-height: 1.6;
-            background: #fff;
-        }
-
-        a {
-            text-decoration: none;
-            color: inherit;
-        }
-
-        :root {
-            --primary-color: #1a3c6e;
-            --accent-color: #f4a261;
-            --bg-light: #f8f9fa;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-
-        section {
-            padding: 80px 0;
-        }
-
-        /* 헤더 공간 (manager.js 연동) */
-        header {
-            width: 100%;
-            height: 70px;
-            background-color: #fff;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            position: fixed;
-            top: 0;
-            z-index: 1000;
-        }
-
-        /* 서브 배너 */
-        .sub-hero {
-            height: 250px;
-            background: linear-gradient(rgba(26,60,110,0.8), rgba(26,60,110,0.8)), url('https://images.unsplash.com/photo-1586769852044-692d6e3703f0?auto=format&fit=crop&w=1600&q=80') center/center no-repeat;
-            background-size: cover;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            color: #fff;
-            margin-top: 70px;
-        }
-
-            .sub-hero h1 {
-                font-size: 2.2rem;
-                font-weight: 800;
-                margin-bottom: 10px;
-            }
-
-            .sub-hero p {
-                font-size: 1.1rem;
-                color: #ffdca8;
-            }
-
-        /* 폼 박스 스타일 */
-        .form-box {
-            background: #fff;
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
-            border: 1px solid #eee;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-label {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 8px;
-            color: #1a3c6e;
-            font-size: 1rem;
-        }
-
-        .form-input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: 0.3s;
-            font-family: inherit;
-        }
-
-            .form-input:focus {
-                border-color: var(--primary-color);
-                outline: none;
-            }
-
-        /* 반반 나누기 (PC에서) */
-        .half-group {
-            display: flex;
-            gap: 15px;
-        }
-
-            .half-group .form-group {
-                flex: 1;
-            }
-
-        /* 버튼 */
-        .btn-submit {
-            display: block;
-            width: 100%;
-            padding: 18px;
-            background-color: var(--primary-color);
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.3s;
-            margin-top: 30px;
-        }
-
-            .btn-submit:hover {
-                background-color: #0f2546;
-            }
-
-            .btn-submit:disabled {
-                background-color: #ccc;
-                cursor: not-allowed;
-            }
-
-        @media (max-width: 600px) {
-            .half-group {
-                flex-direction: column;
-                gap: 0;
-            }
-        }
-
-        footer {
-            background: #222;
-            color: #888;
-            padding: 40px 0;
-            text-align: center;
-        }
-    </style>
+    <title>뉴키즈 - 교재 발주 요청</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header></header> <section class="sub-hero">
+    <header></header>
+
+    <section class="sub-hero bg-order">
         <div class="container">
-            <h1>교재/교구 발주 요청</h1>
-            <p>필요하신 물품을 빠르고 정확하게 배송해 드립니다.</p>
+            <h1>교재 발주 요청</h1>
+            <p>카테고리를 선택하고 연령과 수량을 입력해 주세요.</p>
         </div>
     </section>
 
     <section style="background-color: #f8f9fa;">
         <div class="container">
-            <div class="form-box">
-                <form id="orderForm">
 
-                    <h3 style="margin-bottom:20px; border-bottom:2px solid #eee; padding-bottom:10px;">📦 주문자 정보</h3>
-
-                    <div class="half-group">
-                        <div class="form-group">
-                            <label class="form-label">원명 (기관명)</label>
-                            <input type="text" name="orgName" class="form-input" placeholder="예) 뉴키즈어린이집" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">주문자 성함</label>
-                            <input type="text" name="orderer" class="form-input" placeholder="예) 김선생" required>
-                        </div>
-                    </div>
-
-                    <div class="half-group">
-                        <div class="form-group">
-                            <label class="form-label">연락처</label>
-                            <input type="tel" name="phone" class="form-input" placeholder="010-0000-0000" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">이메일 (선택)</label>
-                            <input type="email" name="email" class="form-input" placeholder="계산서 발행용">
-                        </div>
-                    </div>
-
+            <form id="orderForm" class="proposal-box" style="max-width: 900px;">
+                <h3 class="form-section-title">👤 주문자 정보</h3>
+                <div class="form-grid">
                     <div class="form-group">
-                        <label class="form-label">배송 받으실 주소</label>
-                        <input type="text" name="address" class="form-input" placeholder="주소를 상세하게 입력해주세요" required>
+                        <label class="form-label">원명 (필수)</label>
+                        <input type="text" name="wonName" class="form-input" placeholder="예: 해바라기 어린이집" required>
                     </div>
-
-                    <h3 style="margin-bottom:20px; border-bottom:2px solid #eee; padding-bottom:10px; margin-top:40px;">📝 주문 내역</h3>
-
                     <div class="form-group">
-                        <label class="form-label">주문 상품명 및 수량</label>
-                        <textarea name="productDetails" class="form-input" style="height: 120px;" placeholder="[상품명 / 수량 / 옵션] 을 적어주세요.&#10;예) 한글 1단계 / 10권&#10;예) 미술 펀아트 키트 / 20개 / 5세용" required></textarea>
+                        <label class="form-label">담당자 성함 (필수)</label>
+                        <input type="text" name="manager" class="form-input" required>
                     </div>
-
                     <div class="form-group">
-                        <label class="form-label">배송 요청사항 / 비고</label>
-                        <input type="text" name="notes" class="form-input" placeholder="예) 부재시 경비실에 맡겨주세요.">
+                        <label class="form-label">연락처 (필수)</label>
+                        <input type="tel" name="phone" class="form-input" placeholder="010-0000-0000" required>
                     </div>
-
                     <div class="form-group">
-                        <label class="form-label">희망 납기일</label>
-                        <input type="date" name="deliveryDate" class="form-input">
+                        <label class="form-label">이메일</label>
+                        <input type="email" name="email" class="form-input" placeholder="sample@email.com">
                     </div>
+                </div>
 
-                    <button type="submit" class="btn-submit">발주 요청하기</button>
-                </form>
-            </div>
+                <div class="form-group" style="margin-top:20px;">
+                    <label class="form-label">납품 희망 날짜 (선택)</label>
+                    <input type="date" name="deliveryDate" class="form-input" style="max-width: 300px;">
+                </div>
+
+                <h3 class="form-section-title" style="margin-top: 40px;">📦 교재 선택 (카테고리 클릭)</h3>
+                <div id="loading-msg" style="text-align:center; padding:30px; color:#666;">상품 정보를 불러오는 중입니다...</div>
+
+                <div id="product-list-area" class="order-list-box"></div>
+
+                <div class="form-group full-width" style="margin-top: 20px;">
+                    <label class="form-label">기타 요청사항</label>
+                    <textarea name="remarks" class="form-input" style="height: 80px;" placeholder="추가 전달 사항이 있다면 적어주세요."></textarea>
+                </div>
+
+                <button type="submit" class="btn-submit">발주 요청하기</button>
+            </form>
+
         </div>
     </section>
 
     <footer></footer>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
     <script src="manager.js"></script>
+
     <script>
-        // manager.js에 있는 엑셀 스크립트 주소 활용
-        const GOOGLE_SCRIPT_URL = SHEET_URL;
+        const TARGET_CATEGORIES = ['korean', 'art', 'science', 'coding', 'english', 'integrated'];
+        const CATEGORY_NAMES = {
+            'korean': '📚 한글 & 독서', 'art': '🎨 미술 & 자연', 'science': '🔬 수학 & 과학',
+            'coding': '💻 코딩 & 직업', 'english': '🔤 영어 & 지도', 'integrated': '👶 통합보육 & 누리'
+        };
+
+        function escapeHtml(text) {
+            if (!text) return "";
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            let attempts = 0;
+            const checkSb = setInterval(() => {
+                attempts++;
+                if (window.sb) {
+                    clearInterval(checkSb);
+                    loadOrderProducts(window.sb);
+                } else if (attempts > 50) {
+                    clearInterval(checkSb);
+                    document.getElementById('loading-msg').innerHTML = "<span style='color:red;'>서버 연결 실패. 새로고침 해주세요.</span>";
+                }
+            }, 100);
+        });
+
+        async function loadOrderProducts(sb) {
+            try {
+                const { data, error } = await sb.from('total_posts').select('*').in('category', TARGET_CATEGORIES).order('category', { ascending: true }).order('order_num', { ascending: true });
+                const listArea = document.getElementById('product-list-area');
+                document.getElementById('loading-msg').style.display = 'none';
+
+                if (error || !data || data.length === 0) {
+                    listArea.innerHTML = `<div style="padding:40px; text-align:center; color:#888;">주문 가능한 상품이 없습니다.</div>`;
+                    return;
+                }
+
+                const groupedData = data.reduce((acc, item) => {
+                    const cat = item.category || 'etc';
+                    (acc[cat] = acc[cat] || []).push(item);
+                    return acc;
+                }, {});
+
+                let html = "";
+                TARGET_CATEGORIES.forEach(cat => {
+                    if (groupedData[cat] && groupedData[cat].length > 0) {
+                        // [중요] 2열 배치를 위해 Wrapper로 감쌈
+                        html += `<div class="category-wrapper">`;
+
+                        html += `<div class="order-category-header" onclick="toggleCategory(this)"><span>${CATEGORY_NAMES[cat] || cat}</span><span class="toggle-icon">▼</span></div>`;
+
+                        html += `<div class="order-category-content">`;
+                        groupedData[cat].forEach(item => {
+                            const safeTitle = escapeHtml(item.title || "제목 없음");
+                            html += `
+                                    <div class="order-item-row" data-title="${safeTitle}" onclick="toggleProductItem(this)">
+                                        <div class="order-item-info"><h4>${safeTitle}</h4><span class="check-indicator">✔</span></div>
+                                        <div class="dynamic-qty-container" onclick="event.stopPropagation()">
+                                            ${generateDynamicInputArea()}
+                                        </div>
+                                    </div>`;
+                        });
+                        html += `</div>`; // content 끝
+                        html += `</div>`; // wrapper 끝
+                    }
+                });
+                listArea.innerHTML = html;
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        window.toggleCategory = function (header) { header.classList.toggle('active'); header.nextElementSibling.classList.toggle('show'); };
+        window.toggleProductItem = function (row) { row.classList.toggle('active'); };
+
+        function generateDynamicInputArea() {
+            return `
+                    <div class="qty-rows-wrapper">
+                        <div class="qty-row">
+                            <select class="age-select">
+                                <option value="1">1세</option><option value="2">2세</option><option value="3">3세</option>
+                                <option value="4">4세</option><option value="5">5세</option><option value="6">6세</option><option value="7">7세</option>
+                            </select>
+                            <input type="number" min="0" class="dynamic-qty-input" placeholder="수량 입력">
+                        </div>
+                    </div>
+                    <button type="button" class="btn-add-row" onclick="addQtyRow(this)">+ 연령 추가하기</button>
+                `;
+        }
+
+        window.addQtyRow = function (btn) {
+            const wrapper = btn.previousElementSibling;
+            const newRow = document.createElement('div');
+            newRow.className = 'qty-row';
+            newRow.innerHTML = `
+                    <select class="age-select">
+                        <option value="1">1세</option><option value="2">2세</option><option value="3">3세</option>
+                        <option value="4">4세</option><option value="5">5세</option><option value="6">6세</option><option value="7">7세</option>
+                    </select>
+                    <input type="number" min="0" class="dynamic-qty-input" placeholder="수량 입력">
+                    <button type="button" class="btn-remove-row" onclick="removeQtyRow(this)">×</button>
+                `;
+            wrapper.appendChild(newRow);
+        };
+
+        window.removeQtyRow = function (btn) { btn.parentElement.remove(); };
 
         const form = document.getElementById('orderForm');
-
         form.addEventListener('submit', function (e) {
             e.preventDefault();
-
             const btn = form.querySelector('.btn-submit');
             const originalText = btn.innerText;
-            btn.disabled = true;
-            btn.innerText = "주문 전송 중...";
+
+            const orderDetails = [];
+            document.querySelectorAll('.order-item-row').forEach(row => {
+                const title = row.getAttribute('data-title');
+                const rows = row.querySelectorAll('.qty-row');
+                let hasQty = false;
+                let ageStr = [];
+
+                rows.forEach(qtyRow => {
+                    const age = qtyRow.querySelector('.age-select').value;
+                    const qty = parseInt(qtyRow.querySelector('.dynamic-qty-input').value);
+                    if (qty > 0) { hasQty = true; ageStr.push(`${age}세(${qty}권)`); }
+                });
+
+                if (hasQty) orderDetails.push(`[${title}] : ${ageStr.join(', ')}`);
+            });
+
+            if (orderDetails.length === 0) {
+                alert("수량을 입력한 교재가 없습니다.\n카테고리를 클릭하여 교재 선택 및 수량을 입력해 주세요.");
+                return;
+            }
+
+            btn.disabled = true; btn.innerText = "전송 중...";
 
             const formData = new FormData(form);
-
-            // 전송 데이터 구성 (구글 시트 열 이름과 매칭됨)
             const data = {
-                type: "ORDER", // 엑셀에서 발주 주문임을 표시
-                orgName: formData.get("orgName"),
-                orderer: formData.get("orderer"),
+                type: "ORDER",
+                wonName: formData.get("wonName"),
+                manager: formData.get("manager"),
                 phone: formData.get("phone"),
                 email: formData.get("email"),
-                address: formData.get("address"),
-                productDetails: formData.get("productDetails"),
-                notes: formData.get("notes"),
-                deliveryDate: formData.get("deliveryDate"),
+                deliveryDate: formData.get("deliveryDate") || "미지정",
+                orderDetails: orderDetails.join("\n"),
+                remarks: formData.get("remarks"),
                 timestamp: new Date().toLocaleString()
             };
 
-            fetch(GOOGLE_SCRIPT_URL, {
-                method: "POST",
-                body: JSON.stringify(data)
-            })
-                .then(response => {
-                    alert("발주 요청이 정상적으로 접수되었습니다! 담당자가 확인 후 연락드리겠습니다.");
-                    window.location.reload(); // 페이지 새로고침
+            if (typeof CONFIG === 'undefined' || !CONFIG.ORDER_SHEET_URL) {
+                alert("설정 오류: ORDER_SHEET_URL 없음");
+                btn.disabled = false; btn.innerText = originalText;
+                return;
+            }
+
+            fetch(CONFIG.ORDER_SHEET_URL, { method: "POST", body: JSON.stringify(data) })
+                .then(res => res.json())
+                .then(res => {
+                    if (res.result === 'success') { alert("발주 요청이 성공적으로 전송되었습니다."); window.location.reload(); }
+                    else { throw new Error(res.error); }
                 })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert("접수 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+                .catch(err => {
+                    console.error(err);
+                    alert("전송 실패. 관리자에게 문의하세요.");
                     btn.disabled = false;
                     btn.innerText = originalText;
                 });

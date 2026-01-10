@@ -2,132 +2,18 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>뉴키즈 - 어린이집/유치원 파트너</title>
-    <style>
-        /* [메인 전용 스타일] */
-        .hero {
-            height: 600px;
-            background: linear-gradient(rgba(26, 60, 110, 0.4), rgba(26, 60, 110, 0.4)), url('https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            color: #fff;
-            margin-top: 0;
-        }
-
-        .hero-content h1 {
-            font-size: 3rem;
-            margin-bottom: 20px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
-
-        .hero-content p {
-            font-size: 1.3rem;
-            margin-bottom: 30px;
-            color: #f1f1f1;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
-        }
-
-        /* 카드 그리드 공통 */
-        .main-grid {
-            display: grid;
-            /* 화면 크기에 따라 자동 조절 (최소 280px) */
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 30px;
-        }
-
-        .card {
-            background: var(--bg-light);
-            padding: 40px 30px;
-            border-radius: 15px;
-            text-align: center;
-            transition: 0.3s;
-            border: 1px solid #eee;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-
-            .card:hover {
-                transform: translateY(-10px);
-                border-color: var(--accent-color);
-                box-shadow: 0 10px 20px rgba(0,0,0,0.05);
-            }
-
-        .card-icon {
-            font-size: 3.5rem;
-            margin-bottom: 20px;
-        }
-
-        .card h3 {
-            font-size: 1.5rem;
-            margin-bottom: 10px;
-            color: #333;
-        }
-
-        .card p {
-            color: #666;
-            margin-bottom: 20px;
-            font-size: 0.95rem;
-            word-break: keep-all; /* 단어 단위 줄바꿈 */
-        }
-
-        .card-link {
-            color: var(--accent-color);
-            font-weight: bold;
-            font-size: 0.9rem;
-        }
-
-        /* 문의 섹션 */
-        .contact {
-            text-align: center;
-            background-color: var(--primary-color);
-            color: #fff;
-        }
-
-            .contact h2 {
-                color: #fff;
-                margin-bottom: 10px;
-            }
-
-        /* 버튼 그룹 스타일 */
-        .btn-group {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin-top: 30px;
-            margin-bottom: 10px;
-        }
-
-        /* 모바일 대응 */
-        @media (max-width: 480px) {
-            .btn-group {
-                flex-direction: column;
-                gap: 10px;
-            }
-
-                .btn-group .btn {
-                    width: 100%;
-                }
-        }
-
-        /* PC 버전 전화 걸기 방지 */
-        @media (min-width: 769px) {
-            .mobile-only-link {
-                pointer-events: none;
-                cursor: default;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header></header> <section class="hero">
+    <header></header>
+
+    <section class="hero">
         <div class="container hero-content">
             <h1>우리 원에 필요한 모든 즐거움<br>뉴키즈 (New Kids)</h1>
             <p>검증된 영유아 교재부터 특별한 원어민 행사까지,<br>선생님과 아이들이 모두 행복한 교육 파트너</p>
+
             <a href="proposal.html" class="btn">제안서 / 견적 요청하기</a>
         </div>
     </section>
@@ -229,6 +115,7 @@
     </section>
 
     <footer></footer>
+    <script src="config.js"></script>
     <script src="manager.js"></script>
 </body>
 </html>

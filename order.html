@@ -5,13 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>뉴키즈 - 교재 발주 요청</title>
     <link rel="stylesheet" href="style.css">
-    <style>
-        /* [추가] 아코디언이 닫혀도 수량이 있으면 체크 표시 유지 */
-        .order-item-row.has-data .check-indicator {
-            display: block !important;
-            color: var(--primary-color);
-        }
-    </style>
 </head>
 <body>
     <header></header>
@@ -128,12 +121,12 @@
                         groupedData[cat].forEach(item => {
                             const safeTitle = escapeHtml(item.title || "제목 없음");
                             html += `
-                                        <div class="order-item-row" data-title="${safeTitle}" onclick="toggleProductItem(this)">
-                                            <div class="order-item-info"><h4>${safeTitle}</h4><span class="check-indicator">✔</span></div>
-                                            <div class="dynamic-qty-container" onclick="event.stopPropagation()">
-                                                ${generateDynamicInputArea()}
-                                            </div>
-                                        </div>`;
+                                            <div class="order-item-row" data-title="${safeTitle}" onclick="toggleProductItem(this)">
+                                                <div class="order-item-info"><h4>${safeTitle}</h4><span class="check-indicator">✔</span></div>
+                                                <div class="dynamic-qty-container" onclick="event.stopPropagation()">
+                                                    ${generateDynamicInputArea()}
+                                                </div>
+                                            </div>`;
                         });
                         html += `</div>`;
                         html += `</div>`;
@@ -163,9 +156,9 @@
             }
         };
 
-        // 2. [수정] 상품 아코디언 (하나만 열기)
+        // 2. 상품 아코디언 (하나만 열기)
         window.toggleProductItem = function (row) {
-            if (window.event) window.event.stopPropagation(); // 클릭 전파 중단
+            if (window.event) window.event.stopPropagation();
 
             const isAlreadyActive = row.classList.contains('active');
 
@@ -195,7 +188,6 @@
             if (!e.target.closest('.dynamic-qty-container')) {
                 // 활성화된 모든 상품 닫기
                 document.querySelectorAll('.order-item-row.active').forEach(row => {
-                    // 단, 내가 방금 클릭한 row는 제외 (toggleProductItem에서 처리됨)
                     if (row !== e.target.closest('.order-item-row')) {
                         row.classList.remove('active');
                     }
@@ -203,7 +195,7 @@
             }
         });
 
-        // 4. [신규] 입력된 값이 있으면 체크 표시 유지 (has-data 클래스 토글)
+        // 4. 입력된 값이 있으면 체크 표시 유지
         window.checkRowData = function (el) {
             const row = el.closest('.order-item-row');
             if (!row) return;
@@ -219,19 +211,18 @@
         };
 
         function generateDynamicInputArea() {
-            // oninput 이벤트 추가 (값 입력 시 체크표시 활성화)
             return `
-                        <div class="qty-rows-wrapper">
-                            <div class="qty-row">
-                                <select class="age-select">
-                                    <option value="1">1세</option><option value="2">2세</option><option value="3">3세</option>
-                                    <option value="4">4세</option><option value="5">5세</option><option value="6">6세</option><option value="7">7세</option>
-                                </select>
-                                <input type="number" min="0" class="dynamic-qty-input" placeholder="수량 입력" oninput="checkRowData(this)">
+                            <div class="qty-rows-wrapper">
+                                <div class="qty-row">
+                                    <select class="age-select">
+                                        <option value="1">1세</option><option value="2">2세</option><option value="3">3세</option>
+                                        <option value="4">4세</option><option value="5">5세</option><option value="6">6세</option><option value="7">7세</option>
+                                    </select>
+                                    <input type="number" min="0" class="dynamic-qty-input" placeholder="수량 입력" oninput="checkRowData(this)">
+                                </div>
                             </div>
-                        </div>
-                        <button type="button" class="btn-add-row" onclick="addQtyRow(this)">+ 연령 추가하기</button>
-                    `;
+                            <button type="button" class="btn-add-row" onclick="addQtyRow(this)">+ 연령 추가하기</button>
+                        `;
         }
 
         window.addQtyRow = function (btn) {
@@ -239,20 +230,19 @@
             const newRow = document.createElement('div');
             newRow.className = 'qty-row';
             newRow.innerHTML = `
-                        <select class="age-select">
-                            <option value="1">1세</option><option value="2">2세</option><option value="3">3세</option>
-                            <option value="4">4세</option><option value="5">5세</option><option value="6">6세</option><option value="7">7세</option>
-                        </select>
-                        <input type="number" min="0" class="dynamic-qty-input" placeholder="수량 입력" oninput="checkRowData(this)">
-                        <button type="button" class="btn-remove-row" onclick="removeQtyRow(this)">×</button>
-                    `;
+                            <select class="age-select">
+                                <option value="1">1세</option><option value="2">2세</option><option value="3">3세</option>
+                                <option value="4">4세</option><option value="5">5세</option><option value="6">6세</option><option value="7">7세</option>
+                            </select>
+                            <input type="number" min="0" class="dynamic-qty-input" placeholder="수량 입력" oninput="checkRowData(this)">
+                            <button type="button" class="btn-remove-row" onclick="removeQtyRow(this)">×</button>
+                        `;
             wrapper.appendChild(newRow);
         };
 
         window.removeQtyRow = function (btn) {
             const row = btn.closest('.order-item-row');
             btn.parentElement.remove();
-            // 삭제 후 남은 데이터가 있는지 재확인
             if (row) {
                 const inputs = row.querySelectorAll('.dynamic-qty-input');
                 if (inputs.length > 0) checkRowData(inputs[0]);

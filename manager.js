@@ -7,11 +7,10 @@
     }
 })();
 
-// [공통 기능] 헤더 로드 (Hover 방식 복구 + 모바일 개별 토글)
+// [공통 기능] 헤더 로드
 function loadHeader() {
     const headerEl = document.querySelector('header');
     if (headerEl) {
-        // 1. 새로운 헤더 HTML 주입 (모바일용 onclick 이벤트 추가됨)
         headerEl.innerHTML = `
             <div class="header-inner">
                 <a href="index.html" class="logo-link">
@@ -56,9 +55,8 @@ window.toggleMenu = function () {
     nav.classList.toggle('active');
 };
 
-// [핵심] 모바일 서브메뉴 토글 (아코디언 기능 삭제됨: 개별 작동)
+// [모바일 전용] 서브메뉴 토글 (아코디언 없이 개별 작동)
 window.toggleSubMenu = function (element) {
-    // 화면 너비가 768px 이하(모바일)일 때만 클릭 작동
     if (window.innerWidth <= 768) {
         const parentLi = element.parentElement;
         parentLi.classList.toggle('sub-open');
@@ -85,7 +83,7 @@ function loadFooter() {
     }
 }
 
-// [신규 기능] 스크롤 버튼 생성 (맨위로/맨밑으로)
+// [신규 기능] 스크롤 버튼 생성
 function addScrollButtons() {
     if (document.querySelector('.scroll-btns')) return;
     const btnHtml = `
@@ -114,19 +112,15 @@ window.formatDate = function (dateStr) {
 };
 
 
-// [신규 기능] 텍스트박스(textarea) 내용에 따라 높이 자동 조절
+// [신규 기능] 텍스트박스 높이 자동 조절
 function enableAutoResizeTextarea() {
     const textareas = document.querySelectorAll('textarea.form-input');
-
     textareas.forEach(textarea => {
-        // 1. 초기 높이 설정 (내용이 있으면 맞춰줌)
         textarea.style.height = 'auto';
         textarea.style.height = (textarea.scrollHeight) + 'px';
-
-        // 2. 입력할 때마다 높이 조절 이벤트 연결
         textarea.addEventListener('input', function () {
-            this.style.height = 'auto'; // 높이를 초기화해야 줄어들었을 때도 감지함
-            this.style.height = (this.scrollHeight) + 'px'; // 스크롤 높이만큼 강제로 늘림
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
         });
     });
 }
@@ -136,15 +130,25 @@ document.addEventListener("DOMContentLoaded", function () {
     loadHeader();
     loadFooter();
     addScrollButtons();
-    enableAutoResizeTextarea(); // 텍스트박스 자동 조절 실행
+    enableAutoResizeTextarea();
+    // addConsultationBanner(); <-- 삭제됨
 
     // 모바일 메뉴 외부 클릭 시 닫기
     document.addEventListener('click', function (e) {
         const menu = document.getElementById('navMenu');
         const btn = document.querySelector('.mobile-btn');
-        // 메뉴가 열려있는데, 메뉴 영역이나 버튼이 아닌 곳을 클릭했을 때
         if (menu && menu.classList.contains('active')) {
             if (!menu.contains(e.target) && !btn.contains(e.target)) {
+                menu.classList.remove('active');
+            }
+        }
+    });
+
+    // 모바일 메뉴 링크 클릭 시 메뉴 닫기
+    document.addEventListener('click', function (e) {
+        const menu = document.getElementById('navMenu');
+        if (menu && menu.classList.contains('active')) {
+            if (e.target.tagName === 'A' && menu.contains(e.target)) {
                 menu.classList.remove('active');
             }
         }

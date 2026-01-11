@@ -170,12 +170,7 @@ header {
     width: auto;
 }
 
-/* [중요] PC에서는 flex로 가로 배치 */
-ul.nav-menu {
-    display: flex;
-    gap: 30px;
-}
-
+/* 네비게이션 공통 스타일 */
 .nav-menu > li {
     position: relative;
     padding: 20px 0;
@@ -200,7 +195,7 @@ ul.nav-menu {
     font-weight: 700 !important;
 }
 
-/* 드롭다운 메뉴 (기본 숨김) */
+/* 드롭다운 메뉴 (공통 기본 숨김) */
 .dropdown {
     display: none;
     position: absolute;
@@ -217,41 +212,20 @@ ul.nav-menu {
     text-align: left;
 }
 
-/* [PC] 마우스 호버 시 메뉴 열림 */
-@media (min-width: 769px) {
-    .nav-menu > li:hover .dropdown {
+    .dropdown li a {
         display: block;
-        animation: fadeIn 0.3s ease;
+        padding: 10px 15px;
+        font-size: 0.95rem;
+        color: #555;
+        text-align: center;
+        width: 100%;
     }
 
-    .nav-menu > li:hover .arrow {
-        transform: rotate(180deg);
-    }
-}
-
-/* [Mobile] 클릭(.sub-open) 시 메뉴 열림 */
-.nav-menu > li.sub-open .dropdown {
-    display: block;
-}
-
-.nav-menu > li.sub-open .arrow {
-    transform: rotate(180deg);
-}
-
-.dropdown li a {
-    display: block;
-    padding: 10px 15px;
-    font-size: 0.95rem;
-    color: #555;
-    text-align: center;
-    width: 100%;
-}
-
-    .dropdown li a:hover {
-        background: #f8f9fa;
-        color: var(--accent-color);
-        font-weight: bold;
-    }
+        .dropdown li a:hover {
+            background: #f8f9fa;
+            color: var(--accent-color);
+            font-weight: bold;
+        }
 
 .arrow {
     font-size: 0.8rem;
@@ -269,15 +243,35 @@ ul.nav-menu {
     color: var(--primary-color);
 }
 
-/* === 모바일 반응형 (768px 이하) === */
+/* =========================================
+   [PC 스타일] 769px 이상일 때만 적용
+   ========================================= */
+@media (min-width: 769px) {
+    ul.nav-menu {
+        display: flex;
+        gap: 30px;
+    }
+
+    .nav-menu > li:hover .dropdown {
+        display: block;
+        animation: fadeIn 0.3s ease;
+    }
+
+    .nav-menu > li:hover .arrow {
+        transform: rotate(180deg);
+    }
+}
+
+/* =========================================
+   [Mobile 스타일] 768px 이하일 때만 적용
+   ========================================= */
 @media (max-width: 768px) {
     .mobile-btn {
         display: block;
     }
 
-    /* [수정됨] .nav-menu -> ul.nav-menu로 변경하여 우선순위 높임 (PC 설정 덮어쓰기) */
     ul.nav-menu {
-        display: none; /* 기본적으로 숨김 */
+        display: none;
         flex-direction: column;
         position: absolute;
         top: 70px;
@@ -290,7 +284,6 @@ ul.nav-menu {
         height: auto;
     }
 
-        /* 햄버거 버튼 클릭 시 active 클래스가 붙으면 보임 */
         ul.nav-menu.active {
             display: flex;
         }
@@ -307,6 +300,14 @@ ul.nav-menu {
             justify-content: space-between;
             padding: 15px 20px;
             width: 100%;
+        }
+
+        .nav-menu > li.sub-open .dropdown {
+            display: block;
+        }
+
+        .nav-menu > li.sub-open .arrow {
+            transform: rotate(180deg);
         }
 
     .dropdown {
@@ -880,73 +881,65 @@ ul.nav-menu {
 
 .sub-cat-header {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    background: #f8f9fa;
-    padding: 10px 15px;
-    border-radius: 8px;
-    margin: 15px 15px 5px 15px;
-    border-left: 4px solid #ccc;
+    padding: 15px 20px;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    margin: 15px 15px 5px;
     cursor: pointer;
-    transition: 0.2s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    transition: 0.2s ease;
 }
+
+    .sub-cat-header:hover {
+        border-color: var(--accent-color);
+        transform: translateY(-2px);
+    }
 
     .sub-cat-header.checked-header {
-        background: #fff8f0;
-        border-left-color: var(--accent-color);
-    }
-
-    .sub-cat-header input {
-        margin-right: 10px;
-        transform: scale(1.3);
-    }
-
-.proposal-check-grid {
-    display: none;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-    padding: 0 15px 15px 15px;
-    opacity: 1;
-    pointer-events: auto;
-}
-
-    .proposal-check-grid.show {
-        display: grid;
-        animation: fadeIn 0.3s ease;
-    }
-
-.proposal-item {
-    background: #fff;
-    border: 1px solid #eee;
-    border-radius: 6px;
-    padding: 10px;
-    display: flex;
-    align-items: flex-start;
-    cursor: pointer;
-    transition: 0.2s;
-}
-
-    .proposal-item:hover {
-        border-color: var(--primary-color);
         background: #f0f7ff;
+        border-color: var(--primary-color);
     }
 
-    .proposal-item input {
-        margin-right: 10px;
-        margin-top: 4px;
-        transform: scale(1.15);
+.sub-cat-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+    .sub-cat-title input {
+        width: 20px;
+        height: 20px;
+        accent-color: var(--primary-color);
+        cursor: pointer;
         flex-shrink: 0;
     }
 
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
+    .sub-cat-title span {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #333;
+        word-break: keep-all;
+        line-height: 1.2;
     }
 
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+.sub-cat-header.checked-header .sub-cat-title span {
+    color: var(--primary-color);
+}
+
+.sub-toggle-icon {
+    font-size: 0.9rem;
+    color: #999;
+    transition: transform 0.3s ease;
+    margin-left: 10px;
+}
+
+.sub-cat-header.active .sub-toggle-icon {
+    transform: rotate(180deg);
+    color: var(--primary-color);
 }
 
 .order-item-row {
@@ -967,7 +960,7 @@ ul.nav-menu {
 }
 
 .order-item-row.active .check-indicator, .order-item-row.has-data .check-indicator {
-    display: block;
+    display: block !important;
 }
 
 .order-item-info {
@@ -976,28 +969,84 @@ ul.nav-menu {
     justify-content: space-between;
 }
 
+/* =========================================
+   13. 발주 페이지 수량 입력 디자인 개선 (Grid)
+   ========================================= */
 .dynamic-qty-container {
     display: none;
-    background: #fff;
+    background-color: #f8f9fa;
     padding: 15px;
-    margin-top: 10px;
-    border-top: 1px dashed #ddd;
+    margin-top: 0;
+    border-top: 1px solid #eee;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
 }
-
+/* [수정] fadeIn -> slideDown으로 변경 (왼쪽 쏠림 해결) */
 .order-item-row.active .dynamic-qty-container {
     display: block;
-    animation: fadeIn 0.3s ease;
+    animation: slideDown 0.3s ease;
 }
 
 .qty-row {
-    display: flex;
+    display: grid;
+    grid-template-columns: 2fr 3fr 42px;
+    align-items: center;
     gap: 8px;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
 }
 
-.btn-remove-row, .btn-add-row {
+    .qty-row .age-select, .qty-row .dynamic-qty-input {
+        width: 100%;
+        height: 42px;
+        padding: 0 10px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        background-color: #fff;
+        min-width: 0;
+    }
+
+.btn-remove-row {
+    width: 100%;
+    height: 42px;
+    border: 1px solid #ff6b6b;
+    background-color: #fff;
+    color: #ff6b6b;
+    border-radius: 6px;
     cursor: pointer;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.2s;
 }
+
+    .btn-remove-row:hover {
+        background-color: #ff6b6b;
+        color: #fff;
+    }
+
+.btn-add-row {
+    width: 100%;
+    padding: 12px;
+    border: 1px dashed var(--primary-color);
+    background-color: #fff;
+    color: var(--primary-color);
+    font-weight: bold;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.2s;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+    .btn-add-row:hover {
+        background-color: #f0f7ff;
+        border-style: solid;
+    }
 
 .contact {
     text-align: center;
@@ -1028,7 +1077,7 @@ footer {
 
 .scroll-btns {
     position: fixed;
-    bottom: 30px;
+    bottom: 20px;
     right: 30px;
     z-index: 9999;
     display: flex;
@@ -1081,37 +1130,70 @@ textarea.form-input {
 }
 
 /* =========================================
-   12. 하단 상담문의 고정 버튼 스타일
+   14. [신규] 견적 요청 페이지(Proposal) 디자인 리뉴얼
    ========================================= */
-.consult-banner {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    z-index: 9998; /* 스크롤 버튼보다 바로 아래 */
-    background-color: var(--primary-color);
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-    border-top: 1px solid rgba(255,255,255,0.1);
+.proposal-check-grid {
+    display: none;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    padding: 10px 15px 15px;
 }
-
-    .consult-banner a {
-        display: block;
-        width: 100%;
-        padding: 15px 0;
-        text-align: center;
-        color: #fff;
-        font-weight: bold;
-        font-size: 1.1rem;
-        transition: 0.3s;
+    /* [수정] fadeIn -> slideDown으로 변경 (왼쪽 쏠림 해결) */
+    .proposal-check-grid.show {
+        display: grid;
+        animation: slideDown 0.3s ease;
     }
 
-        .consult-banner a:hover {
-            background-color: var(--accent-color);
-        }
-
-/* 모바일 화면에서 스크롤 버튼이 배너에 가리지 않게 위치 조정 */
 @media (max-width: 768px) {
-    .scroll-btns {
-        bottom: 80px; /* 배너 높이만큼 올림 */
+    .proposal-check-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.proposal-item {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 12px 15px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    background: #fff;
+    cursor: pointer;
+}
+
+    .proposal-item.checked-item {
+        border-color: var(--primary-color);
+        background-color: #f0f7ff;
+        box-shadow: 0 2px 5px rgba(26, 60, 110, 0.1);
+    }
+
+    .proposal-item input {
+        accent-color: var(--primary-color);
+        width: 18px;
+        height: 18px;
+        margin-right: 12px;
+        flex-shrink: 0;
+    }
+
+    .proposal-item span {
+        font-size: 0.95rem;
+        color: #555;
+        word-break: keep-all;
+    }
+
+    .proposal-item.checked-item span {
+        color: var(--primary-color);
+        font-weight: 600;
+    }
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }

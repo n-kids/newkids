@@ -5,57 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>뉴키즈 - 제안/견적 요청</title>
     <link rel="stylesheet" href="style.css">
-    <style>
-        /* 아코디언 스타일 */
-        .proposal-check-grid {
-            display: none;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-            padding-left: 5px;
-            opacity: 1;
-            pointer-events: auto;
-            margin-bottom: 15px;
-        }
-
-            .proposal-check-grid.show {
-                display: grid;
-                animation: fadeIn 0.3s ease;
-            }
-
-        /* 중분류 헤더 스타일 */
-        .sub-cat-header {
-            transition: 0.2s;
-            border-left: 4px solid #ccc;
-        }
-            /* 체크되었을 때 강조 스타일 */
-            .sub-cat-header.checked-header {
-                background: #fff8f0;
-                border-left-color: var(--accent-color);
-            }
-
-                .sub-cat-header.checked-header span {
-                    color: #333;
-                    font-weight: bold;
-                }
-
-        @media (max-width: 480px) {
-            .proposal-check-grid.show {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-5px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-    </style>
 </head>
 <body>
     <header></header>
@@ -191,8 +140,8 @@
                     let groupHtml = `<div class="category-wrapper">`;
 
                     groupHtml += `<div class="proposal-category-header" onclick="toggleProposalCategory(this)">
-                                    <span>${title}</span> <span class="toggle-icon">▼</span>
-                                </div>`;
+                                        <span>${title}</span> <span class="toggle-icon">▼</span>
+                                    </div>`;
 
                     groupHtml += `<div class="proposal-category-content">`;
 
@@ -200,22 +149,25 @@
                     categories.forEach(cat => {
                         if (grouped[cat] && grouped[cat].length > 0) {
                             hasItem = true;
+                            // [수정] 중분류 헤더 구조 변경 (sub-cat-title 래퍼 추가)
                             groupHtml += `
-                                            <div class="sub-cat-header" onclick="toggleSubCategory(this)">
-                                                <input type="checkbox" class="parent-check" data-cat="${cat}">
-                                                <span>${CAT_NAMES[cat] || cat}</span>
-                                            </div>
-                                        `;
+                                                <div class="sub-cat-header" onclick="toggleSubCategory(this)">
+                                                    <div class="sub-cat-title">
+                                                        <input type="checkbox" class="parent-check" data-cat="${cat}">
+                                                        <span>${CAT_NAMES[cat] || cat}</span>
+                                                    </div>
+                                                    <span class="sub-toggle-icon">▼</span>
+                                                </div>
+                                            `;
                             groupHtml += `<div id="grid-${cat}" class="proposal-check-grid">`;
                             grouped[cat].forEach(item => {
                                 const safeTitle = escapeHtml(item.title);
                                 const val = `[${CAT_NAMES[cat]}] ${safeTitle}`;
-                                // [수정] disabled 속성 제거 (항상 클릭 가능)
                                 groupHtml += `
-                                                <label class="proposal-item">
-                                                    <input type="checkbox" name="interest" value="${val}">
-                                                    <span>${safeTitle}</span>
-                                                </label>`;
+                                                    <label class="proposal-item">
+                                                        <input type="checkbox" name="interest" value="${val}" onchange="toggleItemStyle(this)">
+                                                        <span>${safeTitle}</span>
+                                                    </label>`;
                             });
                             groupHtml += `</div>`;
                         }
@@ -234,7 +186,14 @@
             } catch (e) { console.error(e); }
         }
 
-        // [기능 1] 대분류 아코디언
+        // [기능 1] 체크박스 선택 시 시각적 효과 (카드 강조)
+        window.toggleItemStyle = function (checkbox) {
+            const label = checkbox.closest('.proposal-item');
+            if (checkbox.checked) label.classList.add('checked-item');
+            else label.classList.remove('checked-item');
+        }
+
+        // [기능 2] 대분류 아코디언
         window.toggleProposalCategory = function (header) {
             if (window.event) window.event.stopPropagation();
             const isAlreadyActive = header.classList.contains('active');
@@ -250,7 +209,7 @@
             }
         };
 
-        // [기능 2] 중분류 아코디언 (클릭해도 자동 체크 안 됨)
+        // [기능 3] 중분류 아코디언 (화살표 회전 로직 추가)
         window.toggleSubCategory = function (headerDiv) {
             if (window.event) window.event.stopPropagation();
 
@@ -268,11 +227,17 @@
                 if (g !== grid) g.classList.remove('show');
             });
 
+            // 다른 형제 헤더의 활성 상태(화살표) 제거
+            parentGroup.querySelectorAll('.sub-cat-header.active').forEach(h => {
+                if (h !== headerDiv) h.classList.remove('active');
+            });
+
             if (isGridOpen) {
                 grid.classList.remove('show');
+                headerDiv.classList.remove('active'); // 화살표 원위치
             } else {
                 grid.classList.add('show');
-                // [수정] 자동 체크 로직 제거됨
+                headerDiv.classList.add('active'); // 화살표 회전
             }
         };
 
@@ -285,9 +250,8 @@
             }
         }
 
-        // [기능 3] 소분류 선택 감지 -> 중분류 자동 체크/해제
+        // [기능 4] 소분류 선택 감지 -> 중분류 자동 체크/해제
         document.getElementById('proposal-list-area').addEventListener('change', function (e) {
-            // 소분류 체크박스 변경 시
             if (e.target.name === 'interest') {
                 const grid = e.target.closest('.proposal-check-grid');
                 if (!grid) return;
@@ -298,17 +262,14 @@
 
                 if (parentCheckbox) {
                     if (checkedCount > 0) {
-                        // 하나라도 체크되면 부모 체크 & 강조
                         parentCheckbox.checked = true;
                         handleSubCategoryCheck(parentCheckbox);
                     } else {
-                        // 모두 해제되면 부모 체크 해제 & 강조 끄기
                         parentCheckbox.checked = false;
                         handleSubCategoryCheck(parentCheckbox);
                     }
                 }
             }
-            // 중분류 체크박스 직접 변경 시 (헤더 스타일 업데이트)
             else if (e.target.classList.contains('parent-check')) {
                 handleSubCategoryCheck(e.target);
             }

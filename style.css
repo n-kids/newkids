@@ -142,7 +142,7 @@ h2 {
 }
 
 /* =========================================
-   3. 헤더 (Header) - [수정됨: 아코디언 삭제 / Hover 적용]
+   3. 헤더 (Header)
    ========================================= */
 header {
     width: 100%;
@@ -170,6 +170,7 @@ header {
     width: auto;
 }
 
+/* [중요] PC에서는 flex로 가로 배치 */
 ul.nav-menu {
     display: flex;
     gap: 30px;
@@ -180,7 +181,6 @@ ul.nav-menu {
     padding: 20px 0;
 }
 
-    /* 메뉴 링크 스타일 */
     .nav-menu > li > a {
         font-size: 1.05rem;
         font-weight: 600;
@@ -217,19 +217,19 @@ ul.nav-menu {
     text-align: left;
 }
 
-/* [PC] 마우스를 올리면(Hover) 메뉴가 열림 */
+/* [PC] 마우스 호버 시 메뉴 열림 */
 @media (min-width: 769px) {
     .nav-menu > li:hover .dropdown {
         display: block;
         animation: fadeIn 0.3s ease;
     }
-    /* 메뉴가 열리면 화살표 180도 회전 */
+
     .nav-menu > li:hover .arrow {
         transform: rotate(180deg);
     }
 }
 
-/* [Mobile] .sub-open 클래스가 붙으면 열림 (클릭 시) */
+/* [Mobile] 클릭(.sub-open) 시 메뉴 열림 */
 .nav-menu > li.sub-open .dropdown {
     display: block;
 }
@@ -237,7 +237,6 @@ ul.nav-menu {
 .nav-menu > li.sub-open .arrow {
     transform: rotate(180deg);
 }
-
 
 .dropdown li a {
     display: block;
@@ -254,7 +253,6 @@ ul.nav-menu {
         font-weight: bold;
     }
 
-/* 화살표 아이콘 */
 .arrow {
     font-size: 0.8rem;
     transition: transform 0.3s ease;
@@ -271,14 +269,15 @@ ul.nav-menu {
     color: var(--primary-color);
 }
 
-/* === 모바일 반응형 스타일 (768px 이하) === */
+/* === 모바일 반응형 (768px 이하) === */
 @media (max-width: 768px) {
     .mobile-btn {
         display: block;
     }
 
-    .nav-menu {
-        display: none; /* 기본 숨김 */
+    /* [수정됨] .nav-menu -> ul.nav-menu로 변경하여 우선순위 높임 (PC 설정 덮어쓰기) */
+    ul.nav-menu {
+        display: none; /* 기본적으로 숨김 */
         flex-direction: column;
         position: absolute;
         top: 70px;
@@ -291,23 +290,24 @@ ul.nav-menu {
         height: auto;
     }
 
-        .nav-menu.active {
+        /* 햄버거 버튼 클릭 시 active 클래스가 붙으면 보임 */
+        ul.nav-menu.active {
             display: flex;
         }
 
-        .nav-menu > li {
-            width: 100%;
-            text-align: center;
-            padding: 0;
-            border-bottom: 1px solid #f9f9f9;
-        }
+    .nav-menu > li {
+        width: 100%;
+        text-align: center;
+        padding: 0;
+        border-bottom: 1px solid #f9f9f9;
+    }
 
-            .nav-menu > li > a {
-                display: flex;
-                justify-content: space-between;
-                padding: 15px 20px;
-                width: 100%;
-            }
+        .nav-menu > li > a {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 20px;
+            width: 100%;
+        }
 
     .dropdown {
         position: static;
@@ -351,7 +351,7 @@ ul.nav-menu {
 }
 
 /* =========================================
-   4. 배너 (Hero) & 카드 등 기존 스타일 유지
+   4. 배너 (Hero) & 카드
    ========================================= */
 .hero {
     height: 600px;
@@ -378,7 +378,6 @@ ul.nav-menu {
     text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
 
-/* (중간 생략된 기존 스타일은 모두 유지됩니다. 필요한 부분만 변경됨) */
 .sub-hero {
     height: 350px;
     background-size: cover;
@@ -1011,6 +1010,7 @@ ul.nav-menu {
         margin-bottom: 10px;
     }
 
+/* [중요] PC 화면에서 클릭 방지 설정 */
 @media (min-width: 769px) {
     .mobile-only-link {
         pointer-events: none;
@@ -1078,4 +1078,40 @@ textarea.form-input {
     resize: none;
     overflow-y: hidden;
     line-height: 1.6;
+}
+
+/* =========================================
+   12. 하단 상담문의 고정 버튼 스타일
+   ========================================= */
+.consult-banner {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: 9998; /* 스크롤 버튼보다 바로 아래 */
+    background-color: var(--primary-color);
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+    .consult-banner a {
+        display: block;
+        width: 100%;
+        padding: 15px 0;
+        text-align: center;
+        color: #fff;
+        font-weight: bold;
+        font-size: 1.1rem;
+        transition: 0.3s;
+    }
+
+        .consult-banner a:hover {
+            background-color: var(--accent-color);
+        }
+
+/* 모바일 화면에서 스크롤 버튼이 배너에 가리지 않게 위치 조정 */
+@media (max-width: 768px) {
+    .scroll-btns {
+        bottom: 80px; /* 배너 높이만큼 올림 */
+    }
 }

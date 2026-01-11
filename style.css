@@ -142,7 +142,7 @@ h2 {
 }
 
 /* =========================================
-   3. 헤더 (Header) - [수정됨: 아코디언 로직 적용]
+   3. 헤더 (Header) - [수정됨: 아코디언 삭제 / Hover 적용]
    ========================================= */
 header {
     width: 100%;
@@ -185,9 +185,10 @@ ul.nav-menu {
         font-size: 1.05rem;
         font-weight: 600;
         color: #333;
-        display: flex; /* 화살표 정렬용 */
+        display: flex;
         align-items: center;
         gap: 5px;
+        cursor: pointer;
     }
 
         .nav-menu > li > a:hover {
@@ -216,11 +217,27 @@ ul.nav-menu {
     text-align: left;
 }
 
-/* [중요] manager.js에서 .active 클래스를 줄 때만 열림 (아코디언) */
-.nav-menu > li.active .dropdown {
-    display: block;
-    animation: fadeIn 0.3s ease;
+/* [PC] 마우스를 올리면(Hover) 메뉴가 열림 */
+@media (min-width: 769px) {
+    .nav-menu > li:hover .dropdown {
+        display: block;
+        animation: fadeIn 0.3s ease;
+    }
+    /* 메뉴가 열리면 화살표 180도 회전 */
+    .nav-menu > li:hover .arrow {
+        transform: rotate(180deg);
+    }
 }
+
+/* [Mobile] .sub-open 클래스가 붙으면 열림 (클릭 시) */
+.nav-menu > li.sub-open .dropdown {
+    display: block;
+}
+
+.nav-menu > li.sub-open .arrow {
+    transform: rotate(180deg);
+}
+
 
 .dropdown li a {
     display: block;
@@ -237,16 +254,11 @@ ul.nav-menu {
         font-weight: bold;
     }
 
-/* 화살표 아이콘 회전 효과 */
+/* 화살표 아이콘 */
 .arrow {
     font-size: 0.8rem;
     transition: transform 0.3s ease;
     display: inline-block;
-}
-
-/* 메뉴가 열리면 화살표 180도 회전 */
-.nav-menu > li.active .arrow {
-    transform: rotate(180deg);
 }
 
 /* 모바일 햄버거 버튼 */
@@ -279,7 +291,6 @@ ul.nav-menu {
         height: auto;
     }
 
-        /* 햄버거 버튼 클릭 시 메뉴 전체 열림 */
         .nav-menu.active {
             display: flex;
         }
@@ -293,29 +304,28 @@ ul.nav-menu {
 
             .nav-menu > li > a {
                 display: flex;
-                justify-content: space-between; /* 화살표 오른쪽 끝으로 */
+                justify-content: space-between;
                 padding: 15px 20px;
                 width: 100%;
             }
 
-    /* 모바일 드롭다운 스타일 (밀어내기 방식) */
     .dropdown {
-        position: static; /* 둥둥 뜨지 않고 제자리에 */
+        position: static;
         transform: none;
         box-shadow: none;
         border: none;
-        background: #f8f9fa; /* 배경색 다르게 */
+        background: #f8f9fa;
         width: 100%;
         border-top: 1px solid #eee;
     }
 
         .dropdown li a {
-            padding-left: 30px; /* 들여쓰기 */
+            padding-left: 30px;
             text-align: left;
         }
 }
 
-/* 페이드인 애니메이션 */
+/* 애니메이션 */
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -328,7 +338,6 @@ ul.nav-menu {
     }
 }
 
-/* 모바일용 애니메이션 (위치 이동 없음) */
 @media (max-width: 768px) {
     @keyframes fadeIn {
         from {
@@ -342,7 +351,7 @@ ul.nav-menu {
 }
 
 /* =========================================
-   4. 배너 (Hero)
+   4. 배너 (Hero) & 카드 등 기존 스타일 유지
    ========================================= */
 .hero {
     height: 600px;
@@ -369,6 +378,7 @@ ul.nav-menu {
     text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
 
+/* (중간 생략된 기존 스타일은 모두 유지됩니다. 필요한 부분만 변경됨) */
 .sub-hero {
     height: 350px;
     background-size: cover;
@@ -417,9 +427,6 @@ ul.nav-menu {
     background-image: linear-gradient(rgba(26,60,110,0.8), rgba(26,60,110,0.8)), url('https://images.unsplash.com/photo-1586769852044-692d6e3703f0?auto=format&fit=crop&w=1600&q=80');
 }
 
-/* =========================================
-   5. 카드 시스템 (Card)
-   ========================================= */
 .main-grid, .gallery-grid, .product-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -526,9 +533,6 @@ ul.nav-menu {
     overflow: hidden;
 }
 
-/* =========================================
-   6. 폼 및 상세 페이지 (View)
-   ========================================= */
 .proposal-box, .panel-box, .view-box {
     max-width: 900px;
     margin: 0 auto 30px;
@@ -653,9 +657,6 @@ ul.nav-menu {
     text-align: left;
 }
 
-/* =========================================
-   7. 관리자(Admin) & 발주/제안서 스타일
-   ========================================= */
 #login-section {
     max-width: 400px;
     margin: 100px auto;
@@ -769,11 +770,9 @@ ul.nav-menu {
     margin-top: 5px;
 }
 
-/* =========================================
-   8. [신규] 관리자 에디터 및 드래그 앤 드롭 스타일
-   ========================================= */
 #editor-container {
-    height: 1200px;
+    min-height: 400px;
+    height: auto;
     background: #fff;
 }
 
@@ -781,6 +780,10 @@ ul.nav-menu {
     background: #f8f9fa;
     border-top-left-radius: 6px;
     border-top-right-radius: 6px;
+    position: sticky;
+    top: 70px;
+    z-index: 10;
+    border-bottom: 1px solid #ccc;
 }
 
 .ql-container {
@@ -788,20 +791,25 @@ ul.nav-menu {
     border-bottom-right-radius: 6px;
     font-size: 1rem;
     font-family: 'Pretendard', sans-serif;
+    height: auto !important;
 }
 
-/* 에디터 내 이미지에 마우스 올리면 커서 변경 (리사이즈 가능 암시) */
-.ql-editor img {
-    cursor: pointer;
+.ql-editor {
+    min-height: 400px;
+    height: auto !important;
+    overflow-y: hidden;
 }
 
-/* 드래그 오버 시 효과 */
+    .ql-editor img {
+        cursor: pointer;
+        max-width: 100%;
+    }
+
 .drag-over {
     border: 2px dashed var(--primary-color) !important;
     background-color: rgba(26, 60, 110, 0.05);
 }
 
-/* 썸네일 등록창 디자인 */
 .thumbnail-group {
     background: #f1f8ff;
     padding: 15px;
@@ -809,9 +817,6 @@ ul.nav-menu {
     margin-bottom: 20px;
 }
 
-/* =========================================
-   9. 발주/제안서 & 기타
-   ========================================= */
 .order-list-box, .proposal-list-box {
     margin-top: 20px;
     display: grid;
@@ -945,18 +950,6 @@ ul.nav-menu {
     }
 }
 
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-5px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
 .order-item-row {
     padding: 15px 20px;
     border-bottom: 1px solid #f5f5f5;
@@ -1078,14 +1071,11 @@ footer {
         font-size: 1rem;
     }
 }
-/* =========================================
-   11. [추가] 텍스트 박스 자동 높이 조절 스타일
-   ========================================= */
 
-/* textarea 태그에만 적용되는 설정 */
+/* 텍스트 박스 자동 높이 조절 스타일 */
 textarea.form-input {
-    min-height: 120px; /* 처음에 보여줄 기본 높이 */
-    resize: none; /* 사용자가 마우스로 크기 조절 못하게 막음 (자동조절과 충돌 방지) */
-    overflow-y: hidden; /* 내용이 넘쳐도 스크롤바 안 생기게 숨김 */
+    min-height: 120px;
+    resize: none;
+    overflow-y: hidden;
     line-height: 1.6;
 }

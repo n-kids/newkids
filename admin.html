@@ -74,7 +74,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label>내용 (사진 여러 장을 한 번에 선택하거나, 드래그해서 넣으세요)</label>
+                    <label>내용 (사진 클릭 후 크기 조절/정렬 가능)</label>
                     <div id="editor-container"></div>
                 </div>
 
@@ -149,13 +149,14 @@
 
         document.addEventListener("DOMContentLoaded", async function () {
 
+            // [중요] 이미지 크기 조절 및 정렬 모듈 등록
             Quill.register('modules/blotFormatter', QuillBlotFormatter.default);
 
             quill = new Quill('#editor-container', {
                 theme: 'snow',
                 placeholder: '여기에 내용을 작성하세요...',
                 modules: {
-                    blotFormatter: {},
+                    blotFormatter: {}, // 이미지 수정 모듈 활성화
                     toolbar: {
                         container: [
                             [{ 'header': [1, 2, 3, false] }],
@@ -306,7 +307,7 @@
                 card.innerHTML = `
                                 <div class="post-thumb">
                                     <img src="${thumb}"
-                                         style="object-fit: cover; width: 100%; height: 100%;"
+                                         style="object-fit: contain; width: 100%; height: 100%;"
                                          onerror="this.onerror=null; this.src='${NO_IMAGE_URL}';">
                                 </div>
                                 <div class="post-info">

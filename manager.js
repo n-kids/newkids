@@ -55,11 +55,24 @@ window.toggleMenu = function () {
     nav.classList.toggle('active');
 };
 
-// [모바일 전용] 서브메뉴 토글 (아코디언 없이 개별 작동)
+// [모바일 전용] 서브메뉴 토글 (아코디언 효과 적용: 하나 열면 다른 건 닫힘)
 window.toggleSubMenu = function (element) {
     if (window.innerWidth <= 768) {
         const parentLi = element.parentElement;
-        parentLi.classList.toggle('sub-open');
+
+        // 1. 현재 클릭한 메뉴가 이미 열려있는지 상태 확인
+        const wasOpen = parentLi.classList.contains('sub-open');
+
+        // 2. 다른 모든 열려있는 서브메뉴 닫기
+        const allSubMenus = document.querySelectorAll('.nav-menu li.has-sub');
+        allSubMenus.forEach(li => {
+            li.classList.remove('sub-open');
+        });
+
+        // 3. 클릭한 메뉴가 닫혀있던 상태였다면 열기 (이미 열려있었다면 닫힌 채로 유지)
+        if (!wasOpen) {
+            parentLi.classList.add('sub-open');
+        }
     }
 };
 
@@ -125,59 +138,14 @@ function enableAutoResizeTextarea() {
     });
 }
 
-// [신규 기능] 하단 '상담문의' 고정 버튼 (관리자 페이지 제외)
-function addConsultationBanner() {
-    if (document.getElementById('login-section') || document.querySelector('.consult-banner')) return;
-
-    const bannerHtml = `
-        <div class="consult-banner">
-            <a href="proposal.html" class="mobile-only-link">
-                💬 상담문의 / 견적요청
-            </a>
-        </div>
-    `;
-    document.body.insertAdjacentHTML('beforeend', bannerHtml);
-}
-
 // DOM 로드 후 실행
 document.addEventListener("DOMContentLoaded", function () {
     loadHeader();
     loadFooter();
     addScrollButtons();
     enableAutoResizeTextarea();
-    addConsultationBanner();
 
-    // [신규] 텍스트 박스(입력창)를 제외한 모든 요소에서 더블 클릭 방지
-    document.addEventListener('dblclick', function (e) {
-        const target = e.target;
-        const tagName = target.tagName;
-
-        // 더블 클릭을 허용할 요소인지 확인
-        let isAllowed = false;
-
-        // 1. Textarea 허용
-        if (tagName === 'TEXTAREA') {
-            isAllowed = true;
-        }
-        // 2. Input 중 텍스트 입력 관련 타입 허용
-        else if (tagName === 'INPUT') {
-            const allowedTypes = ['text', 'password', 'email', 'number', 'search', 'tel', 'url'];
-            if (allowedTypes.includes(target.type)) {
-                isAllowed = true;
-            }
-        }
-        // 3. 에디터 등 편집 가능한 영역 허용
-        else if (target.isContentEditable) {
-            isAllowed = true;
-        }
-
-        // 허용되지 않은 요소라면 더블 클릭 이벤트 차단
-        if (!isAllowed) {
-            e.preventDefault();
-        }
-    }, { passive: false });
-
-    // 모바일 메뉴 외부 클릭 시 닫기
+    // 1. 모바일 메뉴 외부(배경) 클릭 시 닫기
     document.addEventListener('click', function (e) {
         const menu = document.getElementById('navMenu');
         const btn = document.querySelector('.mobile-btn');
@@ -188,11 +156,21 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // 모바일 메뉴 링크 클릭 시 메뉴 닫기
+    // 2. 모바일 메뉴 링크 클릭 시 메뉴 닫기 (서브메뉴 토글 제외)
     document.addEventListener('click', function (e) {
         const menu = document.getElementById('navMenu');
         if (menu && menu.classList.contains('active')) {
+
+            // 클릭된 요소가 메뉴 내부의 <a> 태그인지 확인
             if (e.target.tagName === 'A' && menu.contains(e.target)) {
+
+                // href가 'javascript:void(0)'인 경우(서브메뉴 토글 버튼)는 닫지 않음
+                const href = e.target.getAttribute('href');
+                if (href && href.includes('javascript:void(0)')) {
+                    return;
+                }
+
+                // 그 외의 진짜 페이지 이동 링크들은 메뉴를 닫음
                 menu.classList.remove('active');
             }
         }

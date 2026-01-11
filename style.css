@@ -147,7 +147,6 @@ h2 {
     height: 100%;
     background: rgba(255,255,255,0.8);
     z-index: 9999;
-    /* Flexbox 중앙 정렬 */
     justify-content: center;
     align-items: center;
     font-size: 1.5rem;
@@ -513,14 +512,11 @@ header {
     border-bottom: 1px solid #eee;
 }
 
+    /* [중요 수정] object-fit: contain으로 설정하여 이미지가 잘리지 않게 함 */
     .card-img, .product-img, .post-thumb img {
         width: 100%;
         height: 100%;
         object-fit: contain;
-    }
-
-    .post-thumb img {
-        object-fit: cover;
     }
 
 .card-body, .product-info, .post-info {
@@ -591,7 +587,7 @@ header {
         margin: 0 auto;
         border-radius: 10px;
     }
-    /* [수정] video 태그도 반응형으로 크기 조절 */
+
     .view-media video {
         width: 100%;
         max-width: 100%;
@@ -614,12 +610,12 @@ header {
     }
 
         .view-content.ql-editor img {
-            margin: 20px auto;
-            display: block;
+            max-width: 100%;
+            height: auto;
         }
 
         .view-content.ql-editor p {
-            text-align: center;
+            text-align: inherit;
         }
 
 .btn-list {
@@ -1131,19 +1127,6 @@ footer {
         opacity: 1;
     }
 
-@media (max-width: 768px) {
-    .scroll-btns {
-        bottom: 20px;
-        right: 20px;
-    }
-
-    .btn-scroll {
-        width: 40px;
-        height: 40px;
-        font-size: 1rem;
-    }
-}
-
 /* 텍스트 박스 자동 높이 조절 스타일 */
 textarea.form-input {
     min-height: 120px;
@@ -1232,4 +1215,58 @@ textarea.form-input {
     background-color: #fff;
     border: 1px solid #ccc;
     box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+/* =========================================
+   16. [신규] 모바일(768px 이하) 카드 목록 스타일 수정 (2단 배열)
+   ========================================= */
+@media (max-width: 768px) {
+    .scroll-btns {
+        bottom: 80px;
+        right: 20px;
+    }
+
+    .btn-scroll {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+
+    /* [핵심 수정] 모바일에서 카드 그리드: 한 줄에 2개 이상 보이도록 설정 */
+    .main-grid, .gallery-grid, .product-grid {
+        grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+        gap: 12px;
+    }
+
+    /* 카드 내부 크기 조정 (작아진 카드에 맞춤) */
+    .card, .product-card, .post-card {
+        padding: 15px 10px;
+    }
+
+    .card-img-wrap, .product-img-wrap, .post-thumb {
+        height: 130px; /* 이미지 높이 축소 */
+    }
+
+    .card-title, .product-title, .post-title {
+        font-size: 1rem;
+        margin-bottom: 5px;
+    }
+
+    .card-text, .product-desc {
+        font-size: 0.8rem;
+        -webkit-line-clamp: 2; /* 2줄까지만 표시 */
+    }
+
+    /* 아이콘 카드 스타일 축소 */
+    .card-icon {
+        width: 50px;
+        height: 50px;
+        line-height: 50px;
+        font-size: 1.8rem;
+        margin-bottom: 10px;
+    }
+
+    .card h3 {
+        font-size: 1.1rem;
+    }
 }

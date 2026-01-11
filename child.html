@@ -3,89 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>뉴키즈 - 전체 교재 라인업</title>
+    <title>뉴키즈 - 교육 프로그램</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <header></header>
+
+    <div id="loading" class="loading-overlay" style="display: flex;">
+        데이터를 불러오는 중입니다...
+    </div>
+
     <section class="sub-hero bg-child">
         <div class="container">
-            <h1>뉴키즈 교재 라인업</h1>
-            <p>영아부터 유아까지, 아이들의 꿈을 키우는 단계별 통합 프로그램</p>
+            <h1 id="page-title">교육 프로그램</h1>
+            <p id="page-desc">아이들의 꿈을 키워주는 다양한 교재를 소개합니다.</p>
         </div>
     </section>
 
-    <section id="korean"><div class="container"><h2>한글 & 독서</h2><p class="section-desc">언어 능력과 인성을 기르는 기초 교육 프로그램</p><div id="list-korean" class="product-grid"><p style="text-align:center;width:100%;">로딩 중...</p></div></div></section>
-    <section id="art" style="background-color:var(--bg-light);"><div class="container"><h2>미술 & 자연 환경</h2><p class="section-desc">오감을 자극하고 자연을 배우는 예술 활동</p><div id="list-art" class="product-grid"><p style="text-align:center;width:100%;">로딩 중...</p></div></div></section>
-    <section id="science"><div class="container"><h2>수학 & 과학</h2><p class="section-desc">호기심을 해결하고 논리적 사고를 키우는 탐구 활동</p><div id="list-science" class="product-grid"><p style="text-align:center;width:100%;">로딩 중...</p></div></div></section>
-    <section id="coding" style="background-color:var(--bg-light);"><div class="container"><h2>코딩 & 직업교육</h2><p class="section-desc">논리적 사고력과 미래 직업을 미리 체험하는 융합 교육</p><div id="list-coding" class="product-grid"><p style="text-align:center;width:100%;">로딩 중...</p></div></div></section>
-    <section id="english"><div class="container"><h2>영어 & 지도</h2><p class="section-desc">말하기, 읽기, 쓰기가 즐거워지는 통합 영어 프로그램</p><div id="list-english" class="product-grid"><p style="text-align:center;width:100%;">로딩 중...</p></div></div></section>
-    <section id="integrated" style="background-color:var(--bg-light);"><div class="container"><h2>통합보육 & 누리과정</h2><p class="section-desc">영유아의 균형 잡힌 성장을 돕는 표준보육과정 통합 프로그램</p><div id="list-integrated" class="product-grid"><p style="text-align:center;width:100%;">로딩 중...</p></div></div></section>
-
-    <section style="text-align: center; background-color: var(--primary-color); color: #fff;">
+    <section>
         <div class="container">
-            <h2 style="color: #fff;">우리 원에 딱 맞는 교재를 찾고 계신가요?</h2>
-            <p style="margin-bottom: 20px;">원장님께 최적의 구성을 제안해 드립니다.</p>
-            <a href="proposal.html" class="btn">📋 견적 및 샘플 신청</a>
+            <div id="post-list" class="main-grid">
+            </div>
         </div>
     </section>
 
     <footer></footer>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js"></script>
     <script src="manager.js"></script>
+
     <script>
+        const NO_IMAGE_URL = "https://placehold.co/400x300/e0e0e0/666666?text=No+Image";
+        const loadingEl = document.getElementById('loading');
+        const postListEl = document.getElementById('post-list');
+        const pageTitleEl = document.getElementById('page-title');
+
+        // 카테고리별 한글 제목 매핑
+        const categoryTitles = {
+            'korean': '📚 한글 & 독서',
+            'art': '🎨 미술 & 자연 환경',
+            'science': '🔬 수학 & 과학',
+            'coding': '💻 코딩 & 직업교육',
+            'english': '🔤 영어 & 지도',
+            'integrated': '👶 통합보육 & 누리과정'
+        };
+
         document.addEventListener("DOMContentLoaded", function () {
-            const checkSb = setInterval(() => { if (window.sb) { clearInterval(checkSb); loadAllSections(window.sb); } }, 100);
+            // 초기 로드 시 실행
+            loadCategoryPosts();
+
+            // URL의 해시(#)가 변경될 때마다 실행 (메뉴 클릭 시)
+            window.addEventListener('hashchange', loadCategoryPosts);
         });
 
-        async function loadAllSections(sb) {
-            const { data } = await sb.from('total_posts').select('*').order('order_num', { ascending: true }).order('created_at', { ascending: false });
-            const categories = ['korean', 'art', 'science', 'coding', 'english', 'integrated'];
-            categories.forEach(cat => { document.getElementById(`list-${cat}`).innerHTML = ""; });
+        async function loadCategoryPosts() {
+            // 1. 현재 URL의 해시값 가져오기 (예: #korean -> korean)
+            // 해시가 없으면 기본값으로 'korean' 설정
+            const category = window.location.hash.substring(1) || 'korean';
 
-            if (!data || data.length === 0) return;
+            // 2. 페이지 제목 변경
+            if (categoryTitles[category]) {
+                pageTitleEl.innerText = categoryTitles[category];
+            }
 
-            data.forEach(item => {
-                const targetDiv = document.getElementById(`list-${item.category}`);
-                if (!targetDiv) return;
+            loadingEl.style.display = 'flex';
+            postListEl.innerHTML = ''; // 기존 목록 초기화
 
-                let displayImg = item.thumbnail_url;
-                if (!displayImg) {
-                    try { const parsed = JSON.parse(item.image_url); if (Array.isArray(parsed) && parsed.length > 0) displayImg = parsed[0]; else displayImg = item.image_url; } catch (e) { displayImg = item.image_url; }
+            try {
+                // 3. Supabase에서 해당 카테고리 데이터 조회
+                let query = window.sb
+                    .from('total_posts')
+                    .select('id, title, thumbnail_url, content, created_at')
+                    .eq('category', category)
+                    .order('order_num', { ascending: true })
+                    .order('created_at', { ascending: false });
+
+                const { data, error } = await query;
+
+                if (error) throw error;
+
+                if (!data || data.length === 0) {
+                    postListEl.innerHTML = `
+                            <div style="grid-column: 1 / -1; text-align: center; padding: 50px; color: #666;">
+                                아직 등록된 게시글이 없습니다.
+                            </div>`;
+                    return;
                 }
 
-                const yId = window.getYoutubeId(displayImg);
-                let isVideo = !!yId;
-                if (yId) displayImg = `https://img.youtube.com/vi/${yId}/hqdefault.jpg`;
-                else if (!displayImg) displayImg = 'https://via.placeholder.com/400x300?text=No+Image';
+                // 4. 데이터 바인딩 (카드 생성)
+                data.forEach(item => {
+                    let thumb = item.thumbnail_url;
 
-                const linkIcon = item.link_url ? `<div class="link-icon">🔗</div>` : '';
+                    // 썸네일이 없으면 본문 첫 번째 이미지 추출 시도
+                    if (!thumb && item.content) {
+                        try {
+                            const parser = new DOMParser();
+                            const doc = parser.parseFromString(item.content, 'text/html');
+                            const firstImg = doc.querySelector('img');
+                            if (firstImg) thumb = firstImg.src;
+                        } catch (e) { }
+                    }
 
-                const div = document.createElement('div');
-                div.className = 'product-card';
-                div.onclick = () => {
-                    if (item.link_url && item.link_url.trim() !== "") {
-                        let url = item.link_url; if (!url.startsWith('http')) url = 'https://' + url; window.open(url, '_blank');
-                    } else { location.href = `view.html?id=${item.id}`; }
-                };
+                    // 그래도 없으면 기본 이미지
+                    if (!thumb) thumb = NO_IMAGE_URL;
 
-                div.innerHTML = `
-                        ${linkIcon}
-                        <div class="product-img-wrap">
-                            <img src="${displayImg}" class="product-img" onerror="this.src='https://via.placeholder.com/400x300?text=Error'">
-                            <div style="display:${isVideo ? 'block' : 'none'}; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:white; font-size:3rem; text-shadow:0 0 10px rgba(0,0,0,0.5);">▶</div>
-                        </div>
-                        <div class="product-info">
-                            <h3 class="product-title">${item.title}</h3>
-                            <div class="product-desc">${item.content}</div>
-                        </div>`;
-                targetDiv.appendChild(div);
-            });
-            categories.forEach(cat => {
-                const div = document.getElementById(`list-${cat}`);
-                if (div.innerHTML === "") div.innerHTML = `<div style="text-align:center; padding:30px; color:#999; grid-column:1/-1;">등록된 내용이 없습니다.</div>`;
-            });
+                    // 카드 HTML 생성 (클릭 시 view.html로 이동)
+                    const cardHtml = `
+                            <a href="view.html?id=${item.id}" class="card post-card">
+                                <div class="card-img-wrap post-thumb">
+                                    <img src="${thumb}" alt="${item.title}"
+                                         onerror="this.onerror=null; this.src='${NO_IMAGE_URL}';">
+                                </div>
+                                <div class="card-body post-info">
+                                    <h3 class="card-title post-title">${item.title}</h3>
+                                    <p class="card-text post-desc">
+                                        ${stripHtml(item.content).substring(0, 50)}...
+                                    </p>
+                                    <span class="view-date" style="font-size:0.85rem; color:#999;">
+                                        ${window.formatDate(item.created_at)}
+                                    </span>
+                                </div>
+                            </a>
+                        `;
+                    postListEl.insertAdjacentHTML('beforeend', cardHtml);
+                });
+
+            } catch (err) {
+                console.error(err);
+                alert("데이터를 불러오는 데 실패했습니다.");
+            } finally {
+                loadingEl.style.display = 'none';
+            }
+        }
+
+        // HTML 태그 제거용 유틸리티 함수 (본문 미리보기용)
+        function stripHtml(html) {
+            let tmp = document.createElement("DIV");
+            tmp.innerHTML = html;
+            return tmp.textContent || tmp.innerText || "";
         }
     </script>
 </body>

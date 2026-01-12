@@ -13,6 +13,7 @@
 })();
 
 // [공통 기능] 헤더 로드
+// [manager.js] loadHeader 함수 전체 교체
 function loadHeader() {
     const headerEl = document.querySelector('header');
     if (headerEl) {
@@ -28,12 +29,15 @@ function loadHeader() {
                     <li class="has-sub">
                         <a href="javascript:void(0)" onclick="toggleSubMenu(this)">📚 교재소개 <span class="arrow">▼</span></a>
                         <ul class="dropdown">
-                            <li><a href="child.html#korean">📚 한글 & 독서</a></li>
-                            <li><a href="child.html#art">🎨 미술 & 자연 환경</a></li>
-                            <li><a href="child.html#science">🔬 수학 & 과학</a></li>
-                            <li><a href="child.html#coding">💻 코딩 & 직업교육</a></li>
-                            <li><a href="child.html#english">🔤 영어 & 지도</a></li>
-                            <li><a href="child.html#integrated">👶 통합보육 & 누리과정</a></li>
+                            <li><a href="child.html#korean">🇰🇷 한글</a></li> <li><a href="child.html#reading">📖 독서</a></li>
+                            <li><a href="child.html#english">🔤 영어</a></li>
+                            <li><a href="child.html#math">🔢 수학</a></li>
+                            <li><a href="child.html#science">🔬 과학</a></li>
+                            <li><a href="child.html#art">🎨 미술</a></li>
+                            <li><a href="child.html#coding">💻 코딩</a></li>
+                            <li><a href="child.html#environment">🌱 환경</a></li>
+                            <li><a href="child.html#nuri">👶 누리과정</a></li>
+                            <li><a href="child.html#infant">🧸 영아</a></li> <li><a href="child.html#special">⭐ 기타(특색)</a></li>
                         </ul>
                     </li>
 
@@ -53,7 +57,6 @@ function loadHeader() {
         `;
     }
 }
-
 // [공통 기능] 모바일 메뉴 토글 (햄버거 버튼)
 window.toggleMenu = function () {
     const nav = document.getElementById('navMenu');

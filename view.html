@@ -86,11 +86,35 @@
             finally { document.getElementById('loading').style.display = 'none'; }
         }
 
-        function updateHeroBackground(category) {
-            const hero = document.getElementById('view-hero');
-            const catMap = { 'season': 'bg-season', 'culture': 'bg-culture', 'performance': 'bg-performance', 'korean': 'bg-child', 'art': 'bg-child', 'science': 'bg-child', 'coding': 'bg-child', 'english': 'bg-child', 'integrated': 'bg-child' };
-            hero.className = 'sub-hero ' + (catMap[category] || 'bg-gray');
-        }
+/* [view.html] 스크립트 하단 함수 교체 */
+
+function updateHeroBackground(category) {
+    const hero = document.getElementById('view-hero');
+    
+    // 카테고리별 배경 클래스 매핑
+    const catMap = {
+        // [행사 프로그램] - 각각의 전용 배경
+        'season': 'bg-season',
+        'culture': 'bg-culture',
+        'performance': 'bg-performance',
+
+        // [교육 프로그램] - 공통 교육 배경(bg-child) 사용
+        'korean': 'bg-child',       // 🇰🇷 한글
+        'reading': 'bg-child',      // 📖 독서
+        'english': 'bg-child',      // 🔤 영어
+        'math': 'bg-child',         // 🔢 수학
+        'science': 'bg-child',      // 🔬 과학
+        'art': 'bg-child',          // 🎨 미술
+        'coding': 'bg-child',       // 💻 코딩
+        'environment': 'bg-child',  // 🌱 환경
+        'nuri': 'bg-child',         // 👶 누리과정
+        'infant': 'bg-child',       // 🧸 영아
+        'special': 'bg-child'       // ⭐ 기타(특색)
+    };
+
+    // 해당 카테고리가 없으면 회색 배경(bg-gray) 처리
+    hero.className = 'sub-hero ' + (catMap[category] || 'bg-gray');
+}
     </script>
 </body>
 </html>

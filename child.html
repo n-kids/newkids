@@ -14,7 +14,7 @@
     </div>
 
     <section class="sub-hero bg-child">
-        <div class="container">
+        <div class="container-wide">
             <h1 id="page-title">교육 프로그램</h1>
             <p id="page-desc">아이들의 꿈을 키워주는 다양한 교재를 소개합니다.</p>
         </div>
@@ -40,14 +40,20 @@
         const pageTitleEl = document.getElementById('page-title');
 
         // 카테고리별 한글 제목 매핑
-        const categoryTitles = {
-            'korean': '📚 한글 & 독서',
-            'art': '🎨 미술 & 자연 환경',
-            'science': '🔬 수학 & 과학',
-            'coding': '💻 코딩 & 직업교육',
-            'english': '🔤 영어 & 지도',
-            'integrated': '👶 통합보육 & 누리과정'
-        };
+// [child.html] categoryTitles 객체 수정
+const categoryTitles = {
+    'korean': '🇰🇷 한글 프로그램', // 아이콘 변경
+    'reading': '📖 독서 프로그램',
+    'english': '🔤 영어 프로그램',
+    'math': '🔢 수학 프로그램',
+    'science': '🔬 과학 프로그램',
+    'art': '🎨 미술 프로그램',
+    'coding': '💻 코딩 프로그램',
+    'environment': '🌱 환경 프로그램',
+    'nuri': '👶 누리과정',
+    'infant': '🧸 영아 프로그램', // 추가됨
+    'special': '⭐ 기타(특색) 프로그램'
+};
 
         document.addEventListener("DOMContentLoaded", function () {
             // 초기 로드 시 실행

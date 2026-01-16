@@ -28,7 +28,7 @@ function loadHeader() {
                 <ul class="nav-menu" id="navMenu">
                     <li class="has-sub">
                         <a href="javascript:void(0)" onclick="toggleSubMenu(this)">📚 교재소개 <span class="arrow">▼</span></a>
-                        <ul class="dropdown">
+                        <ul class="dropdown double-col">
                             <li><a href="child.html#korean">🇰🇷 한글</a></li> <li><a href="child.html#reading">📖 독서</a></li>
                             <li><a href="child.html#english">🔤 영어</a></li>
                             <li><a href="child.html#math">🔢 수학</a></li>
@@ -49,9 +49,11 @@ function loadHeader() {
                             <li><a href="performance.html">👨‍👩‍👧‍👦 부모 참여 행사</a></li>
                         </ul>
                     </li>
+                    
 
                     <li><a href="order.html" style="font-weight:bold;">교재 발주</a></li>
                     <li><a href="proposal.html" class="cta-menu">견적요청</a></li>
+                    <li><a href="https://www.kookminbooks.co.kr/" target ="_blank">국민서관</a></li>
                 </ul>
             </div>
         `;

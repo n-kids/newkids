@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>뉴키즈 - 교구 소개</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* 교구 페이지 전용 스타일 */
+        .partner-link {
+            display: inline-block;
+            transition: transform 0.3s ease;
+        }
+        .partner-link:hover {
+            transform: translateY(-5px); /* 마우스 올리면 살짝 떠오름 */
+        }
+        .partner-logo {
+            max-width: 400px; /* 로고 최대 크기 제한 */
+            width: 100%;      /* 모바일 대응 */
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1); /* 그림자 효과 */
+            border-radius: 10px;
+            border: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+    <header></header>
+
+    <section class="sub-hero bg-gray">
+        <div class="container">
+            <h1 style="color:#333; text-shadow:none;">교구 소개</h1>
+            <p style="color:#666; text-shadow:none;">뉴키즈가 추천하는 우수 교구 협력사를 소개합니다.</p>
+        </div>
+    </section>
+
+    <section>
+        <div class="container" style="min-height: 400px; text-align: center; padding-top: 50px;">
+            
+            <a href="https://www.kookminbooks.co.kr/" target="_blank" class="partner-link" title="국민서관 홈페이지 바로가기">
+                <img src="logo_kmb.jpg" alt="국민서관" class="partner-logo">
+            </a>
+
+            <p style="margin-top: 30px; font-size: 1.1rem; color: #555;">
+                위 로고를 클릭하시면 <strong>국민서관</strong> 홈페이지로 이동합니다.
+            </p>
+
+        </div>
+    </section>
+
+    <footer></footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script src="manager.js"></script>
+</body>
+</html>

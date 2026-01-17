@@ -54,6 +54,10 @@
                 ⚙️ <span class="nav-text">환경 설정</span>
             </div>
 
+            <div class="nav-item" onclick="location.href='index.html'">
+                🏠 <span class="nav-text">홈페이지 이동</span>
+            </div>
+
             <div class="nav-item logout-btn" onclick="adminLogout()">
                 🚪 <span class="nav-text">로그아웃</span>
             </div>
@@ -326,7 +330,7 @@
             }
         });
 
-        // [핵심 수정] 게시글 작성 폼의 카테고리 목록 생성 (교육/행사 확실한 분리)
+        // [게시글 작성 폼의 카테고리 목록 생성]
         async function populateCategorySelects() {
             const { data } = await window.sb.from('program_categories').select('*').order('order_num');
             if (!data) return;
@@ -346,7 +350,6 @@
                 }
             });
 
-            // 확실하게 optgroup을 닫아서 결합
             const finalHtml = `
                     <optgroup label="행사 프로그램">
                         ${eventHtml}

@@ -2,7 +2,7 @@
 
 window.GLOBAL_CATEGORIES = [];
 
-// [안전장치] DB 연결 전 즉시 보여줄 기본 메뉴 (로딩 지연 방지)
+// [안전장치] DB 연결 전 즉시 보여줄 기본 메뉴
 const DEFAULT_CATEGORIES = [
     { code: 'korean', name: '🇰🇷 한글', type: 'EDU' },
     { code: 'reading', name: '📖 독서', type: 'EDU' },

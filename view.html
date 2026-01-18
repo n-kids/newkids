@@ -25,8 +25,12 @@
                     <h2 class="view-title" id="post-title">로딩 중...</h2>
                     <p class="view-date" id="post-date">0000-00-00</p>
                 </div>
+
                 <div class="view-media" id="view-media" style="display:none;"></div>
                 <div class="view-content ql-editor" id="post-content"></div>
+
+                <div id="link-container" style="text-align: center; margin: 40px 0 20px;"></div>
+
                 <a href="javascript:history.back()" class="btn-list">목록으로 돌아가기</a>
             </div>
         </div>
@@ -52,6 +56,7 @@
         async function loadPostDetail(id) {
             document.getElementById('loading').style.display = 'flex';
             try {
+                // link_url 컬럼도 같이 가져오기
                 const { data, error } = await window.sb.from('total_posts').select('*').eq('id', id).single();
                 if (error || !data) throw new Error("데이터 없음");
 
@@ -59,17 +64,16 @@
                 document.getElementById('post-date').innerText = window.formatDate(data.created_at);
                 document.getElementById('post-content').innerHTML = data.content;
 
+                // [미디어 처리]
                 const mediaBox = document.getElementById('view-media');
                 mediaBox.innerHTML = '';
 
-                // 1. 유튜브/비디오 URL 우선 처리
                 if (data.video_url && data.video_url !== 'null' && data.video_url.trim() !== '') {
                     const yid = window.getYoutubeId(data.video_url);
                     mediaBox.innerHTML = yid ? `<iframe src="https://www.youtube.com/embed/${yid}" frameborder="0" allowfullscreen></iframe>`
                         : `<video controls style="width:100%; border-radius:10px;"><source src="${data.video_url}"></video>`;
                     mediaBox.style.display = 'block';
                 }
-                // 2. 업로드 파일 처리 (이미지가 실제로 있을 때만)
                 else if (data.image_url && data.image_url !== 'null' && data.image_url.trim() !== '') {
                     if (isVideo(data.image_url)) {
                         mediaBox.innerHTML = `<video controls style="width:100%; border-radius:10px;"><source src="${data.image_url}"></video>`;
@@ -81,40 +85,57 @@
                     mediaBox.style.display = 'none';
                 }
 
+                // [NEW] 링크 버튼 처리 로직
+                const linkBox = document.getElementById('link-container');
+                linkBox.innerHTML = ""; // 초기화
+
+                if (data.link_url && data.link_url.trim() !== "" && data.link_url !== "null") {
+                    let finalLink = data.link_url;
+                    if (!finalLink.startsWith('http')) {
+                        finalLink = 'https://' + finalLink;
+                    }
+                    linkBox.innerHTML = `
+                            <a href="${finalLink}" target="_blank" class="link-btn-style">
+                                🔗 관련 사이트 바로가기
+                            </a>
+                        `;
+                }
+
+                // 배경 업데이트
                 updateHeroBackground(data.category);
-            } catch (err) { alert("불러오기 실패"); history.back(); }
+
+            } catch (err) {
+                console.error(err);
+                alert("불러오기 실패");
+                history.back();
+            }
             finally { document.getElementById('loading').style.display = 'none'; }
         }
 
-/* [view.html] 스크립트 하단 함수 교체 */
+        // [배경 이미지 처리 함수]
+        function updateHeroBackground(category) {
+            const hero = document.getElementById('view-hero');
 
-function updateHeroBackground(category) {
-    const hero = document.getElementById('view-hero');
-    
-    // 카테고리별 배경 클래스 매핑
-    const catMap = {
-        // [행사 프로그램] - 각각의 전용 배경
-        'season': 'bg-season',
-        'culture': 'bg-culture',
-        'performance': 'bg-performance',
+            const catMap = {
+                'season': 'bg-season',
+                'culture': 'bg-culture',
+                'performance': 'bg-performance',
+                'korean': 'bg-child',
+                'reading': 'bg-child',
+                'english': 'bg-child',
+                'math': 'bg-child',
+                'science': 'bg-child',
+                'art': 'bg-child',
+                'coding': 'bg-child',
+                'environment': 'bg-child',
+                'nuri': 'bg-child',
+                'infant': 'bg-child',
+                'special': 'bg-child'
+            };
 
-        // [교육 프로그램] - 공통 교육 배경(bg-child) 사용
-        'korean': 'bg-child',       // 🇰🇷 한글
-        'reading': 'bg-child',      // 📖 독서
-        'english': 'bg-child',      // 🔤 영어
-        'math': 'bg-child',         // 🔢 수학
-        'science': 'bg-child',      // 🔬 과학
-        'art': 'bg-child',          // 🎨 미술
-        'coding': 'bg-child',       // 💻 코딩
-        'environment': 'bg-child',  // 🌱 환경
-        'nuri': 'bg-child',         // 👶 누리과정
-        'infant': 'bg-child',       // 🧸 영아
-        'special': 'bg-child'       // ⭐ 기타(특색)
-    };
-
-    // 해당 카테고리가 없으면 회색 배경(bg-gray) 처리
-    hero.className = 'sub-hero ' + (catMap[category] || 'bg-gray');
-}
+            // 해당 카테고리가 없으면 회색 배경(bg-gray) 처리
+            hero.className = 'sub-hero ' + (catMap[category] || 'bg-gray');
+        }
     </script>
 </body>
 </html>

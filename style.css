@@ -188,7 +188,6 @@ header {
     width: auto;
 }
 
-/* 데스크탑 네비게이션 */
 .nav-menu > li {
     position: relative;
     padding: 20px 0;
@@ -213,7 +212,6 @@ header {
     font-weight: 700 !important;
 }
 
-/* 드롭다운 */
 .dropdown {
     display: none;
     position: absolute;
@@ -259,7 +257,6 @@ header {
     color: var(--primary-color);
 }
 
-/* 반응형 헤더 */
 @media (min-width: 769px) {
     ul.nav-menu {
         display: flex;
@@ -274,6 +271,24 @@ header {
     .nav-menu > li:hover .arrow {
         transform: rotate(180deg);
     }
+
+    .dropdown.double-col {
+        min-width: 300px !important;
+    }
+
+    .nav-menu > li:hover .dropdown.double-col {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .dropdown.double-col li {
+        width: 100%;
+        border-right: 1px solid #f0f0f0;
+    }
+
+        .dropdown.double-col li:nth-child(even) {
+            border-right: none;
+        }
 }
 
 @media (max-width: 768px) {
@@ -399,7 +414,6 @@ header {
         text-shadow: 0 2px 5px rgba(0,0,0,0.8);
     }
 
-/* 배경 이미지 클래스 */
 .bg-season {
     background-image: linear-gradient(rgba(26,60,110,0.85), rgba(26,60,110,0.85)), url('https://images.unsplash.com/photo-1547638375-ebf04735d792?auto=format&fit=crop&w=1600&q=80');
 }
@@ -451,7 +465,6 @@ header {
         border-color: var(--accent-color);
     }
 
-/* 일반 카드 내용 */
 .card-img-wrap, .post-thumb {
     position: relative;
     width: 100%;
@@ -490,7 +503,6 @@ header {
     -webkit-box-orient: vertical;
 }
 
-/* 일반 카드 아이콘 */
 .card-icon {
     font-size: 3rem;
     margin: 0 auto 20px;
@@ -730,7 +742,7 @@ header {
 }
 
 /* =========================================
-   8. [Order] 교재 발주 페이지 스타일
+   8. [Order] & [Proposal] 페이지 스타일
    ========================================= */
 .proposal-box {
     max-width: 1000px !important;
@@ -752,7 +764,6 @@ header {
     flex-direction: column;
 }
 
-/* 카테고리 헤더 */
 .order-category-header, .sub-cat-header {
     padding: 15px 20px;
     background: #fff;
@@ -772,9 +783,7 @@ header {
         background-color: #fcfcfc;
     }
 
-/* Wrapper가 active일 때 헤더 스타일 (글자색도 흰색으로) */
-.category-wrapper.active .order-category-header,
-.sub-cat-wrapper.active .sub-cat-header {
+.category-wrapper.active .order-category-header, .sub-cat-wrapper.active .sub-cat-header {
     background-color: var(--primary-color);
     color: #fff;
     border-color: var(--primary-color);
@@ -782,7 +791,6 @@ header {
     border-bottom-right-radius: 0;
 }
 
-/* [추가] Active 상태일 때 내부 텍스트 색상 강제 지정 (Proposal용) */
 .sub-cat-wrapper.active .sub-cat-title span {
     color: #fff !important;
 }
@@ -798,7 +806,6 @@ header {
     transform: rotate(180deg);
 }
 
-/* 내용 박스 */
 .order-category-content, .proposal-check-grid {
     display: none;
     background: #fff;
@@ -814,7 +821,6 @@ header {
         animation: slideDown 0.3s ease;
     }
 
-/* 항목 스타일 */
 .order-item-row, .proposal-item {
     padding: 15px 20px;
     border-bottom: 1px solid #eee;
@@ -843,7 +849,6 @@ header {
     background-color: #f0f7ff;
 }
 
-/* 발주 수량 입력 */
 .order-item-info {
     display: flex;
     justify-content: space-between;
@@ -873,7 +878,6 @@ header {
     display: block !important;
 }
 
-/* 수량 입력 영역 */
 .dynamic-qty-container {
     display: none;
     background-color: #fafafa;
@@ -887,7 +891,6 @@ header {
     display: block;
 }
 
-/* 입력 행 그리드 */
 .qty-row {
     display: grid !important;
     grid-template-columns: 1fr 1.5fr 40px !important;
@@ -943,7 +946,6 @@ header {
         background: #f0f7ff;
     }
 
-/* 선택됨 강조 */
 .order-category-header.has-data, .sub-cat-header.has-checked {
     background-color: #eef6ff !important;
     color: var(--primary-color) !important;
@@ -962,9 +964,6 @@ header {
         font-weight: normal;
     }
 
-/* =========================================
-   9. [Proposal] 견적 요청 페이지 스타일
-   ========================================= */
 .proposal-grid-container {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -990,11 +989,6 @@ header {
     cursor: pointer;
     transition: all 0.2s ease;
 }
-
-    .sub-cat-header:hover {
-        background-color: #f9fbfd;
-        border-color: var(--accent-color);
-    }
 
 .sub-cat-title {
     display: flex;
@@ -1041,13 +1035,6 @@ header {
         border-color: var(--accent-color);
     }
 
-    .proposal-item input {
-        margin-right: 10px;
-        width: 18px;
-        height: 18px;
-        accent-color: var(--primary-color);
-    }
-
 @keyframes slideDown {
     from {
         opacity: 0;
@@ -1061,7 +1048,7 @@ header {
 }
 
 /* =========================================
-   10. Footer & 기타
+   9. Footer & 기타
    ========================================= */
 footer {
     background: #222;
@@ -1102,7 +1089,6 @@ footer {
         transform: translateY(-3px);
     }
 
-/* 반응형 */
 @media (max-width: 1100px) {
     .order-list-box {
         grid-template-columns: repeat(2, 1fr) !important;
@@ -1158,22 +1144,26 @@ footer {
     }
 }
 
-@media (min-width: 769px) {
-    .dropdown.double-col {
-        min-width: 300px !important;
-    }
-
-    .nav-menu > li:hover .dropdown.double-col {
-        display: grid !important;
-        grid-template-columns: 1fr 1fr;
-    }
-
-    .dropdown.double-col li {
-        width: 100%;
-        border-right: 1px solid #f0f0f0;
-    }
-
-        .dropdown.double-col li:nth-child(even) {
-            border-right: none;
-        }
+/* =========================================
+   10. [NEW] 관련 링크 버튼 스타일
+   ========================================= */
+.link-btn-style {
+    display: inline-block;
+    background-color: var(--primary-color);
+    color: white;
+    padding: 15px 40px;
+    border-radius: 50px;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 1.1rem;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+    margin-top: 10px;
 }
+
+    .link-btn-style:hover {
+        background-color: var(--accent-color);
+        transform: translateY(-3px);
+        box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+        color: #fff;
+    }

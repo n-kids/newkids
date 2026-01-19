@@ -20,6 +20,7 @@
         <div class="container">
             <form id="orderForm" class="proposal-box">
                 <h3 class="form-section-title">👤 주문자 정보</h3>
+                
                 <div class="form-grid">
                     <div class="form-group">
                         <label class="form-label">원명 (필수)</label>
@@ -37,11 +38,10 @@
                         <label class="form-label">이메일 (선택)</label>
                         <input type="email" name="email" class="form-input" placeholder="sample@email.com">
                     </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">지역 (시/구) (필수)</label>
-                    <input type="text" name="region" class="form-input" placeholder="예: 서울 강남구" required>
+                    <div class="form-group">
+                        <label class="form-label">지역 (시/구) (필수)</label>
+                        <input type="text" name="region" class="form-input" placeholder="예: 서울 강남구" required>
+                    </div>
                 </div>
 
                 <h3 class="form-section-title" style="margin-top: 40px;">📦 교재 선택 (카테고리 클릭)</h3>
@@ -282,7 +282,7 @@
                     phone: fd.get("phone"),
                     email: fd.get("email"),
                     region: fd.get("region"),
-                    deliveryDate: "미지정", // [수정] 입력칸이 없으므로 '미지정' 고정
+                    deliveryDate: "미지정", 
                     orderDetails: details.join("\n"),
                     remarks: fd.get("remarks"),
                     timestamp: new Date().toLocaleString()

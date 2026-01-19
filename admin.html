@@ -8,6 +8,27 @@
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="admin.css">
+
+    <style>
+        /* [수정] 에디터 자동 높이 조절을 위한 스타일 추가 */
+        #editor-container {
+            height: auto !important; /* 고정 높이 제거 */
+            min-height: 300px;       /* 최소 높이 설정 */
+            background: #fff;
+        }
+        
+        /* Quill 에디터 내부 컨테이너 스타일 재정의 */
+        .ql-container {
+            height: auto !important; /* 내용에 따라 늘어나게 설정 */
+            font-family: 'Pretendard', sans-serif !important;
+            font-size: 1rem !important;
+        }
+
+        .ql-editor {
+            min-height: 300px; /* 편집 영역 최소 높이 */
+            overflow-y: hidden; /* 내부 스크롤바 제거 (창 자체가 늘어남) */
+        }
+    </style>
 </head>
 <body>
 
@@ -128,7 +149,7 @@
 
                     <div class="form-group">
                         <label class="form-label">내용 (에디터)</label>
-                        <div id="editor-container" style="background:#fff; height:300px;"></div>
+                        <div id="editor-container"></div>
                     </div>
 
                     <div class="form-group" style="margin-top:20px;">
@@ -235,7 +256,7 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label">메인 설명글</label>
-                            <textarea id="conf-main-desc" class="form-input" rows="6" style="height: 150px;" placeholder="예: 검증된 영유아 교재부터..."></textarea>
+                            <textarea id="conf-main-desc" class="form-input" rows="6" style="min-height: 150px; height: auto;" placeholder="예: 검증된 영유아 교재부터..."></textarea>
                         </div>
                         <div style="display:flex; gap:20px; align-items:center; margin-top:15px;">
                             <div style="text-align:center;">

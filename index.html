@@ -33,13 +33,20 @@
         </div>
     </section>
 
-    <section id="contact" class="contact">
+    <section id="contact" class="contact-section">
         <div class="container">
-            <h2>궁금하신 점이 있으신가요?</h2>
-            <p>아래 번호로 전화주시면 자세한 상담을 도와드리겠습니다.</p>
-            <div class="btn-group">
-                <a href="tel:010-2333-2563" class="btn btn-white">📞 상담문의 1: 010-2333-2563</a>
-                <a href="tel:010-5522-8109" class="btn btn-white">📞 상담문의 2: 010-5522-8109</a>
+            <h2 class="contact-title">궁금하신 점이 있으신가요?</h2>
+            <p class="contact-desc">아래 번호로 전화주시면 자세한 상담을 도와드리겠습니다.</p>
+            
+            <div class="contact-info-wrap">
+                <a href="tel:010-2333-2563" class="contact-link">
+                    <span class="contact-icon">📞</span>
+                    상담문의 1: <strong>010-2333-2563</strong>
+                </a>
+                <a href="tel:010-5522-8109" class="contact-link">
+                    <span class="contact-icon">📞</span>
+                    상담문의 2: <strong>010-5522-8109</strong>
+                </a>
             </div>
         </div>
     </section>
@@ -69,12 +76,29 @@
                 const eventGrid = document.getElementById('event-grid');
                 const legacyFiles = ['season', 'culture', 'performance'];
 
+                // [수정] 카테고리별 아이콘 매핑 목록
+                const iconMap = {
+                    'korean': '🇰🇷',       // 한글
+                    'reading': '📖',      // 독서
+                    'english': '🔤',      // 영어
+                    'math': '🔢',         // 수학
+                    'science': '🔬',      // 과학
+                    'art': '🎨',          // 미술
+                    'coding': '💻',       // 코딩
+                    'environment': '🌱',  // 환경
+                    'nuri': '🐣',         // 누리과정
+                    'infant': '🧸',       // 영아
+                    'special': '✨',      // 특색/기타
+                    'season': '🎉',       // 시즌 테마
+                    'culture': '🌍',      // 원어민 문화
+                    'performance': '👨‍👩‍👧‍👦' // 부모 참여
+                };
+
                 data.forEach(cat => {
                     let href = cat.type === 'EDU' ? `child.html#${cat.code}` : (legacyFiles.includes(cat.code) ? `${cat.code}.html` : `program.html#${cat.code}`);
-                    let icon = '⭐'; // 기본 아이콘
-                    // 아이콘 매핑 (필요 시 추가)
-                    if (cat.code === 'korean') icon = '🇰🇷'; else if (cat.code === 'english') icon = '🔤';
-                    else if (cat.code === 'season') icon = '🎉'; else if (cat.code === 'culture') icon = '🌍';
+                    
+                    // 매핑된 아이콘이 있으면 사용, 없으면 기본 별(⭐) 사용
+                    let icon = iconMap[cat.code] || '⭐';
 
                     const html = `
                             <a href="${href}" class="card">

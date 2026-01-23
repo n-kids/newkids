@@ -8,7 +8,6 @@
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="admin.css">
-
 </head>
 <body>
 
@@ -119,9 +118,10 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">썸네일 이미지</label>
+                        <label class="form-label">썸네일 이미지 (선택)</label>
                         <input type="file" id="post-thumb-file" class="form-input" accept="image/*">
                         <div id="thumb-manage-area" style="display:none; margin-top:5px;"><label><input type="checkbox" id="delete-thumb-check"> 기존 썸네일 삭제</label></div>
+                        <p style="font-size:0.8rem; color:#888; margin-top:5px;">* 미등록 시 유튜브 썸네일 또는 본문 첫 번째 이미지가 자동 설정됩니다.</p>
                     </div>
 
                     <div class="form-group">
@@ -212,9 +212,7 @@
                     <p style="color:#666; margin-bottom:20px;">
                         각 페이지 상단의 <strong>메뉴 이름, 소개 제목/설명, 배경 이미지</strong>를 수정할 수 있습니다.
                     </p>
-                    <div id="category-list-container">
-                        로딩 중...
-                    </div>
+                    <div id="category-list-container">로딩 중...</div>
                 </div>
             </div>
 
@@ -247,7 +245,7 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label">메인 설명글</label>
-                            <textarea id="conf-main-desc" class="form-input" placeholder="메인 화면에 노출될 설명글을 입력하세요."></textarea>
+                            <textarea id="conf-main-desc" class="form-inputp" placeholder="메인 화면에 노출될 설명글을 입력하세요."></textarea>
                         </div>
                         <div style="display:flex; gap:30px; align-items:flex-start; margin-top:30px; border-top:1px dashed #ccc; padding-top:30px;">
                             <div style="text-align:center;">
@@ -336,9 +334,7 @@
                 }
             });
 
-            // ==========================================
-            // [자동 스크롤] 드래그 중 화면 자동 이동
-            // ==========================================
+            // [자동 스크롤]
             const mainContent = document.querySelector('.main-content');
             let scrollInterval = null;
             let scrollStep = 0;
@@ -362,7 +358,7 @@
             function startAutoScroll() { if (scrollInterval) return; scrollInterval = setInterval(() => { mainContent.scrollTop += scrollStep; }, 16); }
             function stopAutoScroll() { clearInterval(scrollInterval); scrollInterval = null; scrollStep = 0; }
 
-            // [드래그 앤 드롭] 이미지 핸들링
+            // [드래그 앤 드롭]
             quill.root.addEventListener('drop', handleDrop, false);
             quill.root.addEventListener('dragover', (e) => {
                 if (e.dataTransfer.types.includes('Files')) {
@@ -374,11 +370,9 @@
                 if (this.files.length > 0) uploadAndInsertImages(this.files);
             });
 
-            // 저장된 구글 시트 주소 로드
             const savedUrl = localStorage.getItem('mySheetUrl');
             if (savedUrl) document.getElementById('sheet-url-input').value = savedUrl;
 
-            // 로그인 체크
             const { data: { session } } = await window.sb.auth.getSession();
             if (session) {
                 showAdminMode();
@@ -463,40 +457,25 @@
             };
             const { error } = await window.sb.from('site_config').update(updateData).eq('id', 1);
             showLoading(false);
-            if (error) {
-                alert(error.message);
-            } else {
-                alert("저장됨");
-                if (mainHeroUrl) originalMainHero = mainHeroUrl;
-                location.reload();
-            }
+            if (error) { alert(error.message); }
+            else { alert("저장됨"); if (mainHeroUrl) originalMainHero = mainHeroUrl; location.reload(); }
         };
 
         async function loadAdminCategories() {
             const listDiv = document.getElementById('category-list-container');
             const { data } = await window.sb.from('program_categories')
-                .select('*')
-                .order('type', { ascending: false })
-                .order('order_num', { ascending: true });
+                .select('*').order('type', { ascending: false }).order('order_num', { ascending: true });
 
             if (!data || data.length === 0) {
                 listDiv.innerHTML = "<div style='text-align:center; padding:30px; color:#999;'>등록된 카테고리가 없습니다.</div>";
                 return;
             }
 
-            // 헤더 생성
             let html = `
                 <div class="cat-manage-layout cat-manage-header">
-                    <div>유형</div>
-                    <div>코드</div>
-                    <div>메뉴 이름</div>
-                    <div>상단 제목</div>
-                    <div>설명글 (내용)</div>
-                    <div>이미지</div>
-                    <div>관리</div>
+                    <div>유형</div><div>코드</div><div>메뉴 이름</div><div>상단 제목</div><div>설명글 (내용)</div><div>이미지</div><div>관리</div>
                 </div>`;
 
-            // 목록 데이터 생성
             data.forEach(cat => {
                 const thumb = cat.hero_image || 'https://via.placeholder.com/50?text=No';
                 const badgeColor = cat.type === 'EDU' ? '#1a3c6e' : '#f4a261';
@@ -602,7 +581,7 @@
             const url = localStorage.getItem('mySheetUrl');
             if (url && url !== "null") window.open(url, '_blank');
             else {
-                alert("저장된 주소가 없습니다. [신청서 관리] 탭에서 주소를 저장해주세요.");
+                alert("저장된 주소가 없습니다.");
                 const sheetNav = document.querySelectorAll('.nav-item')[3];
                 if (sheetNav) switchTab('sheets', sheetNav);
             }
@@ -617,7 +596,6 @@
         function showAdminMode() { document.getElementById('login-section').style.display = 'none'; document.getElementById('admin-layout').style.display = 'flex'; loadManageList(1); }
         function showLoading(s) { document.getElementById('loading').style.display = s ? 'flex' : 'none'; }
 
-        // [수정됨] 게시글 목록 로드 (카드형 그리드 뷰)
         async function loadManageList(page) {
             currentPage = page;
             const cat = document.getElementById('filter-category').value;
@@ -641,8 +619,6 @@
             data.forEach(item => {
                 const thumb = item.thumbnail_url || 'https://via.placeholder.com/300x200?text=No+Image';
                 let catName = item.category;
-
-                // 카테고리 이름 찾기 (옵션 텍스트 활용)
                 const opt = document.querySelector(`#post-category option[value="${item.category}"]`);
                 if (opt) catName = opt.innerText;
 
@@ -651,7 +627,7 @@
                             <img src="${thumb}" class="pm-thumb" alt="thumbnail">
                             <div class="pm-body">
                                 <span class="pm-cat-badge">${catName}</span>
-                                <div class="pm-title" onclick='editPost(${JSON.stringify(item).replace(/'/g, "&#39;")})' style="cursor:pointer;">${item.title}</div>
+                                <div class="pm-title" onclick='editPost(${JSON.stringify(item).replace(/'/g, "&#39;")})'>${item.title}</div>
                                 <div class="pm-info">순서: ${item.order_num}</div>
                             </div>
                             <div class="pm-actions">
@@ -660,7 +636,6 @@
                             </div>
                         </div>`;
             });
-
             renderPagination(count, currentPage);
         }
 
@@ -685,23 +660,14 @@
             showLoading(false);
         }
 
-        // [수정됨] 게시글 업로드/수정 함수 (테두리 제거 & 자동 썸네일)
         async function uploadPost() {
-            // 1. 에디터 이미지 선택 상자(파란 테두리) 강제 숨김
+            // [에디터 정리] 이미지 테두리 제거 및 포커스 해제
             try {
                 const formatter = quill.getModule('blotFormatter');
-                if (formatter && typeof formatter.hide === 'function') {
-                    formatter.hide();
-                }
-            } catch (e) { console.log("Formatter hide error:", e); }
+                if (formatter && typeof formatter.hide === 'function') formatter.hide();
+            } catch (e) { }
+            if (quill) { quill.setSelection(null); quill.blur(); }
 
-            // 2. 선택 영역 해제 및 포커스 아웃
-            if (quill) {
-                quill.setSelection(null);
-                quill.blur();
-            }
-
-            // 3. UI가 갱신될 때까지 아주 잠깐 대기
             await new Promise(resolve => setTimeout(resolve, 50));
 
             const ti = document.getElementById('post-title').value;
@@ -716,21 +682,18 @@
             const tf = document.getElementById('post-thumb-file').files[0];
             const df = document.getElementById('post-file').files[0];
 
-            // A. 직접 파일 업로드 시 썸네일 지정
             if (tf) {
                 const { data } = await window.sb.storage.from('images').upload(`t_${Date.now()}`, tf);
                 tu = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl;
             }
 
-            // B. 썸네일이 없다면 -> 유튜브 or 본문 이미지로 대체
+            // [썸네일 자동 추출]
             if (!tu) {
                 const yUrl = document.getElementById('youtube-url').value;
                 const contentHtml = quill.root.innerHTML;
                 const yId = getYoutubeId(yUrl);
-
-                if (yId) {
-                    tu = `https://img.youtube.com/vi/${yId}/hqdefault.jpg`;
-                } else {
+                if (yId) tu = `https://img.youtube.com/vi/${yId}/hqdefault.jpg`;
+                else {
                     const firstImg = getFirstImageFromContent(contentHtml);
                     if (firstImg) tu = firstImg;
                 }
@@ -739,27 +702,18 @@
             if (df) { const { data } = await window.sb.storage.from('images').upload(`d_${Date.now()}`, df); du = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl; }
 
             const pd = {
-                title: ti,
-                content: quill.root.innerHTML, // 테두리가 제거된 상태의 HTML
-                category: cat,
+                title: ti, content: quill.root.innerHTML, category: cat,
                 order_num: parseInt(document.getElementById('post-order').value) || 0,
                 video_url: document.getElementById('youtube-url').value,
                 link_url: document.getElementById('post-link').value,
-                thumbnail_url: tu,
-                image_url: du
+                thumbnail_url: tu, image_url: du
             };
 
             const { error } = editingId ? await window.sb.from('total_posts').update(pd).eq('id', editingId) : await window.sb.from('total_posts').insert([pd]);
 
             showLoading(false);
-
-            if (error) {
-                alert(error.message);
-            } else {
-                alert("저장되었습니다.");
-                cancelEdit();
-                loadManageList(currentPage);
-            }
+            if (error) alert(error.message);
+            else { alert("저장되었습니다."); cancelEdit(); loadManageList(currentPage); }
         }
 
         window.editPost = function (i) {

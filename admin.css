@@ -128,10 +128,26 @@ body {
     box-sizing: border-box;
 }
 
-    .form-input:focus {
-        border-color: #1a3c6e;
-        outline: none;
-    }
+    
+.form-input:focus {
+      
+    border-color: #1a3c6e;
+    outline: none;
+    
+}
+
+.form-inputp {
+    width: 100%;
+    min-height: 300px;
+    overflow-y: hidden;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+    box-sizing: border-box;
+    min-height: 120px;
+    resize: vertical;
+}
 
 .btn-action {
     background-color: #1a3c6e;
@@ -477,4 +493,33 @@ body {
     #category-list-container, #manage-list {
         overflow-x: auto;
     }
+}
+
+/* =========================================
+   [추가] Quill 에디터 높이 설정 (HTML에서 이동됨)
+   ========================================= */
+#editor-container {
+    height: auto !important;
+    min-height: 500px;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 0 0 6px 6px;
+}
+
+.ql-toolbar {
+    border-radius: 6px 6px 0 0;
+    background-color: #f8f9fa;
+    border: 1px solid #ccc;
+    border-bottom: none;
+}
+
+.ql-container {
+    height: auto !important;
+    font-family: 'Pretendard', sans-serif !important;
+    font-size: 1rem !important;
+}
+
+.ql-editor {
+    min-height: 500px;
+    overflow-y: hidden;
 }

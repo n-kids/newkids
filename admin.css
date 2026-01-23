@@ -145,7 +145,6 @@ body {
     border-radius: 6px;
     font-size: 1rem;
     box-sizing: border-box;
-    min-height: 120px;
     resize: vertical;
 }
 
@@ -522,4 +521,5 @@ body {
 .ql-editor {
     min-height: 500px;
     overflow-y: hidden;
+
 }

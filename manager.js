@@ -176,3 +176,39 @@ document.addEventListener("DOMContentLoaded", function () {
     document.addEventListener('click', e => { const m = document.getElementById('navMenu'), b = document.querySelector('.mobile-btn'); if (m && m.classList.contains('active') && !m.contains(e.target) && !b.contains(e.target)) m.classList.remove('active'); });
     window.addEventListener('hashchange', () => { if (location.pathname.includes('child.html') || location.pathname.includes('program.html')) applySubPageHero(); });
 });
+
+/* =========================================
+[추가] 모바일 헤더 메뉴 제어 스크립트
+========================================= */
+document.addEventListener("DOMContentLoaded", function () {
+    const mobileBtn = document.querySelector('.mobile-btn');
+    const navMenu = document.querySelector('.nav-menu');
+
+    // 1. 햄버거 버튼(☰) 클릭 시 메뉴 열기/닫기 토글
+    if (mobileBtn && navMenu) {
+        mobileBtn.addEventListener('click', function (e) {
+            e.stopPropagation(); // 이벤트 버블링 방지
+            navMenu.classList.toggle('active');
+        });
+    }
+
+    // 2. [핵심] 메뉴 내부의 링크를 클릭하면 메뉴창 닫기
+    const menuLinks = document.querySelectorAll('.nav-menu a');
+    menuLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            if (navMenu.classList.contains('active')) {
+                navMenu.classList.remove('active'); // 메뉴 닫기
+            }
+        });
+    });
+
+    // 3. (옵션) 메뉴 영역 바깥(본문)을 클릭해도 메뉴 닫기
+    document.addEventListener('click', function (e) {
+        if (navMenu && navMenu.classList.contains('active')) {
+            // 클릭한 요소가 메뉴도 아니고, 햄버거 버튼도 아니라면 닫기
+            if (!navMenu.contains(e.target) && !mobileBtn.contains(e.target)) {
+                navMenu.classList.remove('active');
+            }
+        }
+    });
+});

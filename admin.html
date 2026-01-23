@@ -178,6 +178,7 @@
                         <div class="form-group" style="flex: 0 0 150px; margin-bottom:0;">
                             <label class="form-label">유형</label>
                             <select id="new-cat-type" class="form-input">
+                                <option value="BOARD">📌 게시판 전용</option>
                                 <option value="EVENT">행사 (program.html)</option>
                                 <option value="EDU">교육 (child.html)</option>
                             </select>
@@ -210,9 +211,11 @@
 
                 <div class="panel-box">
                     <p style="color:#666; margin-bottom:20px;">
-                        각 페이지 상단의 <strong>메뉴 이름, 소개 제목/설명, 배경 이미지</strong>를 수정할 수 있습니다.
+                        목록의 순서를 변경하려면 <strong>▲ ▼ 버튼</strong>을 누르세요. 수정 후 <strong>[저장]</strong>을 눌러야 반영됩니다.
                     </p>
-                    <div id="category-list-container">로딩 중...</div>
+                    <div id="category-list-container">
+                        로딩 중...
+                    </div>
                 </div>
             </div>
 
@@ -245,7 +248,7 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label">메인 설명글</label>
-                            <textarea id="conf-main-desc" class="form-inputp" placeholder="메인 화면에 노출될 설명글을 입력하세요."></textarea>
+                            <textarea id="conf-main-desc" class="form-input" placeholder="메인 화면에 노출될 설명글을 입력하세요."></textarea>
                         </div>
                         <div style="display:flex; gap:30px; align-items:flex-start; margin-top:30px; border-top:1px dashed #ccc; padding-top:30px;">
                             <div style="text-align:center;">
@@ -290,7 +293,7 @@
     <script src="manager.js"></script>
 
     <script>
-        // 전역 변수 설정
+        // 전역 변수
         let editingId = null;
         let originalDetailUrl = null;
         let originalThumbUrl = null;
@@ -298,193 +301,60 @@
         let quill;
         const ITEMS_PER_PAGE = 12;
         let currentPage = 1;
+        let categoryList = [];
 
-        // [헬퍼] 유튜브 ID 추출
+        // 헬퍼 함수
         function getYoutubeId(url) {
             if (!url) return null;
-            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-            const match = url.match(regExp);
-            return (match && match[2].length === 11) ? match[2] : null;
+            const m = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/);
+            return (m && m[2].length === 11) ? m[2] : null;
         }
-
-        // [헬퍼] 본문에서 첫 번째 이미지 추출
         function getFirstImageFromContent(html) {
-            const div = document.createElement('div');
-            div.innerHTML = html;
-            const img = div.querySelector('img');
-            return img ? img.src : null;
+            const d = document.createElement('div'); d.innerHTML = html;
+            const i = d.querySelector('img'); return i ? i.src : null;
         }
 
-        // [초기화]
+        // 초기화
         document.addEventListener("DOMContentLoaded", async function () {
             Quill.register('modules/blotFormatter', QuillBlotFormatter.default);
+            quill = new Quill('#editor-container', { theme: 'snow', modules: { blotFormatter: {}, toolbar: { container: [[{ 'header': [1, 2, 3, false] }], ['bold', 'italic', 'underline', { 'color': [] }, { 'background': [] }], [{ 'align': [] }, 'link', 'image', 'video']], handlers: { image: function () { document.getElementById('hidden-image-input').click(); } } } } });
 
-            quill = new Quill('#editor-container', {
-                theme: 'snow',
-                modules: {
-                    blotFormatter: { overlay: { style: { border: '2px solid #1a3c6e' } } },
-                    toolbar: {
-                        container: [
-                            [{ 'header': [1, 2, 3, false] }],
-                            ['bold', 'italic', 'underline', { 'color': [] }, { 'background': [] }],
-                            [{ 'align': [] }, 'link', 'image', 'video']
-                        ],
-                        handlers: { image: function () { document.getElementById('hidden-image-input').click(); } }
-                    }
-                }
-            });
-
-            // [자동 스크롤]
-            const mainContent = document.querySelector('.main-content');
-            let scrollInterval = null;
-            let scrollStep = 0;
-
-            mainContent.addEventListener('dragover', (e) => {
-                if (!e.dataTransfer.types.includes('Files')) {
-                    const rect = mainContent.getBoundingClientRect();
-                    const threshold = 100;
-                    if (e.clientY < rect.top + threshold) {
-                        scrollStep = -15; if (!scrollInterval) startAutoScroll();
-                    } else if (e.clientY > rect.bottom - threshold) {
-                        scrollStep = 15; if (!scrollInterval) startAutoScroll();
-                    } else { stopAutoScroll(); }
-                }
-            });
-
-            document.addEventListener('dragend', stopAutoScroll);
-            document.addEventListener('drop', stopAutoScroll);
-            mainContent.addEventListener('mouseleave', stopAutoScroll);
-
-            function startAutoScroll() { if (scrollInterval) return; scrollInterval = setInterval(() => { mainContent.scrollTop += scrollStep; }, 16); }
-            function stopAutoScroll() { clearInterval(scrollInterval); scrollInterval = null; scrollStep = 0; }
-
-            // [드래그 앤 드롭]
-            quill.root.addEventListener('drop', handleDrop, false);
-            quill.root.addEventListener('dragover', (e) => {
-                if (e.dataTransfer.types.includes('Files')) {
-                    e.preventDefault(); e.dataTransfer.dropEffect = 'copy';
-                }
-            }, false);
-
-            document.getElementById('hidden-image-input').addEventListener('change', function () {
-                if (this.files.length > 0) uploadAndInsertImages(this.files);
-            });
-
+            document.getElementById('hidden-image-input').addEventListener('change', function () { if (this.files.length > 0) uploadAndInsertImages(this.files); });
             const savedUrl = localStorage.getItem('mySheetUrl');
             if (savedUrl) document.getElementById('sheet-url-input').value = savedUrl;
 
-            const { data: { session } } = await window.sb.auth.getSession();
-            if (session) {
-                showAdminMode();
-                loadConfigToForm();
-                loadAdminCategories();
-                populateCategorySelects();
-            } else {
-                document.getElementById('login-section').style.display = 'flex';
-            }
+            try {
+                const { data: { session } } = await window.sb.auth.getSession();
+                if (session) { showAdminMode(); loadConfigToForm(); loadAdminCategories(); populateCategorySelects(); }
+                else { document.getElementById('login-section').style.display = 'flex'; }
+            } catch (e) { console.error(e); }
         });
 
-        function handleDrop(e) {
-            if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                e.preventDefault(); uploadAndInsertImages(e.dataTransfer.files);
-            } else { return true; }
-        }
-
-        async function populateCategorySelects() {
-            const { data } = await window.sb.from('program_categories').select('*').order('order_num');
-            if (!data) return;
-            const postSelect = document.getElementById('post-category');
-            const filterSelect = document.getElementById('filter-category');
-            let eduHtml = '', eventHtml = '';
-            data.forEach(c => {
-                const opt = `<option value="${c.code}">${c.name}</option>`;
-                if (c.type === 'EDU') eduHtml += opt; else eventHtml += opt;
-            });
-            postSelect.innerHTML = `<optgroup label="행사">${eventHtml}</optgroup><optgroup label="교육">${eduHtml}</optgroup>`;
-            filterSelect.innerHTML = `<option value="all">전체 보기</option>${postSelect.innerHTML}`;
-        }
-
-        window.switchTab = function (tabName, navEl) {
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            if (navEl) navEl.classList.add('active');
-            document.querySelectorAll('.admin-section').forEach(sec => sec.classList.remove('active'));
-            document.getElementById('tab-' + tabName).classList.add('active');
-            if (tabName === 'posts') loadManageList(1);
-        };
-
-        async function loadConfigToForm() {
-            const { data } = await window.sb.from('site_config').select('*').eq('id', 1).single();
-            if (data) {
-                document.getElementById('conf-name').value = data.company_name || "";
-                document.getElementById('conf-ceo').value = data.ceo_name || "";
-                document.getElementById('conf-addr').value = data.address || "";
-                document.getElementById('conf-phone').value = data.phone || "";
-                document.getElementById('conf-primary').value = data.primary_color || "#1a3c6e";
-                document.getElementById('conf-accent').value = data.accent_color || "#f4a261";
-                document.getElementById('conf-main-title').value = data.main_hero_title || "";
-                document.getElementById('conf-main-desc').value = data.main_hero_desc || "";
-                if (data.main_hero_image) {
-                    document.getElementById('preview-main-hero').src = data.main_hero_image;
-                    originalMainHero = data.main_hero_image;
-                }
-            }
-        }
-
-        window.saveSiteConfig = async function () {
-            if (!confirm("저장하시겠습니까?")) return;
-            showLoading(true);
-            const mainHeroFile = document.getElementById('conf-main-hero').files[0];
-            let mainHeroUrl = originalMainHero;
-            if (mainHeroFile) {
-                const fileName = `main_hero_${Date.now()}`;
-                const { data, error } = await window.sb.storage.from('images').upload(fileName, mainHeroFile);
-                if (!error) {
-                    const { data: urlData } = window.sb.storage.from('images').getPublicUrl(fileName);
-                    mainHeroUrl = urlData.publicUrl;
-                }
-            }
-            const updateData = {
-                company_name: document.getElementById('conf-name').value,
-                ceo_name: document.getElementById('conf-ceo').value,
-                address: document.getElementById('conf-addr').value,
-                phone: document.getElementById('conf-phone').value,
-                primary_color: document.getElementById('conf-primary').value,
-                accent_color: document.getElementById('conf-accent').value,
-                main_hero_title: document.getElementById('conf-main-title').value,
-                main_hero_desc: document.getElementById('conf-main-desc').value,
-                main_hero_image: mainHeroUrl,
-                updated_at: new Date()
-            };
-            const { error } = await window.sb.from('site_config').update(updateData).eq('id', 1);
-            showLoading(false);
-            if (error) { alert(error.message); }
-            else { alert("저장됨"); if (mainHeroUrl) originalMainHero = mainHeroUrl; location.reload(); }
-        };
-
+        // 카테고리 관리
         async function loadAdminCategories() {
             const listDiv = document.getElementById('category-list-container');
-            const { data } = await window.sb.from('program_categories')
-                .select('*').order('type', { ascending: false }).order('order_num', { ascending: true });
+            const { data } = await window.sb.from('program_categories').select('*').order('order_num', { ascending: true });
 
-            if (!data || data.length === 0) {
-                listDiv.innerHTML = "<div style='text-align:center; padding:30px; color:#999;'>등록된 카테고리가 없습니다.</div>";
-                return;
-            }
+            if (!data || data.length === 0) { listDiv.innerHTML = "<div style='text-align:center; padding:30px;'>없음</div>"; return; }
+            categoryList = data;
 
-            let html = `
-                <div class="cat-manage-layout cat-manage-header">
-                    <div>유형</div><div>코드</div><div>메뉴 이름</div><div>상단 제목</div><div>설명글 (내용)</div><div>이미지</div><div>관리</div>
-                </div>`;
+            let html = `<div class="cat-manage-layout cat-manage-header"><div>유형</div><div>순서</div><div>코드</div><div>메뉴 이름</div><div>상단 제목</div><div>설명글 (내용)</div><div>이미지</div><div>관리</div></div>`;
 
-            data.forEach(cat => {
+            data.forEach((cat, index) => {
                 const thumb = cat.hero_image || 'https://via.placeholder.com/50?text=No';
-                const badgeColor = cat.type === 'EDU' ? '#1a3c6e' : '#f4a261';
-                const badgeText = cat.type === 'EDU' ? '교육' : '행사';
+                let badgeColor = '#999';
+                if (cat.type === 'EDU') badgeColor = '#1a3c6e';
+                else if (cat.type === 'EVENT') badgeColor = '#f4a261';
+                else if (cat.type === 'BOARD') badgeColor = '#27ae60';
 
                 html += `
                     <div class="cat-manage-layout cat-manage-row">
-                        <div class="cat-cell-center"><span class="type-badge" style="background:${badgeColor}">${badgeText}</span></div>
-                        <div class="cat-cell-center" style="font-weight:bold; color:#555; font-size:0.9rem;">${cat.code}</div>
+                        <div class="cat-cell-center"><span class="type-badge" style="background:${badgeColor}">${cat.type}</span></div>
+                        <div class="cat-cell-center">
+                            <button class="btn-order" onclick="moveCategory(${index}, -1)">▲</button>
+                            <button class="btn-order" onclick="moveCategory(${index}, 1)">▼</button>
+                        </div>
+                        <div class="cat-cell-center" style="font-weight:bold; font-size:0.9rem;">${cat.code}</div>
                         <div class="cat-cell-input"><input type="text" id="name-${cat.code}" value="${cat.name}"></div>
                         <div class="cat-cell-input"><input type="text" id="title-${cat.code}" value="${cat.hero_title || ''}"></div>
                         <div class="cat-cell-input"><input type="text" id="desc-${cat.code}" value="${cat.hero_desc || ''}"></div>
@@ -493,12 +363,40 @@
                             <input type="file" id="file-${cat.code}" style="display:none;" accept="image/*">
                         </div>
                         <div class="cat-cell-center" style="display:flex; gap:5px; justify-content:center;">
-                            <button onclick="updateCategory('${cat.code}')" class="btn-mini" style="background:#1a3c6e; color:#fff; border:none; padding:5px 10px;">저장</button>
-                            <button onclick="deleteCategory('${cat.code}')" class="btn-mini" style="background:#ff6b6b; color:#fff; border:none; padding:5px 10px;">삭제</button>
+                            <button onclick="updateCategory('${cat.code}')" class="btn-mini" style="background:#1a3c6e; color:#fff;">저장</button>
+                            <button onclick="deleteCategory('${cat.code}')" class="btn-mini" style="background:#ff6b6b; color:#fff;">삭제</button>
                         </div>
                     </div>`;
             });
             listDiv.innerHTML = html;
+        }
+
+        async function moveCategory(index, direction) {
+            const targetIndex = index + direction;
+            if (targetIndex < 0 || targetIndex >= categoryList.length) return;
+            const current = categoryList[index];
+            const target = categoryList[targetIndex];
+            const tempOrder = current.order_num;
+            showLoading(true);
+            try {
+                await window.sb.from('program_categories').update({ order_num: target.order_num }).eq('code', current.code);
+                await window.sb.from('program_categories').update({ order_num: tempOrder }).eq('code', target.code);
+                loadAdminCategories();
+            } catch (e) { alert("오류 발생"); }
+            showLoading(false);
+        }
+
+        async function updateCategory(code) {
+            const n = document.getElementById(`name-${code}`).value;
+            const t = document.getElementById(`title-${code}`).value;
+            const d = document.getElementById(`desc-${code}`).value;
+            const f = document.getElementById(`file-${code}`).files[0];
+            let u = null;
+            showLoading(true);
+            if (f) { const { data } = await window.sb.storage.from('images').upload(`h_${Date.now()}`, f); u = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl; }
+            const ud = { name: n, hero_title: t, hero_desc: d }; if (u) ud.hero_image = u;
+            await window.sb.from('program_categories').update(ud).eq('code', code);
+            showLoading(false); alert("저장됨"); loadAdminCategories();
         }
 
         async function addNewCategory() {
@@ -506,243 +404,94 @@
             const name = document.getElementById('new-cat-name').value.trim();
             const type = document.getElementById('new-cat-type').value;
             const desc = document.getElementById('new-cat-desc').value.trim();
-            const fileInput = document.getElementById('new-cat-file');
-
-            if (!code || !name) return alert("코드와 이름은 필수입니다.");
-            if (/[^a-z0-9]/.test(code)) return alert("코드는 영문 소문자와 숫자만 가능합니다.");
-
-            if (!confirm(`[${name}] 카테고리를 추가하시겠습니까?`)) return;
+            const { data } = await window.sb.from('program_categories').select('order_num').order('order_num', { ascending: false }).limit(1);
+            const maxOrder = (data && data.length > 0) ? data[0].order_num + 1 : 1;
+            if (!code || !name) return alert("필수 입력");
             showLoading(true);
-
             let imgUrl = null;
-            if (fileInput.files.length > 0) {
-                try {
-                    const file = fileInput.files[0];
-                    const fileName = `hero_${code}_${Date.now()}`;
-                    const { data, error } = await window.sb.storage.from('images').upload(fileName, file);
-                    if (error) throw error;
-                    const { data: urlData } = window.sb.storage.from('images').getPublicUrl(fileName);
-                    imgUrl = urlData.publicUrl;
-                } catch (e) {
-                    showLoading(false);
-                    return alert("이미지 업로드 오류: " + e.message);
-                }
-            }
-
-            const { error } = await window.sb.from('program_categories').insert([{
-                code: code, name: name, type: type,
-                hero_title: name, hero_desc: desc || "새로운 프로그램입니다.",
-                hero_image: imgUrl, order_num: 99
-            }]);
-
-            showLoading(false);
-            if (error) alert("추가 실패: " + error.message);
-            else {
-                alert("추가되었습니다.");
-                document.getElementById('new-cat-code').value = '';
-                document.getElementById('new-cat-name').value = '';
-                document.getElementById('new-cat-desc').value = '';
-                document.getElementById('new-cat-file').value = '';
-                loadAdminCategories();
-                populateCategorySelects();
-            }
-        }
-
-        async function updateCategory(code) {
-            const n = document.getElementById(`cat-name-${code}`).value;
-            const t = document.getElementById(`cat-title-${code}`).value;
-            const d = document.getElementById(`cat-desc-${code}`).value;
-            const f = document.getElementById(`cat-file-${code}`).files[0];
-            let u = null;
-            if (f) {
-                const { data } = await window.sb.storage.from('images').upload(`h_${Date.now()}`, f);
-                u = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl;
-            }
-            const ud = { name: n, hero_title: t, hero_desc: d };
-            if (u) ud.hero_image = u;
-            await window.sb.from('program_categories').update(ud).eq('code', code);
-            alert("저장됨"); loadAdminCategories();
+            const fileInput = document.getElementById('new-cat-file');
+            if (fileInput.files[0]) { const { data } = await window.sb.storage.from('images').upload(`h_${Date.now()}`, fileInput.files[0]); imgUrl = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl; }
+            await window.sb.from('program_categories').insert([{ code, name, type, hero_desc: desc, hero_image: imgUrl, order_num: maxOrder }]);
+            showLoading(false); alert("추가됨"); loadAdminCategories(); populateCategorySelects();
         }
 
         async function deleteCategory(code) {
-            if (confirm("삭제하시겠습니까?")) { await window.sb.from('program_categories').delete().eq('code', code); alert("삭제됨"); loadAdminCategories(); }
+            if (confirm("삭제하시겠습니까?")) { await window.sb.from('program_categories').delete().eq('code', code); loadAdminCategories(); populateCategorySelects(); }
         }
 
-        window.saveSheetUrl = function () {
-            const input = document.getElementById('sheet-url-input');
-            let url = input.value.trim();
-            if (!url) return alert("주소를 입력해주세요.");
-            if (!url.startsWith('http')) url = 'https://' + url;
-            localStorage.setItem('mySheetUrl', url);
-            alert("저장되었습니다.");
-        };
-
-        window.openSavedSheet = function () {
-            const url = localStorage.getItem('mySheetUrl');
-            if (url && url !== "null") window.open(url, '_blank');
-            else {
-                alert("저장된 주소가 없습니다.");
-                const sheetNav = document.querySelectorAll('.nav-item')[3];
-                if (sheetNav) switchTab('sheets', sheetNav);
-            }
-        };
-
-        window.adminLogin = async function () {
-            const e = document.getElementById('admin-email').value, p = document.getElementById('admin-password').value;
-            const { error } = await window.sb.auth.signInWithPassword({ email: e, password: p });
-            if (error) alert(error.message); else { showAdminMode(); loadConfigToForm(); loadAdminCategories(); populateCategorySelects(); }
-        };
-        window.adminLogout = async function () { await window.sb.auth.signOut(); location.reload(); };
-        function showAdminMode() { document.getElementById('login-section').style.display = 'none'; document.getElementById('admin-layout').style.display = 'flex'; loadManageList(1); }
-        function showLoading(s) { document.getElementById('loading').style.display = s ? 'flex' : 'none'; }
-
-        async function loadManageList(page) {
-            currentPage = page;
-            const cat = document.getElementById('filter-category').value;
-            const from = (page - 1) * ITEMS_PER_PAGE;
-
-            let q = window.sb.from('total_posts').select('*', { count: 'exact' });
-            if (cat !== 'all') q = q.eq('category', cat);
-
-            const { data, count } = await q.order('order_num', { ascending: true })
-                .order('created_at', { ascending: false })
-                .range(from, from + ITEMS_PER_PAGE - 1);
-
-            const list = document.getElementById('manage-list');
-            list.innerHTML = "";
-
-            if (!data || data.length === 0) {
-                list.innerHTML = "<p style='text-align:center; padding:50px; color:#999; grid-column: 1 / -1;'>등록된 글이 없습니다.</p>";
-                return;
-            }
-
-            data.forEach(item => {
-                const thumb = item.thumbnail_url || 'https://via.placeholder.com/300x200?text=No+Image';
-                let catName = item.category;
-                const opt = document.querySelector(`#post-category option[value="${item.category}"]`);
-                if (opt) catName = opt.innerText;
-
-                list.innerHTML += `
-                        <div class="post-manage-card">
-                            <img src="${thumb}" class="pm-thumb" alt="thumbnail">
-                            <div class="pm-body">
-                                <span class="pm-cat-badge">${catName}</span>
-                                <div class="pm-title" onclick='editPost(${JSON.stringify(item).replace(/'/g, "&#39;")})'>${item.title}</div>
-                                <div class="pm-info">순서: ${item.order_num}</div>
-                            </div>
-                            <div class="pm-actions">
-                                <button onclick='editPost(${JSON.stringify(item).replace(/'/g, "&#39;")})' class="pm-btn">수정</button>
-                                <button onclick='deletePost(${item.id})' class="pm-btn">삭제</button>
-                            </div>
-                        </div>`;
+        // 게시글 관리
+        async function populateCategorySelects() {
+            const { data } = await window.sb.from('program_categories').select('*').order('order_num');
+            if (!data) return;
+            const postSelect = document.getElementById('post-category');
+            const filterSelect = document.getElementById('filter-category');
+            let b = '', e = '', v = '';
+            data.forEach(c => {
+                const o = `<option value="${c.code}">${c.name}</option>`;
+                if (c.type === 'BOARD') b += o; else if (c.type === 'EDU') e += o; else v += o;
             });
-            renderPagination(count, currentPage);
-        }
-
-        function renderPagination(t, c) {
-            const p = document.getElementById('pagination-controls'); p.innerHTML = "";
-            const tp = Math.ceil(t / ITEMS_PER_PAGE);
-            if (tp <= 1) return;
-            for (let i = 1; i <= tp; i++) p.innerHTML += `<button class="page-btn ${i === c ? 'active' : ''}" onclick="loadManageList(${i})">${i}</button>`;
-        }
-
-        async function uploadAndInsertImages(files) {
-            showLoading(true);
-            const r = quill.getSelection(true);
-            let idx = r ? r.index : quill.getLength();
-            for (const f of files) {
-                if (!f.type.startsWith('image/')) continue;
-                const n = `c_${Date.now()}_${f.name}`;
-                await window.sb.storage.from('images').upload(n, f);
-                const { data } = window.sb.storage.from('images').getPublicUrl(n);
-                quill.insertEmbed(idx++, 'image', data.publicUrl);
-            }
-            showLoading(false);
+            postSelect.innerHTML = `<optgroup label="📢 게시판">${b}</optgroup><optgroup label="🎉 행사">${v}</optgroup><optgroup label="🎓 교육">${e}</optgroup>`;
+            filterSelect.innerHTML = `<option value="all">전체 보기</option>${postSelect.innerHTML}`;
         }
 
         async function uploadPost() {
-            // [에디터 정리] 이미지 테두리 제거 및 포커스 해제
-            try {
-                const formatter = quill.getModule('blotFormatter');
-                if (formatter && typeof formatter.hide === 'function') formatter.hide();
-            } catch (e) { }
+            try { const formatter = quill.getModule('blotFormatter'); if (formatter?.hide) formatter.hide(); } catch (e) { }
             if (quill) { quill.setSelection(null); quill.blur(); }
-
             await new Promise(resolve => setTimeout(resolve, 50));
 
             const ti = document.getElementById('post-title').value;
-            if (!ti) return alert("제목을 입력해주세요.");
-
+            if (!ti) return alert("제목 필수");
             showLoading(true);
 
             const cat = document.getElementById('post-category').value;
             let tu = document.getElementById('delete-thumb-check').checked ? null : originalThumbUrl;
             let du = document.getElementById('delete-file-check').checked ? null : originalDetailUrl;
-
             const tf = document.getElementById('post-thumb-file').files[0];
             const df = document.getElementById('post-file').files[0];
 
-            if (tf) {
-                const { data } = await window.sb.storage.from('images').upload(`t_${Date.now()}`, tf);
-                tu = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl;
-            }
-
-            // [썸네일 자동 추출]
+            if (tf) { const { data } = await window.sb.storage.from('images').upload(`t_${Date.now()}`, tf); tu = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl; }
             if (!tu) {
-                const yUrl = document.getElementById('youtube-url').value;
-                const contentHtml = quill.root.innerHTML;
-                const yId = getYoutubeId(yUrl);
+                const yId = getYoutubeId(document.getElementById('youtube-url').value);
                 if (yId) tu = `https://img.youtube.com/vi/${yId}/hqdefault.jpg`;
-                else {
-                    const firstImg = getFirstImageFromContent(contentHtml);
-                    if (firstImg) tu = firstImg;
-                }
+                else { const firstImg = getFirstImageFromContent(quill.root.innerHTML); if (firstImg) tu = firstImg; }
             }
-
             if (df) { const { data } = await window.sb.storage.from('images').upload(`d_${Date.now()}`, df); du = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl; }
 
-            const pd = {
-                title: ti, content: quill.root.innerHTML, category: cat,
-                order_num: parseInt(document.getElementById('post-order').value) || 0,
-                video_url: document.getElementById('youtube-url').value,
-                link_url: document.getElementById('post-link').value,
-                thumbnail_url: tu, image_url: du
-            };
-
+            const pd = { title: ti, content: quill.root.innerHTML, category: cat, order_num: parseInt(document.getElementById('post-order').value) || 0, video_url: document.getElementById('youtube-url').value, link_url: document.getElementById('post-link').value, thumbnail_url: tu, image_url: du };
             const { error } = editingId ? await window.sb.from('total_posts').update(pd).eq('id', editingId) : await window.sb.from('total_posts').insert([pd]);
 
             showLoading(false);
-            if (error) alert(error.message);
-            else { alert("저장되었습니다."); cancelEdit(); loadManageList(currentPage); }
+            if (error) alert(error.message); else { alert("저장됨"); cancelEdit(); loadManageList(currentPage); }
         }
 
-        window.editPost = function (i) {
-            editingId = i.id; originalDetailUrl = i.image_url; originalThumbUrl = i.thumbnail_url;
-            document.getElementById('post-category').value = i.category;
-            document.getElementById('post-title').value = i.title;
-            quill.root.innerHTML = i.content || "";
-            document.getElementById('youtube-url').value = i.video_url || "";
-            document.getElementById('post-link').value = i.link_url || "";
-            document.getElementById('post-order').value = i.order_num || 0;
-            document.getElementById('form-title').innerText = "✏️ 수정 모드";
-            document.getElementById('btn-submit').innerText = "수정 완료";
-            document.getElementById('btn-cancel-edit').style.display = "inline-block";
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        };
+        async function loadManageList(page) {
+            currentPage = page; const cat = document.getElementById('filter-category').value; const from = (page - 1) * ITEMS_PER_PAGE;
+            let q = window.sb.from('total_posts').select('*', { count: 'exact' });
+            if (cat !== 'all') q = q.eq('category', cat);
+            const { data, count } = await q.order('order_num', { ascending: true }).order('created_at', { ascending: false }).range(from, from + ITEMS_PER_PAGE - 1);
+            const list = document.getElementById('manage-list'); list.innerHTML = "";
+            if (!data || data.length === 0) { list.innerHTML = "<p style='padding:50px; text-align:center; grid-column:1/-1;'>글 없음</p>"; return; }
+            data.forEach(item => {
+                const thumb = item.thumbnail_url || 'https://via.placeholder.com/300?text=No+Image';
+                let catName = item.category; try { catName = document.querySelector(`#post-category option[value="${item.category}"]`).innerText; } catch (e) { }
+                list.innerHTML += `<div class="post-manage-card"><img src="${thumb}" class="pm-thumb"><div class="pm-body"><span class="pm-cat-badge">${catName}</span><div class="pm-title" onclick='editPost(${JSON.stringify(item).replace(/'/g, "&#39;")})'>${item.title}</div><div class="pm-info">순서: ${item.order_num}</div></div><div class="pm-actions"><button class="pm-btn" onclick='editPost(${JSON.stringify(item).replace(/'/g, "&#39;")})'>수정</button><button class="pm-btn" onclick='deletePost(${item.id})'>삭제</button></div></div>`;
+            });
+            renderPagination(count, currentPage);
+        }
 
-        window.cancelEdit = function () {
-            editingId = null;
-            document.getElementById('post-title').value = "";
-            quill.root.innerHTML = "";
-            document.querySelectorAll('input[type="file"]').forEach(i => i.value = "");
-            document.getElementById('form-title').innerText = "📝 게시글 작성/수정";
-            document.getElementById('btn-submit').innerText = "업로드 저장";
-            document.getElementById('btn-cancel-edit').style.display = "none";
-        };
-
-        window.deletePost = async function (id) {
-            if (confirm("삭제?")) { await window.sb.from('total_posts').delete().eq('id', id); loadManageList(currentPage); }
-        };
+        // 공통 기능
+        window.editPost = function (i) { editingId = i.id; originalDetailUrl = i.image_url; originalThumbUrl = i.thumbnail_url; document.getElementById('post-category').value = i.category; document.getElementById('post-title').value = i.title; quill.root.innerHTML = i.content || ""; document.getElementById('youtube-url').value = i.video_url || ""; document.getElementById('post-link').value = i.link_url || ""; document.getElementById('post-order').value = i.order_num || 0; document.getElementById('form-title').innerText = "✏️ 수정 모드"; document.getElementById('btn-submit').innerText = "수정 완료"; document.getElementById('btn-cancel-edit').style.display = "inline-block"; window.scrollTo({ top: 0, behavior: 'smooth' }); };
+        window.cancelEdit = function () { editingId = null; document.getElementById('post-title').value = ""; quill.root.innerHTML = ""; document.querySelectorAll('input[type="file"]').forEach(i => i.value = ""); document.getElementById('form-title').innerText = "📝 게시글 작성/수정"; document.getElementById('btn-submit').innerText = "업로드 저장"; document.getElementById('btn-cancel-edit').style.display = "none"; };
+        window.deletePost = async function (id) { if (confirm("삭제?")) { await window.sb.from('total_posts').delete().eq('id', id); loadManageList(currentPage); } };
+        window.switchTab = function (tabName, navEl) { document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active')); if (navEl) navEl.classList.add('active'); document.querySelectorAll('.admin-section').forEach(sec => sec.classList.remove('active')); document.getElementById('tab-' + tabName).classList.add('active'); if (tabName === 'posts') loadManageList(1); };
+        window.adminLogin = async function () { const e = document.getElementById('admin-email').value, p = document.getElementById('admin-password').value; const { error } = await window.sb.auth.signInWithPassword({ email: e, password: p }); if (error) alert(error.message); else { showAdminMode(); loadConfigToForm(); loadAdminCategories(); populateCategorySelects(); } };
+        window.adminLogout = async function () { await window.sb.auth.signOut(); location.reload(); };
+        function showAdminMode() { document.getElementById('login-section').style.display = 'none'; document.getElementById('admin-layout').style.display = 'flex'; loadManageList(1); }
+        function showLoading(s) { document.getElementById('loading').style.display = s ? 'flex' : 'none'; }
+        function renderPagination(t, c) { const p = document.getElementById('pagination-controls'); p.innerHTML = ""; const tp = Math.ceil(t / ITEMS_PER_PAGE); if (tp <= 1) return; for (let i = 1; i <= tp; i++) p.innerHTML += `<button class="page-btn ${i === c ? 'active' : ''}" onclick="loadManageList(${i})">${i}</button>`; }
+        async function uploadAndInsertImages(files) { showLoading(true); const r = quill.getSelection(true); let idx = r ? r.index : quill.getLength(); for (const f of files) { if (!f.type.startsWith('image/')) continue; const n = `c_${Date.now()}_${f.name}`; await window.sb.storage.from('images').upload(n, f); const { data } = window.sb.storage.from('images').getPublicUrl(n); quill.insertEmbed(idx++, 'image', data.publicUrl); } showLoading(false); }
+        async function loadConfigToForm() { const { data } = await window.sb.from('site_config').select('*').eq('id', 1).single(); if (data) { document.getElementById('conf-name').value = data.company_name || ""; document.getElementById('conf-ceo').value = data.ceo_name || ""; document.getElementById('conf-addr').value = data.address || ""; document.getElementById('conf-phone').value = data.phone || ""; document.getElementById('conf-primary').value = data.primary_color || "#1a3c6e"; document.getElementById('conf-accent').value = data.accent_color || "#f4a261"; document.getElementById('conf-main-title').value = data.main_hero_title || ""; document.getElementById('conf-main-desc').value = data.main_hero_desc || ""; if (data.main_hero_image) { document.getElementById('preview-main-hero').src = data.main_hero_image; originalMainHero = data.main_hero_image; } } }
+        window.saveSiteConfig = async function () { if (!confirm("저장?")) return; showLoading(true); const f = document.getElementById('conf-main-hero').files[0]; let u = originalMainHero; if (f) { const { data } = await window.sb.storage.from('images').upload(`main_${Date.now()}`, f); u = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl; } await window.sb.from('site_config').update({ company_name: document.getElementById('conf-name').value, ceo_name: document.getElementById('conf-ceo').value, address: document.getElementById('conf-addr').value, phone: document.getElementById('conf-phone').value, primary_color: document.getElementById('conf-primary').value, accent_color: document.getElementById('conf-accent').value, main_hero_title: document.getElementById('conf-main-title').value, main_hero_desc: document.getElementById('conf-main-desc').value, main_hero_image: u, updated_at: new Date() }).eq('id', 1); showLoading(false); alert("저장됨"); location.reload(); };
     </script>
 </body>
 </html>

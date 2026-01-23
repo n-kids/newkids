@@ -1,0 +1,85 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>뉴키즈 - 글쓰기</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body style="background:#f9fbfd;">
+
+    <header>
+        <div class="header-inner">
+            <a href="index.html" class="logo"><img src="logo.jpg" alt="로고" class="logo-img"></a>
+        </div>
+    </header>
+
+    <div class="container" style="padding-top:100px;">
+        <div class="write-box">
+            <h2 style="text-align:center; color:#1a3c6e; margin-bottom:30px;">✏️ 자유게시판 글쓰기</h2>
+
+            <div class="form-group">
+                <label class="form-label">제목</label>
+                <input type="text" id="w-title" class="form-input" placeholder="제목을 입력하세요">
+            </div>
+
+            <div style="display:flex; gap:15px; margin-bottom:20px;">
+                <div style="flex:1;">
+                    <label class="form-label">작성자</label>
+                    <input type="text" id="w-author" class="form-input" placeholder="이름">
+                </div>
+                <div style="flex:1;">
+                    <label class="form-label">비밀번호</label>
+                    <input type="password" id="w-password" class="form-input" placeholder="삭제 시 필요">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">내용</label>
+                <textarea id="w-content" class="form-input" style="height:300px; resize:vertical;" placeholder="내용을 자유롭게 작성해주세요."></textarea>
+            </div>
+
+            <div class="btn-center-wrap">
+                <button onclick="saveUserPost()" class="btn-action" style="width:200px;">등록하기</button>
+                <button onclick="history.back()" class="btn-action" style="background:#999;">취소</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script>
+        async function saveUserPost() {
+            const title = document.getElementById('w-title').value;
+            const author = document.getElementById('w-author').value;
+            const password = document.getElementById('w-password').value;
+            const content = document.getElementById('w-content').value;
+
+            if(!title || !author || !password || !content) {
+                return alert("모든 항목을 입력해주세요.");
+            }
+
+            if(!confirm("글을 등록하시겠습니까?")) return;
+
+            // DB 저장 (카테고리: 'free' 고정)
+            // 작성자는 link_url 컬럼에, 비밀번호는 video_url 컬럼에 임시 저장 (DB 구조 변경 없이 사용하기 위함)
+            const { error } = await window.sb.from('total_posts').insert([{
+                category: 'free',
+                title: title,
+                content: content, // 줄바꿈을 <br>로 치환하려면: content.replace(/\n/g, "<br>")
+                link_url: author,   // 작성자 이름 저장용
+                video_url: password, // 비밀번호 저장용
+                order_num: 0
+            }]);
+
+            if(error) {
+                alert("저장 실패: " + error.message);
+            } else {
+                alert("등록되었습니다.");
+                location.href = "notice.html";
+            }
+        }
+    </script>
+</body>
+</html>

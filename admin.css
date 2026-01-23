@@ -1,8 +1,6 @@
 ﻿@charset "utf-8";
 
-/* =========================================
-   1. 기본 레이아웃 & 사이드바
-   ========================================= */
+/* 1. 기본 레이아웃 & 사이드바 */
 body {
     background-color: #f0f2f5;
     margin: 0;
@@ -10,16 +8,14 @@ body {
     font-family: 'Pretendard', sans-serif;
 }
 
-/* 관리자 전체 레이아웃 */
 .admin-layout {
     display: flex;
     min-height: 100vh;
 }
 
-/* 좌측 사이드바 */
 .sidebar {
     width: 260px;
-    background-color: #1a3c6e; /* 메인 남색 */
+    background-color: #1a3c6e;
     color: #fff;
     flex-shrink: 0;
     display: flex;
@@ -62,7 +58,6 @@ body {
     background: #153055;
 }
 
-/* 우측 메인 컨텐츠 영역 */
 .main-content {
     flex: 1;
     margin-left: 260px;
@@ -71,7 +66,6 @@ body {
     width: calc(100% - 260px);
 }
 
-/* 탭 전환 효과 */
 .admin-section {
     display: none;
     animation: fadeIn 0.3s;
@@ -93,9 +87,7 @@ body {
     }
 }
 
-/* =========================================
-   2. 패널 & 폼 스타일
-   ========================================= */
+/* 2. 패널 & 폼 스타일 */
 .panel-box {
     background: #fff;
     padding: 30px;
@@ -103,7 +95,6 @@ body {
     box-shadow: 0 4px 15px rgba(0,0,0,0.05);
     border: 1px solid #eee;
     margin-bottom: 30px;
-    /* 가로 폭 꽉 차게 설정 */
     max-width: 100% !important;
     width: 100%;
 }
@@ -128,25 +119,10 @@ body {
     box-sizing: border-box;
 }
 
-    
-.form-input:focus {
-      
-    border-color: #1a3c6e;
-    outline: none;
-    
-}
-
-.form-inputp {
-    width: 100%;
-    min-height: 150px;
-    overflow-y: hidden;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    font-size: 1rem;
-    box-sizing: border-box;
-    resize: vertical;
-}
+    .form-input:focus {
+        border-color: #1a3c6e;
+        outline: none;
+    }
 
 .btn-action {
     background-color: #1a3c6e;
@@ -163,7 +139,6 @@ body {
         background-color: #132b4f;
     }
 
-/* 작성 폼 상단 한 줄 배치 */
 .write-inline-row {
     display: flex;
     gap: 15px;
@@ -184,9 +159,7 @@ body {
     flex: 1;
 }
 
-/* =========================================
-   3. 게시글 목록 (그리드 카드형)
-   ========================================= */
+/* 3. 게시글 목록 (그리드 카드형) */
 .admin-list-header {
     display: flex;
     justify-content: space-between;
@@ -196,14 +169,12 @@ body {
     padding-bottom: 15px;
 }
 
-/* 그리드 레이아웃 설정 */
 #manage-list {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 25px;
 }
 
-/* 카드 스타일 */
 .post-manage-card {
     background: #fff;
     border: 1px solid #eee;
@@ -293,12 +264,10 @@ body {
         background-color: #f8f9fa;
     }
 
-/* =========================================
-   4. 카테고리 관리 테이블 (Grid)
-   ========================================= */
+/* 4. 카테고리 관리 테이블 (Grid + 순서버튼) */
 .cat-manage-layout {
     display: grid !important;
-    grid-template-columns: 60px 100px 140px 140px 1fr 60px 110px;
+    grid-template-columns: 60px 50px 100px 140px 140px 1fr 50px 110px;
     gap: 10px;
     align-items: center;
     padding: 12px 10px;
@@ -340,12 +309,28 @@ body {
     font-weight: bold;
 }
 
-/* =========================================
-   5. Quill 에디터 스타일 (HTML에서 이동됨)
-   ========================================= */
+.btn-order {
+    background: none;
+    border: 1px solid #ddd;
+    cursor: pointer;
+    font-size: 0.7rem;
+    padding: 2px 5px;
+    border-radius: 3px;
+    color: #555;
+    display: block;
+    margin: 2px auto;
+    width: 24px;
+}
+
+    .btn-order:hover {
+        background-color: #eee;
+        color: #1a3c6e;
+    }
+
+/* 5. 에디터 및 기타 */
 #editor-container {
     height: auto !important;
-    min-height: 500px; /* 에디터 기본 높이 확보 */
+    min-height: 500px;
     background: #fff;
     border: 1px solid #ccc;
     border-radius: 0 0 6px 6px;
@@ -354,6 +339,8 @@ body {
 .ql-toolbar {
     border-radius: 6px 6px 0 0;
     background-color: #f8f9fa;
+    border: 1px solid #ccc;
+    border-bottom: none;
 }
 
 .ql-container {
@@ -367,10 +354,6 @@ body {
     overflow-y: hidden;
 }
 
-/* =========================================
-   6. 기타 (로그인, 대시보드, 페이지네이션)
-   ========================================= */
-/* 대시보드 그리드 */
 .dash-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -406,7 +389,6 @@ body {
     color: #333;
 }
 
-/* 로그인 박스 */
 .login-box {
     width: 400px;
     background: #fff;
@@ -463,7 +445,6 @@ body {
         background: #eee;
     }
 
-/* 모바일 반응형 */
 @media (max-width: 1000px) {
     .sidebar {
         width: 70px;
@@ -492,33 +473,4 @@ body {
     #category-list-container, #manage-list {
         overflow-x: auto;
     }
-}
-
-/* =========================================
-   [추가] Quill 에디터 높이 설정 (HTML에서 이동됨)
-   ========================================= */
-#editor-container {
-    height: auto !important;
-    min-height: 500px;
-    background: #fff;
-    border: 1px solid #ccc;
-    border-radius: 0 0 6px 6px;
-}
-
-.ql-toolbar {
-    border-radius: 6px 6px 0 0;
-    background-color: #f8f9fa;
-    border: 1px solid #ccc;
-    border-bottom: none;
-}
-
-.ql-container {
-    height: auto !important;
-    font-family: 'Pretendard', sans-serif !important;
-    font-size: 1rem !important;
-}
-
-.ql-editor {
-    min-height: 500px;
-    overflow-y: hidden;
 }

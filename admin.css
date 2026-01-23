@@ -226,3 +226,171 @@ header, footer {
         font-size: 0.8rem;
     }
 }
+
+/* =========================================
+   [추가] 에디터(Quill) 높이 및 이미지 스타일
+   ========================================= */
+
+/* 에디터 높이 자동 조절 */
+#editor-container {
+    height: auto !important;
+    min-height: 400px; /* 높이를 조금 더 확보 */
+    background: #fff;
+    font-size: 16px;
+}
+
+.ql-editor {
+    min-height: 400px;
+    padding-bottom: 50px; /* 하단 여유 공간 */
+}
+
+    /* [핵심] 이미지 스타일: 드래그 및 정렬 허용 */
+    .ql-editor img {
+        display: inline-block; /* 글자와 어울리게 배치 */
+        vertical-align: middle; /* 텍스트 수직 정렬 보정 */
+        margin: 5px 10px; /* 이미지 주변 여백 */
+        cursor: move; /* 마우스 올리면 '이동 가능' 커서 표시 */
+        max-width: 100%; /* 에디터 뚫고 나가는 것 방지 */
+    }
+
+    /* 정렬된 이미지 (왼쪽/오른쪽/중앙) 스타일 보정 */
+    .ql-editor .ql-align-center img {
+        display: block;
+        margin: 0 auto;
+    }
+
+    .ql-editor img[style*="float: left"] {
+        margin-right: 15px;
+    }
+
+    .ql-editor img[style*="float: right"] {
+        margin-left: 15px;
+    }
+
+/* =========================================
+   [추가] 게시글 작성 페이지 가로 폭 넓히기
+   ========================================= */
+
+/* 흰색 박스(.panel-box)의 가로 제한을 해제 */
+.panel-box {
+    max-width: 100% !important; /* 기존에 좁게 설정된 폭 제한을 풂 */
+    width: 100%; /* 화면에 꽉 차게 설정 */
+    padding: 30px; /* 내부 여백도 조금 더 넉넉하게 */
+}
+
+/* 에디터(글 쓰는 곳) 높이도 같이 키워주면 더 편합니다 */
+#editor-container {
+    min-height: 600px !important; /* 에디터 세로 길이 늘리기 */
+}
+
+.ql-editor {
+    min-height: 600px !important; /* 실제 입력창 높이 */
+}
+
+/* =========================================
+   [추가] 게시글 작성 폼 상단 (한 줄 배치)
+   ========================================= */
+
+/* 3개 항목을 감싸는 Flex 컨테이너 */
+.write-inline-row {
+    display: flex;
+    gap: 15px; /* 항목 사이 간격 */
+    align-items: flex-end; /* 라벨 높이가 달라도 입력창끼리 밑선 맞춤 */
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+/* 1. 정렬 순서 (50px + 여유분) */
+.w-col-order {
+    flex: 0 0 60px; /* 입력창 50px 확보를 위해 컨테이너는 약간 더 크게 잡음 */
+    min-width: 60px;
+}
+
+/* 2. 카테고리 (200px 고정) */
+.w-col-category {
+    flex: 0 0 200px;
+    min-width: 200px;
+}
+
+/* 3. 제목 (나머지 전체) */
+.w-col-title {
+    flex: 1; /* 남은 공간 모두 차지 */
+}
+
+/* 모바일에서는 줄바꿈 처리 (선택 사항) */
+@media (max-width: 768px) {
+    .write-inline-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 15px;
+    }
+
+    .w-col-order, .w-col-category, .w-col-title {
+        width: 100%;
+        flex: none;
+    }
+}
+
+/* =========================================
+   [추가] 카테고리 관리 목록 (가로형) 스타일
+   ========================================= */
+
+/* 테이블처럼 보이는 그리드 행 */
+.list-row {
+    display: grid;
+    gap: 15px; /* 칸 간격 */
+    border-bottom: 1px solid #eee;
+    font-size: 0.9rem;
+}
+
+/* 목록 헤더 */
+.list-header {
+    background: #f1f3f5;
+    padding: 10px;
+    font-weight: bold;
+    color: #555;
+    border-top: 2px solid #1a3c6e;
+}
+
+/* 개별 아이템 행 */
+.category-item-row {
+    background: #fff;
+    transition: background 0.2s;
+}
+
+    .category-item-row:hover {
+        background: #f8faff; /* 마우스 올리면 살짝 파란색 */
+    }
+
+/* 반응형: 모바일에서는 카드로 변환 (선택 사항) */
+@media (max-width: 1024px) {
+    .list-header {
+        display: none;
+    }
+    /* 헤더 숨김 */
+
+    .category-item-row {
+        display: flex !important;
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 10px;
+        border: 1px solid #eee;
+        margin-bottom: 10px;
+        border-radius: 8px;
+        padding: 15px !important;
+    }
+
+        .category-item-row > div {
+            text-align: left !important;
+            width: 100%;
+        }
+}
+
+/* =========================================
+   [추가] 메인 페이지 설명칸 높이 고정
+   ========================================= */
+#conf-main-desc {
+    height: 200px !important; /* 높이 200px 강제 고정 */
+    resize: vertical; /* 세로 크기 조절 허용 */
+    line-height: 1.6; /* 줄 간격 */
+}

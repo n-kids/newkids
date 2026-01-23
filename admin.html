@@ -8,6 +8,26 @@
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="admin.css">
+
+    <style>
+        /* 에디터 자동 높이 조절 */
+        #editor-container {
+            height: auto !important;
+            min-height: 300px;
+            background: #fff;
+        }
+
+        .ql-container {
+            height: auto !important;
+            font-family: 'Pretendard', sans-serif !important;
+            font-size: 1rem !important;
+        }
+
+        .ql-editor {
+            min-height: 300px;
+            overflow-y: hidden;
+        }
+    </style>
 </head>
 <body>
 
@@ -37,35 +57,56 @@
 
         <nav class="sidebar">
             <div class="sidebar-logo">🏢 <span>뉴키즈 관리자</span></div>
-            <div class="nav-item active" onclick="switchTab('dashboard', this)">📊 <span class="nav-text">대시보드</span></div>
-            <div class="nav-item" onclick="switchTab('posts', this)">📝 <span class="nav-text">게시글 관리</span></div>
-            <div class="nav-item" onclick="switchTab('category', this)">🖼️ <span class="nav-text">서브 페이지 관리</span></div>
-            <div class="nav-item" onclick="switchTab('sheets', this)">📑 <span class="nav-text">신청서 확인</span></div>
-            <div class="nav-item" onclick="switchTab('settings', this)">⚙️ <span class="nav-text">환경 설정</span></div>
-            <div class="nav-item" onclick="location.href='index.html'">🏠 <span class="nav-text">홈페이지 이동</span></div>
-            <div class="nav-item logout-btn" onclick="adminLogout()">🚪 <span class="nav-text">로그아웃</span></div>
+
+            <div class="nav-item active" onclick="switchTab('dashboard', this)">
+                📊 <span class="nav-text">대시보드</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('posts', this)">
+                📝 <span class="nav-text">게시글 관리</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('category', this)">
+                🖼️ <span class="nav-text">서브 페이지 관리</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('sheets', this)">
+                📑 <span class="nav-text">신청서 확인</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('settings', this)">
+                ⚙️ <span class="nav-text">환경 설정</span>
+            </div>
+
+            <div class="nav-item" onclick="location.href='index.html'">
+                🏠 <span class="nav-text">홈페이지 이동</span>
+            </div>
+
+            <div class="nav-item logout-btn" onclick="adminLogout()">
+                🚪 <span class="nav-text">로그아웃</span>
+            </div>
         </nav>
 
         <main class="main-content">
 
             <div id="tab-dashboard" class="admin-section active">
                 <h1 style="color:#333; border-bottom:2px solid #ddd; padding-bottom:15px;">관리자 대시보드</h1>
+
                 <div class="dash-grid">
                     <div class="dash-card" onclick="switchTab('posts', document.querySelectorAll('.nav-item')[1])">
                         <span class="dash-icon">📝</span>
                         <div class="dash-title">게시글 작성하기</div>
                         <p style="font-size:0.9rem; color:#888;">교육 및 행사 프로그램 업로드</p>
                     </div>
+
                     <div class="dash-card" onclick="switchTab('category', document.querySelectorAll('.nav-item')[2])">
                         <span class="dash-icon">🖼️</span>
                         <div class="dash-title">서브 페이지 관리</div>
                         <p style="font-size:0.9rem; color:#888;">메뉴 추가/삭제, 배경 수정</p>
                     </div>
+
                     <div class="dash-card" onclick="openSavedSheet()">
                         <span class="dash-icon">📊</span>
                         <div class="dash-title">신청서 확인</div>
                         <p style="font-size:0.9rem; color:#888;">구글 시트로 이동</p>
                     </div>
+
                     <div class="dash-card" onclick="switchTab('settings', document.querySelectorAll('.nav-item')[4])">
                         <span class="dash-icon">⚙️</span>
                         <div class="dash-title">환경 설정</div>
@@ -80,24 +121,20 @@
                     <input type="file" id="hidden-image-input" accept="image/*" multiple style="display:none;">
 
                     <div class="write-inline-row">
-
                         <div class="form-group w-col-order" style="margin-bottom:0;">
                             <label class="form-label">순서</label>
                             <input type="number" id="post-order" class="form-input" value="0" style="text-align:center; padding: 12px 5px;">
                         </div>
-
                         <div class="form-group w-col-category" style="margin-bottom:0;">
                             <label class="form-label">카테고리</label>
                             <select id="post-category" class="form-input">
                                 <option value="">로딩 중...</option>
                             </select>
                         </div>
-
                         <div class="form-group w-col-title" style="margin-bottom:0;">
                             <label class="form-label">제목</label>
                             <input type="text" id="post-title" class="form-input" placeholder="제목을 입력하세요">
                         </div>
-
                     </div>
 
                     <div class="form-group">
@@ -156,7 +193,6 @@
                     <h3 style="margin-bottom:15px; color:#1a3c6e;">➕ 새 카테고리(메뉴) 추가</h3>
 
                     <div style="display: flex; gap: 15px; margin-bottom: 15px; align-items: flex-end;">
-
                         <div class="form-group" style="flex: 0 0 150px; margin-bottom:0;">
                             <label class="form-label">유형</label>
                             <select id="new-cat-type" class="form-input">
@@ -164,12 +200,10 @@
                                 <option value="EDU">교육 (child.html)</option>
                             </select>
                         </div>
-
                         <div class="form-group" style="flex: 0 0 150px; margin-bottom:0;">
                             <label class="form-label">코드 (영문소문자)</label>
                             <input type="text" id="new-cat-code" class="form-input" placeholder="예: cooking">
                         </div>
-
                         <div class="form-group" style="flex: 1; margin-bottom:0;">
                             <label class="form-label">메뉴 이름</label>
                             <input type="text" id="new-cat-name" class="form-input" placeholder="예: 요리 활동">
@@ -177,12 +211,10 @@
                     </div>
 
                     <div style="display: flex; gap: 15px; margin-bottom: 15px; align-items: flex-end;">
-
                         <div class="form-group" style="flex: 1; margin-bottom:0;">
                             <label class="form-label">배경 이미지 (상단 배너)</label>
                             <input type="file" id="new-cat-file" class="form-input" accept="image/*" style="background:#fff;">
                         </div>
-
                         <div class="form-group" style="flex: 2; margin-bottom:0;">
                             <label class="form-label">페이지 설명글 (내용)</label>
                             <input type="text" id="new-cat-desc" class="form-input" placeholder="페이지 상단에 들어갈 설명을 적어주세요.">
@@ -203,12 +235,13 @@
                     </div>
                 </div>
             </div>
+
             <div id="tab-sheets" class="admin-section">
                 <h2 style="border-bottom:2px solid #1a3c6e; padding-bottom:15px;">📑 신청서 관리</h2>
                 <div class="form-group">
-                    <label class="form-label">🔗 구글 시트 주소</label>
+                    <label class="form-label">🔗 구글 시트 주소 설정</label>
                     <div style="display:flex; gap:10px;">
-                        <input type="text" id="sheet-url-input" class="form-input">
+                        <input type="text" id="sheet-url-input" class="form-input" placeholder="https://docs.google.com/spreadsheets/d/...">
                         <button onclick="saveSheetUrl()" class="btn" style="width:100px;">저장</button>
                     </div>
                 </div>
@@ -216,6 +249,7 @@
                     <div class="dash-card" onclick="openSavedSheet()">
                         <span class="dash-icon" style="color:#2ecc71;">📊</span>
                         <div class="dash-title">구글 시트 열기</div>
+                        <p style="font-size:0.9rem; color:#888;">발주/견적 통합 관리 시트</p>
                     </div>
                 </div>
             </div>
@@ -224,26 +258,20 @@
                 <h2 style="border-bottom:2px solid #1a3c6e; padding-bottom:15px;">⚙️ 환경 설정</h2>
                 <div class="panel-box">
                     <h3 class="form-section-title">🏠 메인 페이지(첫 화면) 관리</h3>
-
                     <div style="background:#f9f9f9; padding:30px; border-radius:12px; border:1px solid #eee;">
-
                         <div class="form-group">
                             <label class="form-label">메인 큰 제목 (줄바꿈: &lt;br&gt;)</label>
                             <input type="text" id="conf-main-title" class="form-input" placeholder="예: 우리 원에 필요한 모든 즐거움<br>뉴키즈" style="font-size:1.1rem;">
                         </div>
-
                         <div class="form-group">
                             <label class="form-label">메인 설명글</label>
                             <textarea id="conf-main-desc" class="form-input" placeholder="메인 화면에 노출될 설명글을 입력하세요."></textarea>
                         </div>
-
                         <div style="display:flex; gap:30px; align-items:flex-start; margin-top:30px; border-top:1px dashed #ccc; padding-top:30px;">
-
                             <div style="text-align:center;">
                                 <p style="font-size:0.9rem; margin-bottom:10px; color:#666; font-weight:bold;">현재 배경 이미지</p>
                                 <img id="preview-main-hero" src="" style="width:300px; height:170px; object-fit:cover; border-radius:8px; border:1px solid #ccc; background:#e0e0e0; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
                             </div>
-
                             <div style="flex:1;">
                                 <label class="form-label">배경 이미지 변경</label>
                                 <input type="file" id="conf-main-hero" class="form-input" accept="image/*" style="background:#fff; height: 50px; padding-top:10px;">
@@ -254,6 +282,7 @@
                             </div>
                         </div>
                     </div>
+
                     <h3 class="form-section-title" style="margin-top:40px;">🏢 회사 정보</h3>
                     <div class="form-grid">
                         <div class="form-group"><label class="form-label">회사명</label><input type="text" id="conf-name" class="form-input"></div>
@@ -310,61 +339,36 @@
             });
 
             // ==========================================
-            // [추가된 기능] 드래그 중 자동 스크롤 (Auto Scroll)
+            // [자동 스크롤] 드래그 중 화면 자동 이동
             // ==========================================
             const mainContent = document.querySelector('.main-content');
             let scrollInterval = null;
             let scrollStep = 0;
 
-            // 드래그 감지 (전체 영역)
             mainContent.addEventListener('dragover', (e) => {
-                // 외부 파일 드래그가 아닐 때 (즉, 에디터 내부 이미지 이동 시)
                 if (!e.dataTransfer.types.includes('Files')) {
                     const rect = mainContent.getBoundingClientRect();
-                    const threshold = 100; // 가장자리 감지 범위 (100px)
-
-                    // 위쪽 가장자리 감지
+                    const threshold = 100;
                     if (e.clientY < rect.top + threshold) {
-                        scrollStep = -15; // 위로 스크롤 속도
-                        if (!scrollInterval) startAutoScroll();
-                    }
-                    // 아래쪽 가장자리 감지
-                    else if (e.clientY > rect.bottom - threshold) {
-                        scrollStep = 15; // 아래로 스크롤 속도
-                        if (!scrollInterval) startAutoScroll();
-                    }
-                    // 중간이면 멈춤
-                    else {
-                        stopAutoScroll();
-                    }
+                        scrollStep = -15; if (!scrollInterval) startAutoScroll();
+                    } else if (e.clientY > rect.bottom - threshold) {
+                        scrollStep = 15; if (!scrollInterval) startAutoScroll();
+                    } else { stopAutoScroll(); }
                 }
             });
 
-            // 드래그 종료 시 멈춤
             document.addEventListener('dragend', stopAutoScroll);
             document.addEventListener('drop', stopAutoScroll);
             mainContent.addEventListener('mouseleave', stopAutoScroll);
 
-            function startAutoScroll() {
-                if (scrollInterval) return;
-                scrollInterval = setInterval(() => {
-                    mainContent.scrollTop += scrollStep;
-                }, 16); // 약 60fps 부드러운 이동
-            }
+            function startAutoScroll() { if (scrollInterval) return; scrollInterval = setInterval(() => { mainContent.scrollTop += scrollStep; }, 16); }
+            function stopAutoScroll() { clearInterval(scrollInterval); scrollInterval = null; scrollStep = 0; }
 
-            function stopAutoScroll() {
-                clearInterval(scrollInterval);
-                scrollInterval = null;
-                scrollStep = 0;
-            }
-            // ==========================================
-
-            // [기존] 드래그 앤 드롭 핸들러 (업로드 vs 이동 구분)
+            // [드래그 앤 드롭] 업로드 vs 내부 이동
             quill.root.addEventListener('drop', handleDrop, false);
             quill.root.addEventListener('dragover', (e) => {
                 if (e.dataTransfer.types.includes('Files')) {
-                    e.preventDefault();
-                    e.dataTransfer.dropEffect = 'copy';
+                    e.preventDefault(); e.dataTransfer.dropEffect = 'copy';
                 }
             }, false);
 
@@ -388,11 +392,8 @@
 
         function handleDrop(e) {
             if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                e.preventDefault();
-                uploadAndInsertImages(e.dataTransfer.files);
-            } else {
-                return true;
-            }
+                e.preventDefault(); uploadAndInsertImages(e.dataTransfer.files);
+            } else { return true; }
         }
 
         async function populateCategorySelects() {
@@ -462,15 +463,20 @@
             };
             const { error } = await window.sb.from('site_config').update(updateData).eq('id', 1);
             showLoading(false);
-            if (error) alert(error.message); else { alert("저장됨"); location.reload(); }
+            if (error) {
+                alert(error.message);
+            } else {
+                alert("저장됨");
+                if (mainHeroUrl) originalMainHero = mainHeroUrl; // [수정됨] 저장 후 원본 URL 갱신
+                location.reload();
+            }
         };
 
-        // [수정됨] 카테고리 관리 목록 (가로 한 줄 정렬 스타일)
         async function loadAdminCategories() {
             const listDiv = document.getElementById('category-list-container');
             const { data } = await window.sb.from('program_categories')
                 .select('*')
-                .order('type', { ascending: false }) // EDU 먼저, EVENT 나중에
+                .order('type', { ascending: false })
                 .order('order_num', { ascending: true });
 
             if (!data || data.length === 0) {
@@ -478,146 +484,130 @@
                 return;
             }
 
-            let html = '<div class="category-list-wrap">';
+            // 헤더
+            let html = `
+            <div class="cat-manage-layout cat-manage-header">
+                <div>유형</div>
+                <div>코드</div>
+                <div>메뉴 이름</div>
+                <div>상단 제목</div>
+                <div>설명글 (내용)</div>
+                <div>이미지</div>
+                <div>관리</div>
+            </div>`;
 
-            // 리스트 헤더 (제목줄)
-            html += `
-        <div class="list-row list-header" style="grid-template-columns: 60px 80px 150px 200px 1fr 120px;">
-            <div style="text-align:center;">이미지</div>
-            <div style="text-align:center;">코드</div>
-            <div>메뉴 이름</div>
-            <div>상단 제목</div>
-            <div>설명글</div>
-            <div style="text-align:right;">관리</div>
-        </div>`;
-
+            // 목록
             data.forEach(cat => {
-                const thumb = cat.hero_image || 'https://via.placeholder.com/60?text=No+Img';
+                const thumb = cat.hero_image || 'https://via.placeholder.com/50?text=No';
                 const badgeColor = cat.type === 'EDU' ? '#1a3c6e' : '#f4a261';
                 const badgeText = cat.type === 'EDU' ? '교육' : '행사';
 
                 html += `
-            <div class="list-row list-item category-item-row" style="grid-template-columns: 60px 80px 150px 200px 1fr 120px; align-items:center; padding:10px;">
-                
-                <div style="text-align:center; cursor:pointer;" onclick="document.getElementById('file-${cat.code}').click()">
-                    <img src="${thumb}" style="width:50px; height:50px; object-fit:cover; border-radius:4px; border:1px solid #ddd;" title="이미지 변경하려면 클릭">
-                    <input type="file" id="file-${cat.code}" style="display:none;" accept="image/*">
-                </div>
-
-                <div style="text-align:center;">
-                    <span style="display:inline-block; font-size:0.7rem; padding:2px 6px; background:${badgeColor}; color:#fff; border-radius:4px; margin-bottom:3px;">${badgeText}</span><br>
-                    <span style="font-size:0.8rem; font-weight:bold; color:#666;">${cat.code}</span>
-                </div>
-
-                <div>
-                    <input type="text" id="name-${cat.code}" value="${cat.name}" class="form-input" style="padding: 6px; font-size:0.9rem;">
-                </div>
-
-                <div>
-                    <input type="text" id="title-${cat.code}" value="${cat.hero_title || ''}" class="form-input" style="padding: 6px; font-size:0.9rem;">
-                </div>
-
-                <div>
-                    <input type="text" id="desc-${cat.code}" value="${cat.hero_desc || ''}" class="form-input" style="padding: 6px; font-size:0.9rem;">
-                </div>
-
-                <div style="text-align:right; display:flex; gap:5px; justify-content:flex-end;">
-                    <button onclick="updateCategory('${cat.code}')" class="btn-mini" style="background:#1a3c6e; color:#fff; border:none;">저장</button>
-                    <button onclick="deleteCategory('${cat.code}')" class="btn-mini" style="background:#ff6b6b; color:#fff; border:none;">삭제</button>
-                </div>
-
-            </div>`;
+                <div class="cat-manage-layout cat-manage-row">
+                    <div class="cat-cell-center"><span class="type-badge" style="background:${badgeColor}">${badgeText}</span></div>
+                    <div class="cat-cell-center" style="font-weight:bold; color:#555; font-size:0.9rem;">${cat.code}</div>
+                    <div class="cat-cell-input"><input type="text" id="name-${cat.code}" value="${cat.name}"></div>
+                    <div class="cat-cell-input"><input type="text" id="title-${cat.code}" value="${cat.hero_title || ''}"></div>
+                    <div class="cat-cell-input"><input type="text" id="desc-${cat.code}" value="${cat.hero_desc || ''}"></div>
+                    <div class="cat-cell-center" style="cursor:pointer;" onclick="document.getElementById('file-${cat.code}').click()">
+                        <img src="${thumb}" style="width:40px; height:40px; object-fit:cover; border-radius:4px; border:1px solid #ddd; margin:0 auto;">
+                        <input type="file" id="file-${cat.code}" style="display:none;" accept="image/*">
+                    </div>
+                    <div class="cat-cell-center" style="display:flex; gap:5px; justify-content:center;">
+                        <button onclick="updateCategory('${cat.code}')" class="btn-mini" style="background:#1a3c6e; color:#fff; border:none; padding:5px 10px;">저장</button>
+                        <button onclick="deleteCategory('${cat.code}')" class="btn-mini" style="background:#ff6b6b; color:#fff; border:none; padding:5px 10px;">삭제</button>
+                    </div>
+                </div>`;
             });
-            html += '</div>';
             listDiv.innerHTML = html;
         }
 
-        // [수정됨] 새 카테고리 추가 함수 (이미지/설명 포함)
         async function addNewCategory() {
             const code = document.getElementById('new-cat-code').value.trim().toLowerCase();
             const name = document.getElementById('new-cat-name').value.trim();
             const type = document.getElementById('new-cat-type').value;
-
-            // [추가됨] 설명글과 이미지 파일 가져오기
             const desc = document.getElementById('new-cat-desc').value.trim();
             const fileInput = document.getElementById('new-cat-file');
 
-            // 유효성 검사
             if (!code || !name) return alert("코드와 이름은 필수입니다.");
-            if (/[^a-z0-9]/.test(code)) return alert("코드는 영문 소문자와 숫자만 가능합니다. (특수문자/한글 불가)");
+            if (/[^a-z0-9]/.test(code)) return alert("코드는 영문 소문자와 숫자만 가능합니다.");
 
             if (!confirm(`[${name}] 카테고리를 추가하시겠습니까?`)) return;
-
             showLoading(true);
 
-            // 1. 이미지 업로드 처리 (파일이 있는 경우에만)
             let imgUrl = null;
             if (fileInput.files.length > 0) {
                 try {
                     const file = fileInput.files[0];
-                    const fileName = `hero_${code}_${Date.now()}`; // 파일명 충돌 방지
-
-                    // Supabase 스토리지에 업로드
+                    const fileName = `hero_${code}_${Date.now()}`;
                     const { data, error } = await window.sb.storage.from('images').upload(fileName, file);
-
                     if (error) throw error;
-
-                    // 업로드된 이미지의 공개 주소(URL) 가져오기
                     const { data: urlData } = window.sb.storage.from('images').getPublicUrl(fileName);
                     imgUrl = urlData.publicUrl;
-
                 } catch (e) {
                     showLoading(false);
-                    return alert("이미지 업로드 중 오류가 발생했습니다: " + e.message);
+                    return alert("이미지 업로드 오류: " + e.message);
                 }
             }
 
-            // 2. 데이터베이스에 저장
             const { error } = await window.sb.from('program_categories').insert([{
-                code: code,
-                name: name,
-                type: type,
-                hero_title: name,                        // 제목은 메뉴 이름과 동일하게
-                hero_desc: desc || "새로운 프로그램입니다.", // 설명글 (없으면 기본값)
-                hero_image: imgUrl,                      // 업로드한 이미지 URL (없으면 null)
-                order_num: 99
+                code: code, name: name, type: type,
+                hero_title: name, hero_desc: desc || "새로운 프로그램입니다.",
+                hero_image: imgUrl, order_num: 99
             }]);
 
             showLoading(false);
-
-            if (error) {
-                alert("추가 실패 (코드가 중복되었을 수 있습니다): " + error.message);
-            } else {
-                alert("성공적으로 추가되었습니다.");
-
-                // 입력창 초기화
+            if (error) alert("추가 실패: " + error.message);
+            else {
+                alert("추가되었습니다.");
                 document.getElementById('new-cat-code').value = '';
                 document.getElementById('new-cat-name').value = '';
                 document.getElementById('new-cat-desc').value = '';
                 document.getElementById('new-cat-file').value = '';
-
-                // 목록 새로고침
                 loadAdminCategories();
                 populateCategorySelects();
             }
         }
 
         async function updateCategory(code) {
-            const n = document.getElementById(`cat-name-${code}`).value, t = document.getElementById(`cat-title-${code}`).value, d = document.getElementById(`cat-desc-${code}`).value;
+            const n = document.getElementById(`cat-name-${code}`).value;
+            const t = document.getElementById(`cat-title-${code}`).value;
+            const d = document.getElementById(`cat-desc-${code}`).value;
             const f = document.getElementById(`cat-file-${code}`).files[0];
             let u = null;
-            if (f) { const { data } = await window.sb.storage.from('images').upload(`h_${Date.now()}`, f); u = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl; }
-            const ud = { name: n, hero_title: t, hero_desc: d }; if (u) ud.hero_image = u;
+            if (f) {
+                const { data } = await window.sb.storage.from('images').upload(`h_${Date.now()}`, f);
+                u = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl;
+            }
+            const ud = { name: n, hero_title: t, hero_desc: d };
+            if (u) ud.hero_image = u;
             await window.sb.from('program_categories').update(ud).eq('code', code);
             alert("저장됨"); loadAdminCategories();
         }
 
         async function deleteCategory(code) {
-            if (confirm("삭제?")) { await window.sb.from('program_categories').delete().eq('code', code); alert("삭제됨"); loadAdminCategories(); }
+            if (confirm("삭제하시겠습니까?")) { await window.sb.from('program_categories').delete().eq('code', code); alert("삭제됨"); loadAdminCategories(); }
         }
 
-        window.openSpreadSheet = function () { const url = localStorage.getItem('mySheetUrl'); if (url) window.open(url); else alert("주소 설정 필요"); };
-        window.saveSheetUrl = function () { localStorage.setItem('mySheetUrl', document.getElementById('sheet-url-input').value); alert("저장됨"); };
+        // [수정됨] 구글 시트 주소 저장/열기 함수
+        window.saveSheetUrl = function () {
+            const input = document.getElementById('sheet-url-input');
+            let url = input.value.trim();
+            if (!url) return alert("주소를 입력해주세요.");
+            if (!url.startsWith('http')) url = 'https://' + url;
+            localStorage.setItem('mySheetUrl', url);
+            alert("저장되었습니다.");
+        };
+
+        window.openSavedSheet = function () {
+            const url = localStorage.getItem('mySheetUrl');
+            if (url && url !== "null") window.open(url, '_blank');
+            else {
+                alert("저장된 주소가 없습니다. [신청서 관리] 탭에서 주소를 저장해주세요.");
+                const sheetNav = document.querySelectorAll('.nav-item')[3];
+                if (sheetNav) switchTab('sheets', sheetNav);
+            }
+        };
 
         window.adminLogin = async function () {
             const e = document.getElementById('admin-email').value, p = document.getElementById('admin-password').value;

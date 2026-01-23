@@ -66,7 +66,7 @@ img {
 }
 
 .container-wide {
-    max-width: 1400px; /* 상세페이지 등 넓게 쓸 때 사용 */
+    max-width: 1700px; /* 상세페이지 등 넓게 쓸 때 사용 */
     margin: 0 auto;
     padding: 0 20px;
     box-sizing: border-box;

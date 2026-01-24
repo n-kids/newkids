@@ -127,6 +127,7 @@ body {
     font-size: 1rem;
     box-sizing: border-box;
     min-height: 120px;
+
 }
 
     .form-input:focus {
@@ -274,10 +275,11 @@ body {
         background-color: #f8f9fa;
     }
 
-/* 4. 카테고리 관리 테이블 (Grid + 순서버튼) */
+/* 4. [수정됨] 카테고리 관리 테이블 (노출 버튼 칸 추가) */
 .cat-manage-layout {
     display: grid !important;
-    grid-template-columns: 60px 50px 100px 140px 140px 1fr 50px 110px;
+    /* 유형 | 순서 | 코드 | 메뉴이름 | 제목 | 설명 | 이미지 | 노출 | 관리 */
+    grid-template-columns: 60px 50px 100px 140px 140px 1fr 50px 60px 110px;
     gap: 10px;
     align-items: center;
     padding: 12px 10px;
@@ -484,5 +486,3 @@ body {
         overflow-x: auto;
     }
 }
-
-

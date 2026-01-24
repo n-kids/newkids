@@ -33,20 +33,28 @@
         </div>
     </section>
 
-    <section id="contact" class="contact-section">
+    <!--<section id="news-section">
+        <div class="container">
+            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:40px;">
+                <div style="text-align:left;">
+                    <h2 style="text-align:left; margin-bottom:10px;">📢 뉴키즈 소식</h2>
+                    <p style="color:#666;">공지사항과 새로운 소식을 확인해보세요.</p>
+                </div>
+                <a href="notice.html" style="color:#666; font-size:0.9rem; font-weight:bold;">더보기 +</a>
+            </div>
+            <div id="main-news-grid" class="main-grid">
+                <div style="text-align:center; width:100%; grid-column:1/-1; padding:40px; color:#999;">불러오는 중...</div>
+            </div>
+        </div>
+    </section>-->
+
+    <section id="contact" class="contact-section bg-gray">
         <div class="container">
             <h2 class="contact-title">궁금하신 점이 있으신가요?</h2>
             <p class="contact-desc">아래 번호로 전화주시면 자세한 상담을 도와드리겠습니다.</p>
-            
             <div class="contact-info-wrap">
-                <a href="tel:010-2333-2563" class="contact-link">
-                    <span class="contact-icon">📞</span>
-                    상담문의 1: <strong>010-2333-2563</strong>
-                </a>
-                <a href="tel:010-5522-8109" class="contact-link">
-                    <span class="contact-icon">📞</span>
-                    상담문의 2: <strong>010-5522-8109</strong>
-                </a>
+                <a href="tel:010-2333-2563" class="contact-link"><span class="contact-icon">📞</span>상담문의 1: <strong>010-2333-2563</strong></a>
+                <a href="tel:010-5522-8109" class="contact-link"><span class="contact-icon">📞</span>상담문의 2: <strong>010-5522-8109</strong></a>
             </div>
         </div>
     </section>
@@ -59,60 +67,47 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            // manager.js 로딩 대기 후 실행
             const checkSb = setInterval(() => {
-                if (window.sb) { clearInterval(checkSb); loadMainCategories(); }
+                if (window.sb) { clearInterval(checkSb); loadMainCategories(); loadMainLatestPosts(); }
             }, 100);
         });
 
         async function loadMainCategories() {
             try {
-                const { data } = await window.sb.from('program_categories')
-                    .select('*').eq('is_visible', true).order('order_num');
-
+                const { data } = await window.sb.from('program_categories').select('*').eq('is_visible', true).order('order_num');
                 if (!data) return;
-
                 const eduGrid = document.getElementById('edu-grid');
                 const eventGrid = document.getElementById('event-grid');
                 const legacyFiles = ['season', 'culture', 'performance'];
-
-                // [수정] 카테고리별 아이콘 매핑 목록
-                const iconMap = {
-                    'korean': '🇰🇷',       // 한글
-                    'reading': '📖',      // 독서
-                    'english': '🔤',      // 영어
-                    'math': '🔢',         // 수학
-                    'science': '🔬',      // 과학
-                    'art': '🎨',          // 미술
-                    'coding': '💻',       // 코딩
-                    'environment': '🌱',  // 환경
-                    'nuri': '🐣',         // 누리과정
-                    'infant': '🧸',       // 영아
-                    'special': '✨',      // 특색/기타
-                    'season': '🎉',       // 시즌 테마
-                    'culture': '🌍',      // 원어민 문화
-                    'performance': '👨‍👩‍👧‍👦' // 부모 참여
-                };
+                const iconMap = { 'korean': '🇰🇷', 'reading': '📖', 'english': '🔤', 'math': '🔢', 'science': '🔬', 'art': '🎨', 'coding': '💻', 'environment': '🌱', 'nuri': '🐣', 'infant': '🧸', 'special': '✨', 'season': '🎉', 'culture': '🌍', 'performance': '👨‍👩‍👧‍👦' };
 
                 data.forEach(cat => {
                     let href = cat.type === 'EDU' ? `child.html#${cat.code}` : (legacyFiles.includes(cat.code) ? `${cat.code}.html` : `program.html#${cat.code}`);
-                    
-                    // 매핑된 아이콘이 있으면 사용, 없으면 기본 별(⭐) 사용
                     let icon = iconMap[cat.code] || '⭐';
-
-                    const html = `
-                            <a href="${href}" class="card">
-                                <div class="card-icon">${icon}</div>
-                                <h3>${cat.name}</h3>
-                                <p>${cat.hero_desc || '뉴키즈의 특별한 프로그램'}</p>
-                                <span class="card-link">자세히 보기 &rarr;</span>
-                            </a>`;
-
+                    const html = `<a href="${href}" class="card"><div class="card-icon">${icon}</div><h3>${cat.name}</h3><p>${cat.hero_desc || '뉴키즈의 특별한 프로그램'}</p><span class="card-link">자세히 보기 &rarr;</span></a>`;
                     if (cat.type === 'EDU') eduGrid.insertAdjacentHTML('beforeend', html);
-                    else eventGrid.insertAdjacentHTML('beforeend', html);
+                    else if (cat.type === 'EVENT') eventGrid.insertAdjacentHTML('beforeend', html);
                 });
             } catch (e) { console.error(e); }
         }
+
+        /*async function loadMainLatestPosts() {
+            const grid = document.getElementById('main-news-grid');
+            if (!grid) return;
+            const { data, error } = await window.sb.from('total_posts').select('id, title, category, created_at, thumbnail_url').order('created_at', { ascending: false }).limit(4);
+            if (error || !data || data.length === 0) { grid.innerHTML = '<div style="text-align:center; padding:40px; width:100%; color:#999; grid-column:1/-1;">등록된 소식이 없습니다.</div>'; return; }
+            grid.innerHTML = '';
+            data.forEach(item => {
+                const thumb = item.thumbnail_url || 'https://via.placeholder.com/400x300?text=NEW+KIDS';
+                const date = new Date(item.created_at).toISOString().split('T')[0];
+                let badgeClass = 'style="background:#eee; color:#555;"';
+                let catName = item.category;
+                if (item.category === 'notice') { catName = '공지'; badgeClass = 'style="background:#fff0f0; color:#e74c3c;"'; }
+                else if (item.category === 'free') { catName = '자유'; badgeClass = 'style="background:#f0f7ff; color:#1a3c6e;"'; }
+
+                grid.innerHTML += `<div class="card" onclick="location.href='notice.html'" style="cursor:pointer; text-align:left; align-items:flex-start;"><div class="card-img-wrap" style="height:180px;"><img src="${thumb}" class="card-img" alt="썸네일"></div><div class="card-body" style="padding:20px;"><span style="font-size:0.8rem; font-weight:bold; padding:3px 8px; border-radius:4px; display:inline-block; margin-bottom:8px; ${badgeClass.replace('style="', '').replace('"', '')}">${catName}</span><div class="card-title" style="font-size:1.1rem; margin-bottom:10px;">${item.title}</div><div style="font-size:0.85rem; color:#999; margin-top:auto;">${date}</div></div></div>`;
+            });
+        }*/
     </script>
 </body>
 </html>

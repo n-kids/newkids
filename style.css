@@ -181,7 +181,7 @@ header {
     align-items: center;
     height: 100%;
     max-width: 1800px;
-    margin: 0 auto 0 0;
+    margin: 0 auto 0 -20px;
     padding: 0 20px;
 }
 
@@ -1254,3 +1254,196 @@ header {
             padding-bottom: 10px;
             text-align: left;
         }
+
+/* =========================================
+   [추가] 일반 게시판 (notice.html) 스타일
+   ========================================= */
+.board-header-section {
+    text-align: center;
+    padding: 60px 0 40px;
+    background-color: #f9fbfd;
+    border-bottom: 1px solid #eee;
+}
+
+.board-container {
+    max-width: 1000px;
+    margin: 50px auto;
+    padding: 0 20px;
+}
+
+/* 리스트형 게시판 레이아웃 */
+.board-list-head {
+    display: flex;
+    padding: 15px 10px;
+    border-top: 2px solid #1a3c6e;
+    border-bottom: 1px solid #ddd;
+    background: #f8f9fa;
+    font-weight: 700;
+    color: #333;
+    text-align: center;
+}
+
+.board-list-row {
+    display: flex;
+    padding: 20px 10px;
+    border-bottom: 1px solid #eee;
+    align-items: center;
+    transition: 0.2s;
+    cursor: pointer;
+}
+
+    .board-list-row:hover {
+        background-color: #fcfcfc;
+    }
+
+        .board-list-row:hover .b-title {
+            text-decoration: underline;
+            color: #1a3c6e;
+        }
+
+/* 컬럼 너비 */
+.b-num {
+    width: 60px;
+    text-align: center;
+    color: #888;
+    font-size: 0.9rem;
+}
+
+.b-cat {
+    width: 100px;
+    text-align: center;
+}
+
+.b-title {
+    flex: 1;
+    padding: 0 20px;
+    font-size: 1.05rem;
+    font-weight: 500;
+    color: #333;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.b-date {
+    width: 120px;
+    text-align: center;
+    color: #888;
+    font-size: 0.9rem;
+}
+
+/* 카테고리 뱃지 스타일 */
+.badge {
+    display: inline-block;
+    padding: 4px 10px;
+    font-size: 0.75rem;
+    border-radius: 4px;
+    background: #eef6ff;
+    color: #1a3c6e;
+    font-weight: 600;
+}
+
+/* 모바일 대응 */
+@media (max-width: 768px) {
+    .board-list-head {
+        display: none;
+    }
+    /* 헤더 숨김 */
+    .board-list-row {
+        flex-wrap: wrap;
+        position: relative;
+        padding: 15px;
+    }
+
+    .b-num {
+        display: none;
+    }
+
+    .b-cat {
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        width: auto;
+        text-align: left;
+    }
+
+    .b-title {
+        width: 100%;
+        margin-top: 30px;
+        margin-bottom: 10px;
+        padding: 0;
+        font-size: 1.1rem;
+    }
+
+    .b-date {
+        width: 100%;
+        text-align: left;
+        font-size: 0.85rem;
+    }
+}
+
+/* =========================================
+   [추가] 게시판 탭 & 글쓰기 버튼 스타일
+   ========================================= */
+/* 탭 메뉴 박스 */
+.board-tab-menu {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 40px;
+}
+
+/* 탭 버튼 디자인 */
+.tab-btn {
+    padding: 12px 30px;
+    border: 1px solid #ddd;
+    background: #fff;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #555;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+    /* 활성화된 탭 */
+    .tab-btn.active {
+        background: #1a3c6e;
+        color: #fff;
+        border-color: #1a3c6e;
+        box-shadow: 0 4px 10px rgba(26, 60, 110, 0.3);
+    }
+
+/* 글쓰기 버튼 (우측 정렬용) */
+.board-action-bar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 15px;
+}
+
+.btn-write {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #1a3c6e;
+    color: #fff;
+    border-radius: 5px;
+    font-weight: bold;
+    font-size: 0.95rem;
+    transition: 0.3s;
+}
+
+    .btn-write:hover {
+        background-color: #132b4f;
+        transform: translateY(-2px);
+    }
+
+/* 글쓰기 폼 스타일 (write.html용) */
+.write-box {
+    max-width: 800px;
+    margin: 50px auto;
+    padding: 40px;
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+}

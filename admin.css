@@ -127,7 +127,6 @@ body {
     font-size: 1rem;
     box-sizing: border-box;
     min-height: 120px;
-    overflow-y: hidden;
 }
 
     .form-input:focus {
@@ -485,4 +484,5 @@ body {
         overflow-x: auto;
     }
 }
+
 

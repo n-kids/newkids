@@ -119,6 +119,17 @@ body {
     box-sizing: border-box;
 }
 
+.form-inputp {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+    box-sizing: border-box;
+    min-height: 120px;
+    overflow-y: hidden;
+}
+
     .form-input:focus {
         border-color: #1a3c6e;
         outline: none;
@@ -474,3 +485,4 @@ body {
         overflow-x: auto;
     }
 }
+

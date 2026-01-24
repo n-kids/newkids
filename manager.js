@@ -1,4 +1,4 @@
-﻿// manager.js - 뉴키즈 홈페이지 통합 관리자 (v3.3 - 로딩 순서 최적화)
+﻿// manager.js - 뉴키즈 홈페이지 통합 관리자 (v3.4 - 색상 분리 적용)
 
 window.GLOBAL_CATEGORIES = [];
 
@@ -21,11 +21,9 @@ const DEFAULT_CATEGORIES = [
 ];
 
 (function initSystem() {
-    // 1. [핵심 수정] 라이브러리가 이미 로드되었다면 '즉시' 실행 (지연 없음)
     if (typeof supabase !== 'undefined' && typeof CONFIG !== 'undefined') {
         startSupabase();
     } else {
-        // 2. 만약 라이브러리가 늦게 로드되면 그때만 기다림
         let attempts = 0;
         const waitForSupabase = setInterval(() => {
             if (typeof supabase !== 'undefined' && typeof CONFIG !== 'undefined') {
@@ -33,10 +31,9 @@ const DEFAULT_CATEGORIES = [
                 startSupabase();
             } else {
                 attempts++;
-                if (attempts > 50) { // 5초 초과 시 중단
+                if (attempts > 50) {
                     clearInterval(waitForSupabase);
                     console.error("Supabase 로드 실패");
-                    // 강제로 화면이라도 보여줌
                     document.querySelectorAll('.hero, .sub-hero').forEach(el => el.classList.add('loaded'));
                 }
             }
@@ -45,12 +42,9 @@ const DEFAULT_CATEGORIES = [
 })();
 
 function startSupabase() {
-    // DB 연결 객체 생성
     window.sb = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY, {
         auth: { persistSession: true, storage: window.sessionStorage }
     });
-
-    // 설정 및 카테고리 로드 시작
     loadSiteConfig();
     loadCategories();
 }
@@ -76,13 +70,14 @@ async function loadSiteConfig() {
                     mainHero.style.backgroundImage = `linear-gradient(rgba(26,60,110,0.4), rgba(26,60,110,0.4)), url('${data.main_hero_image}')`;
                 }
 
-                // [색상 적용]
-                if (data.main_hero_text_color) {
-                    mainHero.style.color = data.main_hero_text_color;
+                // [수정] 메인 색상 적용 (제목, 내용 분리)
+                if (data.main_hero_title_color) {
                     const h1 = mainHero.querySelector('h1');
+                    if (h1) h1.style.color = data.main_hero_title_color;
+                }
+                if (data.main_hero_desc_color) {
                     const p = mainHero.querySelector('p');
-                    if (h1) h1.style.color = data.main_hero_text_color;
-                    if (p) p.style.color = data.main_hero_text_color;
+                    if (p) p.style.color = data.main_hero_desc_color;
                 }
 
                 const titleEl = mainHero.querySelector('h1');
@@ -94,7 +89,6 @@ async function loadSiteConfig() {
         }
     } catch (e) { console.error("설정 로드 실패:", e); }
 
-    // [핵심] 로딩 완료 후 화면 표시
     if (mainHero) mainHero.classList.add('loaded');
 }
 
@@ -128,7 +122,7 @@ function applySubPageHero() {
     } else if (location.pathname.includes('program.html')) {
         currentCode = location.hash.replace('#', '');
     } else if (location.pathname.includes('view.html')) {
-        // 상세 페이지는 view.html 내부 로직 따름
+        // 상세 페이지 별도 처리
     } else {
         currentCode = location.pathname.split('/').pop().replace('.html', '');
     }
@@ -141,13 +135,14 @@ function applySubPageHero() {
             hero.style.backgroundPosition = 'center';
         }
 
-        // [색상 적용]
-        if (category.hero_text_color) {
-            hero.style.color = category.hero_text_color;
+        // [수정] 서브 페이지 색상 적용 (제목, 내용 분리)
+        if (category.hero_title_color) {
             const h1 = hero.querySelector('h1');
+            if (h1) h1.style.color = category.hero_title_color;
+        }
+        if (category.hero_desc_color) {
             const p = hero.querySelector('p');
-            if (h1) h1.style.color = category.hero_text_color;
-            if (p) p.style.color = category.hero_text_color;
+            if (p) p.style.color = category.hero_desc_color;
         }
 
         const titleEl = hero.querySelector('h1');
@@ -156,7 +151,6 @@ function applySubPageHero() {
         if (descEl && category.hero_desc) descEl.innerHTML = category.hero_desc;
     }
 
-    // [핵심] 로딩 완료 후 화면 표시 (서브페이지)
     hero.classList.add('loaded');
 }
 
@@ -172,20 +166,20 @@ window.updateHeroBackground = function (categoryCode) {
             hero.style.backgroundPosition = 'center';
         }
 
-        // [색상 적용]
-        if (category.hero_text_color) {
-            hero.style.color = category.hero_text_color;
+        // [수정] 상세 페이지 색상 적용 (제목, 내용 분리)
+        if (category.hero_title_color) {
             const h1 = hero.querySelector('h1');
+            if (h1) h1.style.color = category.hero_title_color;
+        }
+        if (category.hero_desc_color) {
             const p = hero.querySelector('p');
-            if (h1) h1.style.color = category.hero_text_color;
-            if (p) p.style.color = category.hero_text_color;
+            if (p) p.style.color = category.hero_desc_color;
         }
     } else {
         hero.className = 'sub-hero bg-gray';
         hero.style.backgroundImage = 'none';
     }
 
-    // [핵심] 상세 페이지 로딩 완료
     hero.classList.add('loaded');
 };
 
@@ -193,7 +187,6 @@ function loadHeader() {
     const headerEl = document.querySelector('header');
     if (!headerEl) return;
 
-    // 데이터가 없으면 기본값이라도 사용 (메뉴 렌더링 보장)
     const categories = (window.GLOBAL_CATEGORIES && window.GLOBAL_CATEGORIES.length > 0)
         ? window.GLOBAL_CATEGORIES
         : DEFAULT_CATEGORIES;
@@ -242,7 +235,6 @@ document.addEventListener("DOMContentLoaded", function () {
     window.addEventListener('hashchange', () => { if (location.pathname.includes('child.html') || location.pathname.includes('program.html')) applySubPageHero(); });
 });
 
-/* 모바일 메뉴 */
 document.addEventListener("DOMContentLoaded", function () {
     const mobileBtn = document.querySelector('.mobile-btn');
     const navMenu = document.querySelector('.nav-menu');

@@ -8,6 +8,20 @@
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="admin.css">
+    <style>
+        /* 색상 선택기 스타일 최적화 */
+        .color-picker-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .color-picker-label {
+            font-size: 0.7rem;
+            color: #666;
+        }
+    </style>
 </head>
 <body>
 
@@ -127,9 +141,8 @@
                     <div class="form-group">
                         <label class="form-label">내용 (에디터)</label>
                         <p style="font-size:0.85rem; color:#666; background:#f0f7ff; padding:10px; border-radius:5px; margin-bottom:10px;">
-                            💡 <strong>이미지 이동 팁:</strong><br>
-                            1. <strong>드래그 이동:</strong> 이미지를 클릭 후 드래그하여 상/하단 끝으로 가져가면 <strong>자동으로 스크롤</strong>됩니다.<br>
-                            2. <strong>좌우 배치:</strong> 이미지를 클릭하면 나타나는 메뉴에서 정렬 아이콘을 선택하세요.
+                            💡 <strong>팁:</strong> 도구 모음의 <u>'A' 밑줄 쳐진 아이콘</u>을 누르면 <strong>글자 색상</strong>을 변경할 수 있습니다.<br>
+                            이미지는 드래그하여 위치를 옮길 수 있습니다.
                         </p>
                         <div id="editor-container"></div>
                     </div>
@@ -211,9 +224,8 @@
 
                 <div class="panel-box">
                     <p style="color:#666; margin-bottom:20px;">
-                        목록의 순서를 변경하려면 <strong>▲ ▼ 버튼</strong>을 누르세요. 수정 후 <strong>[저장]</strong>을 눌러야 반영됩니다.<br>
-                        <strong>[노출]</strong> 버튼을 눌러 홈페이지 표시 여부를 설정할 수 있습니다.<br>
-                        <strong>[색상]</strong>을 클릭하여 글씨 색을 변경할 수 있습니다.
+                        목록의 순서를 변경하려면 <strong>▲ ▼ 버튼</strong>을 누르세요.<br>
+                        <strong>[색상]</strong> 칼럼에서 제목과 내용의 색상을 각각 지정할 수 있습니다. 수정 후 반드시 <strong>[저장]</strong>을 눌러주세요.
                     </p>
                     <div id="category-list-container">
                         로딩 중...
@@ -253,11 +265,17 @@
                             <textarea id="conf-main-desc" class="form-inputp" placeholder="메인 화면에 노출될 설명글을 입력하세요."></textarea>
                         </div>
 
-                        <div class="form-group" style="margin-top:15px;">
-                            <label class="form-label">메인 글자 색상</label>
-                            <div style="display:flex; align-items:center; gap:10px;">
-                                <input type="color" id="conf-main-text-color" style="width:60px; height:40px; border:none; background:none; cursor:pointer;">
-                                <span style="font-size:0.9rem; color:#666;">제목과 설명글의 색상을 변경합니다.</span>
+                        <div class="form-group" style="margin-top:15px; border-top:1px dashed #ccc; padding-top:15px;">
+                            <label class="form-label">텍스트 색상 설정</label>
+                            <div style="display:flex; gap:30px;">
+                                <div class="color-picker-group">
+                                    <span class="color-picker-label">큰 제목</span>
+                                    <input type="color" id="conf-main-title-color" style="width:60px; height:40px; border:none; background:none; cursor:pointer;">
+                                </div>
+                                <div class="color-picker-group">
+                                    <span class="color-picker-label">설명글</span>
+                                    <input type="color" id="conf-main-desc-color" style="width:60px; height:40px; border:none; background:none; cursor:pointer;">
+                                </div>
                             </div>
                         </div>
 
@@ -329,7 +347,7 @@
 
         // [초기화]
         document.addEventListener("DOMContentLoaded", async function () {
-            // 에디터 설정
+            // [수정] 에디터 설정 (색상 선택기 포함)
             Quill.register('modules/blotFormatter', QuillBlotFormatter.default);
             quill = new Quill('#editor-container', {
                 theme: 'snow',
@@ -338,6 +356,7 @@
                     toolbar: {
                         container: [
                             [{ 'header': [1, 2, 3, false] }],
+                            // [중요] color와 background 옵션이 있는지 확인
                             ['bold', 'italic', 'underline', { 'color': [] }, { 'background': [] }],
                             [{ 'align': [] }, 'link', 'image', 'video']
                         ],
@@ -389,17 +408,21 @@
 
                 categoryList = data; // 전역 저장
 
-                // [수정] 헤더에 '색상' 컬럼 추가 및 Grid Style 변경
-                const gridStyle = "grid-template-columns: 60px 50px 80px 120px 120px 50px 1fr 50px 60px 110px;";
+                // [수정] 그리드 레이아웃 확장 (색상 컬럼 2개로 분리)
+                // Grid: 유형(60) | 순서(50) | 코드(80) | 이름(120) | 제목(120) | 제목색(40) | 내용색(40) | 설명(1fr) | 이미지(50) | 노출(60) | 관리(110)
+                const gridStyle = "grid-template-columns: 60px 50px 80px 120px 120px 45px 45px 1fr 50px 60px 110px;";
 
                 let html = `
                         <div class="cat-manage-layout cat-manage-header" style="${gridStyle}">
-                            <div>유형</div><div>순서</div><div>코드</div><div>메뉴 이름</div><div>상단 제목</div><div>색상</div><div>설명글 (내용)</div><div>이미지</div><div>노출</div><div>관리</div>
+                            <div>유형</div><div>순서</div><div>코드</div><div>메뉴 이름</div><div>상단 제목</div><div>T색</div><div>C색</div><div>설명글 (내용)</div><div>이미지</div><div>노출</div><div>관리</div>
                         </div>`;
 
                 data.forEach((cat, index) => {
                     const thumb = cat.hero_image || 'https://via.placeholder.com/50?text=No';
-                    const textColor = cat.hero_text_color || '#ffffff'; // 기본값 흰색
+
+                    // [수정] 분리된 색상 값 가져오기
+                    const titleColor = cat.hero_title_color || '#ffffff';
+                    const descColor = cat.hero_desc_color || '#ffffff';
 
                     let badgeColor = '#999';
                     let badgeText = cat.type;
@@ -424,7 +447,10 @@
                                 <div class="cat-cell-input"><input type="text" id="title-${cat.code}" value="${cat.hero_title || ''}"></div>
 
                                 <div class="cat-cell-center">
-                                    <input type="color" id="color-${cat.code}" value="${textColor}" style="width:40px; height:30px; padding:0; border:none; background:none; cursor:pointer;">
+                                    <input type="color" id="t-color-${cat.code}" value="${titleColor}" title="제목 색상" style="width:30px; height:30px; padding:0; border:none; background:none; cursor:pointer;">
+                                </div>
+                                <div class="cat-cell-center">
+                                    <input type="color" id="d-color-${cat.code}" value="${descColor}" title="내용 색상" style="width:30px; height:30px; padding:0; border:none; background:none; cursor:pointer;">
                                 </div>
 
                                 <div class="cat-cell-input"><input type="text" id="desc-${cat.code}" value="${cat.hero_desc || ''}"></div>
@@ -477,7 +503,11 @@
             const n = document.getElementById(`name-${code}`).value;
             const t = document.getElementById(`title-${code}`).value;
             const d = document.getElementById(`desc-${code}`).value;
-            const c = document.getElementById(`color-${code}`).value; // 색상 값 가져오기
+
+            // [수정] 2개의 색상 값 가져오기
+            const tc = document.getElementById(`t-color-${code}`).value;
+            const dc = document.getElementById(`d-color-${code}`).value;
+
             const f = document.getElementById(`file-${code}`).files[0];
             let u = null;
 
@@ -487,7 +517,14 @@
                 u = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl;
             }
 
-            const ud = { name: n, hero_title: t, hero_desc: d, hero_text_color: c }; // 색상 포함
+            // [수정] DB 필드명에 맞춰 저장
+            const ud = {
+                name: n,
+                hero_title: t,
+                hero_desc: d,
+                hero_title_color: tc,
+                hero_desc_color: dc
+            };
             if (u) ud.hero_image = u;
 
             await window.sb.from('program_categories').update(ud).eq('code', code);
@@ -629,8 +666,9 @@
                 document.getElementById('conf-main-title').value = data.main_hero_title || "";
                 document.getElementById('conf-main-desc').value = data.main_hero_desc || "";
 
-                // [수정] 메인 색상 로드
-                document.getElementById('conf-main-text-color').value = data.main_hero_text_color || "#ffffff";
+                // [수정] 분리된 색상 값 로드
+                document.getElementById('conf-main-title-color').value = data.main_hero_title_color || "#ffffff";
+                document.getElementById('conf-main-desc-color').value = data.main_hero_desc_color || "#ffffff";
 
                 if (data.main_hero_image) {
                     document.getElementById('preview-main-hero').src = data.main_hero_image;
@@ -660,7 +698,11 @@
                 accent_color: document.getElementById('conf-accent').value,
                 main_hero_title: document.getElementById('conf-main-title').value,
                 main_hero_desc: document.getElementById('conf-main-desc').value,
-                main_hero_text_color: document.getElementById('conf-main-text-color').value, // [수정] 색상 저장
+
+                // [수정] 분리된 색상 값 저장
+                main_hero_title_color: document.getElementById('conf-main-title-color').value,
+                main_hero_desc_color: document.getElementById('conf-main-desc-color').value,
+
                 main_hero_image: mainHeroUrl,
                 updated_at: new Date()
             };

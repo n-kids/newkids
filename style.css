@@ -1486,3 +1486,28 @@ header {
         opacity: 1;
         visibility: visible;
     }
+
+/* =========================================
+   [추가] 에디터 글자 정렬 호환성 패치
+   ========================================= */
+
+/* 가운데 정렬 강제 적용 */
+.view-content .ql-align-center {
+    text-align: center !important;
+}
+
+/* 오른쪽 정렬 강제 적용 */
+.view-content .ql-align-right {
+    text-align: right !important;
+}
+
+/* 양쪽 정렬 강제 적용 */
+.view-content .ql-align-justify {
+    text-align: justify !important;
+}
+
+/* (선택사항) 이미지가 가운데 정렬된 경우 배치 보정 */
+.view-content .ql-align-center img {
+    margin-left: auto;
+    margin-right: auto;
+}

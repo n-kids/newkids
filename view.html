@@ -6,6 +6,39 @@
     <title>뉴키즈 - 상세 내용</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+
+    <style>
+        /* 1. 텍스트 정렬 강제 적용 */
+        .view-content .ql-align-center {
+            text-align: center !important;
+        }
+
+        .view-content .ql-align-right {
+            text-align: right !important;
+        }
+
+        .view-content .ql-align-justify {
+            text-align: justify !important;
+        }
+
+        /* 2. 이미지 정렬 강제 적용 (기본 CSS의 display:block 속성 덮어쓰기) */
+        .view-content .ql-align-center img {
+            display: block;
+            margin: 0 auto !important;
+        }
+
+        .view-content .ql-align-right img {
+            display: block;
+            margin-left: auto !important;
+            margin-right: 0 !important;
+        }
+
+        .view-content .ql-align-left img {
+            display: block;
+            margin-left: 0 !important;
+            margin-right: auto !important;
+        }
+    </style>
 </head>
 <body>
     <header></header>

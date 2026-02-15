@@ -83,6 +83,7 @@
             border-radius: 8px;
             justify-content: center;
             border: 1px solid #eee;
+            align-items: center;
         }
 
         .tool-group {
@@ -133,24 +134,25 @@
             border-radius: 4px;
         }
 
+        /* [캔버스 컨테이너: 확대 시 스크롤 가능] */
         .crop-container {
             border: 2px dashed #ccc;
             margin: 10px 0;
-            max-width: 100%;
-            overflow: hidden;
+            width: 100%;
             background: #fafafa;
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             position: relative;
-            min-height: 300px;
+            height: 65vh;
+            overflow: auto;
         }
 
         #crop-source-canvas {
             display: block;
-            max-width: 100%;
-            cursor: crosshair;
+            transform-origin: top left;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin: auto;
         }
 
         .modal-btns {
@@ -495,6 +497,14 @@
                     <button onclick="setEditMode('draw')" id="btn-mode-draw" class="btn-tool">🖌️ 펜</button>
                     <button onclick="setEditMode('text')" id="btn-mode-text" class="btn-tool">🅰️ 텍스트</button>
                 </div>
+
+                <div class="tool-group">
+                    <span class="tool-label">줌</span>
+                    <button onclick="zoomImage(-0.1)" class="btn-tool" title="축소">－</button>
+                    <span id="zoom-level" style="font-size:0.8rem; min-width:40px; text-align:center; font-weight:bold;">100%</span>
+                    <button onclick="zoomImage(0.1)" class="btn-tool" title="확대">＋</button>
+                </div>
+
                 <div class="tool-group">
                     <span class="tool-label">속성</span>
                     <input type="color" id="pen-color" value="#ff0000" style="width:30px; height:30px; border:none; padding:0; cursor:pointer;">
@@ -512,7 +522,7 @@
                     <button onclick="resetImage()" class="btn-tool" style="color:#e74c3c;">초기화</button>
                 </div>
             </div>
-            <p class="guide-text" id="guide-msg">✂️ 마우스로 드래그하여 자를 영역을 선택하세요. (ESC: 취소)</p>
+            <p class="guide-text" id="guide-msg">✂️ 마우스로 드래그하여 자를 영역을 선택하세요. (확대 후 스크롤 가능)</p>
             <div class="crop-container"><canvas id="crop-source-canvas"></canvas></div>
             <div class="modal-btns">
                 <button onclick="closeCropModal()" class="btn-cancel">취소</button>
@@ -534,6 +544,8 @@
         let cropCanvas, cropCtx, cropImage, originalImageSrc = null; let isDragging = false; let cropStartX, cropStartY, cropRectW, cropRectH;
         let currentCropType = 'thumb'; let currentMode = 'crop'; let selectedEditorImage = null; let activeCategoryCode = null;
         let textObjects = []; let selectedTextIdx = -1; let isResizingText = false;
+
+        let currentZoom = 1.0;
 
         document.addEventListener("DOMContentLoaded", async function () {
             if (typeof Quill !== 'undefined') {
@@ -560,25 +572,191 @@
             }, 500);
         });
 
-        // ... (이미지 편집 관련 함수들 생략 - 기존과 동일) ...
+        // [줌 기능]
+        function zoomImage(step) {
+            currentZoom += step;
+            if (currentZoom < 0.1) currentZoom = 0.1;
+            if (currentZoom > 5.0) currentZoom = 5.0;
+            updateCanvasZoom();
+        }
+
+        function updateCanvasZoom() {
+            if (!cropCanvas) return;
+            const newWidth = cropCanvas.width * currentZoom;
+            const newHeight = cropCanvas.height * currentZoom;
+            cropCanvas.style.width = newWidth + 'px';
+            cropCanvas.style.height = newHeight + 'px';
+            cropCanvas.style.maxWidth = 'none';
+            cropCanvas.style.maxHeight = 'none';
+            document.getElementById('zoom-level').innerText = Math.round(currentZoom * 100) + '%';
+        }
+
         function initEditorInteraction() { const editor = document.getElementById('editor-container'); const btn = document.getElementById('img-edit-btn'); editor.addEventListener('dragover', (e) => { e.preventDefault(); editor.classList.add('drag-over'); }); editor.addEventListener('dragleave', (e) => { e.preventDefault(); editor.classList.remove('drag-over'); }); editor.addEventListener('drop', (e) => { e.preventDefault(); editor.classList.remove('drag-over'); if (e.dataTransfer.files && e.dataTransfer.files.length > 0) handleDirectUpload(e.dataTransfer.files); }); quill.root.addEventListener('click', (e) => { if (e.target && e.target.tagName === 'IMG') { selectedEditorImage = e.target; const rect = selectedEditorImage.getBoundingClientRect(); btn.style.top = (rect.top + window.scrollY + rect.height / 2) + 'px'; btn.style.left = (rect.left + window.scrollX + rect.width / 2) + 'px'; btn.style.display = 'block'; } else { btn.style.display = 'none'; selectedEditorImage = null; } }); window.addEventListener('scroll', () => { btn.style.display = 'none'; }); }
         async function handleDirectUpload(files) { showLoading(true); try { for (let i = 0; i < files.length; i++) { const file = files[i]; if (!file.type.startsWith('image/')) continue; const fileName = `direct_${Date.now()}_${i}.jpg`; const { data, error } = await window.sb.storage.from('images').upload(fileName, file); if (error) throw error; const { data: urlData } = window.sb.storage.from('images').getPublicUrl(data.path); const range = quill.getSelection(true); let idx = range ? range.index : quill.getLength(); quill.insertEmbed(idx, 'image', urlData.publicUrl); quill.setSelection(idx + 1); } } catch (e) { alert("오류: " + e.message); } finally { showLoading(false); } }
         function openEditorForSelectedImage() { if (!selectedEditorImage) return; document.getElementById('img-edit-btn').style.display = 'none'; currentCropType = 'editor'; const img = new Image(); img.crossOrigin = "anonymous"; img.onload = function () { openCropModalWithImage(img); }; img.onerror = function () { alert("이미지 로드 실패 (CORS 정책 확인 필요)"); }; img.src = selectedEditorImage.src; }
         function startNewCanvas() { currentCropType = 'editor'; const canvas = document.createElement('canvas'); canvas.width = 800; canvas.height = 600; const ctx = canvas.getContext('2d'); ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, 800, 600); const img = new Image(); img.onload = function () { openCropModalWithImage(img); }; img.src = canvas.toDataURL(); }
         function initEditSystem() { const thumbInput = document.getElementById('post-thumb-file'); const editorInput = document.getElementById('hidden-image-input'); const mainHeroInput = document.getElementById('conf-main-hero'); const newCatInput = document.getElementById('new-cat-file'); cropCanvas = document.getElementById('crop-source-canvas'); if (!cropCanvas) return; cropCtx = cropCanvas.getContext('2d'); thumbInput.addEventListener('change', function (e) { if (this.files && this.files[0]) { currentCropType = 'thumb'; openCropModalFromFile(this.files[0]); } }); editorInput.addEventListener('change', function (e) { if (this.files && this.files.length > 0) { handleDirectUpload(this.files); } this.value = ''; }); if (mainHeroInput) mainHeroInput.addEventListener('change', function (e) { if (this.files && this.files[0]) { currentCropType = 'main-hero'; openCropModalFromFile(this.files[0]); } }); if (newCatInput) newCatInput.addEventListener('change', function (e) { if (this.files && this.files[0]) { currentCropType = 'sub-hero-new'; openCropModalFromFile(this.files[0]); } }); cropCanvas.addEventListener('mousedown', handleMouseDown); cropCanvas.addEventListener('mousemove', handleMouseMove); cropCanvas.addEventListener('mouseup', handleMouseUp); cropCanvas.addEventListener('mouseout', handleMouseUp); }
         function openCropModalFromFile(file) { const reader = new FileReader(); reader.onload = function (evt) { const img = new Image(); img.onload = function () { openCropModalWithImage(img); }; img.src = evt.target.result; }; reader.readAsDataURL(file); }
-        function openCropModalWithImage(img) { cropImage = img; originalImageSrc = img.src; cropCanvas.width = img.width; cropCanvas.height = img.height; if (img.width > 800) { cropCanvas.style.width = '100%'; cropCanvas.style.height = 'auto'; } else { cropCanvas.style.width = img.width + 'px'; cropCanvas.style.height = 'auto'; } textObjects = []; selectedTextIdx = -1; setEditMode('crop'); cropRectW = 0; cropRectH = 0; redrawCanvas(); document.getElementById('crop-modal').style.display = 'flex'; }
-        function setEditMode(mode) { currentMode = mode;['crop', 'draw', 'text'].forEach(m => { const btn = document.getElementById('btn-mode-' + m); if (btn) btn.className = (m === mode) ? 'btn-tool active' : 'btn-tool'; }); if (mode === 'crop') { cropCanvas.style.cursor = 'crosshair'; document.getElementById('guide-msg').innerText = "✂️ 드래그하여 자르기"; } else if (mode === 'draw') { cropCanvas.style.cursor = 'pen'; document.getElementById('guide-msg').innerText = "🖌️ 그리기"; updateCropImageFromCanvas(); textObjects = []; selectedTextIdx = -1; cropRectW = 0; } else if (mode === 'text') { cropCanvas.style.cursor = 'default'; document.getElementById('guide-msg').innerText = "🅰️ 텍스트 선택(이동) / ■ 핸들(크기 조절)"; cropRectW = 0; } redrawCanvas(); }
+
+        function openCropModalWithImage(img) {
+            cropImage = img;
+            originalImageSrc = img.src;
+            cropCanvas.width = img.width;
+            cropCanvas.height = img.height;
+
+            // 화면 맞춤 초기 배율 계산
+            const containerW = document.querySelector('.crop-container').clientWidth - 40;
+            const containerH = window.innerHeight * 0.65;
+
+            const scaleW = containerW / img.width;
+            const scaleH = containerH / img.height;
+            let startScale = Math.min(scaleW, scaleH);
+            if (startScale > 1) startScale = 1;
+
+            currentZoom = startScale;
+            updateCanvasZoom();
+
+            textObjects = [];
+            selectedTextIdx = -1;
+            setEditMode('crop');
+            cropRectW = 0;
+            cropRectH = 0;
+            redrawCanvas();
+            document.getElementById('crop-modal').style.display = 'flex';
+        }
+
+        function setEditMode(mode) {
+            currentMode = mode;
+            ['crop', 'draw', 'text'].forEach(m => {
+                const btn = document.getElementById('btn-mode-' + m);
+                if (btn) btn.className = (m === mode) ? 'btn-tool active' : 'btn-tool';
+            });
+            if (mode === 'crop') {
+                cropCanvas.style.cursor = 'crosshair';
+                document.getElementById('guide-msg').innerText = "✂️ 드래그하여 자르기";
+            } else if (mode === 'draw') {
+                cropCanvas.style.cursor = 'pen';
+                document.getElementById('guide-msg').innerText = "🖌️ 그리기";
+                // 그리기 모드 전환 시 이전 상태 저장 (텍스트/자르기 초기화)
+                updateCropImageFromCanvas();
+                textObjects = [];
+                selectedTextIdx = -1;
+                cropRectW = 0;
+            } else if (mode === 'text') {
+                cropCanvas.style.cursor = 'default';
+                document.getElementById('guide-msg').innerText = "🅰️ 텍스트 선택(이동) / ■ 핸들(크기 조절)";
+                cropRectW = 0;
+            }
+            redrawCanvas();
+        }
+
         function addTextToCanvas() { const text = document.getElementById('text-input').value; if (!text) return alert("내용을 입력하세요."); const color = document.getElementById('pen-color').value; const size = document.getElementById('pen-width').value * 5 + 20; textObjects.push({ text: text, x: cropCanvas.width / 2, y: cropCanvas.height / 2, color: color, size: size }); setEditMode('text'); selectedTextIdx = textObjects.length - 1; redrawCanvas(); }
         function updateSelectedTextProp() { if (currentMode === 'text' && selectedTextIdx !== -1) { textObjects[selectedTextIdx].color = document.getElementById('pen-color').value; textObjects[selectedTextIdx].size = document.getElementById('pen-width').value * 5 + 20; redrawCanvas(); } }
         function deleteSelectedText() { if (selectedTextIdx !== -1) { textObjects.splice(selectedTextIdx, 1); selectedTextIdx = -1; redrawCanvas(); } else { alert("선택된 텍스트가 없습니다."); } }
         function rotateImage(deg) { updateCropImageFromCanvas(); textObjects = []; selectedTextIdx = -1; const tempC = document.createElement('canvas'); const tempX = tempC.getContext('2d'); if (Math.abs(deg) === 90) { tempC.width = cropImage.height; tempC.height = cropImage.width; } else { tempC.width = cropImage.width; tempC.height = cropImage.height; } tempX.translate(tempC.width / 2, tempC.height / 2); tempX.rotate(deg * Math.PI / 180); tempX.drawImage(cropImage, -cropImage.width / 2, -cropImage.height / 2); cropImage.src = tempC.toDataURL(); cropRectW = 0; }
-        function resetImage() { const img = new Image(); img.onload = function () { cropCanvas.width = img.width; cropCanvas.height = img.height; cropImage = img; cropRectW = 0; textObjects = []; selectedTextIdx = -1; redrawCanvas(); }; img.src = originalImageSrc; }
+        function resetImage() { const img = new Image(); img.onload = function () { cropCanvas.width = img.width; cropCanvas.height = img.height; cropImage = img; cropRectW = 0; textObjects = []; selectedTextIdx = -1; redrawCanvas(); updateCanvasZoom(); }; img.src = originalImageSrc; }
+
+        // [펜 그리기 전용 저장 함수 추가]
+        function saveDrawingState() {
+            const url = cropCanvas.toDataURL();
+            cropImage.src = url;
+        }
+
         function updateCropImageFromCanvas() { selectedTextIdx = -1; redrawCanvas(); const url = cropCanvas.toDataURL(); cropImage.src = url; }
-        function handleMouseDown(e) { isDragging = true; const pos = getPos(e); if (currentMode === 'text' && selectedTextIdx !== -1) { const t = textObjects[selectedTextIdx]; cropCtx.font = `bold ${t.size}px sans-serif`; const metrics = cropCtx.measureText(t.text); const w = metrics.width + 10; const h = t.size + 10; const handleX = t.x + w / 2; const handleY = t.y + h / 2; if (Math.hypot(pos.x - handleX, pos.y - handleY) < 15) { isResizingText = true; return; } } if (currentMode === 'crop') { cropStartX = pos.x; cropStartY = pos.y; cropRectW = 0; cropRectH = 0; } else if (currentMode === 'draw') { cropCtx.beginPath(); cropCtx.moveTo(pos.x, pos.y); cropCtx.strokeStyle = document.getElementById('pen-color').value; cropCtx.lineWidth = document.getElementById('pen-width').value; cropCtx.lineCap = 'round'; } else if (currentMode === 'text') { let clickedIdx = -1; for (let i = textObjects.length - 1; i >= 0; i--) { const t = textObjects[i]; cropCtx.font = `bold ${t.size}px sans-serif`; const metrics = cropCtx.measureText(t.text); if (pos.x >= t.x - metrics.width / 2 && pos.x <= t.x + metrics.width / 2 && pos.y >= t.y - t.size / 2 && pos.y <= t.y + t.size / 2) { clickedIdx = i; break; } } selectedTextIdx = clickedIdx; if (selectedTextIdx !== -1) { const sel = textObjects[selectedTextIdx]; document.getElementById('pen-color').value = sel.color; let val = Math.round((sel.size - 20) / 5); if ([2, 5, 10, 20].includes(val)) document.getElementById('pen-width').value = val; } redrawCanvas(); } }
-        function handleMouseMove(e) { const pos = getPos(e); if (currentMode === 'text' && selectedTextIdx !== -1) { const t = textObjects[selectedTextIdx]; cropCtx.font = `bold ${t.size}px sans-serif`; const w = cropCtx.measureText(t.text).width + 10; const h = t.size + 10; if (Math.hypot(pos.x - (t.x + w / 2), pos.y - (t.y + h / 2)) < 15) cropCanvas.style.cursor = 'nwse-resize'; else cropCanvas.style.cursor = 'default'; } if (!isDragging) return; if (isResizingText && selectedTextIdx !== -1) { const t = textObjects[selectedTextIdx]; const dy = Math.abs(pos.y - t.y); t.size = Math.max(10, dy * 2 - 10); redrawCanvas(); return; } if (currentMode === 'crop') { cropRectW = pos.x - cropStartX; cropRectH = pos.y - cropStartY; redrawCanvas(); } else if (currentMode === 'draw') { cropCtx.lineTo(pos.x, pos.y); cropCtx.stroke(); } else if (currentMode === 'text' && selectedTextIdx !== -1) { textObjects[selectedTextIdx].x = pos.x; textObjects[selectedTextIdx].y = pos.y; redrawCanvas(); } }
-        function handleMouseUp(e) { if (isDragging && currentMode === 'draw') { cropCtx.closePath(); updateCropImageFromCanvas(); } isDragging = false; isResizingText = false; }
-        function getPos(e) { const rect = cropCanvas.getBoundingClientRect(); const scaleX = cropCanvas.width / rect.width; const scaleY = cropCanvas.height / rect.height; return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY }; }
+
+        function getPos(e) {
+            const rect = cropCanvas.getBoundingClientRect();
+            const scaleX = cropCanvas.width / rect.width;
+            const scaleY = cropCanvas.height / rect.height;
+            return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY };
+        }
+
+        function handleMouseDown(e) {
+            isDragging = true;
+            const pos = getPos(e);
+            if (currentMode === 'text' && selectedTextIdx !== -1) {
+                const t = textObjects[selectedTextIdx];
+                cropCtx.font = `bold ${t.size}px sans-serif`;
+                const metrics = cropCtx.measureText(t.text);
+                const w = metrics.width + 10;
+                const h = t.size + 10;
+                const handleX = t.x + w / 2;
+                const handleY = t.y + h / 2;
+                if (Math.hypot(pos.x - handleX, pos.y - handleY) < 15) { isResizingText = true; return; }
+            }
+
+            if (currentMode === 'crop') {
+                cropStartX = pos.x;
+                cropStartY = pos.y;
+                cropRectW = 0;
+                cropRectH = 0;
+            } else if (currentMode === 'draw') {
+                cropCtx.beginPath();
+                cropCtx.moveTo(pos.x, pos.y);
+                cropCtx.strokeStyle = document.getElementById('pen-color').value;
+                // [수정] 선 굵기 숫자로 변환
+                cropCtx.lineWidth = parseInt(document.getElementById('pen-width').value, 10);
+                cropCtx.lineCap = 'round';
+                cropCtx.lineJoin = 'round';
+            } else if (currentMode === 'text') {
+                let clickedIdx = -1;
+                for (let i = textObjects.length - 1; i >= 0; i--) {
+                    const t = textObjects[i];
+                    cropCtx.font = `bold ${t.size}px sans-serif`;
+                    const metrics = cropCtx.measureText(t.text);
+                    if (pos.x >= t.x - metrics.width / 2 && pos.x <= t.x + metrics.width / 2 && pos.y >= t.y - t.size / 2 && pos.y <= t.y + t.size / 2) { clickedIdx = i; break; }
+                }
+                selectedTextIdx = clickedIdx;
+                if (selectedTextIdx !== -1) {
+                    const sel = textObjects[selectedTextIdx];
+                    document.getElementById('pen-color').value = sel.color;
+                    let val = Math.round((sel.size - 20) / 5);
+                    if ([2, 5, 10, 20].includes(val)) document.getElementById('pen-width').value = val;
+                }
+                redrawCanvas();
+            }
+        }
+
+        function handleMouseMove(e) {
+            const pos = getPos(e);
+            if (currentMode === 'text' && selectedTextIdx !== -1) {
+                const t = textObjects[selectedTextIdx];
+                cropCtx.font = `bold ${t.size}px sans-serif`;
+                const w = cropCtx.measureText(t.text).width + 10;
+                const h = t.size + 10;
+                if (Math.hypot(pos.x - (t.x + w / 2), pos.y - (t.y + h / 2)) < 15) cropCanvas.style.cursor = 'nwse-resize'; else cropCanvas.style.cursor = 'default';
+            }
+            if (!isDragging) return;
+            if (isResizingText && selectedTextIdx !== -1) {
+                const t = textObjects[selectedTextIdx];
+                const dy = Math.abs(pos.y - t.y);
+                t.size = Math.max(10, dy * 2 - 10);
+                redrawCanvas(); return;
+            }
+            if (currentMode === 'crop') {
+                cropRectW = pos.x - cropStartX;
+                cropRectH = pos.y - cropStartY;
+                redrawCanvas();
+            } else if (currentMode === 'draw') {
+                cropCtx.lineTo(pos.x, pos.y);
+                cropCtx.stroke();
+            } else if (currentMode === 'text' && selectedTextIdx !== -1) {
+                textObjects[selectedTextIdx].x = pos.x;
+                textObjects[selectedTextIdx].y = pos.y;
+                redrawCanvas();
+            }
+        }
+
+        // [수정: 그리기 종료 시 별도 저장 함수 호출]
+        function handleMouseUp(e) {
+            if (isDragging && currentMode === 'draw') {
+                cropCtx.closePath();
+                saveDrawingState();
+            }
+            isDragging = false;
+            isResizingText = false;
+        }
+
         function redrawCanvas() { cropCtx.clearRect(0, 0, cropCanvas.width, cropCanvas.height); cropCtx.drawImage(cropImage, 0, 0); textObjects.forEach((t, i) => { cropCtx.font = `bold ${t.size}px sans-serif`; cropCtx.fillStyle = t.color; cropCtx.textAlign = "center"; cropCtx.textBaseline = "middle"; cropCtx.fillText(t.text, t.x, t.y); if (i === selectedTextIdx) { const metrics = cropCtx.measureText(t.text); const w = metrics.width + 10; const h = t.size + 10; cropCtx.strokeStyle = '#00a8ff'; cropCtx.lineWidth = 2; cropCtx.setLineDash([5, 3]); cropCtx.strokeRect(t.x - w / 2, t.y - h / 2, w, h); cropCtx.setLineDash([]); cropCtx.fillStyle = '#00a8ff'; cropCtx.fillRect(t.x + w / 2 - 5, t.y + h / 2 - 5, 10, 10); } }); if (currentMode === 'crop' && cropRectW && cropRectH) { cropCtx.fillStyle = 'rgba(0, 0, 0, 0.5)'; cropCtx.fillRect(0, 0, cropCanvas.width, cropCanvas.height); cropCtx.globalCompositeOperation = 'destination-out'; cropCtx.fillStyle = 'rgba(0,0,0,1)'; cropCtx.fillRect(cropStartX, cropStartY, cropRectW, cropRectH); cropCtx.globalCompositeOperation = 'destination-over'; cropCtx.drawImage(cropImage, 0, 0); textObjects.forEach(t => { cropCtx.font = `bold ${t.size}px sans-serif`; cropCtx.fillStyle = t.color; cropCtx.textAlign = "center"; cropCtx.textBaseline = "middle"; cropCtx.fillText(t.text, t.x, t.y); }); cropCtx.globalCompositeOperation = 'source-over'; cropCtx.strokeStyle = '#fff'; cropCtx.lineWidth = 2; cropCtx.strokeRect(cropStartX, cropStartY, cropRectW, cropRectH); cropCtx.strokeStyle = 'red'; cropCtx.lineWidth = 1; cropCtx.strokeRect(cropStartX, cropStartY, cropRectW, cropRectH); } }
         function applyEdit() { selectedTextIdx = -1; redrawCanvas(); const tempC = document.createElement('canvas'); const tempX = tempC.getContext('2d'); if (currentMode === 'crop' && cropRectW && cropRectH) { const finalW = Math.abs(cropRectW); const finalH = Math.abs(cropRectH); const finalX = cropRectW > 0 ? cropStartX : cropStartX + cropRectW; const finalY = cropRectH > 0 ? cropStartY : cropStartY + cropRectH; tempC.width = finalW; tempC.height = finalH; tempX.drawImage(cropCanvas, finalX, finalY, finalW, finalH, 0, 0, finalW, finalH); } else { tempC.width = cropCanvas.width; tempC.height = cropCanvas.height; tempX.drawImage(cropCanvas, 0, 0); } tempC.toBlob(async function (blob) { if (!blob) return alert("이미지 처리 오류"); if (currentCropType === 'thumb') { croppedThumbnailBlob = blob; alert("썸네일이 준비되었습니다."); } else if (currentCropType === 'main-hero') { croppedMainHeroBlob = blob; alert("메인 배경이 준비되었습니다."); } else if (currentCropType === 'sub-hero-new') { croppedNewCatBlob = blob; alert("카테고리 이미지가 준비되었습니다."); } else if (currentCropType === 'sub-hero-list') { if (activeCategoryCode) { croppedCatBlobs[activeCategoryCode] = blob; alert("변경사항이 준비되었습니다."); } } else { if (!confirm("적용하시겠습니까?")) return; showLoading(true); try { const fileName = `editor_${Date.now()}.jpg`; const { data, error } = await window.sb.storage.from('images').upload(fileName, blob); if (error) throw error; const publicUrl = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl; if (selectedEditorImage) { selectedEditorImage.src = publicUrl; quill.update(); } else { const range = quill.getSelection(true); let idx = range ? range.index : quill.getLength(); quill.insertEmbed(idx, 'image', publicUrl); quill.setSelection(idx + 1); } } catch (e) { alert("업로드 실패: " + e.message); } finally { showLoading(false); } } closeCropModal(); }, 'image/jpeg', 0.9); }
         function closeCropModal() { document.getElementById('crop-modal').style.display = 'none'; document.querySelectorAll('input[type="file"]').forEach(i => i.value = ''); textObjects = []; selectedTextIdx = -1; activeCategoryCode = null; }
@@ -616,6 +794,15 @@
                 document.getElementById('conf-main-overlay-opacity').value = mop;
                 document.getElementById('op-val-main').innerText = mop;
                 if (data.main_hero_image) { document.getElementById('preview-main-hero').src = data.main_hero_image; originalMainHero = data.main_hero_image; isMainHeroDeleted = false; } else { document.getElementById('preview-main-hero').src = "https://via.placeholder.com/300x170?text=No+Image"; isMainHeroDeleted = true; }
+
+                // 팝업 설정 로드
+                if (data.popup_image) {
+                    document.getElementById('preview-popup').src = data.popup_image;
+                } else {
+                    document.getElementById('preview-popup').src = "https://via.placeholder.com/200x200?text=No+Popup";
+                }
+                document.getElementById('conf-popup-link').value = data.popup_link || "";
+                document.getElementById('conf-popup-visible').checked = data.is_popup_visible || false;
             }
         }
 
@@ -633,6 +820,16 @@
                 if (data) u = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl;
             }
 
+            // 팝업 이미지 처리
+            const fPopup = document.getElementById('conf-popup-file').files[0];
+            let uPopup = document.getElementById('preview-popup').src;
+            if (uPopup.includes("via.placeholder")) uPopup = null;
+
+            if (fPopup) {
+                const { data } = await window.sb.storage.from('images').upload(`popup_${Date.now()}.jpg`, fPopup);
+                if (data) uPopup = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl;
+            }
+
             const updateData = {
                 company_name: document.getElementById('conf-name').value, ceo_name: document.getElementById('conf-ceo').value,
                 address: document.getElementById('conf-addr').value, phone: document.getElementById('conf-phone').value,
@@ -641,6 +838,12 @@
                 main_hero_title_color: document.getElementById('conf-main-title-color').value, main_hero_desc_color: document.getElementById('conf-main-desc-color').value,
                 main_hero_image: u, main_hero_bg_color: document.getElementById('conf-main-bg-color').value,
                 main_hero_overlay_color: document.getElementById('conf-main-overlay-color').value, main_hero_overlay_opacity: parseFloat(document.getElementById('conf-main-overlay-opacity').value),
+
+                // 팝업 데이터
+                popup_image: uPopup,
+                popup_link: document.getElementById('conf-popup-link').value,
+                is_popup_visible: document.getElementById('conf-popup-visible').checked,
+
                 updated_at: new Date()
             };
             const { error } = await window.sb.from('site_config').update(updateData).eq('id', 1);
@@ -708,7 +911,7 @@
         window.editPost = function (i) { editingId = i.id; originalDetailUrl = i.image_url; originalThumbUrl = i.thumbnail_url; document.getElementById('post-category').value = i.category; document.getElementById('post-title').value = i.title; quill.root.innerHTML = i.content || ""; document.getElementById('post-link').value = i.link_url || ""; document.getElementById('post-order').value = i.order_num || 0; let val = i.video_url || ""; const chkIntro = document.getElementById('chk-intro'); const chkOrder = document.getElementById('chk-order'); const youtubeInput = document.getElementById('youtube-url'); if (val === FLAG_ORDER_ONLY) { chkIntro.checked = false; chkOrder.checked = true; youtubeInput.value = ""; } else if (val.startsWith(FLAG_ORDER_ALL)) { chkIntro.checked = true; chkOrder.checked = true; youtubeInput.value = val.replace(FLAG_ORDER_ALL, '').replace('|', ''); } else { chkIntro.checked = true; chkOrder.checked = false; youtubeInput.value = val; } toggleEditorState(); document.getElementById('form-title').innerText = "✏️ 수정 모드"; document.getElementById('btn-submit').innerText = "수정 완료"; document.getElementById('btn-cancel-edit').style.display = "inline-block"; window.scrollTo({ top: 0, behavior: 'smooth' }); };
         window.cancelEdit = function () { editingId = null; croppedThumbnailBlob = null; document.getElementById('post-title').value = ""; quill.root.innerHTML = ""; document.querySelectorAll('input[type="file"]').forEach(i => i.value = ""); document.getElementById('chk-intro').checked = true; document.getElementById('chk-order').checked = false; toggleEditorState(); document.getElementById('form-title').innerText = "📝 게시글 작성/수정"; document.getElementById('btn-submit').innerText = "업로드 저장"; document.getElementById('btn-cancel-edit').style.display = "none"; };
         window.deletePost = async function (id) { if (confirm("삭제?")) { await window.sb.from('total_posts').delete().eq('id', id); loadManageList(currentPage); } };
-        window.adminLogin = async function () { const emailEl = document.getElementById('admin-email'); const pwEl = document.getElementById('admin-password'); if (!emailEl || !pwEl) return alert("입력창을 찾을 수 없습니다."); if (!window.sb) { alert("❌ 시스템 오류: Supabase 연결 실패"); return; } try { const { data, error } = await window.sb.auth.signInWithPassword({ email: emailEl.value, password: pwEl.value }); if (error) { alert("로그인 실패: \" + error.message"); } else { showAdminMode(); loadConfigToForm(); loadAdminCategories(); populateCategorySelects(); loadPopups(); } } catch (e) { alert("오류 발생: " + e.message); console.error(e); } };
+        window.adminLogin = async function () { const emailEl = document.getElementById('admin-email'); const pwEl = document.getElementById('admin-password'); if (!emailEl || !pwEl) return alert("입력창을 찾을 수 없습니다."); if (!window.sb) { alert("❌ 시스템 오류: Supabase 연결 실패"); return; } try { const { data, error } = await window.sb.auth.signInWithPassword({ email: emailEl.value, password: pwEl.value }); if (error) { alert("로그인 실패: " + error.message); } else { showAdminMode(); loadConfigToForm(); loadAdminCategories(); populateCategorySelects(); loadPopups(); } } catch (e) { alert("오류 발생: " + e.message); console.error(e); } };
 
         window.switchTab = function (t, n) { document.querySelectorAll('.nav-item').forEach(e => e.classList.remove('active')); if (n) n.classList.add('active'); document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active')); document.getElementById('tab-' + t).classList.add('active'); if (t === 'posts') loadManageList(1); };
         window.adminLogout = async function () { await window.sb.auth.signOut(); location.reload(); };

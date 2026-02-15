@@ -5,9 +5,193 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>뉴키즈 - 어린이집/유치원 파트너</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* =========================================
+           [팝업 슬라이더 스타일]
+           ========================================= */
+        #popup-layer {
+            position: fixed;
+            top: 100px;
+            left: 20px;
+            z-index: 20000;
+            display: none; /* JS로 제어 */
+        }
+
+        .popup-slider-box {
+            width: 450px;
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.3);
+            border: 1px solid #ddd;
+            position: relative;
+            animation: popupFadeIn 0.5s ease;
+        }
+
+        @keyframes popupFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 슬라이드 영역 */
+        .slider-wrapper {
+            position: relative;
+            width: 100%;
+            height: auto;
+            background: #f0f0f0;
+            min-height: 250px;
+        }
+
+        .popup-slide {
+            display: none; /* 기본 숨김 */
+            width: 100%;
+        }
+
+            .popup-slide.active {
+                display: block; /* 활성화된 슬라이드만 표시 */
+                animation: fadeIn 0.5s;
+            }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0.5;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .popup-slide img {
+            width: 100%;
+            display: block;
+            height: auto;
+        }
+
+        /* 화살표 네비게이션 */
+        .slider-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.4);
+            color: #fff;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+            z-index: 10;
+        }
+
+            .slider-btn:hover {
+                background: rgba(0, 0, 0, 0.7);
+            }
+
+        .prev-btn {
+            left: 10px;
+        }
+
+        .next-btn {
+            right: 10px;
+        }
+
+        /* 페이지 인디케이터 (점) */
+        .slider-dots {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 6px;
+            z-index: 10;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+            .dot.active {
+                background: #fff;
+                transform: scale(1.2);
+            }
+
+        /* 하단 닫기 바 */
+        .popup-footer {
+            background: #222;
+            color: #fff;
+            padding: 12px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+
+        .popup-close-today {
+            cursor: pointer;
+            color: #ccc;
+        }
+
+            .popup-close-today:hover {
+                color: #fff;
+                text-decoration: underline;
+            }
+
+        .popup-close {
+            cursor: pointer;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        /* 모바일 대응 */
+        @media (max-width: 768px) {
+            #popup-layer {
+                top: 80px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 90%;
+                max-width: 450px;
+            }
+
+            .popup-slider-box {
+                width: 100%;
+            }
+        }
+    </style>
 </head>
 <body>
     <header></header>
+
+    <div id="popup-layer">
+        <div class="popup-slider-box">
+            <div class="slider-wrapper" id="slider-content">
+            </div>
+
+            <button class="slider-btn prev-btn" id="btn-prev" style="display:none;">❮</button>
+            <button class="slider-btn next-btn" id="btn-next" style="display:none;">❯</button>
+            <div class="slider-dots" id="slider-dots"></div>
+
+            <div class="popup-footer">
+                <span class="popup-close-today" onclick="closePopupToday()">오늘 하루 열지 않기</span>
+                <span class="popup-close" onclick="closePopup()">닫기 [X]</span>
+            </div>
+        </div>
+    </div>
 
     <section class="hero">
         <div class="container hero-content">
@@ -33,21 +217,6 @@
         </div>
     </section>
 
-    <!--<section id="news-section">
-        <div class="container">
-            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:40px;">
-                <div style="text-align:left;">
-                    <h2 style="text-align:left; margin-bottom:10px;">📢 뉴키즈 소식</h2>
-                    <p style="color:#666;">공지사항과 새로운 소식을 확인해보세요.</p>
-                </div>
-                <a href="notice.html" style="color:#666; font-size:0.9rem; font-weight:bold;">더보기 +</a>
-            </div>
-            <div id="main-news-grid" class="main-grid">
-                <div style="text-align:center; width:100%; grid-column:1/-1; padding:40px; color:#999;">불러오는 중...</div>
-            </div>
-        </div>
-    </section>-->
-
     <section id="contact" class="contact-section bg-gray">
         <div class="container">
             <h2 class="contact-title">궁금하신 점이 있으신가요?</h2>
@@ -66,48 +235,174 @@
     <script src="manager.js"></script>
 
     <script>
+        let currentSlideIndex = 0;
+        let totalSlides = 0;
+        let slideInterval = null;
+
         document.addEventListener("DOMContentLoaded", function () {
+            // Supabase 로드 대기
             const checkSb = setInterval(() => {
-                if (window.sb) { clearInterval(checkSb); loadMainCategories(); loadMainLatestPosts(); }
+                if (window.sb) {
+                    clearInterval(checkSb);
+                    console.log("System Ready: Supabase Loaded");
+                    loadMainCategories();
+                    initPopupSlider();
+                }
             }, 100);
         });
 
+        // =========================================
+        // [팝업 슬라이더 초기화 및 실행]
+        // =========================================
+        async function initPopupSlider() {
+            try {
+                // 1. 오늘 하루 안 보기 체크
+                const today = new Date().toISOString().split('T')[0];
+                if (localStorage.getItem('hide_main_popup_date') === today) {
+                    return;
+                }
+
+                // 2. DB 데이터 가져오기
+                const { data, error } = await window.sb.from('site_popups')
+                    .select('*')
+                    .eq('is_visible', true)
+                    .order('order_num', { ascending: true })
+                    .order('created_at', { ascending: false });
+
+                if (error || !data || data.length === 0) return;
+
+                // 3. HTML 렌더링
+                const sliderContent = document.getElementById('slider-content');
+                const dotsContainer = document.getElementById('slider-dots');
+                sliderContent.innerHTML = '';
+                dotsContainer.innerHTML = '';
+                totalSlides = data.length;
+
+                data.forEach((popup, index) => {
+                    const div = document.createElement('div');
+                    div.className = `popup-slide ${index === 0 ? 'active' : ''}`;
+                    div.dataset.index = index;
+
+                    let imgHtml = `<img src="${popup.image_url}" alt="공지">`;
+
+                    if (popup.link_url && popup.link_url.trim() !== '') {
+                        let url = popup.link_url.trim();
+                        if (!url.startsWith('http') && !url.includes('.html')) url = 'https://' + url;
+                        div.innerHTML = `<a href="${url}" target="_blank">${imgHtml}</a>`;
+                    } else {
+                        div.innerHTML = imgHtml;
+                    }
+                    sliderContent.appendChild(div);
+
+                    if (totalSlides > 1) {
+                        const dot = document.createElement('div');
+                        dot.className = `dot ${index === 0 ? 'active' : ''}`;
+                        dot.onclick = () => showSlide(index);
+                        dotsContainer.appendChild(dot);
+                    }
+                });
+
+                // 4. 네비게이션 및 자동 슬라이드 설정
+                if (totalSlides > 1) {
+                    document.getElementById('btn-prev').style.display = 'flex';
+                    document.getElementById('btn-next').style.display = 'flex';
+
+                    document.getElementById('btn-prev').onclick = () => changeSlide(-1);
+                    document.getElementById('btn-next').onclick = () => changeSlide(1);
+
+                    // [수정] 자동 슬라이드 속도 2초로 변경
+                    startAutoSlide();
+
+                    const box = document.querySelector('.popup-slider-box');
+                    box.addEventListener('mouseenter', stopAutoSlide);
+                    box.addEventListener('mouseleave', startAutoSlide);
+                }
+
+                document.getElementById('popup-layer').style.display = 'block';
+
+            } catch (e) { console.error("팝업 로드 오류:", e); }
+        }
+
+        function changeSlide(n) {
+            let nextIndex = currentSlideIndex + n;
+            if (nextIndex >= totalSlides) nextIndex = 0;
+            if (nextIndex < 0) nextIndex = totalSlides - 1;
+            showSlide(nextIndex);
+        }
+
+        function showSlide(index) {
+            currentSlideIndex = index;
+
+            const slides = document.querySelectorAll('.popup-slide');
+            slides.forEach(s => s.classList.remove('active'));
+            slides[currentSlideIndex].classList.add('active');
+
+            const dots = document.querySelectorAll('.dot');
+            if (dots.length > 0) {
+                dots.forEach(d => d.classList.remove('active'));
+                dots[currentSlideIndex].classList.add('active');
+            }
+        }
+
+        function startAutoSlide() {
+            if (totalSlides <= 1) return;
+            stopAutoSlide();
+            // [수정] 2000ms = 2초
+            slideInterval = setInterval(() => changeSlide(1), 2000);
+        }
+
+        function stopAutoSlide() {
+            if (slideInterval) clearInterval(slideInterval);
+        }
+
+        function closePopup() {
+            document.getElementById('popup-layer').style.display = 'none';
+            stopAutoSlide();
+        }
+
+        function closePopupToday() {
+            const today = new Date().toISOString().split('T')[0];
+            localStorage.setItem('hide_main_popup_date', today);
+            closePopup();
+        }
+
         async function loadMainCategories() {
             try {
-                const { data } = await window.sb.from('program_categories').select('*').eq('is_visible', true).order('order_num');
+                const { data } = await window.sb.from('program_categories')
+                    .select('*')
+                    .eq('is_visible', true)
+                    .order('order_num');
+
                 if (!data) return;
+
                 const eduGrid = document.getElementById('edu-grid');
                 const eventGrid = document.getElementById('event-grid');
+
                 const legacyFiles = ['season', 'culture', 'performance'];
-                const iconMap = { 'korean': '🇰🇷', 'reading': '📖', 'english': '🔤', 'math': '🔢', 'science': '🔬', 'art': '🎨', 'coding': '💻', 'environment': '🌱', 'nuri': '🐣', 'infant': '🧸', 'special': '✨', 'season': '🎉', 'culture': '🌍', 'performance': '👨‍👩‍👧‍👦' };
+                const iconMap = {
+                    'korean': '🇰🇷', 'reading': '📖', 'english': '🔤', 'math': '🔢',
+                    'science': '🔬', 'art': '🎨', 'coding': '💻', 'environment': '🌱',
+                    'nuri': '🐣', 'infant': '🧸', 'special': '✨',
+                    'season': '🎉', 'culture': '🌍', 'performance': '👨‍👩‍👧‍👦'
+                };
 
                 data.forEach(cat => {
                     let href = cat.type === 'EDU' ? `child.html#${cat.code}` : (legacyFiles.includes(cat.code) ? `${cat.code}.html` : `program.html#${cat.code}`);
                     let icon = iconMap[cat.code] || '⭐';
-                    const html = `<a href="${href}" class="card"><div class="card-icon">${icon}</div><h3>${cat.name}</h3><p>${cat.hero_desc || '뉴키즈의 특별한 프로그램'}</p><span class="card-link">자세히 보기 &rarr;</span></a>`;
+
+                    const html = `
+                            <a href="${href}" class="card">
+                                <div class="card-icon">${icon}</div>
+                                <h3>${cat.name}</h3>
+                                <p>${cat.hero_desc || '뉴키즈의 특별한 프로그램'}</p>
+                                <span class="card-link">자세히 보기 &rarr;</span>
+                            </a>`;
+
                     if (cat.type === 'EDU') eduGrid.insertAdjacentHTML('beforeend', html);
                     else if (cat.type === 'EVENT') eventGrid.insertAdjacentHTML('beforeend', html);
                 });
-            } catch (e) { console.error(e); }
+            } catch (e) { console.error("카테고리 로드 실패:", e); }
         }
-
-        /*async function loadMainLatestPosts() {
-            const grid = document.getElementById('main-news-grid');
-            if (!grid) return;
-            const { data, error } = await window.sb.from('total_posts').select('id, title, category, created_at, thumbnail_url').order('created_at', { ascending: false }).limit(4);
-            if (error || !data || data.length === 0) { grid.innerHTML = '<div style="text-align:center; padding:40px; width:100%; color:#999; grid-column:1/-1;">등록된 소식이 없습니다.</div>'; return; }
-            grid.innerHTML = '';
-            data.forEach(item => {
-                const thumb = item.thumbnail_url || 'https://via.placeholder.com/400x300?text=NEW+KIDS';
-                const date = new Date(item.created_at).toISOString().split('T')[0];
-                let badgeClass = 'style="background:#eee; color:#555;"';
-                let catName = item.category;
-                if (item.category === 'notice') { catName = '공지'; badgeClass = 'style="background:#fff0f0; color:#e74c3c;"'; }
-                else if (item.category === 'free') { catName = '자유'; badgeClass = 'style="background:#f0f7ff; color:#1a3c6e;"'; }
-
-                grid.innerHTML += `<div class="card" onclick="location.href='notice.html'" style="cursor:pointer; text-align:left; align-items:flex-start;"><div class="card-img-wrap" style="height:180px;"><img src="${thumb}" class="card-img" alt="썸네일"></div><div class="card-body" style="padding:20px;"><span style="font-size:0.8rem; font-weight:bold; padding:3px 8px; border-radius:4px; display:inline-block; margin-bottom:8px; ${badgeClass.replace('style="', '').replace('"', '')}">${catName}</span><div class="card-title" style="font-size:1.1rem; margin-bottom:10px;">${item.title}</div><div style="font-size:0.85rem; color:#999; margin-top:auto;">${date}</div></div></div>`;
-            });
-        }*/
     </script>
 </body>
 </html>

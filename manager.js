@@ -1,5 +1,21 @@
 ﻿// manager.js - 통합 관리자 (로그인 오류 수정 및 안정성 확보)
 
+// ============================================================
+// [0] 새로고침 시 스크롤 최상단 고정 (가장 먼저 실행)
+// ============================================================
+if ('scrollRestoration' in history) {
+    history.scrollRestoration = 'manual'; // 브라우저의 스크롤 복원 기능 비활성화
+}
+window.scrollTo(0, 0); // 즉시 최상단 이동
+
+// 페이지를 떠나거나 새로고침 직전에도 최상단으로 이동
+window.addEventListener('beforeunload', function () {
+    window.scrollTo(0, 0);
+});
+
+// ============================================================
+// [1] 전역 설정 및 유틸리티
+// ============================================================
 window.GLOBAL_CATEGORIES = [];
 
 // [안전장치] 기본 카테고리 데이터
@@ -33,7 +49,9 @@ function hexToRgba(hex, opacity) {
     return `rgba(${r}, ${g}, ${b}, ${opacity})`;
 }
 
-// [초기화]
+// ============================================================
+// [2] Supabase 초기화 및 설정 로드
+// ============================================================
 (function initSystem() {
     if (typeof supabase !== 'undefined' && typeof CONFIG !== 'undefined') {
         startSupabase();
@@ -119,6 +137,10 @@ async function loadCategories() {
     loadHeader();
     applySubPageHero();
 }
+
+// ============================================================
+// [3] UI 및 페이지 제어 함수
+// ============================================================
 
 function applySubPageHero() {
     const hero = document.getElementById('view-hero') || document.querySelector('.sub-hero');
@@ -219,6 +241,10 @@ function loadFooter() {
     const footerEl = document.querySelector('footer');
     if (footerEl) footerEl.innerHTML = `<div class="container"><p>${CONFIG.COMPANY.NAME} | 대표: <span>${CONFIG.COMPANY.CEO}</span></p><p>주소: <span>${CONFIG.COMPANY.ADDRESS}</span></p><p>문의: <span>${CONFIG.COMPANY.PHONE}</span></p><br><p><a href="admin.html" style="color:inherit; text-decoration:none;">&copy; 2026 New Kids. All rights reserved.</a></p></div>`;
 }
+
+// ============================================================
+// [4] 이벤트 리스너 및 헬퍼 함수
+// ============================================================
 
 window.toggleMenu = function () { document.getElementById('navMenu').classList.toggle('active'); };
 window.toggleSubMenu = function (el) { if (window.innerWidth <= 768) { const p = el.parentElement; const o = p.classList.contains('sub-open'); document.querySelectorAll('.nav-menu li.has-sub').forEach(li => li.classList.remove('sub-open')); if (!o) p.classList.add('sub-open'); } };

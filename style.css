@@ -1513,3 +1513,57 @@ header {
     margin-left: auto;
     margin-right: auto;
 }
+
+/* 팝업 스타일 */
+.main-popup {
+    display: none; /* 기본 숨김 */
+    position: fixed;
+    top: 100px;
+    left: 50%; /* 중앙 정렬 */
+    transform: translateX(-50%);
+    width: 350px;
+    max-width: 90%;
+    z-index: 10000;
+    box-shadow: 0 5px 25px rgba(0,0,0,0.3);
+    border-radius: 10px;
+    overflow: hidden;
+    background: #fff;
+    animation: popupFadeIn 0.5s ease;
+}
+
+@keyframes popupFadeIn {
+    from {
+        opacity: 0;
+        top: 120px;
+    }
+
+    to {
+        opacity: 1;
+        top: 100px;
+    }
+}
+
+.popup-content img {
+    width: 100%;
+    display: block;
+}
+
+.popup-footer {
+    background: #222;
+    color: #fff;
+    padding: 10px 15px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+}
+
+.popup-close-today {
+    cursor: pointer;
+    color: #ccc;
+}
+
+.popup-close {
+    cursor: pointer;
+    font-weight: bold;
+    color: #fff;
+}

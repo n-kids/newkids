@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
@@ -26,8 +26,8 @@
 
     <div class="board-header-section">
         <div class="container">
-            <h1 style="font-size: 2rem; margin-bottom:10px;">📢 소식 & 커뮤니티</h1>
-            <p style="color:#666;">뉴키즈의 공지사항과 자유로운 이야기를 나누는 공간입니다.</p>
+            <h1 id="notice-title" style="font-size: 2rem; margin-bottom:10px;">📢 소식 & 커뮤니티</h1>
+            <p id="notice-desc" style="color:#666;">뉴키즈의 공지사항과 자유로운 이야기를 나누는 공간입니다.</p>
         </div>
     </div>
 
@@ -74,8 +74,31 @@
         let currentCategory = 'notice'; // 기본값: 공지사항
 
         document.addEventListener("DOMContentLoaded", () => {
-            loadBoardList(1);
+            const checkSb = setInterval(() => {
+                if (window.sb) {
+                    clearInterval(checkSb);
+                    loadNoticeHeader(); 
+                    loadBoardList(1);   
+                }
+            }, 100);
         });
+
+        // 관리자 페이지에서 설정한 헤더 정보를 가져오는 함수
+        async function loadNoticeHeader() {
+            try {
+                const { data, error } = await window.sb.from('program_categories')
+                    .select('hero_title, hero_desc')
+                    .eq('code', 'notice')
+                    .single();
+
+                if (data) {
+                    if (data.hero_title) document.getElementById('notice-title').innerHTML = data.hero_title;
+                    if (data.hero_desc) document.getElementById('notice-desc').innerHTML = data.hero_desc;
+                }
+            } catch (e) {
+                console.log("헤더 정보 로드 안됨(기본 텍스트 유지)");
+            }
+        }
 
         // 탭 전환 함수
         function switchBoard(cat) {
@@ -128,8 +151,9 @@
                 // 작성자: 공지사항이면 '관리자', 자유게시판이면 입력된 이름(link_url에 저장됨) 사용
                 let author = (currentCategory === 'notice') ? '관리자' : (item.link_url || '익명');
 
+                // [수정된 부분] onclick="alert()" 을 onclick="location.href='view.html?id=...'" 로 변경
                 html += `
-                    <div class="board-list-row" onclick="alert('${item.title}')">
+                    <div class="board-list-row" onclick="location.href='view.html?id=${item.id}'">
                         <div class="b-num">${item.id}</div>
                         <div class="b-cat"><span class="badge" style="background:#f1f3f5; color:#555;">${author}</span></div>
                         <div class="b-title">${item.title}</div>

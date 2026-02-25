@@ -29,7 +29,7 @@
         <div class="container">
             <h2 style="color: #fff;">우리 원에 딱 맞는 시즌 행사를 찾으시나요?</h2>
             <p style="margin-bottom: 20px;">원하는 날짜와 인원을 알려주시면 맞춤 견적서를 보내드립니다.</p>
-            <a href="https://pf.kakao.com/_nSxhpG" target="_blank" class="btn" style="background-color: #fee500; color: #3c1e1e; border: none;">카카오톡 문의하기</a>
+            <a href="proposal.html" class="btn">📋 견적 및 상담 신청</a>
         </div>
     </section>
 
@@ -40,35 +40,62 @@
     <script src="manager.js"></script>
 
     <script>
-        async function loadSeasonPosts() {
-            const listDiv = document.getElementById('post-list');
+        const CATEGORY_NAME = 'season';
 
+        document.addEventListener("DOMContentLoaded", function () {
+            // Supabase 객체가 로드될 때까지 대기 후 실행
+            const checkSb = setInterval(() => {
+                if (window.sb) {
+                    clearInterval(checkSb);
+                    loadPosts(window.sb, CATEGORY_NAME);
+                }
+            }, 100);
+        });
+
+        async function loadPosts(sb, cat) {
             try {
-                // 'season' 카테고리의 게시물만 가져오기 (정렬 순서 적용)
-                const { data, error } = await window.sb
+                const { data, error } = await sb
                     .from('total_posts')
                     .select('*')
-                    .eq('category', 'season')
+                    .eq('category', cat)
                     .order('order_num', { ascending: true })
                     .order('created_at', { ascending: false });
 
                 if (error) throw error;
 
+                const list = document.getElementById('post-list');
+                list.innerHTML = "";
+
                 if (!data || data.length === 0) {
-                    listDiv.innerHTML = '<div style="text-align:center; width:100%; grid-column: 1/-1; padding:50px; color:#999;">등록된 활동이 없습니다.</div>';
+                    list.innerHTML = `<div style="text-align:center; grid-column:1/-1; padding:50px; color:#999;">등록된 게시글이 없습니다.</div>`;
                     return;
                 }
 
-                listDiv.innerHTML = '';
+                // Supabase 스토리지 이미지 기본 경로 (config.js의 URL 활용)
+                const STORAGE_BASE_URL = `${CONFIG.SUPABASE_URL}/storage/v1/object/public/post_images/`;
+
                 data.forEach(item => {
-                    // 썸네일 결정: 대표 이미지 우선 -> 유튜브 썸네일 -> 기본 이미지 순
-                    let displayImg = item.image_url;
-                    const yId = item.video_url ? extractYoutubeId(item.video_url) : null;
+                    let displayImg = "";
+
+                    // 1. 이미지 경로 분석 및 결정
+                    let rawImg = item.thumbnail_url || item.image_url;
+
+                    // JSON 배열 형태인 경우 첫 번째 이미지 추출
+                    try {
+                        const parsed = JSON.parse(rawImg);
+                        if (Array.isArray(parsed) && parsed.length > 0) rawImg = parsed[0];
+                    } catch (e) { /* 일반 문자열인 경우 통과 */ }
+
+                    // 유튜브 ID 추출 시도
+                    const yId = (typeof window.getYoutubeId === 'function') ? window.getYoutubeId(rawImg) : extractYoutubeId(rawImg);
                     let isVideo = !!yId;
 
                     if (yId) {
                         displayImg = `https://img.youtube.com/vi/${yId}/hqdefault.jpg`;
-                    } else if (!displayImg) {
+                    } else if (rawImg) {
+                        // 전체 URL이면 그대로 사용, 파일명이면 스토리지 경로 결합
+                        displayImg = rawImg.startsWith('http') ? rawImg : STORAGE_BASE_URL + rawImg;
+                    } else {
                         displayImg = 'https://via.placeholder.com/400x300?text=No+Image';
                     }
 
@@ -76,6 +103,7 @@
 
                     const div = document.createElement('div');
                     div.className = 'card';
+                    div.style.cursor = 'pointer';
                     div.onclick = () => {
                         if (item.link_url && item.link_url.trim() !== "") {
                             let url = item.link_url;
@@ -86,35 +114,32 @@
                         }
                     };
 
-                    // [수정 포인트] card-body 내부에 제목(${item.title})만 남기고 본문(${item.content})은 제거함
+                    // 2. 카드 내부 구성 ([수정] 본문 content 제거, 제목 스타일 강화)
                     div.innerHTML = `
                             ${linkIcon}
                             <div class="card-img-wrap">
                                 <img src="${displayImg}" class="card-img" onerror="this.src='https://via.placeholder.com/400x300?text=Error'">
                                 <div style="display:${isVideo ? 'block' : 'none'}; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:white; font-size:3rem; text-shadow:0 0 10px rgba(0,0,0,0.5);">▶</div>
                             </div>
-                            <div class="card-body">
-                                <div class="card-title" style="margin-bottom:0; font-weight:600; text-align:center;">${item.title}</div>
+                            <div class="card-body" style="padding: 15px; text-align: center;">
+                                <div class="card-title" style="margin: 0; font-weight: 600; font-size: 1.1rem; word-break: keep-all;">${item.title}</div>
                             </div>
                         `;
-                    listDiv.appendChild(div);
+                    list.appendChild(div);
                 });
-
             } catch (err) {
-                console.error('Error loading posts:', err);
-                listDiv.innerHTML = '<div style="text-align:center; width:100%; grid-column: 1/-1; padding:50px; color:red;">데이터를 불러오는 중 오류가 발생했습니다.</div>';
+                console.error('게시글 로드 오류:', err);
+                document.getElementById('post-list').innerHTML = `<div style="text-align:center; grid-column:1/-1; padding:50px; color:red;">데이터를 불러오는 중 오류가 발생했습니다.</div>`;
             }
         }
 
-        // 유튜브 ID 추출 함수
+        // 유튜브 ID 추출 보조 함수 (window.getYoutubeId가 없을 경우 대비)
         function extractYoutubeId(url) {
-            if (!url) return null;
+            if (!url || typeof url !== 'string') return null;
             const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
             const match = url.match(regExp);
             return (match && match[2].length === 11) ? match[2] : null;
         }
-
-        document.addEventListener('DOMContentLoaded', loadSeasonPosts);
     </script>
 </body>
 </html>

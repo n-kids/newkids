@@ -1,0 +1,176 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>뉴키즈 - 축하 폭죽 효과</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #f4f6f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: sans-serif;
+        }
+
+        /* 중앙 안내 박스 */
+        .success-box {
+            text-align: center;
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            z-index: 10;
+            position: relative;
+        }
+
+        h1 {
+            color: #1a3c6e;
+            margin: 0 0 10px 0;
+        }
+
+        p {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            background: #1a3c6e;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(26, 60, 110, 0.3);
+        }
+
+            button:hover {
+                transform: scale(1.05);
+                background: #132b4f;
+            }
+
+        /* 폭죽 캔버스 (화면 전체 덮음) */
+        #confetti-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* 클릭은 통과되도록 */
+            z-index: 99;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="success-box">
+        <h1>🎉 신청이 완료되었습니다!</h1>
+        <p>뉴키즈와 함께해주셔서 감사합니다.<br>담당자가 확인 후 빠르게 연락드리겠습니다.</p>
+        <button onclick="fireConfetti()">한 번 더 축하하기!</button>
+    </div>
+
+    <canvas id="confetti-canvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        let width = window.innerWidth;
+        let height = window.innerHeight;
+        let particles = [];
+
+        // 캔버스 크기 조절
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // 색상 팔레트 (뉴키즈 브랜드 컬러 + 알록달록)
+        const colors = ['#1a3c6e', '#f4a261', '#e76f51', '#2a9d8f', '#e9c46a', '#ff006e', '#3a86ff'];
+
+        // 파티클 클래스
+        class Particle {
+            constructor() {
+                this.x = width / 2; // 중앙에서 시작
+                this.y = height / 2;
+                // 폭발하듯 퍼지도록 랜덤 속도
+                this.vx = (Math.random() - 0.5) * 20;
+                this.vy = (Math.random() - 0.5) * 20 - 5;
+                this.size = Math.random() * 8 + 4;
+                this.color = colors[Math.floor(Math.random() * colors.length)];
+                this.gravity = 0.2; // 중력
+                this.friction = 0.96; // 공기 저항
+                this.rotation = Math.random() * 360;
+                this.rotationSpeed = (Math.random() - 0.5) * 10;
+                this.shape = Math.random() > 0.5 ? 'circle' : 'rect'; // 원 또는 네모
+            }
+
+            update() {
+                this.vx *= this.friction;
+                this.vy *= this.friction;
+                this.vy += this.gravity;
+                this.x += this.vx;
+                this.y += this.vy;
+                this.rotation += this.rotationSpeed;
+                this.size *= 0.98; // 점점 작아짐
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation * Math.PI / 180);
+                ctx.fillStyle = this.color;
+
+                if (this.shape === 'rect') {
+                    ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
+                } else {
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.size/2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
+        }
+
+        // 폭죽 터뜨리기
+        function fireConfetti() {
+            // 파티클 100개 생성
+            for (let i = 0; i < 100; i++) {
+                particles.push(new Particle());
+            }
+            animate();
+        }
+
+        // 애니메이션 루프
+        function animate() {
+            // 잔상 효과 (투명한 배경을 덧칠)
+            ctx.clearRect(0, 0, width, height);
+
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+
+                // 화면 밖으로 나가거나 너무 작아지면 삭제
+                if (particles[i].size < 0.5 || particles[i].y > height) {
+                    particles.splice(i, 1);
+                    i--;
+                }
+            }
+
+            if (particles.length > 0) {
+                requestAnimationFrame(animate);
+            }
+        }
+
+        // 페이지 로드 시 자동 실행
+        window.onload = fireConfetti;
+    </script>
+</body>
+</html>

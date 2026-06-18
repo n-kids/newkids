@@ -1567,3 +1567,20 @@ header {
     font-weight: bold;
     color: #fff;
 }
+/* =========================================
+   [추가] 첨부파일 다운로드 버튼 스타일
+   ========================================= */
+.download-container {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.btn-download {
+    background-color: #2ecc71 !important; /* 초록색 다운로드 버튼 */
+    margin: 10px 0;
+    display: inline-block;
+}
+
+    .btn-download:hover {
+        background-color: #27ae60 !important;
+    }

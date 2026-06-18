@@ -1,0 +1,445 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>뉴키즈 - 통합 관리자</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <style>
+        /* 페이지네이션 스타일 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+
+        .page-btn {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            background-color: #fff;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+            .page-btn:hover {
+                background-color: #f0f0f0;
+            }
+
+            .page-btn.active {
+                background-color: #1a3c6e;
+                color: white;
+                border-color: #1a3c6e;
+                font-weight: bold;
+            }
+
+            .page-btn:disabled {
+                color: #ccc;
+                cursor: not-allowed;
+            }
+    </style>
+</head>
+<body>
+    <header></header>
+
+    <div id="loading" class="loading-overlay">처리 중입니다...</div>
+
+    <div class="container">
+        <div id="login-section">
+            <h2 style="text-align:center; margin-bottom:30px;">🔒 관리자 로그인</h2>
+            <div class="form-group">
+                <label>아이디 (이메일)</label>
+                <input type="email" id="admin-email" class="form-input" placeholder="admin@newkids.com">
+            </div>
+            <div class="form-group">
+                <label>비밀번호</label>
+                <input type="password" id="admin-password" class="form-input" placeholder="비밀번호 입력">
+            </div>
+            <div class="btn-center-wrap">
+                <button onclick="adminLogin()" class="btn-action" style="width: 100%;">로그인</button>
+            </div>
+        </div>
+
+        <div id="admin-section" style="display:none;">
+            <div class="panel-box">
+                <h2 id="form-title" style="border-bottom:2px solid #1a3c6e; padding-bottom:15px; margin-bottom:20px;">📝 새 글 작성하기</h2>
+                <input type="file" id="hidden-image-input" accept="image/*" multiple style="display:none;">
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>카테고리 선택</label>
+                        <select id="post-category" class="form-input">
+                            <optgroup label="행사 프로그램">
+                                <option value="season">🎉 시즌 테마 행사</option>
+                                <option value="culture">🌍 원어민 행사</option>
+                                <option value="performance">👨‍👩‍👧‍👦 부모 참여 행사</option>
+                            </optgroup>
+                            <optgroup label="교육 프로그램 (세분화)">
+                                <option value="korean">🇰🇷 한글</option>
+                                <option value="reading">📖 독서</option>
+                                <option value="english">🔤 영어</option>
+                                <option value="math">🔢 수학</option>
+                                <option value="science">🔬 과학</option>
+                                <option value="art">🎨 미술</option>
+                                <option value="coding">💻 코딩</option>
+                                <option value="environment">🌱 환경</option>
+                                <option value="nuri">👶 누리과정</option>
+                                <option value="infant">🧸 영아</option>
+                                <option value="special">⭐ 기타(특색)</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>순서 (작은 숫자 우선)</label>
+                        <input type="number" id="post-order" class="form-input" value="0">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>제목</label>
+                    <input type="text" id="post-title" class="form-input" placeholder="제목을 입력하세요">
+                </div>
+
+                <div class="form-group">
+                    <label>📌 대표 이미지 (썸네일)</label>
+                    <input type="file" id="post-thumb-file" class="form-input" accept="image/*">
+                    <div id="thumb-manage-area" class="file-manage-area" style="display:none;">
+                        <span id="current-thumb-msg"></span>
+                        <label class="del-label"><input type="checkbox" id="delete-thumb-check"> 기존 사진 삭제</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>내용</label>
+                    <div id="editor-container"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>상세 이미지/동영상 (선택)</label>
+                    <input type="file" id="post-file" class="form-input" accept="image/*,video/*">
+                    <div id="file-manage-area" class="file-manage-area" style="display:none;">
+                        <span id="current-file-msg"></span>
+                        <label class="del-label"><input type="checkbox" id="delete-file-check"> 기존 파일 삭제</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>유튜브 링크</label>
+                    <input type="text" id="youtube-url" class="form-input" placeholder="https://youtu.be/...">
+                </div>
+
+                <div class="form-group">
+                    <label>관련 링크</label>
+                    <input type="text" id="post-link" class="form-input" placeholder="클릭 시 이동할 주소">
+                </div>
+
+                <div class="btn-center-wrap">
+                    <button id="btn-submit" onclick="uploadPost()" class="btn-action" style="min-width: 200px;">업로드 저장</button>
+                    <button id="btn-cancel-edit" onclick="cancelEdit()" class="btn-action" style="display:none; background-color:#666; min-width: 150px;">수정 취소</button>
+                </div>
+            </div>
+
+            <div class="panel-box" style="margin-top: 50px;">
+                <div class="admin-list-header">
+                    <h3>📂 전체 게시글 관리</h3>
+                    <div class="filter-box">
+                        <select id="filter-category" class="form-input" onchange="loadManageList(1)">
+                            <option value="all">전체 보기</option>
+                            <option value="season">🎉 시즌 테마 행사</option>
+                            <option value="culture">🌍 원어민 행사</option>
+                            <option value="performance">👨‍👩‍👧‍👦 부모 참여 행사</option>
+                            <option value="korean">🇰🇷 한글</option>
+                            <option value="reading">📖 독서</option>
+                            <option value="english">🔤 영어</option>
+                            <option value="math">🔢 수학</option>
+                            <option value="science">🔬 과학</option>
+                            <option value="art">🎨 미술</option>
+                            <option value="coding">💻 코딩</option>
+                            <option value="environment">🌱 환경</option>
+                            <option value="nuri">👶 누리과정</option>
+                            <option value="infant">🧸 영아</option>
+                            <option value="special">⭐ 기타(특색)</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="manage-list"></div>
+                <div id="pagination-controls" class="pagination"></div>
+            </div>
+        </div>
+    </div>
+
+    <footer></footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <script src="https://unpkg.com/quill-blot-formatter@1.0.5/dist/quill-blot-formatter.min.js"></script>
+    <script src="config.js"></script>
+    <script src="manager.js"></script>
+
+    <script>
+        let editingId = null;
+        let originalDetailUrl = null;
+        let originalThumbUrl = null;
+        let quill;
+        const NO_IMAGE_URL = "https://placehold.co/400x300/e0e0e0/666666?text=No+Image";
+
+        // [수정] 한 줄에 4개씩 나온다고 가정 (style.css에 따라 다름)
+        // 만약 한 줄에 3개라면 COLS_PER_ROW를 3으로 변경하세요.
+        const COLS_PER_ROW = 4;
+        const ROWS_PER_PAGE = 3; // 3줄(행) 보기
+        const ITEMS_PER_PAGE = COLS_PER_ROW * ROWS_PER_PAGE; // 결과: 12개씩 표시
+
+        let currentPage = 1;
+
+        document.addEventListener("DOMContentLoaded", async function () {
+            Quill.register('modules/blotFormatter', QuillBlotFormatter.default);
+            quill = new Quill('#editor-container', {
+                theme: 'snow',
+                modules: {
+                    blotFormatter: {},
+                    toolbar: {
+                        container: [
+                            [{ 'header': [1, 2, 3, false] }],
+                            ['bold', 'italic', 'underline'],
+                            [{ 'color': [] }, { 'background': [] }],
+                            [{ 'align': [] }],
+                            ['link', 'image', 'video']
+                        ],
+                        handlers: {
+                            image: function () { document.getElementById('hidden-image-input').click(); }
+                        }
+                    }
+                }
+            });
+
+            const editorRoot = quill.root;
+            editorRoot.addEventListener('drop', handleDrop, false);
+            editorRoot.addEventListener('dragover', (e) => e.preventDefault(), false);
+
+            document.getElementById('hidden-image-input').addEventListener('change', function () {
+                if (this.files.length > 0) uploadAndInsertImages(this.files);
+            });
+
+            const { data: { session } } = await window.sb.auth.getSession();
+            if (session) showAdminMode();
+            else document.getElementById('login-section').style.display = 'block';
+        });
+
+        function handleDrop(e) {
+            e.preventDefault();
+            if (e.dataTransfer && e.dataTransfer.files.length > 0) {
+                uploadAndInsertImages(e.dataTransfer.files);
+            }
+        }
+
+        async function uploadAndInsertImages(files) {
+            showLoading(true);
+            const range = quill.getSelection(true);
+            let currentIndex = range ? range.index : quill.getLength();
+
+            for (const file of files) {
+                if (!file.type.startsWith('image/')) continue;
+                try {
+                    const fileName = `content_${Date.now()}_${file.name}`;
+                    const { data, error } = await window.sb.storage.from('images').upload(fileName, file);
+                    if (error) throw error;
+                    const { data: publicData } = window.sb.storage.from('images').getPublicUrl(fileName);
+                    quill.insertEmbed(currentIndex++, 'image', publicData.publicUrl);
+                } catch (err) { alert("업로드 실패: " + err.message); }
+            }
+            showLoading(false);
+            quill.setSelection(currentIndex);
+        }
+
+        async function adminLogin() {
+            const email = document.getElementById('admin-email').value;
+            const password = document.getElementById('admin-password').value;
+            showLoading(true);
+            const { error } = await window.sb.auth.signInWithPassword({ email, password });
+            showLoading(false);
+            if (error) alert("로그인 실패: " + error.message);
+            else showAdminMode();
+        }
+
+        function showAdminMode() {
+            document.getElementById('login-section').style.display = 'none';
+            document.getElementById('admin-section').style.display = 'block';
+            loadManageList(1);
+        }
+
+        function showLoading(show) { document.getElementById('loading').style.display = show ? 'flex' : 'none'; }
+
+        async function loadManageList(page = 1) {
+            currentPage = page;
+            const cat = document.getElementById('filter-category').value;
+            const listDiv = document.getElementById('manage-list');
+            const paginationDiv = document.getElementById('pagination-controls');
+
+            // 페이지네이션 범위 계산
+            const from = (page - 1) * ITEMS_PER_PAGE;
+            const to = from + ITEMS_PER_PAGE - 1;
+
+            let query = window.sb.from('total_posts').select('*', { count: 'exact' });
+            if (cat !== 'all') query = query.eq('category', cat);
+
+            // 데이터 조회
+            const { data, count, error } = await query
+                .order('order_num', { ascending: true })
+                .order('created_at', { ascending: false })
+                .range(from, to);
+
+            listDiv.innerHTML = "";
+            paginationDiv.innerHTML = "";
+
+            if (error) {
+                listDiv.innerHTML = `<div style='text-align:center;'>에러 발생: ${error.message}</div>`;
+                return;
+            }
+
+            if (!data || data.length === 0) {
+                listDiv.innerHTML = "<div style='text-align:center; padding:30px;'>글이 없습니다.</div>";
+                return;
+            }
+
+            // 게시물 렌더링
+            data.forEach(item => {
+                const thumb = item.thumbnail_url || NO_IMAGE_URL;
+                const card = document.createElement('div');
+                card.className = 'post-card';
+                card.onclick = () => location.href = `view.html?id=${item.id}`;
+                card.innerHTML = `
+                            <div class="post-thumb"><img src="${thumb}" style="width:100%; height:100%; object-fit:cover;"></div>
+                            <div class="post-info">
+                                <span class="category-badge">${item.category}</span>
+                                <h4 class="card-title">${item.title}</h4>
+                                <div class="card-text">순서: ${item.order_num || 0}</div>
+                            </div>
+                            <div class="post-actions">
+                                <button onclick='event.stopPropagation(); editPost(${JSON.stringify(item).replace(/'/g, "&#39;")})' class="btn-mini edit">수정</button>
+                                <button onclick='event.stopPropagation(); deletePost(${item.id})' class="btn-mini del">삭제</button>
+                            </div>`;
+                listDiv.appendChild(card);
+            });
+
+            // 페이지네이션 UI
+            renderPagination(count, currentPage);
+        }
+
+        function renderPagination(totalCount, currentPage) {
+            const paginationDiv = document.getElementById('pagination-controls');
+            const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
+
+            if (totalPages <= 1) return;
+
+            const prevBtn = document.createElement('button');
+            prevBtn.innerText = "이전";
+            prevBtn.className = "page-btn";
+            prevBtn.disabled = currentPage === 1;
+            prevBtn.onclick = () => loadManageList(currentPage - 1);
+            paginationDiv.appendChild(prevBtn);
+
+            for (let i = 1; i <= totalPages; i++) {
+                const btn = document.createElement('button');
+                btn.innerText = i;
+                btn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
+                btn.onclick = () => loadManageList(i);
+                paginationDiv.appendChild(btn);
+            }
+
+            const nextBtn = document.createElement('button');
+            nextBtn.innerText = "다음";
+            nextBtn.className = "page-btn";
+            nextBtn.disabled = currentPage === totalPages;
+            nextBtn.onclick = () => loadManageList(currentPage + 1);
+            paginationDiv.appendChild(nextBtn);
+        }
+
+        window.editPost = function (item) {
+            editingId = item.id;
+            originalDetailUrl = item.image_url;
+            originalThumbUrl = item.thumbnail_url;
+            document.getElementById('post-category').value = item.category;
+            document.getElementById('post-title').value = item.title;
+            quill.root.innerHTML = item.content || "";
+            document.getElementById('youtube-url').value = item.video_url || "";
+            document.getElementById('post-link').value = item.link_url || "";
+            document.getElementById('post-order').value = item.order_num || 0;
+
+            document.getElementById('thumb-manage-area').style.display = item.thumbnail_url ? "block" : "none";
+            document.getElementById('file-manage-area').style.display = item.image_url ? "block" : "none";
+            document.getElementById('delete-thumb-check').checked = false;
+            document.getElementById('delete-file-check').checked = false;
+
+            document.getElementById('form-title').innerText = "✏️ 수정 중...";
+            document.getElementById('btn-submit').innerText = "수정 완료";
+            document.getElementById('btn-cancel-edit').style.display = "inline-block";
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        async function uploadPost() {
+            const title = document.getElementById('post-title').value;
+            if (!title) return alert("제목 필수");
+            showLoading(true);
+
+            let thumbUrl = document.getElementById('delete-thumb-check').checked ? null : originalThumbUrl;
+            let detailUrl = document.getElementById('delete-file-check').checked ? null : originalDetailUrl;
+
+            const tFile = document.getElementById('post-thumb-file').files[0];
+            const dFile = document.getElementById('post-file').files[0];
+
+            if (tFile) {
+                const { data } = await window.sb.storage.from('images').upload(`t_${Date.now()}`, tFile);
+                if (data) thumbUrl = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl;
+            }
+            if (dFile) {
+                const { data } = await window.sb.storage.from('images').upload(`d_${Date.now()}`, dFile);
+                if (data) detailUrl = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl;
+            }
+
+            const postData = {
+                title, content: quill.root.innerHTML,
+                category: document.getElementById('post-category').value,
+                order_num: parseInt(document.getElementById('post-order').value) || 0,
+                video_url: document.getElementById('youtube-url').value,
+                link_url: document.getElementById('post-link').value,
+                thumbnail_url: thumbUrl, image_url: detailUrl
+            };
+
+            const { error } = editingId ? await window.sb.from('total_posts').update(postData).eq('id', editingId) : await window.sb.from('total_posts').insert([postData]);
+            showLoading(false);
+
+            if (error) {
+                alert(error.message);
+            } else {
+                alert("저장됨");
+                cancelEdit();
+                loadManageList(currentPage); // 현재 페이지 새로고침
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        window.cancelEdit = function () {
+            editingId = null;
+            document.getElementById('post-title').value = "";
+            quill.root.innerHTML = "";
+            document.querySelectorAll('input[type="file"]').forEach(i => i.value = "");
+            document.getElementById('thumb-manage-area').style.display = "none";
+            document.getElementById('file-manage-area').style.display = "none";
+            document.getElementById('form-title').innerText = "📝 새 글 작성하기";
+            document.getElementById('btn-submit').innerText = "업로드 저장";
+            document.getElementById('btn-cancel-edit').style.display = "none";
+        };
+
+        window.deletePost = async function (id) {
+            if (confirm("삭제?")) {
+                await window.sb.from('total_posts').delete().eq('id', id);
+                loadManageList(currentPage);
+            }
+        };
+    </script>
+</body>
+</html>

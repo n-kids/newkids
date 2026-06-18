@@ -9,7 +9,6 @@
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 
     <style>
-        /* 1. 텍스트 정렬 강제 적용 */
         .view-content .ql-align-center {
             text-align: center !important;
         }
@@ -22,7 +21,6 @@
             text-align: justify !important;
         }
 
-        /* 2. 이미지 정렬 강제 적용 */
         .view-content .ql-align-center img {
             display: block;
             margin: 0 auto !important;
@@ -45,10 +43,10 @@
     <header></header>
     <div id="loading" class="loading-overlay">내용을 불러오는 중입니다...</div>
 
-    <section class="sub-hero bg-season" id="view-hero">
+    <section class="sub-hero" id="view-hero" style="background-color: #1a3c6e;">
         <div class="container">
-            <h1 id="page-title">상세 보기</h1>
-            <p>뉴키즈의 다양한 활동을 확인해 보세요.</p>
+            <h1 id="page-title"></h1>
+            <p id="page-desc"></p>
         </div>
     </section>
 
@@ -56,11 +54,13 @@
         <div class="container-wide">
             <div class="view-box">
                 <div class="view-header">
-                    <h2 class="view-title" id="post-title">로딩 중...</h2>
-                    <p class="view-date" id="post-date">0000-00-00</p>
+                    <h2 class="view-title" id="post-title"></h2>
+                    <p class="view-date" id="post-date"></p>
                 </div>
 
                 <div class="view-media" id="view-media" style="display:none;"></div>
+
+                <div id="download-container" class="download-container"></div>
 
                 <div class="view-content ql-editor" id="post-content"></div>
 
@@ -83,7 +83,6 @@
             const postId = params.get('id');
 
             if (postId) {
-                // Supabase 연결 대기 (안전장치)
                 const checkSb = setInterval(() => {
                     if (window.sb) {
                         clearInterval(checkSb);
@@ -93,10 +92,14 @@
             }
         });
 
-        // 확장자로 비디오 파일인지 확인하는 함수
         function isVideo(url) {
             if (!url) return false;
             return /\.(mp4|webm|ogg|mov|avi|mkv)(\?|$)/i.test(url);
+        }
+
+        function isImage(url) {
+            if (!url) return false;
+            return /\.(jpeg|jpg|gif|png|webp|svg)(\?|$)/i.test(url);
         }
 
         async function loadPostDetail(id) {
@@ -109,61 +112,81 @@
                 document.getElementById('post-date').innerText = window.formatDate(data.created_at);
                 document.getElementById('post-content').innerHTML = data.content;
 
-                // [미디어 처리 핵심 로직 수정]
                 const mediaBox = document.getElementById('view-media');
+                const downloadBox = document.getElementById('download-container');
                 mediaBox.innerHTML = '';
+                downloadBox.innerHTML = '';
 
-                // 1. DB에서 값 가져오기 (없으면 빈 문자열)
                 let rawVideo = data.video_url || "";
-
-                // 2. 값 정제 (공백 제거)
                 let videoVal = rawVideo.trim();
 
-                // 3. 예외 조건 필터링 (발주 전용, null 문자열 등)
                 if (videoVal === 'ORDER_ITEM' || videoVal === 'null' || videoVal === '') {
                     videoVal = null;
                 }
                 else if (videoVal.startsWith('ORDER_ALL|')) {
-                    // 'ORDER_ALL|주소' 형식일 경우 주소 부분만 추출
                     const parts = videoVal.split('|');
-                    if (parts.length > 1 && parts[1].trim() !== '') {
-                        videoVal = parts[1].trim();
-                    } else {
-                        videoVal = null;
-                    }
+                    videoVal = (parts.length > 1 && parts[1].trim() !== '') ? parts[1].trim() : null;
                 }
 
-                // 4. [중요] 실제 주소인지 최종 확인 (http로 시작하지 않으면 무효 처리)
                 if (videoVal && !videoVal.startsWith('http')) {
                     videoVal = null;
                 }
 
-                // 5. 화면 표시 로직
-                // (1) 유효한 비디오 URL이 있는 경우
+                // 비디오 렌더링
                 if (videoVal) {
                     const yid = window.getYoutubeId(videoVal);
-                    // 유튜브 ID가 있으면 iframe, 없으면 일반 video 태그
-                    mediaBox.innerHTML = yid
-                        ? `<iframe src="https://www.youtube.com/embed/${yid}" frameborder="0" allowfullscreen></iframe>`
-                        : `<video controls style="width:100%; border-radius:10px;"><source src="${videoVal}"></video>`;
+                    mediaBox.innerHTML += yid
+                        ? `<iframe src="https://www.youtube.com/embed/${yid}" frameborder="0" allowfullscreen style="margin-bottom:15px;"></iframe>`
+                        : `<video controls style="width:100%; border-radius:10px; margin-bottom:15px;"><source src="${videoVal}"></video>`;
                     mediaBox.style.display = 'block';
                 }
-                // (2) 비디오는 없는데 상단 이미지(image_url)가 있는 경우
-                else if (data.image_url && data.image_url !== 'null' && data.image_url.trim() !== '') {
-                    // 혹시 이미지 URL 칸에 비디오 파일을 넣었을 경우 대비
-                    if (isVideo(data.image_url)) {
-                        mediaBox.innerHTML = `<video controls style="width:100%; border-radius:10px;"><source src="${data.image_url}"></video>`;
-                    } else {
-                        mediaBox.innerHTML = `<img src="${data.image_url}" onerror="this.parentElement.style.display='none'">`;
-                    }
-                    mediaBox.style.display = 'block';
+
+                // (view.html의 loadPostDetail 함수 내부에 있는 다중 파일 파싱 부분을 이 코드로 교체하세요)
+                if (data.image_url && data.image_url !== 'null' && data.image_url.trim() !== '') {
+                    const urls = data.image_url.split('||');
+
+                    urls.forEach(fileData => {
+                        fileData = fileData.trim();
+                        if (!fileData) return;
+
+                        let fileUrl = fileData;
+                        let displayFilename = "";
+
+                        // '@@' 구분자를 통해 URL과 한글 원본 이름을 분리합니다.
+                        if (fileData.includes('@@')) {
+                            const parts = fileData.split('@@');
+                            fileUrl = parts[0];
+                            displayFilename = parts[1];
+                        } else {
+                            // 과거에 올렸던 파일 하위 호환
+                            let rawFilename = fileUrl.split('/').pop().split('?')[0];
+                            try { rawFilename = decodeURIComponent(rawFilename); } catch (e) { }
+                            displayFilename = rawFilename.includes('___') ? rawFilename.split('___').pop() : rawFilename;
+                        }
+
+                        const fileExt = displayFilename.split('.').pop().toUpperCase();
+
+                        if (isVideo(fileUrl)) {
+                            mediaBox.innerHTML += `<video controls style="width:100%; border-radius:10px; margin-bottom:15px;"><source src="${fileUrl}"></video>`;
+                            mediaBox.style.display = 'block';
+                        } else if (isImage(fileUrl)) {
+                            mediaBox.innerHTML += `<img src="${fileUrl}" style="width:100%; border-radius:8px; margin-bottom:15px;" onerror="this.style.display='none'">`;
+                            mediaBox.style.display = 'block';
+                        }
+
+                        const forceDownloadUrl = fileUrl + (fileUrl.includes('?') ? '&' : '?') + 'download=' + encodeURIComponent(displayFilename);
+
+                        downloadBox.innerHTML += `
+            <a href="${forceDownloadUrl}" class="link-btn-style btn-download" style="display: inline-block; margin: 5px;">
+                📂 ${displayFilename} 다운로드
+            </a>`;
+                    });
                 }
-                // (3) 둘 다 없으면 숨김
-                else {
+
+                if (!mediaBox.innerHTML.trim()) {
                     mediaBox.style.display = 'none';
                 }
 
-                // [관련 링크 버튼]
                 const linkBox = document.getElementById('link-container');
                 linkBox.innerHTML = "";
 
@@ -172,16 +195,13 @@
                     if (!finalLink.startsWith('http')) finalLink = 'https://' + finalLink;
 
                     linkBox.innerHTML = `
-                            <a href="${finalLink}" target="_blank" class="link-btn-style">
-                                🔗 관련 사이트 바로가기
-                            </a>`;
+                                    <a href="${finalLink}" target="_blank" class="link-btn-style">
+                                        🔗 관련 사이트 바로가기
+                                    </a>`;
                 }
 
-                // [배경 이미지 업데이트] - 재귀 호출 방지 적용
                 if (typeof window.updateHeroBackground === 'function') {
                     window.updateHeroBackground(data.category);
-                } else {
-                    applyLocalHero(data.category);
                 }
 
             } catch (err) {
@@ -190,21 +210,6 @@
                 history.back();
             }
             finally { document.getElementById('loading').style.display = 'none'; }
-        }
-
-        // 로컬 배경 적용 함수 (manager.js 로드 실패 시 백업용)
-        function applyLocalHero(category) {
-            const hero = document.getElementById('view-hero');
-            const catMap = {
-                'season': 'bg-season', 'culture': 'bg-culture', 'performance': 'bg-performance',
-                'korean': 'bg-child', 'reading': 'bg-child', 'english': 'bg-child',
-                'math': 'bg-child', 'science': 'bg-child', 'art': 'bg-child',
-                'coding': 'bg-child', 'environment': 'bg-child', 'nuri': 'bg-child',
-                'infant': 'bg-child', 'special': 'bg-child'
-            };
-            if (hero) {
-                hero.className = 'sub-hero ' + (catMap[category] || 'bg-gray');
-            }
         }
     </script>
 </body>

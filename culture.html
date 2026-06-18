@@ -90,6 +90,7 @@
             const { data } = await sb.from('total_posts')
                 .select('*')
                 .eq('category', CATEGORY_NAME)
+                .eq('is_visible', true)
                 .order('order_num', { ascending: true })
                 .order('created_at', { ascending: false });
 
@@ -97,10 +98,15 @@
             list.innerHTML = "";
 
             if (!data || data.length === 0) {
-                list.innerHTML = `<div style="text-align:center; grid-column:1/-1; padding:50px; color:#666;">등록된 게시글이 없습니다.</div>`;
+                listContainer.innerHTML = `
+        <div style="text-align:center; padding: 80px 20px; color:#888; background-color:#f9f9f9; border-radius:12px; grid-column: 1 / -1; width: 100%;">
+            <div style="font-size: 3rem; margin-bottom: 15px;">📭</div>
+            <h3 style="color:#555; margin-bottom: 10px;">현재 준비 중인 프로그램입니다.</h3>
+            <p style="font-size: 1rem;">새로운 콘텐츠가 곧 업데이트될 예정입니다. 조금만 기다려주세요!</p>
+        </div>
+    `;
                 return;
             }
-
             data.forEach(item => {
                 let displayImg = item.thumbnail_url;
                 if (!displayImg) {

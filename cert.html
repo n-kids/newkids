@@ -1,0 +1,634 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>뉴키즈 - 스마트 상장 제작소</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #1a3c6e;
+            --bg-color: #e9ecef;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Nanum Gothic', sans-serif;
+            background: var(--bg-color);
+            color: #333;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: white;
+            padding: 15px;
+            border-bottom: 1px solid #ddd;
+            text-align: center;
+            flex: 0 0 auto;
+        }
+
+            .header h1 {
+                margin: 0;
+                color: var(--primary-color);
+                font-size: 1.4rem;
+            }
+
+        .container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* [왼쪽] 입력 패널 */
+        .controls {
+            width: 400px;
+            background: white;
+            border-right: 1px solid #ddd;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+            z-index: 10;
+        }
+
+        .section-title {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #1a3c6e;
+            border-bottom: 2px solid #1a3c6e;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+            margin-top: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 10px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 0.85rem;
+            color: #555;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 0.95rem;
+            font-family: 'Nanum Gothic';
+        }
+
+        .tab-menu {
+            display: flex;
+            gap: 5px;
+            background: #f1f3f5;
+            padding: 5px;
+            border-radius: 6px;
+        }
+
+        .tab-item {
+            flex: 1;
+            text-align: center;
+            padding: 8px 0;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border-radius: 4px;
+            color: #666;
+            font-weight: bold;
+        }
+
+            .tab-item.active {
+                background: white;
+                color: var(--primary-color);
+                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            }
+
+        .rich-editor {
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .editor-toolbar {
+            background: #f8f9fa;
+            border-bottom: 1px solid #ddd;
+            padding: 5px;
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .tool-btn {
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            width: 28px;
+            height: 28px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+            .tool-btn:hover {
+                background: #e2e6ea;
+            }
+
+        .color-picker {
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            border: none;
+            cursor: pointer;
+        }
+
+        .editor-content {
+            min-height: 150px;
+            padding: 10px;
+            outline: none;
+            font-size: 16px;
+            line-height: 1.6;
+            background: #fff;
+            overflow-y: auto;
+            max-height: 300px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            margin-bottom: 50px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-print {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-save {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        /* [오른쪽] 미리보기 영역 */
+        .preview-area {
+            flex: 1;
+            background: #e9ecef;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            overflow: auto;
+            position: relative;
+        }
+
+        /* 실제 종이 */
+        #paper {
+            background: white;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            position: relative;
+            overflow: hidden;
+            width: 1123px;
+            height: 794px;
+            transform-origin: center center;
+            transition: width 0.3s, height 0.3s;
+        }
+
+        .paper-bg-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* [레이아웃] */
+        .paper-content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            /* 상단 패딩 줄임(헤더 작아짐), 하단 패딩 줄임 */
+            padding: 90px 90px 50px 90px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        /* 1. 상단부 */
+        .top-section {
+            width: 100%;
+            flex: 0 0 auto;
+            display: flex;
+            flex-direction: column;
+            z-index: 20;
+        }
+
+        .p-title {
+            font-size: 70px;
+            font-weight: 800;
+            color: #1a3c6e;
+            font-family: 'Nanum Myeongjo';
+            line-height: 1.2;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .p-no-box, .p-sub-info {
+            display: none;
+        }
+
+        .p-name {
+            font-size: 55px;
+            font-weight: 700;
+            font-family: 'Nanum Myeongjo';
+            margin-top: 5px;
+            text-align: center;
+        }
+
+        /* 2. 본문 (중앙 배치, 하단 여백 증가) */
+        .body-section {
+            flex: 1 1 auto;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            /* 하단 패딩을 늘려 날짜를 아래로 밀어냄 */
+            padding: 30px 0 80px 0;
+        }
+
+        .p-body {
+            font-size: 32px;
+            line-height: 1.8;
+            width: 85%;
+            margin: 0 auto;
+            word-break: keep-all;
+            white-space: pre-wrap;
+            font-family: 'Nanum Myeongjo';
+        }
+
+        /* 3. 하단부 (간격 좁힘) */
+        .bottom-section {
+            width: 100%;
+            flex: 0 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            /* 날짜와 발신인 사이 간격 좁힘 */
+            gap: 10px;
+            margin-top: 0;
+        }
+
+        .p-date {
+            font-size: 22px;
+            font-family: 'Nanum Myeongjo';
+        }
+        /* 날짜 폰트 약간 축소 */
+        .p-sender-box {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .p-sender {
+            font-size: 40px;
+            font-weight: 700;
+            font-family: 'Nanum Myeongjo';
+        }
+
+        .p-stamp {
+            width: 100px;
+            height: 100px;
+            opacity: 0.85;
+            mix-blend-mode: multiply;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>🏆 뉴키즈 스마트 상장 제작소</h1>
+    </div>
+
+    <div class="container">
+        <div class="controls">
+            <div class="tab-menu">
+                <div class="tab-item active" onclick="setTemplate('award')">🏅 상장</div>
+                <div class="tab-item" onclick="setTemplate('cert')">🎓 수료증</div>
+                <div class="tab-item" onclick="setTemplate('letter')">💌 가정통신문</div>
+            </div>
+
+            <div class="section-title">기본 정보</div>
+            <div class="form-group">
+                <label class="form-label">제목</label>
+                <input type="text" id="inp-title" class="form-input" value="착한 어린이 상" oninput="updatePaper()">
+            </div>
+            <div style="display:flex; gap:10px;">
+                <div class="form-group" style="flex:1;">
+                    <label class="form-label">소속</label>
+                    <input type="text" id="inp-group" class="form-input" value="해님반" oninput="updatePaper()">
+                </div>
+                <div class="form-group" style="flex:1;">
+                    <label class="form-label">성명 (받는사람)</label>
+                    <input type="text" id="inp-name" class="form-input" value="홍 길 동" oninput="updatePaper()">
+                </div>
+            </div>
+
+            <div class="section-title">본문 내용</div>
+            <div class="form-group">
+                <div class="rich-editor">
+                    <div class="editor-toolbar">
+                        <button class="tool-btn" onclick="execCmd('bold')" title="굵게"><b>B</b></button>
+                        <input type="color" class="color-picker" title="글자색" onchange="execCmd('foreColor', this.value)">
+                        <select onchange="execCmd('fontSize', this.value)" style="height:28px;">
+                            <option value="3">보통</option>
+                            <option value="5">크게</option>
+                            <option value="7">최대</option>
+                        </select>
+                        <div style="width:1px; height:20px; background:#ddd; margin:0 5px;"></div>
+                        <button class="tool-btn" onclick="setAlign('left')">⬅️</button>
+                        <button class="tool-btn" onclick="setAlign('center')">⏺️</button>
+                        <button class="tool-btn" onclick="setAlign('right')">➡️</button>
+                    </div>
+                    <div id="inp-content" class="editor-content" contenteditable="true" oninput="updatePaper()">
+                        위 어린이는 평소 친구들과 사이좋게 지내며, 밥도 골고루 잘 먹고 선생님 말씀을 잘 들었기에 이 상장을 주어 칭찬합니다.
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-title">하단 정보</div>
+            <div style="display:flex; gap:10px;">
+                <div class="form-group" style="flex:2;">
+                    <label class="form-label">날짜</label>
+                    <input type="text" id="inp-date" class="form-input" value="2026년 2월 7일" oninput="updatePaper()">
+                </div>
+                <div class="form-group" style="flex:1;">
+                    <label class="form-label" id="lbl-no">번호</label>
+                    <input type="text" id="inp-no" class="form-input" value="제 2026-01호" oninput="updatePaper()">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">발신인</label>
+                <input type="text" id="inp-sender" class="form-input" value="뉴키즈 유치원장  김 철 수" oninput="updatePaper()">
+            </div>
+            <div class="form-group">
+                <label class="form-label">직인 이미지</label>
+                <input type="file" id="inp-stamp" class="form-input" accept="image/*" onchange="handleStampUpload(this)">
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-print" onclick="printPaper()">🖨️ 인쇄</button>
+                <button class="btn btn-save" onclick="downloadImage()">💾 저장</button>
+            </div>
+        </div>
+
+        <div class="preview-area" id="previewArea">
+            <div id="paper">
+                <canvas id="bg-canvas" class="paper-bg-canvas"></canvas>
+                <div class="paper-content">
+                    <div class="top-section">
+                        <div class="p-no-box" id="div-no"><span class="p-no" id="out-no">제 2026-01호</span></div>
+                        <div class="p-title" id="out-title">착한 어린이 상</div>
+                        <div class="p-sub-info" id="div-info"><div class="p-info" id="out-group">해님반</div></div>
+                        <div class="p-name" id="out-name">홍 길 동</div>
+                    </div>
+
+                    <div class="body-section">
+                        <div class="p-body" id="out-body"></div>
+                    </div>
+
+                    <div class="bottom-section">
+                        <div class="p-date" id="out-date">2026년 2월 7일</div>
+                        <div class="p-sender-box">
+                            <span class="p-sender" id="out-sender">뉴키즈 유치원장  김 철 수</span>
+                            <img id="out-stamp" class="p-stamp" src="" style="display:none;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentTemplate = 'award';
+        const paper = document.getElementById('paper');
+        const bgCanvas = document.getElementById('bg-canvas');
+        const bgCtx = bgCanvas.getContext('2d');
+
+        window.onload = function () {
+            createDefaultStamp();
+            updatePaper();
+            setTemplate('award');
+            fitToScreen();
+        };
+
+        function fitToScreen() {
+            const container = document.getElementById('previewArea');
+            const margin = 60;
+            const paperW = paper.offsetWidth; const paperH = paper.offsetHeight;
+            const scale = Math.min((container.clientWidth - margin) / paperW, (container.clientHeight - margin) / paperH);
+            paper.style.transform = `scale(${Math.min(Math.max(scale, 0.3), 1.0)})`;
+        }
+        window.addEventListener('resize', fitToScreen);
+
+        function execCmd(cmd, val) { document.execCommand(cmd, false, val); updatePaper(); }
+        function setAlign(align) {
+            document.getElementById('out-body').style.textAlign = align;
+            document.getElementById('inp-content').style.textAlign = align;
+        }
+
+        function updatePaper() {
+            document.getElementById('out-title').innerText = document.getElementById('inp-title').value;
+            document.getElementById('out-group').innerText = document.getElementById('inp-group').value;
+            if (currentTemplate === 'letter') {
+                document.getElementById('out-name').innerText = document.getElementById('inp-name').value + " 학부모님께";
+            } else {
+                document.getElementById('out-name').innerText = document.getElementById('inp-name').value;
+            }
+            document.getElementById('out-date').innerText = document.getElementById('inp-date').value;
+            document.getElementById('out-no').innerText = document.getElementById('inp-no').value;
+            document.getElementById('out-sender').innerText = document.getElementById('inp-sender').value;
+            document.getElementById('out-body').innerHTML = document.getElementById('inp-content').innerHTML;
+        }
+
+        function setTemplate(type) {
+            currentTemplate = type;
+            document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
+            event.target.classList.add('active');
+
+            const pTitle = document.getElementById('out-title');
+            const pName = document.getElementById('out-name');
+            const pBody = document.getElementById('out-body');
+
+            if (type === 'letter') {
+                // [가정통신문]
+                paper.style.width = '794px'; paper.style.height = '1123px';
+                document.getElementById('div-no').style.display = 'none';
+                document.getElementById('div-info').style.display = 'none';
+
+                pTitle.style.color = 'white';
+                pTitle.style.fontSize = '45px';
+                pTitle.style.marginBottom = '20px';
+                pTitle.style.fontFamily = "'Nanum Gothic'";
+
+                pName.style.textAlign = 'right';
+                pName.style.fontSize = '24px';
+                pName.style.color = '#333';
+                pName.style.marginTop = '30px'; // 헤더 아래로 내림
+                pName.style.paddingRight = '20px';
+                pName.style.fontFamily = "'Nanum Gothic'";
+
+                pBody.style.textAlign = 'left';
+                pBody.style.fontSize = '22px';
+                pBody.style.fontFamily = "'Nanum Gothic'";
+                pBody.style.width = '90%';
+
+                document.getElementById('inp-title').value = "가정 통신문";
+                document.getElementById('inp-content').innerHTML = "학부모님 가정에 평안과 행복이 가득하시길 바랍니다.<br><br>이번 주 금요일은 우리 아이들의 즐거운 <b>'시장 놀이'</b>가 있는 날입니다.<br><br>가정에서 사용하지 않는 물건들을 아이들 편에 보내주시면 소중한 교육 자료로 활용하겠습니다.<br><br>많은 협조 부탁드립니다.";
+                setAlign('left');
+
+            } else {
+                // [상장/수료증]
+                paper.style.width = '1123px'; paper.style.height = '794px';
+                document.getElementById('div-no').style.display = 'block';
+                document.getElementById('div-info').style.display = 'block';
+
+                pTitle.style.color = '#1a3c6e';
+                pTitle.style.fontSize = '70px';
+                pTitle.style.marginBottom = '10px';
+                pTitle.style.fontFamily = "'Nanum Myeongjo'";
+
+                pName.style.textAlign = 'center';
+                pName.style.fontSize = '55px';
+                pName.style.color = '#000';
+                pName.style.marginTop = '5px';
+                pName.style.paddingRight = '0';
+                pName.style.fontFamily = "'Nanum Myeongjo'";
+
+                pBody.style.textAlign = 'center';
+                pBody.style.fontSize = '32px';
+                pBody.style.fontFamily = "'Nanum Myeongjo'";
+                pBody.style.width = '85%';
+
+                if (type === 'award') {
+                    document.getElementById('inp-title').value = "착한 어린이 상";
+                    document.getElementById('inp-content').innerHTML = "위 어린이는 평소 친구들과 사이좋게 지내며,<br>밥도 골고루 잘 먹고 선생님 말씀을 잘 들었기에<br>이 상장을 주어 칭찬합니다.";
+                } else {
+                    document.getElementById('inp-title').value = "수 료 증";
+                    document.getElementById('inp-content').innerHTML = "위 어린이는 본 유치원의 소정의 교육과정을<br>성실히 이수하였기에 이 증서를 수여합니다.";
+                }
+                setAlign('center');
+            }
+
+            bgCanvas.width = paper.offsetWidth; bgCanvas.height = paper.offsetHeight;
+            drawBackground(); updatePaper(); setTimeout(fitToScreen, 100);
+        }
+
+        function drawBackground() {
+            const w = bgCanvas.width; const h = bgCanvas.height;
+            const padding = (currentTemplate === 'letter') ? 50 : 40;
+            bgCtx.clearRect(0, 0, w, h);
+
+            if (currentTemplate === 'letter') {
+                // 가정통신문 디자인
+                bgCtx.fillStyle = "#ffffff"; bgCtx.fillRect(0, 0, w, h);
+
+                // 헤더 배경 (높이 180 -> 100으로 축소)
+                const headerHeight = 100;
+                bgCtx.fillStyle = "#1a3c6e";
+                bgCtx.fillRect(padding, padding, w - padding * 2, headerHeight);
+
+                // 테두리 (헤더 아래부터 시작)
+                bgCtx.lineWidth = 3; bgCtx.strokeStyle = "#1a3c6e";
+                bgCtx.strokeRect(padding, padding + headerHeight, w - padding * 2, h - padding * 2 - headerHeight);
+
+                // 하단 장식선 (위치 조정)
+                bgCtx.beginPath(); bgCtx.moveTo(padding + 40, h - 130); bgCtx.lineTo(w - padding - 40, h - 130);
+                bgCtx.lineWidth = 2; bgCtx.strokeStyle = "#ddd"; bgCtx.stroke();
+            } else {
+                // 상장 디자인
+                bgCtx.fillStyle = "#ffffff"; bgCtx.fillRect(0, 0, w, h);
+                bgCtx.lineWidth = 15; bgCtx.strokeStyle = "#e6b800"; bgCtx.strokeRect(padding, padding, w - padding * 2, h - padding * 2);
+                bgCtx.lineWidth = 2; bgCtx.strokeStyle = "#cba000"; bgCtx.strokeRect(padding + 12, padding + 12, w - (padding * 2 + 24), h - (padding * 2 + 24));
+                drawCorner(padding, padding);
+                bgCtx.save(); bgCtx.translate(w, 0); bgCtx.scale(-1, 1); drawCorner(padding, padding); bgCtx.restore();
+                bgCtx.save(); bgCtx.translate(0, h); bgCtx.scale(1, -1); drawCorner(padding, padding); bgCtx.restore();
+            }
+        }
+
+        function drawCorner(x, y) {
+            bgCtx.beginPath(); bgCtx.moveTo(x, y + 70); bgCtx.lineTo(x, y); bgCtx.lineTo(x + 70, y);
+            bgCtx.lineWidth = 6; bgCtx.strokeStyle = "#e6b800"; bgCtx.stroke();
+        }
+
+        function createDefaultStamp() {
+            const c = document.createElement('canvas'); c.width = 150; c.height = 150;
+            const cx = c.getContext('2d');
+            cx.strokeStyle = "rgba(255,0,0,0.8)"; cx.lineWidth = 5; cx.strokeRect(10, 10, 130, 130);
+            cx.fillStyle = "rgba(255,0,0,0.8)"; cx.font = "bold 36px sans-serif"; cx.textAlign = "center"; cx.textBaseline = "middle";
+            cx.fillText("뉴키즈", 75, 55); cx.fillText("원장인", 75, 95);
+            document.getElementById('out-stamp').src = c.toDataURL();
+            document.getElementById('out-stamp').style.display = 'block';
+        }
+
+        function handleStampUpload(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) { document.getElementById('out-stamp').src = e.target.result; }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function downloadImage() {
+            const tr = paper.style.transform; paper.style.transform = "none";
+            html2canvas(paper, { scale: 2 }).then(c => {
+                const l = document.createElement('a'); l.download = document.getElementById('inp-title').value + ".png"; l.href = c.toDataURL(); l.click();
+                paper.style.transform = tr;
+            });
+        }
+
+        function printPaper() {
+            const tr = paper.style.transform; paper.style.transform = "none";
+            html2canvas(paper, { scale: 2 }).then(c => {
+                const w = window.open('', '', 'width=900,height=900');
+                w.document.write('<html><head><title>인쇄</title><style>body{margin:0;text-align:center;}</style></head><body>');
+                w.document.write('<img src="' + c.toDataURL() + '" style="width:' + (currentTemplate === 'letter' ? 'auto' : '100%') + ';height:' + (currentTemplate === 'letter' ? '98vh' : 'auto') + '">');
+                w.document.write('</body></html>'); w.document.close(); w.focus();
+                setTimeout(() => { w.print(); w.close(); paper.style.transform = tr; }, 500);
+            });
+        }
+    </script>
+</body>
+</html>

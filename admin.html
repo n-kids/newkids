@@ -421,7 +421,7 @@
                     <h3 class="form-section-title">🏠 메인 페이지(첫 화면) 관리</h3>
                     <div style="background:#f9f9f9; padding:30px; border-radius:12px; border:1px solid #eee;">
                         <div class="form-group"><label class="form-label">메인 큰 제목</label><input type="text" id="conf-main-title" class="form-input"></div>
-                        <div class="form-group"><label class="form-label">메인 설명글</label><textarea id="conf-main-desc" class="form-inputp"></textarea></div>
+                        <div class="form-group"><label class="form-label">메인 설명글</label><textarea id="conf-main-desc" class="form-input"></textarea></div>
                         <div class="form-group" style="margin-top:15px; border-top:1px dashed #ccc; padding-top:15px;">
                             <label class="form-label">텍스트 색상 설정</label>
                             <div style="display:flex; gap:30px;">
@@ -795,7 +795,7 @@
         window.toggleEditorState = function () { const isIntro = document.getElementById('chk-intro').checked; document.getElementById('editor-area').style.opacity = isIntro ? '1' : '0.5'; document.getElementById('editor-area').style.pointerEvents = isIntro ? 'auto' : 'none'; }
 
         // ==========================================
-        // [수정됨] 설정 저장 (구글 시트 주소 영구 저장 추가)
+        // [수정됨] 설정 저장 (구글 시트 주소 영구 저장 추가 및 에러 방지)
         // ==========================================
         async function loadConfigToForm() {
             const { data } = await window.sb.from('site_config').select('*').eq('id', 1).single();
@@ -820,14 +820,69 @@
         }
 
         async function saveSiteConfig() {
-            if (!confirm("저장하시겠습니까?")) return; showLoading(true);
-            const f = document.getElementById('conf-main-hero').files[0]; let u = document.getElementById('preview-main-hero').src; if (isMainHeroDeleted) u = null; let uploadData = croppedMainHeroBlob ? croppedMainHeroBlob : f;
-            if (uploadData) { const ext = croppedMainHeroBlob ? 'jpg' : ''; const { data } = await window.sb.storage.from('images').upload(`main_${Date.now()}${ext}`, uploadData); if (data) u = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl; }
-            const fPopup = document.getElementById('conf-popup-file').files[0]; let uPopup = document.getElementById('preview-popup') ? document.getElementById('preview-popup').src : null; if (uPopup && uPopup.includes("via.placeholder")) uPopup = null;
-            if (fPopup) { const { data } = await window.sb.storage.from('images').upload(`popup_${Date.now()}.jpg`, fPopup); if (data) uPopup = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl; }
-            const updateData = { company_name: document.getElementById('conf-name').value, ceo_name: document.getElementById('conf-ceo').value, address: document.getElementById('conf-addr').value, phone: document.getElementById('conf-phone').value, primary_color: document.getElementById('conf-primary').value, accent_color: document.getElementById('conf-accent').value, main_hero_title: document.getElementById('conf-main-title').value, main_hero_desc: document.getElementById('conf-main-desc').value, main_hero_title_color: document.getElementById('conf-main-title-color').value, main_hero_desc_color: document.getElementById('conf-main-desc-color').value, main_hero_image: u, main_hero_bg_color: document.getElementById('conf-main-bg-color').value, main_hero_overlay_color: document.getElementById('conf-main-overlay-color').value, main_hero_overlay_opacity: parseFloat(document.getElementById('conf-main-overlay-opacity').value), popup_image: uPopup, popup_link: document.getElementById('conf-popup-link') ? document.getElementById('conf-popup-link').value : null, is_popup_visible: document.getElementById('conf-popup-visible') ? document.getElementById('conf-popup-visible').checked : false, updated_at: new Date() };
+            if (!confirm("저장하시겠습니까?")) return;
+            showLoading(true);
+
+            const f = document.getElementById('conf-main-hero').files[0];
+            let u = document.getElementById('preview-main-hero').src;
+            if (isMainHeroDeleted) u = null;
+            let uploadData = croppedMainHeroBlob ? croppedMainHeroBlob : f;
+
+            if (uploadData) {
+                const ext = croppedMainHeroBlob ? 'jpg' : '';
+                const { data } = await window.sb.storage.from('images').upload(`main_${Date.now()}${ext}`, uploadData);
+                if (data) u = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl;
+            }
+
+            // --- 🚨 [오류 수정 부분] 삭제된 팝업 HTML 요소에 대한 Null 참조 에러 방지 ---
+            const popupFileEl = document.getElementById('conf-popup-file');
+            const fPopup = popupFileEl ? popupFileEl.files[0] : null;
+
+            let previewPopupEl = document.getElementById('preview-popup');
+            let uPopup = previewPopupEl ? previewPopupEl.src : null;
+            if (uPopup && uPopup.includes("via.placeholder")) uPopup = null;
+
+            if (fPopup) {
+                const { data } = await window.sb.storage.from('images').upload(`popup_${Date.now()}.jpg`, fPopup);
+                if (data) uPopup = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl;
+            }
+
+            const popupLinkEl = document.getElementById('conf-popup-link');
+            const popupVisEl = document.getElementById('conf-popup-visible');
+
+            // 업데이트 할 데이터 정리
+            const updateData = {
+                company_name: document.getElementById('conf-name').value,
+                ceo_name: document.getElementById('conf-ceo').value,
+                address: document.getElementById('conf-addr').value,
+                phone: document.getElementById('conf-phone').value,
+                primary_color: document.getElementById('conf-primary').value,
+                accent_color: document.getElementById('conf-accent').value,
+                main_hero_title: document.getElementById('conf-main-title').value,
+                main_hero_desc: document.getElementById('conf-main-desc').value,
+                main_hero_title_color: document.getElementById('conf-main-title-color').value,
+                main_hero_desc_color: document.getElementById('conf-main-desc-color').value,
+                main_hero_image: u,
+                main_hero_bg_color: document.getElementById('conf-main-bg-color').value,
+                main_hero_overlay_color: document.getElementById('conf-main-overlay-color').value,
+                main_hero_overlay_opacity: parseFloat(document.getElementById('conf-main-overlay-opacity').value),
+                popup_image: uPopup,
+                popup_link: popupLinkEl ? popupLinkEl.value : null,
+                is_popup_visible: popupVisEl ? popupVisEl.checked : false,
+                updated_at: new Date()
+            };
+
             const { error } = await window.sb.from('site_config').update(updateData).eq('id', 1);
-            croppedMainHeroBlob = null; showLoading(false); if (error) alert(error.message); else { alert("저장됨"); if (u) originalMainHero = u; location.reload(); }
+            croppedMainHeroBlob = null;
+            showLoading(false);
+
+            if (error) {
+                alert(error.message);
+            } else {
+                alert("디자인 및 회사 정보가 성공적으로 저장되었습니다!");
+                if (u) originalMainHero = u;
+                location.reload();
+            }
         }
 
         // ==========================================

@@ -1274,9 +1274,7 @@ header {
 /* 게시판 목록 가로 넓이 확장 */
 .board-container {
     max-width: 1200px !important; /* 기본 넓이(보통 800px~1000px)를 1200px로 넓힙니다. */
-    margin: 0 auto;
-    margin-right: 400px;
-    margin-left:400px;
+   margin: 0 400px 0 400px;
     padding: 50px 20px;
 }
 

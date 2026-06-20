@@ -184,18 +184,35 @@ window.applySubPageHero = function () {
 function loadHeader() {
     const headerEl = document.querySelector('header');
     if (!headerEl) return;
-    const categories = (window.GLOBAL_CATEGORIES && window.GLOBAL_CATEGORIES.length > 0) ? window.GLOBAL_CATEGORIES : DEFAULT_CATEGORIES;
-    const legacyFiles = ['season', 'culture', 'performance'];
 
+    const categories = (window.GLOBAL_CATEGORIES && window.GLOBAL_CATEGORIES.length > 0) ? window.GLOBAL_CATEGORIES : DEFAULT_CATEGORIES;
+
+    // 1. 교육(EDU) 메뉴 생성
     const eduMenuHtml = categories.filter(c => c.type === 'EDU').map(c => {
         const colorStyle = c.menu_text_color ? `style="color:${c.menu_text_color}"` : '';
         return `<li><a href="child.html#${c.code}" ${colorStyle}>${c.name}</a></li>`;
     }).join('');
 
+    // 2. 행사(EVENT) 메뉴 생성
+    const legacyFiles = ['season', 'culture', 'performance'];
     const eventMenuHtml = categories.filter(c => c.type === 'EVENT').map(c => {
         const href = legacyFiles.includes(c.code) ? `${c.code}.html` : `program.html#${c.code}`;
         const colorStyle = c.menu_text_color ? `style="color:${c.menu_text_color}"` : '';
         return `<li><a href="${href}" ${colorStyle}>${c.name}</a></li>`;
+    }).join('');
+
+    // 3. 신규 게시판(BOARD) 메뉴 생성 (알림/소식 드롭다운)
+    const boardMenuHtml = categories.filter(c => c.type === 'BOARD').map(c => {
+        const colorStyle = c.menu_text_color ? `style="color:${c.menu_text_color}"` : '';
+        return `<li><a href="notice.html#${c.code}" ${colorStyle}>${c.name}</a></li>`;
+    }).join('');
+
+    // 4. 고정 페이지(PAGE) 메뉴 생성 (상단에 독립적으로 추가)
+    // 기존에 코드로 박혀있던 'order', 'proposal' 외에 추가된 PAGE들도 자동 생성
+    const fixedPageHtml = categories.filter(c => c.type === 'PAGE').map(c => {
+        const isCta = (c.code === 'proposal') ? 'class="cta-menu"' : '';
+        const weight = (c.code === 'order') ? 'style="font-weight:bold;"' : '';
+        return `<li><a href="${c.code}.html" ${isCta} ${weight}>${c.name}</a></li>`;
     }).join('');
 
     headerEl.innerHTML = `
@@ -203,14 +220,31 @@ function loadHeader() {
             <a href="index.html" class="logo-link"><img src="${CONFIG.LOGO_URL}" alt="NEW KIDS" class="logo-img"></a>
             <button class="mobile-btn" onclick="window.toggleMenu()">☰</button>
             <ul class="nav-menu" id="navMenu">
-                <li class="has-sub"><a href="javascript:void(0)" onclick="toggleSubMenu(this)">📚 교재소개 <span class="arrow">▼</span></a><ul class="dropdown double-col">${eduMenuHtml}</ul></li>
-                <li class="has-sub"><a href="javascript:void(0)" onclick="toggleSubMenu(this)">🎉 행사프로그램 <span class="arrow">▼</span></a><ul class="dropdown">${eventMenuHtml}</ul></li>
-                <li><a href="order.html" style="font-weight:bold;">교재 발주</a></li>
-                <li><a href="proposal.html" class="cta-menu">견적요청</a></li>
-                <li><a href="https://www.kookminbooks.co.kr/" target ="_blank">국민서관</a></li>
+                <li class="has-sub">
+                    <a href="javascript:void(0)" onclick="toggleSubMenu(this)">📚 교재소개 <span class="arrow">▼</span></a>
+                    <ul class="dropdown double-col">${eduMenuHtml}</ul>
+                </li>
+                <li class="has-sub">
+                    <a href="javascript:void(0)" onclick="toggleSubMenu(this)">🎉 행사프로그램 <span class="arrow">▼</span></a>
+                    <ul class="dropdown">${eventMenuHtml}</ul>
+                </li>
+                ${boardMenuHtml ? `
+                <li class="has-sub">
+                    <a href="javascript:void(0)" onclick="toggleSubMenu(this)">📢 알림/소식 <span class="arrow">▼</span></a>
+                    <ul class="dropdown">${boardMenuHtml}</ul>
+                </li>` : ''}
+                ${fixedPageHtml}
+                <li><a href="https://www.kookminbooks.co.kr/" target="_blank">국민서관</a></li>
             </ul>
         </div>`;
 }
+
+/* * 업데이트 된 내용:**
+    1. ** 알림 / 소식 그룹 추가:** `BOARD` 유형으로 추가된 카테고리가 있다면 상단에 '📢 알림/소식' 드롭다운이 자동으로 생기며 그 안에 들어갑니다.
+2. ** 페이지 자동 확장:** `PAGE` 유형으로 '회사소개' 등을 추가하면 상단 메뉴에 자동으로 버튼이 추가됩니다.
+3. ** 코드 안정성:** 특정 유형의 카테고리가 하나도 없을 때는 메뉴 자체가 나타나지 않도록 처리하여 깔끔한 UI를 유지합니다.
+
+이제 관리자 페이지에서 마음껏 카테고리를 추가하고 관리해 보세요! 추가로 궁금한 점이 있으시면 언제든 말씀해 주세요. */
 
 function loadFooter() {
     const footerEl = document.querySelector('footer');

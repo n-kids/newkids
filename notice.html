@@ -3,48 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>뉴키즈 - 소식 및 커뮤니티</title>
+    <title>뉴키즈 - 알림 및 소식</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <header>
-        <div class="header-inner">
-            <a href="index.html" class="logo">
-                <img src="logo.jpg" alt="뉴키즈 로고" class="logo-img">
-            </a>
-            <button class="mobile-btn">☰</button>
-            <ul class="nav-menu">
-                <li><a href="index.html">홈으로</a></li>
-                <li><a href="#">회사소개</a></li>
-                <li><a href="#">교육 프로그램</a></li>
-                <li><a href="#">행사 프로그램</a></li>
-                <li><a href="notice.html" style="color:#f4a261; font-weight:bold;">게시판</a></li>
-            </ul>
-        </div>
-    </header>
+    <!-- 헤더 (manager.js에서 자동 로드됨) -->
+    <header></header>
 
-    <div class="board-header-section">
+    <div class="board-header-section" id="view-hero">
         <div class="container">
-            <h1 style="font-size: 2rem; margin-bottom:10px;">📢 소식 & 커뮤니티</h1>
-            <p style="color:#666;">뉴키즈의 공지사항과 자유로운 이야기를 나누는 공간입니다.</p>
+            <h1 style="font-size: 2.2rem; margin-bottom:10px; color:#1a3c6e;">📢 알림 & 소식</h1>
+            <p style="color:#666;">뉴키즈의 새로운 소식과 공지사항을 확인해 보세요.</p>
         </div>
     </div>
 
     <div class="board-container">
-
-        <div class="board-tab-menu">
-            <button class="tab-btn active" onclick="switchBoard('notice')">공지사항</button>
-            <button class="tab-btn" onclick="switchBoard('free')">자유게시판</button>
-        </div>
-
-        <div class="board-action-bar" id="write-btn-area" style="display:none;">
-            <a href="write.html" class="btn-write">✏️ 글쓰기</a>
-        </div>
+        <!-- 탭 메뉴 및 자유게시판 글쓰기 버튼 제거됨 -->
 
         <div class="board-list-head">
             <div class="b-num">번호</div>
-            <div class="b-cat">작성자</div> <div class="b-title">제목</div>
+            <div class="b-cat">작성자</div>
+            <div class="b-title">제목</div>
             <div class="b-date">작성일</div>
         </div>
 
@@ -53,15 +33,10 @@
         </div>
 
         <div id="pagination-box" class="pagination" style="margin-top:40px;"></div>
-
     </div>
 
-    <footer>
-        <div class="container">
-            <p>(주)뉴키즈 | 대표: 홍길동 | 사업자등록번호: 123-45-67890</p>
-            <p class="copyright">© 2026 NEW KIDS. All rights reserved.</p>
-        </div>
-    </footer>
+    <!-- 푸터 (manager.js에서 자동 로드됨) -->
+    <footer></footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js"></script>
@@ -71,29 +46,11 @@
         // 전역 설정
         const ITEMS_PER_PAGE = 10;
         let currentPage = 1;
-        let currentCategory = 'notice'; // 기본값: 공지사항
+        const currentCategory = 'notice'; // 공지사항(notice) 고정
 
         document.addEventListener("DOMContentLoaded", () => {
             loadBoardList(1);
         });
-
-        // 탭 전환 함수
-        function switchBoard(cat) {
-            currentCategory = cat;
-            currentPage = 1;
-
-            // 탭 스타일 변경
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            if (cat === 'notice') document.querySelectorAll('.tab-btn')[0].classList.add('active');
-            else document.querySelectorAll('.tab-btn')[1].classList.add('active');
-
-            // 글쓰기 버튼 표시 여부 (자유게시판일 때만 보임)
-            const writeBtn = document.getElementById('write-btn-area');
-            if (cat === 'free') writeBtn.style.display = 'flex';
-            else writeBtn.style.display = 'none';
-
-            loadBoardList(1);
-        }
 
         // 목록 불러오기
         async function loadBoardList(page) {
@@ -106,7 +63,7 @@
 
             // DB 조회 (카테고리로 필터링)
             const { data, count, error } = await window.sb.from('total_posts')
-                .select('id, title, category, created_at, link_url', { count: 'exact' }) // link_url을 작성자로 사용
+                .select('id, title, category, created_at', { count: 'exact' })
                 .eq('category', currentCategory)
                 .order('created_at', { ascending: false })
                 .range(from, to);
@@ -117,7 +74,7 @@
             }
 
             if (!data || data.length === 0) {
-                listDiv.innerHTML = `<div style="text-align:center; padding:50px; border-bottom:1px solid #eee;">등록된 글이 없습니다.</div>`;
+                listDiv.innerHTML = `<div style="text-align:center; padding:50px; border-bottom:1px solid #eee;">등록된 공지사항이 없습니다.</div>`;
                 document.getElementById('pagination-box').innerHTML = '';
                 return;
             }
@@ -125,16 +82,16 @@
             let html = '';
             data.forEach(item => {
                 const date = new Date(item.created_at).toISOString().split('T')[0];
-                // 작성자: 공지사항이면 '관리자', 자유게시판이면 입력된 이름(link_url에 저장됨) 사용
-                let author = (currentCategory === 'notice') ? '관리자' : (item.link_url || '익명');
+                const author = '관리자'; // 공지사항이므로 관리자로 고정
 
+                // 글 클릭 시 view.html 상세 페이지로 이동하도록 설정
                 html += `
-                    <div class="board-list-row" onclick="alert('${item.title}')">
-                        <div class="b-num">${item.id}</div>
-                        <div class="b-cat"><span class="badge" style="background:#f1f3f5; color:#555;">${author}</span></div>
-                        <div class="b-title">${item.title}</div>
-                        <div class="b-date">${date}</div>
-                    </div>`;
+                        <div class="board-list-row" onclick="location.href='view.html?id=${item.id}'">
+                            <div class="b-num">${item.id}</div>
+                            <div class="b-cat"><span class="badge" style="background:#f1f3f5; color:#555;">${author}</span></div>
+                            <div class="b-title">${item.title}</div>
+                            <div class="b-date">${date}</div>
+                        </div>`;
             });
             listDiv.innerHTML = html;
 

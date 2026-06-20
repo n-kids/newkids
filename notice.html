@@ -3,23 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>뉴키즈 - 알림 및 소식</title>
+    <title>뉴키즈 - 게시판</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <!-- 헤더 (manager.js에서 자동 로드됨) -->
     <header></header>
 
     <div class="board-header-section" id="view-hero">
         <div class="container">
-            <h1 style="font-size: 2.2rem; margin-bottom:10px; color:#1a3c6e;">📢 알림 & 소식</h1>
-            <p style="color:#666;">뉴키즈의 새로운 소식과 공지사항을 확인해 보세요.</p>
+            <h1 id="board-title" style="font-size: 2.2rem; margin-bottom:10px; color:#1a3c6e;">📢 알림 & 소식</h1>
+            <p id="board-desc" style="color:#666;">데이터를 불러오는 중입니다...</p>
         </div>
     </div>
 
     <div class="board-container">
-        <!-- 탭 메뉴 및 자유게시판 글쓰기 버튼 제거됨 -->
+        <div style="text-align: right; margin-bottom: 15px;">
+            <button id="btn-user-write" class="btn-action" style="display: none;" onclick="location.href='write.html#' + currentCategory">✏️ 글쓰기</button>
+        </div>
 
         <div class="board-list-head">
             <div class="b-num">번호</div>
@@ -35,7 +36,6 @@
         <div id="pagination-box" class="pagination" style="margin-top:40px;"></div>
     </div>
 
-    <!-- 푸터 (manager.js에서 자동 로드됨) -->
     <footer></footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -43,16 +43,43 @@
     <script src="manager.js"></script>
 
     <script>
-        // 전역 설정
         const ITEMS_PER_PAGE = 10;
         let currentPage = 1;
-        const currentCategory = 'notice'; // 공지사항(notice) 고정
+        let currentCategory = location.hash.replace('#', '') || 'notice';
 
         document.addEventListener("DOMContentLoaded", () => {
+            const checkReady = setInterval(() => {
+                if (window.sb && window.GLOBAL_CATEGORIES && window.GLOBAL_CATEGORIES.length > 0) {
+                    clearInterval(checkReady);
+                    updateBoardHeader();
+                    loadBoardList(1);
+                }
+            }, 100);
+        });
+
+        window.addEventListener('hashchange', () => {
+            currentCategory = location.hash.replace('#', '') || 'notice';
+            updateBoardHeader();
             loadBoardList(1);
         });
 
-        // 목록 불러오기
+        function updateBoardHeader() {
+            const catInfo = window.GLOBAL_CATEGORIES.find(c => c.code === currentCategory);
+            if (catInfo) {
+                document.getElementById('board-title').innerText = catInfo.name;
+                document.getElementById('board-desc').innerText = catInfo.hero_desc || "뉴키즈의 게시판입니다.";
+                document.title = "뉴키즈 - " + catInfo.name;
+            }
+
+            // 💡 핵심 로직: 카테고리가 'notice'면 글쓰기 버튼 숨김, 아니면 표시!
+            const writeBtn = document.getElementById('btn-user-write');
+            if (currentCategory === 'notice') {
+                writeBtn.style.display = 'none';
+            } else {
+                writeBtn.style.display = 'inline-block';
+            }
+        }
+
         async function loadBoardList(page) {
             currentPage = page;
             const listDiv = document.getElementById('board-list-wrapper');
@@ -61,9 +88,8 @@
 
             listDiv.innerHTML = '<div style="text-align:center; padding:50px; color:#999;">로딩 중...</div>';
 
-            // DB 조회 (카테고리로 필터링)
             const { data, count, error } = await window.sb.from('total_posts')
-                .select('id, title, category, created_at', { count: 'exact' })
+                .select('id, title, category, created_at, link_url', { count: 'exact' })
                 .eq('category', currentCategory)
                 .order('created_at', { ascending: false })
                 .range(from, to);
@@ -74,7 +100,7 @@
             }
 
             if (!data || data.length === 0) {
-                listDiv.innerHTML = `<div style="text-align:center; padding:50px; border-bottom:1px solid #eee;">등록된 공지사항이 없습니다.</div>`;
+                listDiv.innerHTML = `<div style="text-align:center; padding:50px; border-bottom:1px solid #eee;">등록된 글이 없습니다.</div>`;
                 document.getElementById('pagination-box').innerHTML = '';
                 return;
             }
@@ -82,13 +108,14 @@
             let html = '';
             data.forEach(item => {
                 const date = new Date(item.created_at).toISOString().split('T')[0];
-                const author = '관리자'; // 공지사항이므로 관리자로 고정
 
-                // 글 클릭 시 view.html 상세 페이지로 이동하도록 설정
+                // 공지사항이면 무조건 '관리자', 자유게시판이면 작성자가 쓴 이름(link_url) 표시
+                const authorName = (currentCategory === 'notice') ? '관리자' : (item.link_url || '익명');
+
                 html += `
                         <div class="board-list-row" onclick="location.href='view.html?id=${item.id}'">
                             <div class="b-num">${item.id}</div>
-                            <div class="b-cat"><span class="badge" style="background:#f1f3f5; color:#555;">${author}</span></div>
+                            <div class="b-cat"><span class="badge" style="background:#f1f3f5; color:#555;">${authorName}</span></div>
                             <div class="b-title">${item.title}</div>
                             <div class="b-date">${date}</div>
                         </div>`;
@@ -98,7 +125,6 @@
             renderPagination(count, currentPage);
         }
 
-        // 페이지네이션
         function renderPagination(totalCount, current) {
             const wrapper = document.getElementById('pagination-box');
             wrapper.innerHTML = '';

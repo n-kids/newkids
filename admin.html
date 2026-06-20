@@ -9,6 +9,8 @@
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="admin.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 </head>
 <body>
 
@@ -537,7 +539,7 @@
         function showAdminMode() { document.getElementById('login-section').style.display = 'none'; document.getElementById('admin-layout').style.display = 'flex'; loadManageList(1); }
         function showLoading(s) { document.getElementById('loading').style.display = s ? 'flex' : 'none'; }
 
-        // 카테고리 로직 (순서 변경 포함)
+        // 카테고리 로직 (드래그 앤 드롭 순서 변경 적용)
         async function loadAdminCategories() {
             const listDiv = document.getElementById('category-list-container');
             try {
@@ -553,29 +555,37 @@
                 const gridStyle = "grid-template-columns: 60px 40px 70px 100px 100px 45px 45px 45px 45px 50px 1fr 120px 50px 60px;";
                 html += `<div class="cat-manage-layout cat-manage-header" style="${gridStyle}"><div>유형</div><div>순서</div><div>코드</div><div>메뉴명</div><div>제목</div><div title="상단 메뉴 글자색">메뉴색</div><div title="배경 큰 제목 색상">제목색</div><div title="배경 설명글 색상">설명색</div><div title="배경 이미지 덮는 필터 색상">필터색</div><div title="필터 색상의 투명도">투명도</div><div>설명글</div><div>이미지</div><div>노출</div><div>삭제</div></div>`;
 
+                // 👇 드래그 앤 드롭이 작동할 리스트 영역을 'sortable-category-list' 아이디로 감싸줍니다.
+                html += `<div id="sortable-category-list">`;
+
                 data.forEach((cat, index) => {
                     const thumb = cat.hero_image || 'https://via.placeholder.com/50?text=None';
                     const visBtn = cat.is_visible !== false ? `<button class="btn-mini" style="background:#27ae60; color:#fff;" onclick="toggleVisibility('${cat.code}', false)">ON</button>` : `<button class="btn-mini" style="background:#999; color:#fff;" onclick="toggleVisibility('${cat.code}', true)">OFF</button>`;
 
-                    html += `<div class="cat-manage-layout cat-manage-row" style="${gridStyle}">
-                                        <div class="cat-cell-center"><span class="type-badge">${cat.type}</span></div>
-                                        <div class="cat-cell-center"><button class="btn-order" onclick="moveCategory(${index}, -1)">▲</button><button class="btn-order" onclick="moveCategory(${index}, 1)">▼</button></div>
-                                        <div class="cat-cell-center" style="font-weight:bold; font-size:0.8rem;">${cat.code}</div>
-                                        <div class="cat-cell-input"><input type="text" id="name-${cat.code}" value="${cat.name}"></div>
-                                        <div class="cat-cell-input"><input type="text" id="title-${cat.code}" value="${cat.hero_title || ''}"></div>
-                                        <div class="cat-cell-center"><input type="color" id="m-color-${cat.code}" value="${cat.menu_text_color || '#333333'}" style="width:25px; border:none;" title="메뉴 글자색"></div>
-                                        <div class="cat-cell-center"><input type="color" id="t-color-${cat.code}" value="${cat.hero_title_color || '#ffffff'}" style="width:25px; border:none;" title="배경 큰 제목 색상"></div>
-                                        <div class="cat-cell-center"><input type="color" id="d-color-${cat.code}" value="${cat.hero_desc_color || '#ffffff'}" style="width:25px; border:none;" title="배경 설명글 색상"></div>
-                                        <div class="cat-cell-center"><input type="color" id="o-color-${cat.code}" value="${cat.hero_overlay_color || '#1a3c6e'}" style="width:25px; border:none;" title="배경 이미지 덮는 필터 색상"></div>
-                                        <div class="cat-cell-center"><input type="number" id="o-op-${cat.code}" value="${cat.hero_overlay_opacity !== undefined ? cat.hero_overlay_opacity : 0.8}" step="0.1" style="width:40px;"></div>
-                                        <div class="cat-cell-input"><input type="text" id="desc-${cat.code}" value="${cat.hero_desc || ''}"></div>
-                                        <div class="cat-cell-center" style="display:flex; flex-direction:column; align-items:center; gap:5px;"><img src="${thumb}" style="width:50px; height:50px; object-fit:cover; cursor:pointer; border:1px solid #ddd;" onclick="document.getElementById('file-${cat.code}').click()" title="이미지 변경"><input type="file" id="file-${cat.code}" class="cat-file-input" data-code="${cat.code}" style="display:none;" accept="image/*"><button class="btn-mini" style="font-size:0.6rem; color:red;" onclick="deleteSubHeroImage('${cat.code}')">삭제</button></div>
-                                        <div class="cat-cell-center">${visBtn}</div>
-                                        <div class="cat-cell-center"><button onclick="deleteCategory('${cat.code}')" class="btn-mini" style="background:#ff6b6b; color:#fff; width:100%;">삭제</button></div>
-                                    </div>`;
+                    // 🚨 순서 칸에 버튼(▲/▼) 대신 드래그 핸들(↕️) 아이콘을 배치하고, 행 자체에 data-code를 심어둡니다.
+                    html += `<div class="cat-manage-layout cat-manage-row" data-code="${cat.code}" style="${gridStyle}">
+                                    <div class="cat-cell-center"><span class="type-badge">${cat.type}</span></div>
+                                    <div class="cat-cell-center"><span class="drag-handle" style="cursor:grab; font-size:1.2rem; display:block;" title="드래그해서 순서 변경">↕️</span></div>
+                                    <div class="cat-cell-center" style="font-weight:bold; font-size:0.8rem;">${cat.code}</div>
+                                    <div class="cat-cell-input"><input type="text" id="name-${cat.code}" value="${cat.name}"></div>
+                                    <div class="cat-cell-input"><input type="text" id="title-${cat.code}" value="${cat.hero_title || ''}"></div>
+                                    <div class="cat-cell-center"><input type="color" id="m-color-${cat.code}" value="${cat.menu_text_color || '#333333'}" style="width:25px; border:none;" title="메뉴 글자색"></div>
+                                    <div class="cat-cell-center"><input type="color" id="t-color-${cat.code}" value="${cat.hero_title_color || '#ffffff'}" style="width:25px; border:none;" title="배경 큰 제목 색상"></div>
+                                    <div class="cat-cell-center"><input type="color" id="d-color-${cat.code}" value="${cat.hero_desc_color || '#ffffff'}" style="width:25px; border:none;" title="배경 설명글 색상"></div>
+                                    <div class="cat-cell-center"><input type="color" id="o-color-${cat.code}" value="${cat.hero_overlay_color || '#1a3c6e'}" style="width:25px; border:none;" title="배경 이미지 덮는 필터 색상"></div>
+                                    <div class="cat-cell-center"><input type="number" id="o-op-${cat.code}" value="${cat.hero_overlay_opacity !== undefined ? cat.hero_overlay_opacity : 0.8}" step="0.1" style="width:40px;"></div>
+                                    <div class="cat-cell-input"><input type="text" id="desc-${cat.code}" value="${cat.hero_desc || ''}"></div>
+                                    <div class="cat-cell-center" style="display:flex; flex-direction:column; align-items:center; gap:5px;"><img src="${thumb}" style="width:50px; height:50px; object-fit:cover; cursor:pointer; border:1px solid #ddd;" onclick="document.getElementById('file-${cat.code}').click()" title="이미지 변경"><input type="file" id="file-${cat.code}" class="cat-file-input" data-code="${cat.code}" style="display:none;" accept="image/*"><button class="btn-mini" style="font-size:0.6rem; color:red;" onclick="deleteSubHeroImage('${cat.code}')">삭제</button></div>
+                                    <div class="cat-cell-center">${visBtn}</div>
+                                    <div class="cat-cell-center"><button onclick="deleteCategory('${cat.code}')" class="btn-mini" style="background:#ff6b6b; color:#fff; width:100%;">삭제</button></div>
+                                </div>`;
                 });
+
+                html += `</div>`; // sortable-category-list 닫기
                 html += `<div style="text-align:right; margin-top:20px;"><button onclick="saveAllCategories()" class="btn-action" style="background:#2ecc71; border:none; padding:12px 30px; font-size:1rem;">💾 변경사항 일괄 저장</button></div>`;
+
                 listDiv.innerHTML = html;
+
                 document.querySelectorAll('.cat-file-input').forEach(input => {
                     input.addEventListener('change', function (e) {
                         if (this.files && this.files[0]) {
@@ -585,11 +595,44 @@
                         }
                     });
                 });
+
+                // 👇 드래그 앤 드롭 기능(SortableJS) 활성화 및 놓았을 때 자동 저장 로직
+                if (typeof Sortable !== 'undefined') {
+                    const sortableList = document.getElementById('sortable-category-list');
+                    new Sortable(sortableList, {
+                        handle: '.drag-handle', // ↕️ 아이콘 부분을 잡아야만 드래그 가능
+                        animation: 150, // 부드러운 애니메이션 효과 (0.15초)
+                        onEnd: async function (evt) {
+                            showLoading(true);
+                            try {
+                                const rows = sortableList.querySelectorAll('.cat-manage-row');
+                                const updatePromises = Array.from(rows).map((row, idx) => {
+                                    const code = row.getAttribute('data-code');
+                                    return window.sb.from('program_categories').update({ order_num: idx }).eq('code', code);
+                                });
+
+                                // 데이터베이스에 바뀐 순서 일괄 저장
+                                await Promise.all(updatePromises);
+
+                                // 순서가 바뀌었으므로 상단 메뉴와 카테고리 필터 정보 새로고침
+                                if (typeof populateCategorySelects === 'function') populateCategorySelects();
+                                if (typeof loadHeader === 'function') loadHeader();
+
+                            } catch (e) {
+                                alert("순서 저장 중 오류가 발생했습니다: " + e.message);
+                            } finally {
+                                showLoading(false);
+                            }
+                        }
+                    });
+                }
+
             } catch (e) {
                 listDiv.innerHTML = "로드 실패";
                 console.error(e);
             }
         }
+
         async function saveAllCategories() { if (!confirm("모든 카테고리의 변경사항을 저장하시겠습니까?")) return; showLoading(true); const updatePromises = []; for (const cat of categoryList) { const code = cat.code; const fileInput = document.getElementById(`file-${code}`); let uploadData = croppedCatBlobs[code] ? croppedCatBlobs[code] : (fileInput && fileInput.files[0] ? fileInput.files[0] : null); updatePromises.push(async () => { let imgUrl = null; if (uploadData) { const ext = croppedCatBlobs[code] ? 'jpg' : ''; const { data, error } = await window.sb.storage.from('images').upload(`h_${Date.now()}_${code}${ext}`, uploadData); if (!error) { const { data: urlData } = window.sb.storage.from('images').getPublicUrl(data.path); imgUrl = urlData.publicUrl; } } const updateData = { name: document.getElementById(`name-${code}`).value, hero_title: document.getElementById(`title-${code}`).value, hero_desc: document.getElementById(`desc-${code}`).value, menu_text_color: document.getElementById(`m-color-${code}`).value, hero_title_color: document.getElementById(`t-color-${code}`).value, hero_desc_color: document.getElementById(`d-color-${code}`).value, hero_overlay_color: document.getElementById(`o-color-${code}`).value, hero_overlay_opacity: parseFloat(document.getElementById(`o-op-${code}`).value) }; if (imgUrl) updateData.hero_image = imgUrl; return window.sb.from('program_categories').update(updateData).eq('code', code); }); } try { await Promise.all(updatePromises.map(fn => fn())); croppedCatBlobs = {}; showLoading(false); alert("모든 변경사항이 저장되었습니다."); loadAdminCategories(); } catch (e) { showLoading(false); console.error(e); alert("저장 중 오류가 발생했습니다."); } }
         async function addNewCategory() { const code = document.getElementById('new-cat-code').value.trim().toLowerCase(); const name = document.getElementById('new-cat-name').value.trim(); const type = document.getElementById('new-cat-type').value; const desc = document.getElementById('new-cat-desc').value.trim(); if (!code || !name) return alert("필수 입력"); const f = document.getElementById('new-cat-file').files[0]; let uploadData = croppedNewCatBlob ? croppedNewCatBlob : f; let u = null; if (uploadData) { const ext = croppedNewCatBlob ? 'jpg' : ''; const { data } = await window.sb.storage.from('images').upload(`h_${Date.now()}${ext}`, uploadData); u = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl; } await window.sb.from('program_categories').insert([{ code, name, type, hero_desc: desc, hero_image: u, order_num: 999, is_visible: true }]); croppedNewCatBlob = null; document.getElementById('new-cat-code').value = ''; loadAdminCategories(); populateCategorySelects(); }
         async function deleteSubHeroImage(c) { if (confirm("이미지를 삭제하시겠습니까?")) { showLoading(true); await window.sb.from('program_categories').update({ hero_image: null }).eq('code', c); showLoading(false); loadAdminCategories(); } }

@@ -1271,10 +1271,23 @@ header {
     border-bottom: 1px solid #eee;
 }
 
+/* 게시판 목록 가로 넓이 확장 */
 .board-container {
-    max-width: 1000px;
-    margin: 50px auto;
-    padding: 0 20px;
+    max-width: 1200px !important; /* 기본 넓이(보통 800px~1000px)를 1200px로 넓힙니다. */
+    margin: 0 auto;
+    padding: 50px 20px;
+}
+
+/* 게시판 상단 제목 영역 넓이 동기화 */
+.board-header-section .container {
+    max-width: 1200px !important;
+}
+
+/* 글 읽기 상세 페이지(view) 넓이 확장 공통 스타일 */
+.view-box,
+.post-detail-box {
+    max-width: 1200px !important;
+    margin: 0 auto;
 }
 
 /* 리스트형 게시판 레이아웃 */

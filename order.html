@@ -73,11 +73,6 @@
     <script>
         let CATEGORY_NAMES = {};
 
-        function escapeHtml(text) {
-            if (!text) return "";
-            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-        }
-
         document.addEventListener("DOMContentLoaded", function () {
             const checkSb = setInterval(() => {
                 if (window.sb) {
@@ -85,20 +80,6 @@
                     loadDynamicOrderProducts(window.sb);
                 }
             }, 100);
-
-            const phoneInput = document.querySelector('input[name="phone"]');
-            if (phoneInput) {
-                phoneInput.addEventListener('input', function (e) {
-                    let number = e.target.value.replace(/[^0-9]/g, "");
-                    let tel = "";
-                    if (number.startsWith('02')) {
-                        if (number.length < 3) { tel = number; } else if (number.length < 6) { tel = number.substr(0, 2) + "-" + number.substr(2); } else { tel = number.substr(0, 2) + "-" + number.substr(2, 4) + "-" + number.substr(6); }
-                    } else {
-                        if (number.length < 4) { tel = number; } else if (number.length < 7) { tel = number.substr(0, 3) + "-" + number.substr(3); } else { tel = number.substr(0, 3) + "-" + number.substr(3, 4) + "-" + number.substr(7); }
-                    }
-                    e.target.value = tel;
-                });
-            }
         });
 
         async function loadDynamicOrderProducts(sb) {
@@ -151,7 +132,7 @@
 
                     if (items.length > 0) {
                         items.forEach(item => {
-                            const safeTitle = escapeHtml(item.title);
+                            const safeTitle = window.escapeHtml(item.title);
                             html += `<div class="order-item-row" data-title="${safeTitle}" onclick="toggleProductItem(this)">
                                                     <div class="order-item-info">
                                                         <h4>${safeTitle}</h4>

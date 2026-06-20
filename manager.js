@@ -1,14 +1,13 @@
-﻿// manager.js - 통합 관리자 (로그인 오류 수정 및 안정성 확보)
+﻿// manager.js - 통합 관리자 (최적화 및 중복 코드 제거)
 
 // ============================================================
-// [0] 새로고침 시 스크롤 최상단 고정 (가장 먼저 실행)
+// [0] 새로고침 시 스크롤 최상단 고정
 // ============================================================
 if ('scrollRestoration' in history) {
-    history.scrollRestoration = 'manual'; // 브라우저의 스크롤 복원 기능 비활성화
+    history.scrollRestoration = 'manual';
 }
-window.scrollTo(0, 0); // 즉시 최상단 이동
+window.scrollTo(0, 0);
 
-// 페이지를 떠나거나 새로고침 직전에도 최상단으로 이동
 window.addEventListener('beforeunload', function () {
     window.scrollTo(0, 0);
 });
@@ -17,8 +16,8 @@ window.addEventListener('beforeunload', function () {
 // [1] 전역 설정 및 유틸리티
 // ============================================================
 window.GLOBAL_CATEGORIES = [];
+window.NO_IMAGE_URL = "https://placehold.co/400x300/e0e0e0/666666?text=No+Image"; // 공통 기본 이미지
 
-// [안전장치] 기본 카테고리 데이터
 const DEFAULT_CATEGORIES = [
     { code: 'korean', name: '🇰🇷 한글', type: 'EDU' },
     { code: 'reading', name: '📖 독서', type: 'EDU' },
@@ -38,7 +37,6 @@ const DEFAULT_CATEGORIES = [
     { code: 'order', name: '교재 발주', type: 'PAGE' }
 ];
 
-// [유틸리티] Hex -> RGBA 변환
 function hexToRgba(hex, opacity) {
     if (!hex) return `rgba(26, 60, 110, ${opacity})`;
     hex = hex.replace('#', '');
@@ -48,6 +46,12 @@ function hexToRgba(hex, opacity) {
     const b = parseInt(hex.substring(4, 6), 16);
     return `rgba(${r}, ${g}, ${b}, ${opacity})`;
 }
+
+// 텍스트 HTML 이스케이프 (공통)
+window.escapeHtml = function (text) {
+    if (!text) return "";
+    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+};
 
 // ============================================================
 // [2] Supabase 초기화 및 설정 로드
@@ -78,7 +82,6 @@ function startSupabase() {
         window.sb = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY, {
             auth: { persistSession: true, storage: window.sessionStorage }
         });
-        console.log("Supabase initialized successfully");
         loadSiteConfig();
         loadCategories();
     } catch (e) {
@@ -135,14 +138,13 @@ async function loadCategories() {
         window.GLOBAL_CATEGORIES = (data && data.length > 0) ? data : DEFAULT_CATEGORIES;
     } catch (e) { window.GLOBAL_CATEGORIES = DEFAULT_CATEGORIES; }
     loadHeader();
-    applySubPageHero();
+    window.applySubPageHero();
 }
 
 // ============================================================
 // [3] UI 및 페이지 제어 함수
 // ============================================================
-
-function applySubPageHero() {
+window.applySubPageHero = function () {
     const hero = document.getElementById('view-hero') || document.querySelector('.sub-hero');
     if (!hero) return;
 
@@ -175,33 +177,6 @@ function applySubPageHero() {
         const descEl = hero.querySelector('p');
         if (titleEl && category.hero_title) titleEl.innerHTML = category.hero_title;
         if (descEl && category.hero_desc) descEl.innerHTML = category.hero_desc;
-    }
-    hero.classList.add('loaded');
-}
-
-window.updateHeroBackground = function (categoryCode) {
-    const hero = document.getElementById('view-hero');
-    if (!hero) return;
-    const category = window.GLOBAL_CATEGORIES.find(c => c.code === categoryCode);
-    if (category) {
-        if (category.hero_image) {
-            const overlayColor = category.hero_overlay_color || '#1a3c6e';
-            const overlayOpacity = category.hero_overlay_opacity !== undefined ? category.hero_overlay_opacity : 0.8;
-            const rgba = hexToRgba(overlayColor, overlayOpacity);
-            hero.style.backgroundImage = `linear-gradient(${rgba}, ${rgba}), url('${category.hero_image}')`;
-            hero.className = 'sub-hero';
-            hero.style.backgroundSize = 'cover';
-            hero.style.backgroundPosition = 'center';
-            hero.style.backgroundColor = 'transparent';
-        } else {
-            hero.style.backgroundImage = 'none';
-            hero.style.backgroundColor = category.hero_bg_color || '#1a3c6e';
-        }
-        if (category.hero_title_color) hero.querySelector('h1').style.color = category.hero_title_color;
-        if (category.hero_desc_color) hero.querySelector('p').style.color = category.hero_desc_color;
-    } else {
-        hero.className = 'sub-hero bg-gray';
-        hero.style.backgroundImage = 'none';
     }
     hero.classList.add('loaded');
 };
@@ -245,7 +220,6 @@ function loadFooter() {
 // ============================================================
 // [4] 이벤트 리스너 및 헬퍼 함수
 // ============================================================
-
 window.toggleMenu = function () { document.getElementById('navMenu').classList.toggle('active'); };
 window.toggleSubMenu = function (el) { if (window.innerWidth <= 768) { const p = el.parentElement; const o = p.classList.contains('sub-open'); document.querySelectorAll('.nav-menu li.has-sub').forEach(li => li.classList.remove('sub-open')); if (!o) p.classList.add('sub-open'); } };
 function addScrollButtons() { if (document.querySelector('.scroll-btns')) return; document.body.insertAdjacentHTML('beforeend', `<div class="scroll-btns"><button class="btn-scroll" onclick="scrollToTop()">▲</button><button class="btn-scroll" onclick="scrollToBottom()">▼</button></div>`); }
@@ -255,15 +229,46 @@ window.getYoutubeId = (u) => { if (!u) return null; const m = u.match(/^.*((yout
 window.formatDate = (d) => { return d ? d.split('T')[0] : ''; };
 function enableAutoResizeTextarea() { document.querySelectorAll('textarea.form-input').forEach(t => { t.style.height = 'auto'; t.style.height = (t.scrollHeight) + 'px'; t.addEventListener('input', function () { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; }); }); }
 
+// ============================================================
+// [5] DOMContentLoaded (중복 병합 완료)
+// ============================================================
 document.addEventListener("DOMContentLoaded", function () {
-    loadHeader(); loadFooter(); addScrollButtons(); enableAutoResizeTextarea();
-    document.addEventListener('click', e => { const m = document.getElementById('navMenu'), b = document.querySelector('.mobile-btn'); if (m && m.classList.contains('active') && !m.contains(e.target) && !b.contains(e.target)) m.classList.remove('active'); });
-    window.addEventListener('hashchange', () => { if (location.pathname.includes('child.html') || location.pathname.includes('program.html')) applySubPageHero(); });
-});
+    loadHeader();
+    loadFooter();
+    addScrollButtons();
+    enableAutoResizeTextarea();
 
-document.addEventListener("DOMContentLoaded", function () {
-    const mobileBtn = document.querySelector('.mobile-btn'); const navMenu = document.querySelector('.nav-menu');
-    if (mobileBtn && navMenu) { mobileBtn.addEventListener('click', function (e) { e.stopPropagation(); navMenu.classList.toggle('active'); }); }
-    const menuLinks = document.querySelectorAll('.nav-menu a'); menuLinks.forEach(link => { link.addEventListener('click', () => { if (navMenu.classList.contains('active')) navMenu.classList.remove('active'); }); });
-    document.addEventListener('click', function (e) { if (navMenu && navMenu.classList.contains('active')) { if (!navMenu.contains(e.target) && !mobileBtn.contains(e.target)) navMenu.classList.remove('active'); } });
+    // 폼 전화번호 자동 하이픈 (공통 적용)
+    document.querySelectorAll('input[name="phone"]').forEach(input => {
+        input.addEventListener('input', function (e) {
+            let number = e.target.value.replace(/[^0-9]/g, "");
+            let tel = "";
+            if (number.startsWith('02')) {
+                if (number.length < 3) tel = number; else if (number.length < 6) tel = number.substr(0, 2) + "-" + number.substr(2); else tel = number.substr(0, 2) + "-" + number.substr(2, 4) + "-" + number.substr(6);
+            } else {
+                if (number.length < 4) tel = number; else if (number.length < 7) tel = number.substr(0, 3) + "-" + number.substr(3); else tel = number.substr(0, 3) + "-" + number.substr(3, 4) + "-" + number.substr(7);
+            }
+            e.target.value = tel;
+        });
+    });
+
+    // 모바일 메뉴 제어 로직 통합
+    const mobileBtn = document.querySelector('.mobile-btn');
+    const navMenu = document.getElementById('navMenu');
+
+    if (mobileBtn && navMenu) {
+        mobileBtn.addEventListener('click', function (e) { e.stopPropagation(); navMenu.classList.toggle('active'); });
+    }
+
+    document.querySelectorAll('.nav-menu a').forEach(link => {
+        link.addEventListener('click', () => { if (navMenu && navMenu.classList.contains('active')) navMenu.classList.remove('active'); });
+    });
+
+    document.addEventListener('click', e => {
+        if (navMenu && navMenu.classList.contains('active') && !navMenu.contains(e.target) && (!mobileBtn || !mobileBtn.contains(e.target))) navMenu.classList.remove('active');
+    });
+
+    window.addEventListener('hashchange', () => {
+        if (location.pathname.includes('child.html') || location.pathname.includes('program.html')) window.applySubPageHero();
+    });
 });

@@ -9,252 +9,6 @@
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="admin.css">
-
-    <style>
-        /* =========================================
-           1. 통합 관리자 UI 커스텀 스타일
-           ========================================= */
-        .color-picker-group {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 2px;
-        }
-
-        .color-picker-label {
-            font-size: 0.7rem;
-            color: #666;
-        }
-
-        .opacity-val {
-            font-size: 0.75rem;
-            color: #1a3c6e;
-            font-weight: bold;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            margin-right: 5px;
-        }
-
-        .cat-manage-header div {
-            font-size: 0.85rem;
-            letter-spacing: -0.5px;
-        }
-
-        /* =========================================
-           2. 이미지 편집 모달 스타일
-           ========================================= */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.6);
-            z-index: 9999;
-            display: none;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal-content {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            width: 95%;
-            max-width: 1000px;
-            max-height: 95vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            box-shadow: 0 4px 25px rgba(0,0,0,0.3);
-            overflow: hidden;
-        }
-
-        .editor-toolbar {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 10px;
-            width: 100%;
-            background: #f8f9fa;
-            padding: 12px;
-            border-radius: 8px;
-            justify-content: center;
-            border: 1px solid #eee;
-            align-items: center;
-        }
-
-        .tool-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding-right: 15px;
-            border-right: 1px solid #ddd;
-        }
-
-            .tool-group:last-child {
-                border-right: none;
-            }
-
-        .tool-label {
-            font-size: 0.8rem;
-            font-weight: bold;
-            color: #555;
-            margin-right: 5px;
-        }
-
-        .btn-tool {
-            padding: 6px 12px;
-            background: #fff;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-            .btn-tool:hover {
-                background: #e9ecef;
-            }
-
-            .btn-tool.active {
-                background: #1a3c6e;
-                color: white;
-                border-color: #1a3c6e;
-            }
-
-        .tool-input {
-            padding: 5px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-
-        .crop-container {
-            border: 2px dashed #ccc;
-            margin: 10px 0;
-            width: 100%;
-            background: #fafafa;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            position: relative;
-            height: 65vh;
-            overflow: auto;
-        }
-
-        #crop-source-canvas {
-            display: block;
-            transform-origin: top left;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin: auto;
-        }
-
-        .modal-btns {
-            display: flex;
-            gap: 10px;
-            width: 100%;
-            justify-content: center;
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid #eee;
-        }
-
-        .btn-cancel {
-            padding: 10px 25px;
-            background: #888;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        .btn-confirm {
-            padding: 10px 25px;
-            background: #1a3c6e;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-            .btn-confirm:hover {
-                background: #132b4f;
-            }
-
-        #img-edit-btn {
-            position: absolute;
-            display: none;
-            z-index: 1000;
-            background: #1a3c6e;
-            color: white;
-            padding: 8px 15px;
-            border-radius: 20px;
-            border: 2px solid #fff;
-            font-weight: bold;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            cursor: pointer;
-            transform: translate(-50%, -50%);
-        }
-
-            #img-edit-btn:hover {
-                background: #132b4f;
-                transform: translate(-50%, -50%) scale(1.05);
-            }
-
-        .popup-list-item {
-            display: flex;
-            gap: 15px;
-            background: #fff;
-            border: 1px solid #ddd;
-            padding: 15px;
-            border-radius: 8px;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-
-        .popup-preview {
-            width: 100px;
-            height: 100px;
-            object-fit: cover;
-            border-radius: 6px;
-            border: 1px solid #eee;
-            background: #f0f0f0;
-        }
-
-        .popup-info {
-            flex: 1;
-        }
-
-        /* 에디터 드래그 앤 드롭 시각적 효과 */
-        #editor-container {
-            transition: 0.3s background-color;
-        }
-
-            #editor-container.drag-over {
-                border: 2px dashed #1a3c6e !important;
-                background-color: #f0f7ff !important;
-                opacity: 0.8;
-            }
-
-        .ql-editor img {
-            cursor: grab;
-        }
-
-            .ql-editor img:active {
-                cursor: grabbing;
-            }
-    </style>
 </head>
 <body>
 
@@ -796,7 +550,6 @@
                 categoryList = data;
                 let html = `<div style="text-align:right; margin-bottom:10px;"><button onclick="saveAllCategories()" class="btn-action" style="background:#2ecc71; border:none; padding:10px 20px;">💾 변경사항 일괄 저장</button></div>`;
 
-                // [수정됨] 칸 너비를 넓혀주고 직관적인 한글(메뉴색, 제목색 등)로 변경, 마우스 오버 시 툴팁 추가
                 const gridStyle = "grid-template-columns: 60px 40px 70px 100px 100px 45px 45px 45px 45px 50px 1fr 120px 50px 60px;";
                 html += `<div class="cat-manage-layout cat-manage-header" style="${gridStyle}"><div>유형</div><div>순서</div><div>코드</div><div>메뉴명</div><div>제목</div><div title="상단 메뉴 글자색">메뉴색</div><div title="배경 큰 제목 색상">제목색</div><div title="배경 설명글 색상">설명색</div><div title="배경 이미지 덮는 필터 색상">필터색</div><div title="필터 색상의 투명도">투명도</div><div>설명글</div><div>이미지</div><div>노출</div><div>삭제</div></div>`;
 
@@ -804,23 +557,22 @@
                     const thumb = cat.hero_image || 'https://via.placeholder.com/50?text=None';
                     const visBtn = cat.is_visible !== false ? `<button class="btn-mini" style="background:#27ae60; color:#fff;" onclick="toggleVisibility('${cat.code}', false)">ON</button>` : `<button class="btn-mini" style="background:#999; color:#fff;" onclick="toggleVisibility('${cat.code}', true)">OFF</button>`;
 
-                    // [수정됨] 각 컬러 피커에도 title(툴팁) 속성을 추가하여 알기 쉽게 변경
                     html += `<div class="cat-manage-layout cat-manage-row" style="${gridStyle}">
-                                    <div class="cat-cell-center"><span class="type-badge">${cat.type}</span></div>
-                                    <div class="cat-cell-center"><button class="btn-order" onclick="moveCategory(${index}, -1)">▲</button><button class="btn-order" onclick="moveCategory(${index}, 1)">▼</button></div>
-                                    <div class="cat-cell-center" style="font-weight:bold; font-size:0.8rem;">${cat.code}</div>
-                                    <div class="cat-cell-input"><input type="text" id="name-${cat.code}" value="${cat.name}"></div>
-                                    <div class="cat-cell-input"><input type="text" id="title-${cat.code}" value="${cat.hero_title || ''}"></div>
-                                    <div class="cat-cell-center"><input type="color" id="m-color-${cat.code}" value="${cat.menu_text_color || '#333333'}" style="width:25px; border:none;" title="메뉴 글자색"></div>
-                                    <div class="cat-cell-center"><input type="color" id="t-color-${cat.code}" value="${cat.hero_title_color || '#ffffff'}" style="width:25px; border:none;" title="배경 큰 제목 색상"></div>
-                                    <div class="cat-cell-center"><input type="color" id="d-color-${cat.code}" value="${cat.hero_desc_color || '#ffffff'}" style="width:25px; border:none;" title="배경 설명글 색상"></div>
-                                    <div class="cat-cell-center"><input type="color" id="o-color-${cat.code}" value="${cat.hero_overlay_color || '#1a3c6e'}" style="width:25px; border:none;" title="배경 이미지 덮는 필터 색상"></div>
-                                    <div class="cat-cell-center"><input type="number" id="o-op-${cat.code}" value="${cat.hero_overlay_opacity !== undefined ? cat.hero_overlay_opacity : 0.8}" step="0.1" style="width:40px;"></div>
-                                    <div class="cat-cell-input"><input type="text" id="desc-${cat.code}" value="${cat.hero_desc || ''}"></div>
-                                    <div class="cat-cell-center" style="display:flex; flex-direction:column; align-items:center; gap:5px;"><img src="${thumb}" style="width:50px; height:50px; object-fit:cover; cursor:pointer; border:1px solid #ddd;" onclick="document.getElementById('file-${cat.code}').click()" title="이미지 변경"><input type="file" id="file-${cat.code}" class="cat-file-input" data-code="${cat.code}" style="display:none;" accept="image/*"><button class="btn-mini" style="font-size:0.6rem; color:red;" onclick="deleteSubHeroImage('${cat.code}')">삭제</button></div>
-                                    <div class="cat-cell-center">${visBtn}</div>
-                                    <div class="cat-cell-center"><button onclick="deleteCategory('${cat.code}')" class="btn-mini" style="background:#ff6b6b; color:#fff; width:100%;">삭제</button></div>
-                                </div>`;
+                                        <div class="cat-cell-center"><span class="type-badge">${cat.type}</span></div>
+                                        <div class="cat-cell-center"><button class="btn-order" onclick="moveCategory(${index}, -1)">▲</button><button class="btn-order" onclick="moveCategory(${index}, 1)">▼</button></div>
+                                        <div class="cat-cell-center" style="font-weight:bold; font-size:0.8rem;">${cat.code}</div>
+                                        <div class="cat-cell-input"><input type="text" id="name-${cat.code}" value="${cat.name}"></div>
+                                        <div class="cat-cell-input"><input type="text" id="title-${cat.code}" value="${cat.hero_title || ''}"></div>
+                                        <div class="cat-cell-center"><input type="color" id="m-color-${cat.code}" value="${cat.menu_text_color || '#333333'}" style="width:25px; border:none;" title="메뉴 글자색"></div>
+                                        <div class="cat-cell-center"><input type="color" id="t-color-${cat.code}" value="${cat.hero_title_color || '#ffffff'}" style="width:25px; border:none;" title="배경 큰 제목 색상"></div>
+                                        <div class="cat-cell-center"><input type="color" id="d-color-${cat.code}" value="${cat.hero_desc_color || '#ffffff'}" style="width:25px; border:none;" title="배경 설명글 색상"></div>
+                                        <div class="cat-cell-center"><input type="color" id="o-color-${cat.code}" value="${cat.hero_overlay_color || '#1a3c6e'}" style="width:25px; border:none;" title="배경 이미지 덮는 필터 색상"></div>
+                                        <div class="cat-cell-center"><input type="number" id="o-op-${cat.code}" value="${cat.hero_overlay_opacity !== undefined ? cat.hero_overlay_opacity : 0.8}" step="0.1" style="width:40px;"></div>
+                                        <div class="cat-cell-input"><input type="text" id="desc-${cat.code}" value="${cat.hero_desc || ''}"></div>
+                                        <div class="cat-cell-center" style="display:flex; flex-direction:column; align-items:center; gap:5px;"><img src="${thumb}" style="width:50px; height:50px; object-fit:cover; cursor:pointer; border:1px solid #ddd;" onclick="document.getElementById('file-${cat.code}').click()" title="이미지 변경"><input type="file" id="file-${cat.code}" class="cat-file-input" data-code="${cat.code}" style="display:none;" accept="image/*"><button class="btn-mini" style="font-size:0.6rem; color:red;" onclick="deleteSubHeroImage('${cat.code}')">삭제</button></div>
+                                        <div class="cat-cell-center">${visBtn}</div>
+                                        <div class="cat-cell-center"><button onclick="deleteCategory('${cat.code}')" class="btn-mini" style="background:#ff6b6b; color:#fff; width:100%;">삭제</button></div>
+                                    </div>`;
                 });
                 html += `<div style="text-align:right; margin-top:20px;"><button onclick="saveAllCategories()" class="btn-action" style="background:#2ecc71; border:none; padding:12px 30px; font-size:1rem;">💾 변경사항 일괄 저장</button></div>`;
                 listDiv.innerHTML = html;

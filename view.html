@@ -53,7 +53,7 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
 
-        /* 답변 및 첨부파일 영역 스타일 */
+        /* 답변 영역 100% 채우기 */
         .comments-section {
             width: 100%;
             margin-top: 50px;
@@ -115,6 +115,21 @@
             display: none;
             border: 1px solid #eee;
         }
+
+        .file-download-link {
+            display: inline-block;
+            color: #1a3c6e;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 5px 10px;
+            border-radius: 5px;
+            transition: background 0.2s;
+        }
+
+            .file-download-link:hover {
+                background: #e0efff;
+                text-decoration: underline;
+            }
     </style>
 </head>
 <body>
@@ -130,7 +145,6 @@
         <div id="v-youtube" style="display:none; margin-bottom: 30px;"></div>
         <div id="v-content" class="post-content"></div>
 
-        <!-- 첨부파일 영역 -->
         <div id="v-files">
             <div style="font-weight:bold; margin-bottom:10px; color:#1a3c6e;">📎 첨부파일</div>
             <div id="file-list-container"></div>
@@ -145,7 +159,6 @@
             <button id="btn-user-delete" onclick="deleteUserPost()" class="btn-action" style="background:#ff6b6b; display:none;">🗑️ 본인 글 삭제</button>
         </div>
 
-        <!-- 답변 영역 -->
         <div class="comments-section" id="comments-section">
             <div class="comments-header">💬 관리자 답변 <span id="comment-count" style="color:#f4a261;">0</span></div>
             <div id="comment-list">
@@ -177,6 +190,29 @@
             }, 100);
         });
 
+        // 👇 새 창 열림을 방지하고 강제로 다운로드하게 만드는 핵심 함수
+        window.forceDownload = async function (url, filename) {
+            try {
+                // 다운로드 시작 시 버튼 텍스트 변경 등도 가능하지만 심플하게 백그라운드 다운로드 실행
+                const response = await fetch(url);
+                const blob = await response.blob();
+                const blobUrl = window.URL.createObjectURL(blob);
+
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = blobUrl;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+
+                window.URL.revokeObjectURL(blobUrl);
+                a.remove();
+            } catch (e) {
+                console.error("강제 다운로드 실패, 새 창으로 엽니다:", e);
+                window.open(url, '_blank'); // 실패 시 브라우저 기본 동작으로 폴백
+            }
+        };
+
         async function loadPostDetail(id) {
             const { data, error } = await window.sb.from('total_posts').select('*').eq('id', id).single();
             if (error || !data) { alert("글을 불러올 수 없습니다."); history.back(); return; }
@@ -187,49 +223,50 @@
             document.getElementById('v-content').innerHTML = data.content || '';
             document.getElementById('v-date').innerText = "작성일: " + new Date(data.created_at).toISOString().split('T')[0];
 
-            // 첨부파일 로직
-            // 💡 첨부파일 로직: 다운로드 속성 추가 및 파일명 유지
+            // 💡 첨부파일 로직: forceDownload 함수 연동
             const fileListContainer = document.getElementById('file-list-container');
             const vFiles = document.getElementById('v-files');
+
             if (data.image_url) {
                 const files = data.image_url.split('||');
                 fileListContainer.innerHTML = '';
                 files.forEach(f => {
-                    let url = f, name = "download_file"; // 기본 이름
+                    let url = f, name = "download_file";
 
-                    // 구분자 '@@'가 있는 경우 원래 파일명 추출
                     if (f.includes('@@')) {
                         url = f.split('@@')[0];
                         name = f.split('@@')[1];
                     } else {
-                        // 없는 경우 URL 경로에서 파일명 추출 시도
                         name = f.split('/').pop().split('?')[0];
                         try { name = decodeURIComponent(name); } catch (e) { }
                     }
 
-                    // download 속성을 추가하여 클릭 시 새창 없이 바로 다운로드 실행
+                    // a 태그에 javascript:void(0)를 주어 페이지 이동을 막고 강제 다운로드 함수 실행
                     fileListContainer.innerHTML += `
-                        <div style="margin-bottom:5px;">
-                            <a href="${url}" download="${name}" style="color:#1a3c6e; text-decoration:underline;">
-                                📥 ${name}
-                            </a>
-                        </div>`;
+                            <div style="margin-bottom:8px;">
+                                <a href="javascript:void(0)" onclick="forceDownload('${url}', '${name}')" class="file-download-link">
+                                    📥 ${name}
+                                </a>
+                            </div>`;
                 });
                 vFiles.style.display = 'block';
             }
-            let author = '관리자';
-            let isUserPost = false;
 
+            let author = '관리자';
+            let isUserPost = false; // 일반 사용자가 쓴 글인지 판별하는 스위치
+
+            // 작성자 이름 확인
             if (data.link_url && !data.link_url.startsWith('http')) {
                 author = data.link_url;
-                isUserPost = true;
+                isUserPost = true; // 링크칸에 이름이 있다면 일반 사용자 글!
             } else if (data.link_url && data.link_url.startsWith('http')) {
                 document.getElementById('v-link-box').style.display = 'inline-block';
                 document.getElementById('v-link').href = data.link_url;
             }
 
+            // 비밀번호 & 유튜브 확인
             if (data.video_url && !data.video_url.startsWith('http') && !data.video_url.includes('ORDER_')) {
-                isUserPost = true;
+                isUserPost = true; // 영상칸에 비밀번호가 있다면 일반 사용자 글!
             } else if (data.video_url && data.video_url.includes('youtu')) {
                 const yId = window.getYoutubeId ? window.getYoutubeId(data.video_url) : null;
                 if (yId) {
@@ -239,6 +276,8 @@
             }
 
             document.getElementById('v-author').innerText = "작성자: " + author;
+
+            // 일반 사용자가 작성한 글일 경우에만 [글 삭제 버튼]과 [관리자 답변 창] 활성화
             if (isUserPost) {
                 document.getElementById('btn-user-delete').style.display = 'inline-block';
                 document.getElementById('comments-section').style.display = 'block';
@@ -278,14 +317,14 @@
                 const safeContent = window.escapeHtml(c.content).replace(/\n/g, '<br>');
 
                 html += `
-                        <div class="comment-item">
-                            <div class="comment-meta">
-                                <span class="comment-author">🏢 ${c.author}</span>
-                                <span class="comment-date">${dateStr}</span>
+                            <div class="comment-item">
+                                <div class="comment-meta">
+                                    <span class="comment-author">🏢 ${c.author}</span>
+                                    <span class="comment-date">${dateStr}</span>
+                                </div>
+                                <div class="comment-content">${safeContent}</div>
                             </div>
-                            <div class="comment-content">${safeContent}</div>
-                        </div>
-                    `;
+                        `;
             });
             listDiv.innerHTML = html;
         }

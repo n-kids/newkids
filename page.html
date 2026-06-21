@@ -1,0 +1,54 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>뉴키즈 - 페이지</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header></header>
+
+    <section class="sub-hero" id="view-hero">
+        <div class="container">
+            <h1 id="page-title">로딩 중...</h1>
+            <p id="page-desc"></p>
+        </div>
+    </section>
+
+    <section class="container" style="padding: 50px 0;">
+        <div id="page-content" class="view-content">
+        </div>
+    </section>
+
+    <footer></footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script src="manager.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+            // 현재 페이지의 파일명에서 코드를 추출 (예: introduce.html -> introduce)
+            const pageCode = location.pathname.split('/').pop().replace('.html', '');
+
+            const checkReady = setInterval(() => {
+                if (window.GLOBAL_CATEGORIES && window.GLOBAL_CATEGORIES.length > 0) {
+                    clearInterval(checkReady);
+                    loadPageContent(pageCode);
+                }
+            }, 100);
+        });
+
+        async function loadPageContent(code) {
+            const cat = window.GLOBAL_CATEGORIES.find(c => c.code === code);
+            if (cat) {
+                document.getElementById('page-title').innerText = cat.name;
+                document.getElementById('page-desc').innerText = cat.hero_desc || "";
+
+                // 해당 카테고리(페이지)에 해당하는 첫 번째 글을 내용으로 가져오기
+                const { data } = await window.sb.from('total_posts').select('content').eq('category', code).limit(1).single();
+                if (data) document.getElementById('page-content').innerHTML = data.content;
+            }
+        }
+    </script>
+</body>
+</html>

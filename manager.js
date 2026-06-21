@@ -235,7 +235,7 @@ async function loadCategories() {
 }
 
 // ============================================================
-// [3] UI 및 페이지 제어 함수
+// [3] UI 및 페이지 제어 함수 (수정됨)
 // ============================================================
 window.applySubPageHero = function () {
     const hero = document.getElementById('view-hero') || document.querySelector('.sub-hero');
@@ -246,6 +246,11 @@ window.applySubPageHero = function () {
     else if (location.pathname.includes('program.html')) currentCode = location.hash.replace('#', '');
     else if (location.pathname.includes('proposal.html')) currentCode = 'proposal';
     else if (location.pathname.includes('order.html')) currentCode = 'order';
+    // 👇 새롭게 추가된 부분: page.html일 경우 URL 파라미터(?id=)에서 코드를 가져옴
+    else if (location.pathname.includes('page.html')) {
+        const urlParams = new URLSearchParams(window.location.search);
+        currentCode = urlParams.get('id');
+    }
     else currentCode = location.pathname.split('/').pop().replace('.html', '');
 
     const category = window.GLOBAL_CATEGORIES.find(c => c.code === currentCode);
@@ -279,21 +284,11 @@ function loadHeader() {
     if (!headerEl) return;
 
     const categories = (window.GLOBAL_CATEGORIES && window.GLOBAL_CATEGORIES.length > 0) ? window.GLOBAL_CATEGORIES : DEFAULT_CATEGORIES;
-
-    // 1. 대분류 메뉴 그룹의 이름을 정의합니다.
-    const groupNames = {
-        'EDU': '📚 교재소개',
-        'EVENT': '🎉 행사프로그램',
-        'BOARD': '📢 알림/소식'
-    };
-
-    // 2. 각 유형(Type)별로 묶어줄 HTML 보관함을 만듭니다.
+    const groupNames = { 'EDU': '📚 교재소개', 'EVENT': '🎉 행사프로그램', 'BOARD': '📢 알림/소식' };
     const groupHtml = {};
 
-    // 카테고리 목록을 순서대로 돌면서 하위 메뉴(li)들을 생성합니다.
     categories.forEach(c => {
-        if (!groupHtml[c.type]) groupHtml[c.type] = ''; // 처음 나오는 유형이면 빈 칸 생성
-
+        if (!groupHtml[c.type]) groupHtml[c.type] = '';
         const colorStyle = c.menu_text_color ? `style="color:${c.menu_text_color}"` : '';
 
         if (c.type === 'EDU') {
@@ -307,28 +302,20 @@ function loadHeader() {
         } else if (c.type === 'PAGE') {
             const isCta = (c.code === 'proposal') ? 'class="cta-menu"' : '';
             const weight = (c.code === 'order') ? 'style="font-weight:bold;"' : '';
-            groupHtml[c.type] += `<li><a href="${c.code}.html" ${isCta} ${weight}>${c.name}</a></li>`;
+            // 👇 새롭게 추가된 부분: order, proposal은 기존 파일, 새로 만든 건 page.html로 영구 연결!
+            const href = (c.code === 'order' || c.code === 'proposal') ? `${c.code}.html` : `page.html?id=${c.code}`;
+            groupHtml[c.type] += `<li><a href="${href}" ${isCta} ${weight}>${c.name}</a></li>`;
         }
     });
 
-    // 💡 3. 핵심 로직: 관리자 페이지에 등록된 '순서'에서 먼저 등장하는 유형을 기록합니다.
-    // 이렇게 하면 목록 맨 위에 있는 유형이 메인 메뉴의 맨 앞으로 오게 됩니다!
     const mainOrder = [];
-    categories.forEach(c => {
-        if (!mainOrder.includes(c.type)) {
-            mainOrder.push(c.type);
-        }
-    });
+    categories.forEach(c => { if (!mainOrder.includes(c.type)) mainOrder.push(c.type); });
 
-    // 4. 파악된 순서대로 메인 메뉴(대분류) HTML을 조립합니다.
     let navHtml = '';
     mainOrder.forEach(type => {
         if (type === 'PAGE') {
-            // 고정 페이지(PAGE)는 드롭다운 없이 단일 버튼으로 꺼냅니다.
             navHtml += groupHtml[type];
         } else if (groupHtml[type]) {
-            // 자식 메뉴가 여러 개인 경우 (EDU, EVENT, BOARD)
-            // EDU(교재소개)는 항목이 많으므로 2줄로 보여주는 'double-col' 클래스를 유지합니다.
             const isDouble = (type === 'EDU') ? 'double-col' : '';
             navHtml += `
                 <li class="has-sub">
@@ -338,7 +325,6 @@ function loadHeader() {
         }
     });
 
-    // 5. 완성된 메뉴를 헤더에 쏙 넣습니다.
     headerEl.innerHTML = `
         <div class="header-inner">
             <a href="index.html" class="logo-link"><img src="${CONFIG.LOGO_URL}" alt="NEW KIDS" class="logo-img"></a>
@@ -348,8 +334,7 @@ function loadHeader() {
                 <li><a href="https://www.kookminbooks.co.kr/" target="_blank">국민서관</a></li>
             </ul>
         </div>`;
-}
-/* * 업데이트 된 내용:**
+}/* * 업데이트 된 내용:**
     1. ** 알림 / 소식 그룹 추가:** `BOARD` 유형으로 추가된 카테고리가 있다면 상단에 '📢 알림/소식' 드롭다운이 자동으로 생기며 그 안에 들어갑니다.
 2. ** 페이지 자동 확장:** `PAGE` 유형으로 '회사소개' 등을 추가하면 상단 메뉴에 자동으로 버튼이 추가됩니다.
 3. ** 코드 안정성:** 특정 유형의 카테고리가 하나도 없을 때는 메뉴 자체가 나타나지 않도록 처리하여 깔끔한 UI를 유지합니다.

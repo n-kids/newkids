@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>뉴키즈 - 페이지</title>
+    <title>뉴키즈</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -16,7 +16,8 @@
     </section>
 
     <section class="container" style="padding: 50px 0;">
-        <div id="page-content" class="view-content">
+        <div id="page-content" class="view-content" style="min-height: 400px; max-width: 1200px; margin: 0 auto;">
+            <div style="text-align:center; padding:50px; color:#999;">내용을 불러오는 중입니다...</div>
         </div>
     </section>
 
@@ -25,10 +26,17 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js"></script>
     <script src="manager.js"></script>
+
     <script>
-        document.addEventListener("DOMContentLoaded", async () => {
-            // 현재 페이지의 파일명에서 코드를 추출 (예: introduce.html -> introduce)
-            const pageCode = location.pathname.split('/').pop().replace('.html', '');
+        document.addEventListener("DOMContentLoaded", () => {
+            // URL 파라미터 파악 (예: page.html?id=introduce -> 'introduce' 추출)
+            const urlParams = new URLSearchParams(window.location.search);
+            const pageCode = urlParams.get('id');
+
+            if (!pageCode) {
+                document.getElementById('page-content').innerHTML = "<div style='text-align:center; padding:50px;'>잘못된 접근입니다.</div>";
+                return;
+            }
 
             const checkReady = setInterval(() => {
                 if (window.GLOBAL_CATEGORIES && window.GLOBAL_CATEGORIES.length > 0) {
@@ -40,13 +48,25 @@
 
         async function loadPageContent(code) {
             const cat = window.GLOBAL_CATEGORIES.find(c => c.code === code);
-            if (cat) {
-                document.getElementById('page-title').innerText = cat.name;
-                document.getElementById('page-desc').innerText = cat.hero_desc || "";
 
-                // 해당 카테고리(페이지)에 해당하는 첫 번째 글을 내용으로 가져오기
-                const { data } = await window.sb.from('total_posts').select('content').eq('category', code).limit(1).single();
-                if (data) document.getElementById('page-content').innerHTML = data.content;
+            if (cat) {
+                document.title = "뉴키즈 - " + cat.name; // 브라우저 탭 이름 변경
+
+                // 데이터베이스에서 해당 카테고리의 첫 번째 글 내용을 가져옵니다.
+                const { data, error } = await window.sb.from('total_posts')
+                    .select('content')
+                    .eq('category', code)
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .single();
+
+                if (data && data.content) {
+                    document.getElementById('page-content').innerHTML = data.content;
+                } else {
+                    document.getElementById('page-content').innerHTML = "<div style='text-align:center; color:#999; padding:50px;'>아직 작성된 내용이 없습니다.<br>관리자 페이지 [게시글 작성하기] 탭에서 새 글을 작성해 주세요.</div>";
+                }
+            } else {
+                document.getElementById('page-content').innerHTML = "<div style='text-align:center; padding:50px;'>존재하지 않는 페이지입니다.</div>";
             }
         }
     </script>

@@ -639,8 +639,34 @@
         async function deleteCategory(c) { if (confirm("정말 삭제하시겠습니까?")) { await window.sb.from('program_categories').delete().eq('code', c); loadAdminCategories(); populateCategorySelects(); } }
         async function toggleVisibility(c, s) { showLoading(true); await window.sb.from('program_categories').update({ is_visible: s }).eq('code', c); loadAdminCategories(); showLoading(false); }
         window.moveCategory = async function (index, direction) { const targetIndex = index + direction; if (targetIndex < 0 || targetIndex >= categoryList.length) return; const temp = categoryList[index]; categoryList[index] = categoryList[targetIndex]; categoryList[targetIndex] = temp; showLoading(true); try { const updatePromises = categoryList.map((cat, idx) => { return window.sb.from('program_categories').update({ order_num: idx }).eq('code', cat.code); }); await Promise.all(updatePromises); loadAdminCategories(); } catch (e) { alert("카테고리 순서 변경 중 오류가 발생했습니다: " + e.message); } finally { showLoading(false); } };
-        async function populateCategorySelects() { const { data } = await window.sb.from('program_categories').select('*').order('order_num'); if (!data) return; const postSelect = document.getElementById('post-category'); const filterSelect = document.getElementById('filter-category'); let boardHtml = '', eduHtml = '', eventHtml = ''; data.forEach(c => { const opt = `<option value="${c.code}">${c.name}</option>`; if (c.type === 'BOARD') boardHtml += opt; else if (c.type === 'EDU') eduHtml += opt; else if (c.type === 'EVENT') eventHtml += opt; }); postSelect.innerHTML = `<optgroup label="📢 게시판">${boardHtml}</optgroup><optgroup label="🎉 행사">${eventHtml}</optgroup><optgroup label="🎓 교육">${eduHtml}</optgroup>`; filterSelect.innerHTML = `<option value="all">전체 보기</option>${postSelect.innerHTML}`; }
-        window.toggleEditorState = function () { const isIntro = document.getElementById('chk-intro').checked; document.getElementById('editor-area').style.opacity = isIntro ? '1' : '0.5'; document.getElementById('editor-area').style.pointerEvents = isIntro ? 'auto' : 'none'; }
+        async function populateCategorySelects() {
+            const { data } = await window.sb.from('program_categories').select('*').order('order_num');
+            if (!data) return;
+
+            const postSelect = document.getElementById('post-category');
+            const filterSelect = document.getElementById('filter-category');
+
+            // 💡 pageHtml 변수를 추가합니다.
+            let boardHtml = '', eduHtml = '', eventHtml = '', pageHtml = '';
+
+            data.forEach(c => {
+                const opt = `<option value="${c.code}">${c.name}</option>`;
+                if (c.type === 'BOARD') boardHtml += opt;
+                else if (c.type === 'EDU') eduHtml += opt;
+                else if (c.type === 'EVENT') eventHtml += opt;
+                else if (c.type === 'PAGE') pageHtml += opt; // 💡 PAGE 유형일 때 추가되도록 설정
+            });
+
+            // 💡 고정 페이지 그룹을 최상단(또는 원하는 위치)에 추가하여 화면에 표시합니다.
+            postSelect.innerHTML = `
+                <optgroup label="⚙️ 고정 페이지">${pageHtml}</optgroup>
+                <optgroup label="📢 게시판">${boardHtml}</optgroup>
+                <optgroup label="🎉 행사">${eventHtml}</optgroup>
+                <optgroup label="🎓 교육">${eduHtml}</optgroup>
+            `;
+
+            filterSelect.innerHTML = `<option value="all">전체 보기</option>${postSelect.innerHTML}`;
+        }        window.toggleEditorState = function () { const isIntro = document.getElementById('chk-intro').checked; document.getElementById('editor-area').style.opacity = isIntro ? '1' : '0.5'; document.getElementById('editor-area').style.pointerEvents = isIntro ? 'auto' : 'none'; }
 
         // ==========================================
         // [수정됨] 설정 저장 (구글 시트 주소 영구 저장 추가 및 에러 방지)

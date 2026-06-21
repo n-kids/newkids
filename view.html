@@ -53,7 +53,7 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
 
-        /* 👇 답변 영역이 부모 요소(post-detail-box)의 100%를 꽉 채우도록 수정 */
+        /* 답변 및 첨부파일 영역 스타일 */
         .comments-section {
             width: 100%;
             margin-top: 50px;
@@ -106,6 +106,15 @@
             line-height: 1.6;
             word-break: break-all;
         }
+
+        #v-files {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            display: none;
+            border: 1px solid #eee;
+        }
     </style>
 </head>
 <body>
@@ -121,6 +130,12 @@
         <div id="v-youtube" style="display:none; margin-bottom: 30px;"></div>
         <div id="v-content" class="post-content"></div>
 
+        <!-- 첨부파일 영역 -->
+        <div id="v-files">
+            <div style="font-weight:bold; margin-bottom:10px; color:#1a3c6e;">📎 첨부파일</div>
+            <div id="file-list-container"></div>
+        </div>
+
         <div id="v-link-box" style="display:none; margin-top: 40px;">
             <a id="v-link" href="#" target="_blank" class="btn-action" style="background:#f4a261; text-decoration:none;">🔗 관련 링크 이동</a>
         </div>
@@ -130,14 +145,13 @@
             <button id="btn-user-delete" onclick="deleteUserPost()" class="btn-action" style="background:#ff6b6b; display:none;">🗑️ 본인 글 삭제</button>
         </div>
 
-        <!-- 👇 답변 영역을 post-detail-box 안으로 이동했습니다! -->
+        <!-- 답변 영역 -->
         <div class="comments-section" id="comments-section">
             <div class="comments-header">💬 관리자 답변 <span id="comment-count" style="color:#f4a261;">0</span></div>
             <div id="comment-list">
                 <div style="text-align:center; padding:20px; color:#999;">답변을 불러오는 중입니다...</div>
             </div>
         </div>
-        <!-- 👆 답변 영역 끝 -->
     </div>
 
     <footer></footer>
@@ -173,6 +187,36 @@
             document.getElementById('v-content').innerHTML = data.content || '';
             document.getElementById('v-date').innerText = "작성일: " + new Date(data.created_at).toISOString().split('T')[0];
 
+            // 첨부파일 로직
+            // 💡 첨부파일 로직: 다운로드 속성 추가 및 파일명 유지
+            const fileListContainer = document.getElementById('file-list-container');
+            const vFiles = document.getElementById('v-files');
+            if (data.image_url) {
+                const files = data.image_url.split('||');
+                fileListContainer.innerHTML = '';
+                files.forEach(f => {
+                    let url = f, name = "download_file"; // 기본 이름
+
+                    // 구분자 '@@'가 있는 경우 원래 파일명 추출
+                    if (f.includes('@@')) {
+                        url = f.split('@@')[0];
+                        name = f.split('@@')[1];
+                    } else {
+                        // 없는 경우 URL 경로에서 파일명 추출 시도
+                        name = f.split('/').pop().split('?')[0];
+                        try { name = decodeURIComponent(name); } catch (e) { }
+                    }
+
+                    // download 속성을 추가하여 클릭 시 새창 없이 바로 다운로드 실행
+                    fileListContainer.innerHTML += `
+                        <div style="margin-bottom:5px;">
+                            <a href="${url}" download="${name}" style="color:#1a3c6e; text-decoration:underline;">
+                                📥 ${name}
+                            </a>
+                        </div>`;
+                });
+                vFiles.style.display = 'block';
+            }
             let author = '관리자';
             let isUserPost = false;
 
@@ -195,9 +239,8 @@
             }
 
             document.getElementById('v-author').innerText = "작성자: " + author;
-            if (isUserPost) document.getElementById('btn-user-delete').style.display = 'inline-block';
-
-            if (data.category !== 'notice') {
+            if (isUserPost) {
+                document.getElementById('btn-user-delete').style.display = 'inline-block';
                 document.getElementById('comments-section').style.display = 'block';
                 loadAdminReplies(currentPostId);
             }

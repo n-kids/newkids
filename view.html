@@ -3,75 +3,142 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>뉴키즈 - 상세 내용</title>
+    <title>뉴키즈 - 글 읽기</title>
     <link rel="stylesheet" href="style.css">
-
-    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-
     <style>
-
-        #view-hero { display:none !important;}
-        .view-content .ql-align-center {
-            text-align: center !important;
+        #view-hero {
+            display: none !important;
         }
 
-        .view-content .ql-align-right {
-            text-align: right !important;
+        .post-detail-box {
+            max-width: 1200px !important;
+            margin: 0 auto;
+            padding: 40px 20px;
         }
 
-        .view-content .ql-align-justify {
-            text-align: justify !important;
+        .post-title {
+            font-size: 2rem;
+            color: #1a3c6e;
+            margin-bottom: 15px;
+            font-weight: bold;
+            line-height: 1.3;
         }
 
-        .view-content .ql-align-center img {
-            display: block;
-            margin: 0 auto !important;
+        .post-meta {
+            display: flex;
+            gap: 15px;
+            color: #666;
+            font-size: 0.95rem;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
         }
 
-        .view-content .ql-align-right img {
-            display: block;
-            margin-left: auto !important;
-            margin-right: 0 !important;
+        .post-content {
+            min-height: 300px;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: #333;
         }
 
-        .view-content .ql-align-left img {
-            display: block;
-            margin-left: 0 !important;
-            margin-right: auto !important;
+        .post-actions {
+            text-align: right;
+            margin-top: 40px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+
+        #v-youtube iframe {
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        /* 👇 답변 영역이 부모 요소(post-detail-box)의 100%를 꽉 채우도록 수정 */
+        .comments-section {
+            width: 100%;
+            margin-top: 50px;
+            display: none;
+        }
+
+        .comments-header {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #1a3c6e;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #1a3c6e;
+        }
+
+        .comment-item {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 25px;
+            background: #f0f7ff;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #f4a261;
+        }
+
+        .comment-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .comment-author {
+            font-weight: bold;
+            color: #1a3c6e;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .comment-date {
+            font-size: 0.85rem;
+            color: #888;
+        }
+
+        .comment-content {
+            font-size: 1.05rem;
+            color: #333;
+            line-height: 1.6;
+            word-break: break-all;
         }
     </style>
 </head>
 <body>
     <header></header>
-    <div id="loading" class="loading-overlay">내용을 불러오는 중입니다...</div>
 
-    <section class="sub-hero" id="view-hero" style="background-color: #1a3c6e;">
-        <div class="container">
-            <h1 id="page-title"></h1>
-            <p id="page-desc"></p>
+    <div class="container post-detail-box">
+        <h1 id="v-title" class="post-title">불러오는 중...</h1>
+        <div class="post-meta">
+            <span id="v-author">작성자: -</span>
+            <span id="v-date">작성일: -</span>
         </div>
-    </section>
 
-    <section>
-        <div class="container-wide">
-            <div class="view-box">
-                <div class="view-header">
-                    <h2 class="view-title" id="post-title"></h2>
-                    <p class="view-date" id="post-date"></p>
-                </div>
+        <div id="v-youtube" style="display:none; margin-bottom: 30px;"></div>
+        <div id="v-content" class="post-content"></div>
 
-                <div class="view-media" id="view-media" style="display:none;"></div>
+        <div id="v-link-box" style="display:none; margin-top: 40px;">
+            <a id="v-link" href="#" target="_blank" class="btn-action" style="background:#f4a261; text-decoration:none;">🔗 관련 링크 이동</a>
+        </div>
 
-                <div id="download-container" class="download-container"></div>
+        <div class="post-actions">
+            <button onclick="history.back()" class="btn-action" style="background:#666;">목록으로</button>
+            <button id="btn-user-delete" onclick="deleteUserPost()" class="btn-action" style="background:#ff6b6b; display:none;">🗑️ 본인 글 삭제</button>
+        </div>
 
-                <div class="view-content ql-editor" id="post-content"></div>
-
-                <div id="link-container" style="text-align: center; margin: 40px 0 20px;"></div>
-
-                <a href="javascript:history.back()" class="btn-list">목록으로 돌아가기</a>
+        <!-- 👇 답변 영역을 post-detail-box 안으로 이동했습니다! -->
+        <div class="comments-section" id="comments-section">
+            <div class="comments-header">💬 관리자 답변 <span id="comment-count" style="color:#f4a261;">0</span></div>
+            <div id="comment-list">
+                <div style="text-align:center; padding:20px; color:#999;">답변을 불러오는 중입니다...</div>
             </div>
         </div>
-    </section>
+        <!-- 👆 답변 영역 끝 -->
+    </div>
 
     <footer></footer>
 
@@ -80,138 +147,104 @@
     <script src="manager.js"></script>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const params = new URLSearchParams(window.location.search);
-            const postId = params.get('id');
+        let currentPost = null;
+        let currentPostId = null;
 
-            if (postId) {
-                const checkSb = setInterval(() => {
-                    if (window.sb) {
-                        clearInterval(checkSb);
-                        loadPostDetail(postId);
-                    }
-                }, 100);
-            }
+        document.addEventListener("DOMContentLoaded", () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            currentPostId = urlParams.get('id');
+            if (!currentPostId) { alert("잘못된 접근입니다."); history.back(); return; }
+
+            const checkReady = setInterval(() => {
+                if (window.sb) {
+                    clearInterval(checkReady);
+                    loadPostDetail(currentPostId);
+                }
+            }, 100);
         });
 
-        function isVideo(url) {
-            if (!url) return false;
-            return /\.(mp4|webm|ogg|mov|avi|mkv)(\?|$)/i.test(url);
-        }
-
-        function isImage(url) {
-            if (!url) return false;
-            return /\.(jpeg|jpg|gif|png|webp|svg)(\?|$)/i.test(url);
-        }
-
         async function loadPostDetail(id) {
-            document.getElementById('loading').style.display = 'flex';
-            try {
-                const { data, error } = await window.sb.from('total_posts').select('*').eq('id', id).single();
-                if (error || !data) throw new Error("데이터 없음");
+            const { data, error } = await window.sb.from('total_posts').select('*').eq('id', id).single();
+            if (error || !data) { alert("글을 불러올 수 없습니다."); history.back(); return; }
 
-                document.getElementById('post-title').innerText = data.title;
-                document.getElementById('post-date').innerText = window.formatDate(data.created_at);
-                document.getElementById('post-content').innerHTML = data.content;
+            currentPost = data;
+            document.getElementById('v-title').innerText = data.title;
+            document.title = "뉴키즈 - " + data.title;
+            document.getElementById('v-content').innerHTML = data.content || '';
+            document.getElementById('v-date').innerText = "작성일: " + new Date(data.created_at).toISOString().split('T')[0];
 
-                const mediaBox = document.getElementById('view-media');
-                const downloadBox = document.getElementById('download-container');
-                mediaBox.innerHTML = '';
-                downloadBox.innerHTML = '';
+            let author = '관리자';
+            let isUserPost = false;
 
-                let rawVideo = data.video_url || "";
-                let videoVal = rawVideo.trim();
-
-                if (videoVal === 'ORDER_ITEM' || videoVal === 'null' || videoVal === '') {
-                    videoVal = null;
-                }
-                else if (videoVal.startsWith('ORDER_ALL|')) {
-                    const parts = videoVal.split('|');
-                    videoVal = (parts.length > 1 && parts[1].trim() !== '') ? parts[1].trim() : null;
-                }
-
-                if (videoVal && !videoVal.startsWith('http')) {
-                    videoVal = null;
-                }
-
-                // 비디오 렌더링
-                if (videoVal) {
-                    const yid = window.getYoutubeId(videoVal);
-                    mediaBox.innerHTML += yid
-                        ? `<iframe src="https://www.youtube.com/embed/${yid}" frameborder="0" allowfullscreen style="margin-bottom:15px;"></iframe>`
-                        : `<video controls style="width:100%; border-radius:10px; margin-bottom:15px;"><source src="${videoVal}"></video>`;
-                    mediaBox.style.display = 'block';
-                }
-
-                // (view.html의 loadPostDetail 함수 내부에 있는 다중 파일 파싱 부분을 이 코드로 교체하세요)
-                if (data.image_url && data.image_url !== 'null' && data.image_url.trim() !== '') {
-                    const urls = data.image_url.split('||');
-
-                    urls.forEach(fileData => {
-                        fileData = fileData.trim();
-                        if (!fileData) return;
-
-                        let fileUrl = fileData;
-                        let displayFilename = "";
-
-                        // '@@' 구분자를 통해 URL과 한글 원본 이름을 분리합니다.
-                        if (fileData.includes('@@')) {
-                            const parts = fileData.split('@@');
-                            fileUrl = parts[0];
-                            displayFilename = parts[1];
-                        } else {
-                            // 과거에 올렸던 파일 하위 호환
-                            let rawFilename = fileUrl.split('/').pop().split('?')[0];
-                            try { rawFilename = decodeURIComponent(rawFilename); } catch (e) { }
-                            displayFilename = rawFilename.includes('___') ? rawFilename.split('___').pop() : rawFilename;
-                        }
-
-                        const fileExt = displayFilename.split('.').pop().toUpperCase();
-
-                        if (isVideo(fileUrl)) {
-                            mediaBox.innerHTML += `<video controls style="width:100%; border-radius:10px; margin-bottom:15px;"><source src="${fileUrl}"></video>`;
-                            mediaBox.style.display = 'block';
-                        } else if (isImage(fileUrl)) {
-                            mediaBox.innerHTML += `<img src="${fileUrl}" style="width:100%; border-radius:8px; margin-bottom:15px;" onerror="this.style.display='none'">`;
-                            mediaBox.style.display = 'block';
-                        }
-
-                        const forceDownloadUrl = fileUrl + (fileUrl.includes('?') ? '&' : '?') + 'download=' + encodeURIComponent(displayFilename);
-
-                        downloadBox.innerHTML += `
-            <a href="${forceDownloadUrl}" class="link-btn-style btn-download" style="display: inline-block; margin: 5px;">
-                📂 ${displayFilename} 다운로드
-            </a>`;
-                    });
-                }
-
-                if (!mediaBox.innerHTML.trim()) {
-                    mediaBox.style.display = 'none';
-                }
-
-                const linkBox = document.getElementById('link-container');
-                linkBox.innerHTML = "";
-
-                if (data.link_url && data.link_url.trim() !== "" && data.link_url !== "null") {
-                    let finalLink = data.link_url.trim();
-                    if (!finalLink.startsWith('http')) finalLink = 'https://' + finalLink;
-
-                    linkBox.innerHTML = `
-                                    <a href="${finalLink}" target="_blank" class="link-btn-style">
-                                        🔗 관련 사이트 바로가기
-                                    </a>`;
-                }
-
-                if (typeof window.updateHeroBackground === 'function') {
-                    window.updateHeroBackground(data.category);
-                }
-
-            } catch (err) {
-                console.error(err);
-                alert("불러오기 실패: " + err.message);
-                history.back();
+            if (data.link_url && !data.link_url.startsWith('http')) {
+                author = data.link_url;
+                isUserPost = true;
+            } else if (data.link_url && data.link_url.startsWith('http')) {
+                document.getElementById('v-link-box').style.display = 'inline-block';
+                document.getElementById('v-link').href = data.link_url;
             }
-            finally { document.getElementById('loading').style.display = 'none'; }
+
+            if (data.video_url && !data.video_url.startsWith('http') && !data.video_url.includes('ORDER_')) {
+                isUserPost = true;
+            } else if (data.video_url && data.video_url.includes('youtu')) {
+                const yId = window.getYoutubeId ? window.getYoutubeId(data.video_url) : null;
+                if (yId) {
+                    document.getElementById('v-youtube').style.display = 'block';
+                    document.getElementById('v-youtube').innerHTML = `<iframe width="100%" height="600" src="https://www.youtube.com/embed/${yId}" frameborder="0" allowfullscreen></iframe>`;
+                }
+            }
+
+            document.getElementById('v-author').innerText = "작성자: " + author;
+            if (isUserPost) document.getElementById('btn-user-delete').style.display = 'inline-block';
+
+            if (data.category !== 'notice') {
+                document.getElementById('comments-section').style.display = 'block';
+                loadAdminReplies(currentPostId);
+            }
+        }
+
+        async function deleteUserPost() {
+            if (!currentPost) return;
+            const pwd = prompt("글을 삭제하시려면 작성 시 입력한 비밀번호를 입력해주세요.");
+            if (pwd === null) return;
+            if (pwd !== currentPost.video_url) return alert("비밀번호가 일치하지 않습니다.");
+
+            if (confirm("정말 이 글을 삭제하시겠습니까? (달려있는 답변도 모두 삭제됩니다)")) {
+                const { error } = await window.sb.from('total_posts').delete().eq('id', currentPost.id);
+                if (error) alert("삭제 중 오류가 발생했습니다: " + error.message);
+                else { alert("글이 정상적으로 삭제되었습니다."); history.back(); }
+            }
+        }
+
+        async function loadAdminReplies(postId) {
+            const listDiv = document.getElementById('comment-list');
+            const { data, error } = await window.sb.from('post_comments').select('*').eq('post_id', postId).order('created_at', { ascending: true });
+
+            if (error) return listDiv.innerHTML = `<div style="text-align:center; color:#ff6b6b; padding:20px;">오류가 발생했습니다.</div>`;
+            document.getElementById('comment-count').innerText = data ? data.length : 0;
+
+            if (!data || data.length === 0) {
+                listDiv.innerHTML = `<div style="text-align:center; color:#999; padding:30px; background:#f9f9f9; border-radius:8px;">관리자가 답변을 준비 중입니다.</div>`;
+                return;
+            }
+
+            let html = '';
+            data.forEach(c => {
+                const dateObj = new Date(c.created_at);
+                const dateStr = `${dateObj.getFullYear()}.${String(dateObj.getMonth() + 1).padStart(2, '0')}.${String(dateObj.getDate()).padStart(2, '0')}`;
+                const safeContent = window.escapeHtml(c.content).replace(/\n/g, '<br>');
+
+                html += `
+                        <div class="comment-item">
+                            <div class="comment-meta">
+                                <span class="comment-author">🏢 ${c.author}</span>
+                                <span class="comment-date">${dateStr}</span>
+                            </div>
+                            <div class="comment-content">${safeContent}</div>
+                        </div>
+                    `;
+            });
+            listDiv.innerHTML = html;
         }
     </script>
 </body>

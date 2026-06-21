@@ -1,4 +1,4 @@
-﻿// manager.js - 통합 관리자 (최적화 및 중복 코드 제거)
+﻿// manager.js - 통합 관리자 (최적화 및 중복 코드 제거 완료)
 
 // ============================================================
 // [0] 새로고침 시 스크롤 최상단 고정
@@ -131,99 +131,6 @@ async function loadSiteConfig() {
     if (mainHero) mainHero.classList.add('loaded');
 }
 
-// [1] 카테고리 생성 함수 수정 (이미지 없어도 고정 페이지 생성 가능하게 변경)
-async function addNewCategory() {
-    const code = document.getElementById('new-cat-code').value.trim().toLowerCase();
-    const name = document.getElementById('new-cat-name').value.trim();
-    const type = document.getElementById('new-cat-type').value;
-    const desc = document.getElementById('new-cat-desc').value.trim();
-
-    if (!code || !name) return alert("코드와 메뉴 이름은 필수 입력입니다.");
-
-    showLoading(true);
-    let u = null;
-    const f = document.getElementById('new-cat-file').files[0];
-    let uploadData = croppedNewCatBlob ? croppedNewCatBlob : f;
-
-    // 이미지가 있을 때만 업로드 진행
-    if (uploadData) {
-        try {
-            const ext = croppedNewCatBlob ? 'jpg' : (f.name.split('.').pop() || 'jpg');
-            const { data } = await window.sb.storage.from('images').upload(`h_${Date.now()}.${ext}`, uploadData);
-            u = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl;
-        } catch (e) {
-            console.error("이미지 업로드 실패:", e);
-        }
-    }
-
-    // 데이터 삽입
-    const { error } = await window.sb.from('program_categories').insert([{
-        code,
-        name,
-        type,
-        hero_desc: desc,
-        hero_image: u,
-        order_num: 999,
-        is_visible: true
-    }]);
-
-    showLoading(false);
-    if (error) {
-        alert("생성 실패: " + error.message);
-    } else {
-        alert("카테고리가 생성되었습니다.");
-        croppedNewCatBlob = null;
-        document.getElementById('new-cat-code').value = '';
-        document.getElementById('new-cat-name').value = '';
-        loadAdminCategories();
-        populateCategorySelects();
-    }
-}
-
-// [2] 삭제 기능이 포함된 목록 로드 함수 (기존 코드와 교체)
-async function loadAdminCategories() {
-    const listDiv = document.getElementById('category-list-container');
-    try {
-        const { data, error } = await window.sb.from('program_categories').select('*').order('order_num', { ascending: true });
-        if (error) throw error;
-
-        categoryList = data || [];
-        let html = `<div style="text-align:right; margin-bottom:10px;"><button onclick="saveAllCategories()" class="btn-action" style="background:#2ecc71; border:none; padding:10px 20px;">💾 변경사항 일괄 저장</button></div>`;
-        const gridStyle = "grid-template-columns: 60px 40px 70px 100px 100px 45px 45px 45px 45px 50px 1fr 120px 50px 60px;";
-
-        html += `<div class="cat-manage-layout cat-manage-header" style="${gridStyle}"><div>유형</div><div>순서</div><div>코드</div><div>메뉴명</div><div>제목</div><div>메뉴색</div><div>제목색</div><div>설명색</div><div>필터색</div><div>투명도</div><div>설명글</div><div>이미지</div><div>노출</div><div>삭제</div></div>`;
-        html += `<div id="sortable-category-list">`;
-
-        categoryList.forEach((cat, index) => {
-            const thumb = cat.hero_image || 'https://via.placeholder.com/50?text=None';
-            const visBtn = cat.is_visible !== false ? `<button class="btn-mini" style="background:#27ae60; color:#fff;" onclick="toggleVisibility('${cat.code}', false)">ON</button>` : `<button class="btn-mini" style="background:#999; color:#fff;" onclick="toggleVisibility('${cat.code}', true)">OFF</button>`;
-
-            html += `<div class="cat-manage-layout cat-manage-row" data-code="${cat.code}" style="${gridStyle}">
-                        <div class="cat-cell-center"><span class="type-badge" style="background:${cat.type === 'PAGE' ? '#e67e22' : '#1a3c6e'}">${cat.type}</span></div>
-                        <div class="cat-cell-center"><span class="drag-handle" style="cursor:grab; font-size:1.2rem;">↕️</span></div>
-                        <div class="cat-cell-center" style="font-weight:bold; font-size:0.8rem;">${cat.code}</div>
-                        <div class="cat-cell-input"><input type="text" id="name-${cat.code}" value="${cat.name}"></div>
-                        <div class="cat-cell-input"><input type="text" id="title-${cat.code}" value="${cat.hero_title || ''}"></div>
-                        <div class="cat-cell-center"><input type="color" id="m-color-${cat.code}" value="${cat.menu_text_color || '#333333'}" style="width:25px; border:none;" title="메뉴 글자색"></div>
-                        <div class="cat-cell-center"><input type="color" id="t-color-${cat.code}" value="${cat.hero_title_color || '#ffffff'}" style="width:25px; border:none;" title="배경 큰 제목 색상"></div>
-                        <div class="cat-cell-center"><input type="color" id="d-color-${cat.code}" value="${cat.hero_desc_color || '#ffffff'}" style="width:25px; border:none;" title="배경 설명글 색상"></div>
-                        <div class="cat-cell-center"><input type="color" id="o-color-${cat.code}" value="${cat.hero_overlay_color || '#1a3c6e'}" style="width:25px; border:none;" title="배경 이미지 덮는 필터 색상"></div>
-                        <div class="cat-cell-center"><input type="number" id="o-op-${cat.code}" value="${cat.hero_overlay_opacity !== undefined ? cat.hero_overlay_opacity : 0.8}" step="0.1" style="width:40px;"></div>
-                        <div class="cat-cell-input"><input type="text" id="desc-${cat.code}" value="${cat.hero_desc || ''}"></div>
-                        <div class="cat-cell-center" style="display:flex; flex-direction:column; align-items:center; gap:5px;"><img src="${thumb}" style="width:50px; height:50px; object-fit:cover; cursor:pointer;" onclick="document.getElementById('file-${cat.code}').click()"><input type="file" id="file-${cat.code}" class="cat-file-input" data-code="${cat.code}" style="display:none;" accept="image/*"><button class="btn-mini" style="font-size:0.6rem; color:red;" onclick="deleteSubHeroImage('${cat.code}')">삭제</button></div>
-                        <div class="cat-cell-center">${visBtn}</div>
-                        <div class="cat-cell-center"><button onclick="deleteCategory('${cat.code}')" class="btn-mini" style="background:#ff6b6b; color:#fff; width:100%;">삭제</button></div>
-                    </div>`;
-        });
-        html += `</div>`;
-        listDiv.innerHTML = html;
-
-        // 드래그 앤 드롭 및 이벤트 초기화 로직 유지...
-    } catch (e) {
-        console.error(e);
-    }
-}
-
 async function loadCategories() {
     if (!window.sb) return;
     try {
@@ -235,7 +142,7 @@ async function loadCategories() {
 }
 
 // ============================================================
-// [3] UI 및 페이지 제어 함수 (수정됨)
+// [3] UI 및 페이지 제어 함수
 // ============================================================
 window.applySubPageHero = function () {
     const hero = document.getElementById('view-hero') || document.querySelector('.sub-hero');
@@ -246,7 +153,6 @@ window.applySubPageHero = function () {
     else if (location.pathname.includes('program.html')) currentCode = location.hash.replace('#', '');
     else if (location.pathname.includes('proposal.html')) currentCode = 'proposal';
     else if (location.pathname.includes('order.html')) currentCode = 'order';
-    // 👇 새롭게 추가된 부분: page.html일 경우 URL 파라미터(?id=)에서 코드를 가져옴
     else if (location.pathname.includes('page.html')) {
         const urlParams = new URLSearchParams(window.location.search);
         currentCode = urlParams.get('id');
@@ -302,7 +208,6 @@ function loadHeader() {
         } else if (c.type === 'PAGE') {
             const isCta = (c.code === 'proposal') ? 'class="cta-menu"' : '';
             const weight = (c.code === 'order') ? 'style="font-weight:bold;"' : '';
-            // 👇 새롭게 추가된 부분: order, proposal은 기존 파일, 새로 만든 건 page.html로 영구 연결!
             const href = (c.code === 'order' || c.code === 'proposal') ? `${c.code}.html` : `page.html?id=${c.code}`;
             groupHtml[c.type] += `<li><a href="${href}" ${isCta} ${weight}>${c.name}</a></li>`;
         }
@@ -334,12 +239,7 @@ function loadHeader() {
                 <li><a href="https://www.kookminbooks.co.kr/" target="_blank">국민서관</a></li>
             </ul>
         </div>`;
-}/* * 업데이트 된 내용:**
-    1. ** 알림 / 소식 그룹 추가:** `BOARD` 유형으로 추가된 카테고리가 있다면 상단에 '📢 알림/소식' 드롭다운이 자동으로 생기며 그 안에 들어갑니다.
-2. ** 페이지 자동 확장:** `PAGE` 유형으로 '회사소개' 등을 추가하면 상단 메뉴에 자동으로 버튼이 추가됩니다.
-3. ** 코드 안정성:** 특정 유형의 카테고리가 하나도 없을 때는 메뉴 자체가 나타나지 않도록 처리하여 깔끔한 UI를 유지합니다.
-
-이제 관리자 페이지에서 마음껏 카테고리를 추가하고 관리해 보세요! 추가로 궁금한 점이 있으시면 언제든 말씀해 주세요. */
+}
 
 function loadFooter() {
     const footerEl = document.querySelector('footer');
@@ -356,10 +256,19 @@ window.scrollToTop = () => { window.scrollTo({ top: 0, behavior: 'smooth' }) };
 window.scrollToBottom = () => { window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }) };
 window.getYoutubeId = (u) => { if (!u) return null; const m = u.match(/^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/); return (m && m[7].length === 11) ? m[7] : null; };
 window.formatDate = (d) => { return d ? d.split('T')[0] : ''; };
-function enableAutoResizeTextarea() { document.querySelectorAll('textarea.form-input').forEach(t => { t.style.height = 'auto'; t.style.height = (t.scrollHeight) + 'px'; t.addEventListener('input', function () { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; }); }); }
+function enableAutoResizeTextarea() {
+    document.querySelectorAll('textarea.form-input').forEach(t => {
+        // 👇 숨겨진 탭에서도 텍스트 박스가 찌그러지지 않도록 기본 최소 높이를 120px로 고정합니다.
+        t.style.minHeight = '120px';
 
+        t.addEventListener('input', function () {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+    });
+}
 // ============================================================
-// [5] DOMContentLoaded (중복 병합 완료)
+// [5] DOMContentLoaded
 // ============================================================
 document.addEventListener("DOMContentLoaded", function () {
     loadHeader();

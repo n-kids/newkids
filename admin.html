@@ -814,7 +814,7 @@
             }
         }
 
-        async function loadAdminCategories() {
+       async function loadAdminCategories() {
             const listDiv = document.getElementById('category-list-container');
             try {
                 const { data, error } = await window.sb.from('program_categories').select('*').order('order_num', { ascending: true });
@@ -822,9 +822,10 @@
                 if (!data) return listDiv.innerHTML = "<div style='padding:30px; text-align:center;'>카테고리 없음</div>";
 
                 categoryList = data; // 저장 시 사용
-
-                const gridStyle = "grid-template-columns: 40px 70px 100px 100px 45px 45px 45px 45px 50px 1fr 120px 50px 60px; min-width: 1100px;";
-                const headerHtml = `<div class="cat-manage-layout cat-manage-header" style="${gridStyle}"><div>순서</div><div>코드</div><div>메뉴명</div><div>제목</div><div title="상단 메뉴 글자색">메뉴색</div><div title="배경 큰 제목 색상">제목색</div><div title="배경 설명글 색상">설명색</div><div title="배경 이미지 덮는 필터 색상">필터색</div><div title="필터 색상의 투명도">투명도</div><div>설명글</div><div>이미지</div><div>노출</div><div>삭제</div></div>`;
+                
+                // 💡 배경색 칸이 추가되면서 열 넓이(grid-template-columns)와 최소 너비를 살짝 넓혔습니다.
+                const gridStyle = "grid-template-columns: 40px 70px 100px 100px 45px 45px 45px 45px 45px 50px 1fr 120px 50px 60px; min-width: 1150px;";
+                const headerHtml = `<div class="cat-manage-layout cat-manage-header" style="${gridStyle}"><div>순서</div><div>코드</div><div>메뉴명</div><div>제목</div><div title="상단 메뉴 글자색">메뉴색</div><div title="배경 큰 제목 색상">제목색</div><div title="배경 설명글 색상">설명색</div><div title="이미지가 없을 때의 배경 색상">배경색</div><div title="배경 이미지 덮는 필터 색상">필터색</div><div title="필터 색상의 투명도">투명도</div><div>설명글</div><div>이미지</div><div>노출</div><div>삭제</div></div>`;
 
                 let groups = { 'PAGE': '', 'BOARD': '', 'EVENT': '', 'EDU': '' };
                 const groupNames = { 'PAGE': '⚙️ 고정 페이지', 'BOARD': '📢 게시판', 'EVENT': '🎉 행사', 'EDU': '🎓 교육' };
@@ -841,6 +842,9 @@
                         <div class="cat-cell-center"><input type="color" id="m-color-${cat.code}" value="${cat.menu_text_color || '#333333'}" style="width:25px; border:none;" title="메뉴 글자색"></div>
                         <div class="cat-cell-center"><input type="color" id="t-color-${cat.code}" value="${cat.hero_title_color || '#ffffff'}" style="width:25px; border:none;" title="배경 큰 제목 색상"></div>
                         <div class="cat-cell-center"><input type="color" id="d-color-${cat.code}" value="${cat.hero_desc_color || '#ffffff'}" style="width:25px; border:none;" title="배경 설명글 색상"></div>
+                        
+                        <div class="cat-cell-center"><input type="color" id="bg-color-${cat.code}" value="${cat.hero_bg_color || '#1a3c6e'}" style="width:25px; border:none;" title="이미지가 없을 때의 배경 색상"></div>
+                        
                         <div class="cat-cell-center"><input type="color" id="o-color-${cat.code}" value="${cat.hero_overlay_color || '#1a3c6e'}" style="width:25px; border:none;" title="배경 이미지 덮는 필터 색상"></div>
                         <div class="cat-cell-center"><input type="number" id="o-op-${cat.code}" value="${cat.hero_overlay_opacity !== undefined ? cat.hero_overlay_opacity : 0.8}" step="0.1" style="width:40px;"></div>
                         <div class="cat-cell-input"><input type="text" id="desc-${cat.code}" value="${cat.hero_desc || ''}"></div>
@@ -855,19 +859,17 @@
                 });
 
                 let finalHtml = `<div style="text-align:right; margin-bottom:10px;"><button onclick="saveAllCategories()" class="btn-action" style="background:#2ecc71; border:none; padding:10px 20px;">💾 변경사항 일괄 저장</button></div>`;
-                finalHtml += `<div id="accordion-wrapper">`; // 큰 카테고리 드래그 감싸개
+                finalHtml += `<div id="accordion-wrapper">`;
 
-                // 현재 DB에 저장된 순서를 기반으로 큰 카테고리 순서 파악
                 const mainOrder = [];
                 data.forEach(c => { if (!mainOrder.includes(c.type)) mainOrder.push(c.type); });
                 const allTypes = ['PAGE', 'BOARD', 'EVENT', 'EDU'];
                 allTypes.forEach(t => { if (!mainOrder.includes(t)) mainOrder.push(t); });
 
                 mainOrder.forEach(type => {
-                    // 👇 수정된 부분: 무조건 닫혀있는 상태로 시작하도록 빈 문자열과 아래 화살표(▼) 지정
-                    const isActive = '';
+                    const isActive = ''; 
                     const iconStr = '▼';
-
+                    
                     finalHtml += `
                     <div class="accordion-group" data-type="${type}">
                         <div class="accordion-header">
@@ -887,7 +889,7 @@
                     </div>`;
                 });
 
-                finalHtml += `</div>`; // wrapper 닫기
+                finalHtml += `</div>`;
                 finalHtml += `<div style="text-align:right; margin-top:20px;"><button onclick="saveAllCategories()" class="btn-action" style="background:#2ecc71; border:none; padding:12px 30px; font-size:1rem;">💾 변경사항 일괄 저장</button></div>`;
 
                 listDiv.innerHTML = finalHtml;
@@ -903,14 +905,12 @@
                 });
 
                 if (typeof Sortable !== 'undefined') {
-                    // 1. 큰 카테고리끼리 순서 변경
                     new Sortable(document.getElementById('accordion-wrapper'), {
                         handle: '.drag-group-handle',
                         animation: 150,
                         onEnd: updateCategoryOrderRealtime
                     });
 
-                    // 2. 각 그룹 내부에서 항목들끼리 순서 변경
                     ['PAGE', 'BOARD', 'EVENT', 'EDU'].forEach(type => {
                         const el = document.getElementById(`sortable-list-${type}`);
                         if (el && !el.innerHTML.includes('등록된 카테고리가 없습니다')) {
@@ -927,49 +927,53 @@
                 console.error(e);
             }
         }
-        async function saveAllCategories() {
-            if (!confirm("모든 카테고리의 변경사항을 저장하시겠습니까?")) return;
-            showLoading(true);
-            const updatePromises = [];
-            for (const cat of categoryList) {
-                const code = cat.code;
-                const fileInput = document.getElementById(`file-${code}`);
-                let uploadData = croppedCatBlobs[code] ? croppedCatBlobs[code] : (fileInput && fileInput.files[0] ? fileInput.files[0] : null);
-                updatePromises.push(async () => {
-                    let imgUrl = null;
-                    if (uploadData) {
-                        const ext = croppedCatBlobs[code] ? 'jpg' : '';
-                        const { data, error } = await window.sb.storage.from('images').upload(`h_${Date.now()}_${code}${ext}`, uploadData);
-                        if (!error) {
-                            const { data: urlData } = window.sb.storage.from('images').getPublicUrl(data.path); imgUrl = urlData.publicUrl;
-                        }
-                    }
-                    const updateData = {
-                        name: document.getElementById(`name-${code}`).value,
-                        hero_title: document.getElementById(`title-${code}`).value,
-                        hero_desc: document.getElementById(`desc-${code}`).value,
-                        menu_text_color: document.getElementById(`m-color-${code}`).value,
-                        hero_title_color: document.getElementById(`t-color-${code}`).value,
-                        hero_desc_color: document.getElementById(`d-color-${code}`).value,
-                        hero_overlay_color: document.getElementById(`o-color-${code}`).value,
-                        hero_overlay_opacity: parseFloat(document.getElementById(`o-op-${code}`).value)
-                    };
-                    if (imgUrl) updateData.hero_image = imgUrl;
-                    return window.sb.from('program_categories').update(updateData).eq('code', code);
-                });
-            }
-            try {
-                await Promise.all(updatePromises.map(fn => fn()));
-                croppedCatBlobs = {};
-                showLoading(false);
-                alert("모든 변경사항이 저장되었습니다.");
-                loadAdminCategories();
+        async function saveAllCategories() { 
+            if (!confirm("모든 카테고리의 변경사항을 저장하시겠습니까?")) return; 
+            showLoading(true); 
+            const updatePromises = []; 
+            for (const cat of categoryList) { 
+                const code = cat.code; 
+                const fileInput = document.getElementById(`file-${code}`); 
+                let uploadData = croppedCatBlobs[code] ? croppedCatBlobs[code] : (fileInput && fileInput.files[0] ? fileInput.files[0] : null); 
+                updatePromises.push(async () => { 
+                    let imgUrl = null; 
+                    if (uploadData) { 
+                        const ext = croppedCatBlobs[code] ? 'jpg' : ''; 
+                        const { data, error } = await window.sb.storage.from('images').upload(`h_${Date.now()}_${code}${ext}`, uploadData); 
+                        if (!error) { 
+                            const { data: urlData } = window.sb.storage.from('images').getPublicUrl(data.path); imgUrl = urlData.publicUrl; 
+                        } 
+                    } 
+                    const updateData = { 
+                        name: document.getElementById(`name-${code}`).value, 
+                        hero_title: document.getElementById(`title-${code}`).value, 
+                        hero_desc: document.getElementById(`desc-${code}`).value, 
+                        menu_text_color: document.getElementById(`m-color-${code}`).value, 
+                        hero_title_color: document.getElementById(`t-color-${code}`).value, 
+                        hero_desc_color: document.getElementById(`d-color-${code}`).value, 
+                        
+                        // 👇 배경색 피커 엘리먼트에서 Hex 값을 읽어와 Supabase 컬럼에 주입합니다.
+                        hero_bg_color: document.getElementById(`bg-color-${code}`).value, 
+                        
+                        hero_overlay_color: document.getElementById(`o-color-${code}`).value, 
+                        hero_overlay_opacity: parseFloat(document.getElementById(`o-op-${code}`).value) 
+                    }; 
+                    if (imgUrl) updateData.hero_image = imgUrl; 
+                    return window.sb.from('program_categories').update(updateData).eq('code', code); 
+                }); 
+            } 
+            try { 
+                await Promise.all(updatePromises.map(fn => fn())); 
+                croppedCatBlobs = {}; 
+                showLoading(false); 
+                alert("모든 변경사항이 저장되었습니다."); 
+                loadAdminCategories(); 
                 if (typeof populateCategorySelects === 'function') populateCategorySelects();
-            } catch (e) {
-                showLoading(false); console.error(e); alert("저장 중 오류가 발생했습니다.");
-            }
+            } catch (e) { 
+                showLoading(false); console.error(e); alert("저장 중 오류가 발생했습니다."); 
+            } 
         }
-
+        
         async function addNewCategory() { const code = document.getElementById('new-cat-code').value.trim().toLowerCase(); const name = document.getElementById('new-cat-name').value.trim(); const type = document.getElementById('new-cat-type').value; const desc = document.getElementById('new-cat-desc').value.trim(); if (!code || !name) return alert("필수 입력"); const f = document.getElementById('new-cat-file').files[0]; let uploadData = croppedNewCatBlob ? croppedNewCatBlob : f; let u = null; if (uploadData) { const ext = croppedNewCatBlob ? 'jpg' : ''; const { data } = await window.sb.storage.from('images').upload(`h_${Date.now()}${ext}`, uploadData); u = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl; } await window.sb.from('program_categories').insert([{ code, name, type, hero_desc: desc, hero_image: u, order_num: 999, is_visible: true }]); croppedNewCatBlob = null; document.getElementById('new-cat-code').value = ''; document.getElementById('new-cat-name').value = ''; loadAdminCategories(); populateCategorySelects(); }
         async function deleteSubHeroImage(c) { if (confirm("이미지를 삭제하시겠습니까?")) { showLoading(true); await window.sb.from('program_categories').update({ hero_image: null }).eq('code', c); showLoading(false); loadAdminCategories(); } }
         async function deleteCategory(c) { if (confirm("정말 삭제하시겠습니까?")) { await window.sb.from('program_categories').delete().eq('code', c); loadAdminCategories(); populateCategorySelects(); } }

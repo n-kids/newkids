@@ -1,5 +1,8 @@
 ﻿@charset "utf-8";
 
+/* style.css 파일 최상단 */
+@import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
+
 /* =========================================
    1. 기본 설정 (Reset & Base)
    ========================================= */

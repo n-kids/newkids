@@ -1645,3 +1645,22 @@ footer {
     line-height: 1.6;
     word-break: break-all;
 }
+
+/* =========================================
+   모바일(스마트폰) 전용 팝업 크기 조절
+========================================= */
+@media screen and (max-width: 768px) {
+    /* 팝업 창 전체 박스의 크기를 화면의 80%로 줄이고, 최대 넓이를 320px로 제한합니다 */
+    .popup-content, .popup-box, .popup-container, #popup-wrapper {
+        width: 80% !important;
+        max-width: 320px !important;
+        margin: 0 auto !important; /* 화면 가운데 정렬 */
+    }
+    
+    /* 팝업 안의 이미지가 박스 밖으로 삐져나가지 않게 꽉 차게 맞춥니다 */
+    .popup-img, .popup-image, .popup-content img {
+        width: 100% !important;
+        height: auto !important;
+        object-fit: contain !important;
+    }
+}

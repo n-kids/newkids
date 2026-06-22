@@ -1650,20 +1650,27 @@ footer {
 }
 
 /* =========================================
-   모바일(스마트폰) 전용 팝업 크기 조절
+   모바일(스마트폰) 전용 팝업 크기 추가 축소
 ========================================= */
 @media screen and (max-width: 768px) {
-    /* 팝업 창 전체 박스의 크기를 화면의 80%로 줄이고, 최대 넓이를 320px로 제한합니다 */
+    /* 팝업 전체 너비를 화면의 65%로 줄이고, 최대 크기를 260px로 더 아담하게 제한합니다 */
     .popup-content, .popup-box, .popup-container, #popup-wrapper {
-        width: 80% !important;
-        max-width: 320px !important;
-        margin: 0 auto !important; /* 화면 가운데 정렬 */
+        width: 65% !important;
+        max-width: 260px !important;
+        margin: 0 auto !important;
+        
+        /* 팝업이 고정형(fixed)일 경우 화면 중앙에 예쁘게 위치하도록 정렬 보완 */
+        position: fixed !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
     }
     
-    /* 팝업 안의 이미지가 박스 밖으로 삐져나가지 않게 꽉 차게 맞춥니다 */
+    /* 팝업 내부 이미지가 줄어든 박스 크기에 맞춰 깨짐 없이 연출되도록 설정 */
     .popup-img, .popup-image, .popup-content img {
         width: 100% !important;
         height: auto !important;
         object-fit: contain !important;
+        display: block;
     }
 }

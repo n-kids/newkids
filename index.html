@@ -158,14 +158,14 @@
             color: #fff;
         }
 
-        /* 모바일 대응 */
+        /* 👇 모바일 대응 (이 부분이 핵심적으로 수정되었습니다!) */
         @media (max-width: 768px) {
             #popup-layer {
-                top: 80px;
+                top: 50%;
                 left: 50%;
-                transform: translateX(-50%);
-                width: 90%;
-                max-width: 450px;
+                transform: translate(-50%, -50%);
+                width: 65%;
+                max-width: 260px;
             }
 
             .popup-slider-box {

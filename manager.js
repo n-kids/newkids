@@ -1,4 +1,4 @@
-﻿// manager.js - 통합 관리자 (최적화 및 중복 코드 제거 완료)
+// manager.js - 통합 관리자 (최적화 및 중복 코드 제거 완료)
 
 // ============================================================
 // [0] 새로고침 시 스크롤 최상단 고정
@@ -106,14 +106,16 @@ async function loadSiteConfig() {
             if (data.accent_color) root.style.setProperty('--accent-color', data.accent_color);
 
             if (mainHero) {
+                // 👇 메인 페이지 필터 항상 적용 로직
+                const overlayColor = data.main_hero_overlay_color || '#1a3c6e';
+                const overlayOpacity = data.main_hero_overlay_opacity !== undefined ? data.main_hero_overlay_opacity : 0.4;
+                const rgba = hexToRgba(overlayColor, overlayOpacity);
+
                 if (data.main_hero_image) {
-                    const overlayColor = data.main_hero_overlay_color || '#1a3c6e';
-                    const overlayOpacity = data.main_hero_overlay_opacity !== undefined ? data.main_hero_overlay_opacity : 0.4;
-                    const rgba = hexToRgba(overlayColor, overlayOpacity);
                     mainHero.style.backgroundImage = `linear-gradient(${rgba}, ${rgba}), url('${data.main_hero_image}')`;
                     mainHero.style.backgroundColor = 'transparent';
                 } else {
-                    mainHero.style.backgroundImage = 'none';
+                    mainHero.style.backgroundImage = `linear-gradient(${rgba}, ${rgba})`;
                     mainHero.style.backgroundColor = data.main_hero_bg_color || '#1a3c6e';
                 }
 
@@ -161,16 +163,18 @@ window.applySubPageHero = function () {
 
     const category = window.GLOBAL_CATEGORIES.find(c => c.code === currentCode);
     if (category) {
+        // 👇 서브 페이지 필터 항상 적용 로직
+        const overlayColor = category.hero_overlay_color || '#1a3c6e';
+        const overlayOpacity = category.hero_overlay_opacity !== undefined ? category.hero_overlay_opacity : 0.8;
+        const rgba = hexToRgba(overlayColor, overlayOpacity);
+
         if (category.hero_image) {
-            const overlayColor = category.hero_overlay_color || '#1a3c6e';
-            const overlayOpacity = category.hero_overlay_opacity !== undefined ? category.hero_overlay_opacity : 0.8;
-            const rgba = hexToRgba(overlayColor, overlayOpacity);
             hero.style.backgroundImage = `linear-gradient(${rgba}, ${rgba}), url('${category.hero_image}')`;
             hero.style.backgroundSize = 'cover';
             hero.style.backgroundPosition = 'center';
             hero.style.backgroundColor = 'transparent';
         } else {
-            hero.style.backgroundImage = 'none';
+            hero.style.backgroundImage = `linear-gradient(${rgba}, ${rgba})`;
             hero.style.backgroundColor = category.hero_bg_color || '#1a3c6e';
         }
 
@@ -256,17 +260,8 @@ window.scrollToTop = () => { window.scrollTo({ top: 0, behavior: 'smooth' }) };
 window.scrollToBottom = () => { window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }) };
 window.getYoutubeId = (u) => { if (!u) return null; const m = u.match(/^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/); return (m && m[7].length === 11) ? m[7] : null; };
 window.formatDate = (d) => { return d ? d.split('T')[0] : ''; };
-function enableAutoResizeTextarea() {
-    document.querySelectorAll('textarea.form-input').forEach(t => {
-        // 👇 숨겨진 탭에서도 텍스트 박스가 찌그러지지 않도록 기본 최소 높이를 120px로 고정합니다.
-        t.style.minHeight = '120px';
+function enableAutoResizeTextarea() { document.querySelectorAll('textarea.form-input').forEach(t => { t.style.minHeight = '120px'; t.style.height = 'auto'; t.style.height = (t.scrollHeight) + 'px'; t.addEventListener('input', function () { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; }); }); }
 
-        t.addEventListener('input', function () {
-            this.style.height = 'auto';
-            this.style.height = (this.scrollHeight) + 'px';
-        });
-    });
-}
 // ============================================================
 // [5] DOMContentLoaded
 // ============================================================

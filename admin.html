@@ -701,7 +701,7 @@
             } catch (e) { console.error(e); } finally { showLoading(false); }
         }
 
-        async function loadAdminCategories() {
+       async function loadAdminCategories() {
             const listDiv = document.getElementById('category-list-container');
             try {
                 const { data, error } = await window.sb.from('program_categories').select('*').order('order_num', { ascending: true });
@@ -722,7 +722,8 @@
                 const allTypes = ['PAGE', 'BOARD', 'EVENT', 'EDU']; allTypes.forEach(t => { if (!mainOrder.includes(t)) mainOrder.push(t); });
 
                 mainOrder.forEach(type => {
-                    finalHtml += `<div class="accordion-group" data-type="${type}"><div class="accordion-header"><div class="drag-group-handle">↕️</div><div class="accordion-title-area" onclick="toggleAccordion(this.parentElement.parentElement)">${groupNames[type]} <span>▼</span></div></div><div class="accordion-body" style="display:none;"><div style="overflow-x:auto;">${headerHtml}<div id="sortable-list-${type}" class="sortable-group">${groups[type] || '<div style="padding:30px; text-align:center; color:#999; border:1px dashed #ddd;">등록된 카테고리가 없습니다.</div>'}</div></div></div></div>`;
+                    // 👇 이 부분의 <div class="accordion-body" style="display:none;"> 에서 style을 제거하여 정상적으로 열리도록 수정했습니다.
+                    finalHtml += `<div class="accordion-group" data-type="${type}"><div class="accordion-header"><div class="drag-group-handle">↕️</div><div class="accordion-title-area" onclick="toggleAccordion(this.parentElement.parentElement)">${groupNames[type]} <span>▼</span></div></div><div class="accordion-body"><div style="overflow-x:auto;">${headerHtml}<div id="sortable-list-${type}" class="sortable-group">${groups[type] || '<div style="padding:30px; text-align:center; color:#999; border:1px dashed #ddd;">등록된 카테고리가 없습니다.</div>'}</div></div></div></div>`;
                 });
                 finalHtml += `</div><div style="text-align:right; margin-top:20px;"><button onclick="saveAllCategories()" class="btn-action" style="background:#2ecc71; border:none; padding:12px 30px; font-size:1rem;">💾 변경사항 일괄 저장</button></div>`;
                 listDiv.innerHTML = finalHtml;

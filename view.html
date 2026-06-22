@@ -217,16 +217,32 @@
             const { data, error } = await window.sb.from('total_posts').select('*').eq('id', id).single();
             if (error || !data) { alert("글을 불러올 수 없습니다."); history.back(); return; }
 
+            // 💡 [추가됨] 비밀글(비공개) 확인 로직
+            if (data.is_secret) {
+                // 현재 관리자 로그인 상태인지 확인
+                const { data: { session } } = await window.sb.auth.getSession();
+                const isAdmin = session !== null;
+
+                if (!isAdmin) {
+                    const pwdInput = prompt("🔒 비밀글입니다. 작성 시 입력한 비밀번호를 입력해주세요.");
+                    if (pwdInput === null) { history.back(); return; } // 취소 누름
+                    if (pwdInput !== data.video_url) { // 비밀번호(video_url 컬럼에 저장됨) 비교
+                        alert("비밀번호가 일치하지 않습니다.");
+                        history.back();
+                        return;
+                    }
+                }
+            }
+
             currentPost = data;
             document.getElementById('v-title').innerText = data.title;
             document.title = "뉴키즈 - " + data.title;
             document.getElementById('v-content').innerHTML = data.content || '';
             document.getElementById('v-date').innerText = "작성일: " + new Date(data.created_at).toISOString().split('T')[0];
 
-            // 💡 첨부파일 로직: forceDownload 함수 연동
+            // 💡 첨부파일 로직: 다운로드 속성 추가 및 파일명 유지
             const fileListContainer = document.getElementById('file-list-container');
             const vFiles = document.getElementById('v-files');
-
             if (data.image_url) {
                 const files = data.image_url.split('||');
                 fileListContainer.innerHTML = '';
@@ -241,24 +257,23 @@
                         try { name = decodeURIComponent(name); } catch (e) { }
                     }
 
-                    // a 태그에 javascript:void(0)를 주어 페이지 이동을 막고 강제 다운로드 함수 실행
                     fileListContainer.innerHTML += `
-                            <div style="margin-bottom:8px;">
-                                <a href="javascript:void(0)" onclick="forceDownload('${url}', '${name}')" class="file-download-link">
-                                    📥 ${name}
-                                </a>
-                            </div>`;
+                        <div style="margin-bottom:8px;">
+                            <a href="javascript:void(0)" onclick="forceDownload('${url}', '${name}')" class="file-download-link">
+                                📥 ${name}
+                            </a>
+                        </div>`;
                 });
                 vFiles.style.display = 'block';
             }
 
             let author = '관리자';
-            let isUserPost = false; // 일반 사용자가 쓴 글인지 판별하는 스위치
+            let isUserPost = false; 
 
             // 작성자 이름 확인
             if (data.link_url && !data.link_url.startsWith('http')) {
                 author = data.link_url;
-                isUserPost = true; // 링크칸에 이름이 있다면 일반 사용자 글!
+                isUserPost = true; 
             } else if (data.link_url && data.link_url.startsWith('http')) {
                 document.getElementById('v-link-box').style.display = 'inline-block';
                 document.getElementById('v-link').href = data.link_url;
@@ -266,7 +281,7 @@
 
             // 비밀번호 & 유튜브 확인
             if (data.video_url && !data.video_url.startsWith('http') && !data.video_url.includes('ORDER_')) {
-                isUserPost = true; // 영상칸에 비밀번호가 있다면 일반 사용자 글!
+                isUserPost = true; 
             } else if (data.video_url && data.video_url.includes('youtu')) {
                 const yId = window.getYoutubeId ? window.getYoutubeId(data.video_url) : null;
                 if (yId) {
@@ -284,7 +299,6 @@
                 loadAdminReplies(currentPostId);
             }
         }
-
         async function deleteUserPost() {
             if (!currentPost) return;
             const pwd = prompt("글을 삭제하시려면 작성 시 입력한 비밀번호를 입력해주세요.");

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
@@ -88,8 +88,9 @@
 
             listDiv.innerHTML = '<div style="text-align:center; padding:50px; color:#999;">로딩 중...</div>';
 
+            // 💡 DB에서 데이터를 가져올 때 'is_secret(비밀글 여부)' 컬럼도 같이 가져오도록 수정
             const { data, count, error } = await window.sb.from('total_posts')
-                .select('id, title, category, created_at, link_url', { count: 'exact' })
+                .select('id, title, category, created_at, link_url, is_secret', { count: 'exact' })
                 .eq('category', currentCategory)
                 .order('created_at', { ascending: false })
                 .range(from, to);
@@ -105,6 +106,17 @@
                 return;
             }
 
+            // 👇 [핵심 로직 추가] 현재 페이지의 게시글들에 대해 관리자 답변이 달렸는지 한 번에 조회
+            const postIds = data.map(p => p.id);
+            const { data: comments } = await window.sb
+                .from('post_comments')
+                .select('post_id')
+                .in('post_id', postIds)
+                .eq('author', '관리자');
+
+            // 답변이 달린 게시글 ID들만 모아서 빠르게 검색할 수 있도록 Set으로 변환
+            const repliedPostIds = new Set(comments ? comments.map(c => c.post_id) : []);
+
             let html = '';
             data.forEach(item => {
                 const date = new Date(item.created_at).toISOString().split('T')[0];
@@ -112,11 +124,19 @@
                 // 공지사항이면 무조건 '관리자', 자유게시판이면 작성자가 쓴 이름(link_url) 표시
                 const authorName = (currentCategory === 'notice') ? '관리자' : (item.link_url || '익명');
 
+                // 💡 [비밀글 로직] is_secret 값이 true면 제목 앞에 자물쇠 아이콘 추가
+                const secretIcon = item.is_secret ? '<span style="color:#d35400; margin-right:5px;" title="비밀글">🔒</span>' : '';
+
+                // 💡 [답변완료 로직] 관리자 답변이 있는 글이면 제목 뒤에 뱃지 추가
+                const replyBadge = repliedPostIds.has(item.id) 
+                    ? `<span style="background:#1a3c6e; color:white; font-size:0.75rem; padding:2px 6px; border-radius:4px; margin-left:6px; vertical-align:middle;">✅ 답변완료</span>` 
+                    : '';
+
                 html += `
                         <div class="board-list-row" onclick="location.href='view.html?id=${item.id}'">
                             <div class="b-num">${item.id}</div>
                             <div class="b-cat"><span class="badge" style="background:#f1f3f5; color:#555;">${authorName}</span></div>
-                            <div class="b-title">${item.title}</div>
+                            <div class="b-title">${secretIcon}${item.title} ${replyBadge}</div>
                             <div class="b-date">${date}</div>
                         </div>`;
             });

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
@@ -20,6 +20,19 @@
                 <input type="text" id="w-title" class="form-input" placeholder="제목을 입력하세요">
             </div>
 
+            <div class="form-group" style="background:#f0f7ff; padding:15px; border-radius:8px; border:1px solid #cce5ff; margin-bottom:20px;">
+                <label class="form-label" style="margin-bottom:10px;">게시글 공개 설정</label>
+                <div style="display:flex; gap:30px; align-items:center;">
+                    <label style="cursor:pointer; display:flex; align-items:center; font-weight:bold;">
+                        <input type="radio" name="w-secret" value="false" checked style="width:18px; height:18px; margin-right:8px; accent-color:#1a3c6e;">
+                        🌐 공개글 (누구나 볼 수 있음)
+                    </label>
+                    <label style="cursor:pointer; display:flex; align-items:center; font-weight:bold; color:#d35400;">
+                        <input type="radio" name="w-secret" value="true" style="width:18px; height:18px; margin-right:8px; accent-color:#d35400;">
+                        🔒 비밀글 (작성자와 관리자만 볼 수 있음)
+                    </label>
+                </div>
+            </div>
             <div style="display:flex; gap:15px; margin-bottom:20px;">
                 <div style="flex:1;">
                     <label class="form-label">작성자</label>
@@ -69,6 +82,9 @@
             const author = document.getElementById('w-author').value.trim();
             const password = document.getElementById('w-password').value.trim();
             const content = document.getElementById('w-content').value.trim();
+            
+            // 👇 라디오 버튼에서 사용자가 선택한 비밀글 여부(true/false 문자열)를 가져와서 진짜 Boolean(참/거짓) 값으로 변환
+            const isSecret = document.querySelector('input[name="w-secret"]:checked').value === "true";
 
             if (!title || !author || !password || !content) {
                 return alert("모든 항목을 입력해주세요.");
@@ -79,6 +95,7 @@
             // HTML 태그 이스케이프 처리 및 줄바꿈 적용
             const safeContent = window.escapeHtml(content).replace(/\n/g, "<br>");
 
+            // 💡 데이터베이스에 is_secret 값 포함하여 저장
             const { error } = await window.sb.from('total_posts').insert([{
                 category: targetCategory,  // 파악한 현재 게시판에 저장
                 title: window.escapeHtml(title),
@@ -86,7 +103,8 @@
                 link_url: window.escapeHtml(author), // 작성자
                 video_url: password,                 // 비밀번호
                 order_num: 0,
-                is_visible: true
+                is_visible: true,
+                is_secret: isSecret                  // 🔒 비밀글 여부 저장!
             }]);
 
             if (error) {

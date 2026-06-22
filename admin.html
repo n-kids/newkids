@@ -14,7 +14,7 @@
     <style>
         <style>
         /* 👇 구글 폰트에서 Jua 폰트 불러오기 추가 */
-        @import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Do+Hyeon&family=Gowun+Dodum&family=Jua&display=swap');
 
         /* 아코디언 UI 디자인 (큰 카테고리용) */
         .accordion-group { margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
@@ -77,11 +77,22 @@
             content: '코딩체' !important;
             font-family: 'Courier New', monospace;
         }
-        /* 👇 새롭게 추가할 폰트(주아체) 규칙 */
+       
         .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="Jua"]::before,
         .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="Jua"]::before {
             content: '주아체' !important;
             font-family: 'Jua', sans-serif;
+        }
+        
+        .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="Do Hyeon"]::before,
+        .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="Do Hyeon"]::before {
+            content: '도현체' !important;
+            font-family: 'Do Hyeon', sans-serif;
+        }
+        .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="Gowun Dodum"]::before,
+        .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="Gowun Dodum"]::before {
+            content: '고운돋움' !important;
+            font-family: 'Gowun Dodum', sans-serif;
         }
     </style>
 </head>
@@ -410,7 +421,7 @@
             if (typeof Quill !== 'undefined') {
                 // Inline Style 방식으로 폰트 등록
                 const Font = Quill.import('attributors/style/font');
-                Font.whitelist = ['Noto Sans KR', 'Nanum Gothic', 'Malgun Gothic', 'Arial', 'Courier New', 'jua'];
+                Font.whitelist = ['Noto Sans KR', 'Nanum Gothic', 'Malgun Gothic', 'Arial', 'Courier New', 'jua', 'Do Hyeon', 'Gowun Dodum'];
                 Quill.register(Font, true);
 
                 Quill.register('modules/blotFormatter', QuillBlotFormatter.default);
@@ -421,7 +432,7 @@
                         toolbar: {
                             // 👇 툴바 첫 번째 옵션에 폰트 선택 드롭다운 추가
                             container: [
-                                [{ 'font': [false, 'Noto Sans KR', 'Nanum Gothic', 'Malgun Gothic', 'Arial', 'Courier New','jua'] }],
+                                [{ 'font': [false, 'Noto Sans KR', 'Nanum Gothic', 'Malgun Gothic', 'Arial', 'Courier New','jua', 'Do Hyeon', 'Gowun Dodum'] }],
                                 [{ 'header': [1, 2, 3, false] }], 
                                 ['bold', 'italic', 'underline', { 'color': [] }, { 'background': [] }], 
                                 [{ 'align': [] }, 'link', 'image', 'video']

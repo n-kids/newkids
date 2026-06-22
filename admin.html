@@ -42,6 +42,37 @@
             transition: 0.2s;
         }
         .cs-item:hover { background: #e0efff; color: #1a3c6e; font-weight: bold; padding-left: 35px; }
+
+        /* 👇 Quill 에디터 폰트 피커 드롭다운 스타일 추가 */
+        .ql-snow .ql-picker.ql-font .ql-picker-label::before,
+        .ql-snow .ql-picker.ql-font .ql-picker-item::before {
+            content: '기본 폰트' !important;
+        }
+        .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="Noto Sans KR"]::before,
+        .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="Noto Sans KR"]::before {
+            content: '노토산스' !important;
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+        .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="Nanum Gothic"]::before,
+        .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="Nanum Gothic"]::before {
+            content: '나눔고딕' !important;
+            font-family: 'Nanum Gothic', sans-serif;
+        }
+        .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="Malgun Gothic"]::before,
+        .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="Malgun Gothic"]::before {
+            content: '맑은고딕' !important;
+            font-family: 'Malgun Gothic', sans-serif;
+        }
+        .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="Arial"]::before,
+        .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="Arial"]::before {
+            content: 'Arial' !important;
+            font-family: 'Arial', sans-serif;
+        }
+        .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="Courier New"]::before,
+        .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="Courier New"]::before {
+            content: '코딩체' !important;
+            font-family: 'Courier New', monospace;
+        }
     </style>
 </head>
 <body>
@@ -365,14 +396,26 @@
         let textObjects = []; let selectedTextIdx = -1; let isResizingText = false; let currentZoom = 1.0;
 
         document.addEventListener("DOMContentLoaded", async function () {
+            // 👇 폰트 설정 추가 부분
             if (typeof Quill !== 'undefined') {
+                // Inline Style 방식으로 폰트 등록
+                const Font = Quill.import('attributors/style/font');
+                Font.whitelist = ['Noto Sans KR', 'Nanum Gothic', 'Malgun Gothic', 'Arial', 'Courier New'];
+                Quill.register(Font, true);
+
                 Quill.register('modules/blotFormatter', QuillBlotFormatter.default);
                 quill = new Quill('#editor-container', {
                     theme: 'snow',
                     modules: {
                         blotFormatter: {},
                         toolbar: {
-                            container: [[{ 'header': [1, 2, 3, false] }], ['bold', 'italic', 'underline', { 'color': [] }, { 'background': [] }], [{ 'align': [] }, 'link', 'image', 'video']],
+                            // 👇 툴바 첫 번째 옵션에 폰트 선택 드롭다운 추가
+                            container: [
+                                [{ 'font': [false, 'Noto Sans KR', 'Nanum Gothic', 'Malgun Gothic', 'Arial', 'Courier New'] }],
+                                [{ 'header': [1, 2, 3, false] }], 
+                                ['bold', 'italic', 'underline', { 'color': [] }, { 'background': [] }], 
+                                [{ 'align': [] }, 'link', 'image', 'video']
+                            ],
                             handlers: { image: function () { document.getElementById('hidden-image-input').click(); } }
                         }
                     }
@@ -523,7 +566,6 @@
                 let isVis = item.is_visible !== false;
                 let visBtnStr = isVis ? `<button onclick="togglePostVisibility(${item.id}, false)" class="pm-btn" style="background:#2ecc71; color:white; border:none;">👁️ 노출 중</button>` : `<button onclick="togglePostVisibility(${item.id}, true)" class="pm-btn" style="background:#95a5a6; color:white; border:none;">🙈 숨김</button>`;
 
-                // 🚨 여기서 기존의 '💬 답변' 버튼 링크 주소를 모달에서 본문 보기 스크롤로 매핑 수정!
                 list.innerHTML += `<div class="post-manage-card"><img src="${thumb}" class="pm-thumb" alt="thumbnail"><div class="pm-body"><div style="margin-bottom:5px;">${badge} <span class="pm-cat-badge">${catName}</span></div><div class="pm-title" onclick='editPost(${JSON.stringify(item).replace(/'/g, "&#39;")})'>${item.title}</div><div class="pm-info">순서: ${item.order_num}</div></div><div class="pm-actions">${visBtnStr}<button onclick='editPost(${JSON.stringify(item).replace(/'/g, "&#39;")})' class="pm-btn">수정</button><button onclick='deletePost(${item.id})' class="pm-btn" style="background:#ff6b6b; color:white; border:none;">삭제</button></div></div>`;
             });
             renderPagination(count, currentPage);
@@ -531,9 +573,6 @@
 
         function renderPagination(t, c) { const p = document.getElementById('pagination-controls'); p.innerHTML = ""; const tp = Math.ceil(t / ITEMS_PER_PAGE); if (tp <= 1) return; for (let i = 1; i <= tp; i++) p.innerHTML += `<button class="page-btn ${i === c ? 'active' : ''}" onclick="loadManageList(${i})">${i}</button>`; }
 
-        // =======================================================
-        // 💡 [핵심 교체 및 로직 업그레이드] editPost & cancelEdit
-        // =======================================================
         window.editPost = function (i) {
             editingId = i.id; originalDetailUrl = i.image_url; originalThumbUrl = i.thumbnail_url; document.getElementById('post-category').value = i.category; 
             let catName = i.category; if(categoryList) { const f = categoryList.find(c => c.code === i.category); if(f) catName = f.name; }
@@ -545,17 +584,16 @@
             if (val === FLAG_ORDER_ONLY) { chkIntro.checked = false; chkOrder.checked = true; youtubeInput.value = ""; } else if (val.startsWith(FLAG_ORDER_ALL)) { chkIntro.checked = true; chkOrder.checked = true; youtubeInput.value = val.replace(FLAG_ORDER_ALL, '').replace('|', ''); } else { chkIntro.checked = true; chkOrder.checked = false; youtubeInput.value = val; }
             toggleEditorState(); 
 
-            // 🎯 사용자가 쓴 문의글인지 판별 (비밀번호 존재 여부 및 주소가 아닌 작성자명 기준)
             let isUserPost = false;
             if (i.link_url && !i.link_url.startsWith('http')) isUserPost = true;
             if (i.video_url && !i.video_url.startsWith('http') && !i.video_url.includes('ORDER_')) isUserPost = true;
 
             if (isUserPost) {
                 document.getElementById('form-title').innerText = "💬 사용자 문의글 확인 및 답변 등록";
-                document.getElementById('btn-submit').style.display = "none";             // 업로드 저장 숨김
-                document.getElementById('btn-reply-submit').style.display = "inline-block"; // 답변 등록 노출
-                document.getElementById('admin-reply-area').style.display = "block";        // 답변 입력 폼 노출
-                loadFormReplies(i.id); // 기존에 달아둔 답변 리스트 로드
+                document.getElementById('btn-submit').style.display = "none";             
+                document.getElementById('btn-reply-submit').style.display = "inline-block"; 
+                document.getElementById('admin-reply-area').style.display = "block";        
+                loadFormReplies(i.id); 
             } else {
                 document.getElementById('form-title').innerText = "✏️ 수정 모드";
                 document.getElementById('btn-submit').innerText = "수정 완료";

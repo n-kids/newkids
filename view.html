@@ -324,6 +324,12 @@
                 return;
             }
 
+            // 💡 [추가된 로직] 답변이 1개라도 존재한다면, 사용자 화면의 글 제목(v-title) 옆에 뱃지 추가!
+            const titleEl = document.getElementById('v-title');
+            if (!titleEl.innerHTML.includes('답변완료')) {
+                titleEl.innerHTML += ` <span style="background:#1a3c6e; color:white; font-size:1rem; padding:4px 10px; border-radius:4px; vertical-align:middle; margin-left:10px; display:inline-block;">✅ 답변완료</span>`;
+            }
+
             let html = '';
             data.forEach(c => {
                 const dateObj = new Date(c.created_at);
@@ -331,14 +337,14 @@
                 const safeContent = window.escapeHtml(c.content).replace(/\n/g, '<br>');
 
                 html += `
-                            <div class="comment-item">
-                                <div class="comment-meta">
-                                    <span class="comment-author">🏢 ${c.author}</span>
-                                    <span class="comment-date">${dateStr}</span>
-                                </div>
-                                <div class="comment-content">${safeContent}</div>
+                        <div class="comment-item">
+                            <div class="comment-meta">
+                                <span class="comment-author">🏢 ${c.author}</span>
+                                <span class="comment-date">${dateStr}</span>
                             </div>
-                        `;
+                            <div class="comment-content">${safeContent}</div>
+                        </div>
+                    `;
             });
             listDiv.innerHTML = html;
         }

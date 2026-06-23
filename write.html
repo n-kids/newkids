@@ -33,6 +33,7 @@
                     </label>
                 </div>
             </div>
+
             <div style="display:flex; gap:15px; margin-bottom:20px;">
                 <div style="flex:1;">
                     <label class="form-label">작성자</label>
@@ -49,8 +50,13 @@
                 <textarea id="w-content" class="form-input" style="height:300px; resize:vertical;" placeholder="내용을 입력해주세요."></textarea>
             </div>
 
+            <div class="form-group" style="margin-top:20px; background-color: #fafafa; padding: 15px; border: 1px dashed #bbb; border-radius: 8px;">
+                <label class="form-label">📷 이미지 및 첨부파일 업로드 (선택 / 여러 장 가능)</label>
+                <input type="file" id="w-images" class="form-input" accept="image/*" multiple style="background:#fff;">
+                <p style="font-size: 0.8rem; color: #888; margin-top: 5px;">* 문의글과 관련된 사진이나 이미지를 첨부하실 수 있습니다.</p>
+            </div>
             <div style="text-align:center; margin-top:30px; display:flex; gap:10px; justify-content:center;">
-                <button onclick="saveUserPost()" class="btn-action" style="min-width:150px;">글 등록하기</button>
+                <button id="btn-submit-user" onclick="saveUserPost()" class="btn-action" style="min-width:150px;">글 등록하기</button>
                 <button onclick="history.back()" class="btn-action" style="background:#999; min-width:150px;">취소</button>
             </div>
         </div>
@@ -62,7 +68,6 @@
     <script src="config.js"></script>
     <script src="manager.js"></script>
     <script>
-        // 현재 접속한 게시판의 코드를 가져옵니다. (예: write.html#free -> free)
         const targetCategory = location.hash.replace('#', '') || 'free';
 
         document.addEventListener("DOMContentLoaded", () => {
@@ -82,9 +87,8 @@
             const author = document.getElementById('w-author').value.trim();
             const password = document.getElementById('w-password').value.trim();
             const content = document.getElementById('w-content').value.trim();
-            
-            // 👇 라디오 버튼에서 사용자가 선택한 비밀글 여부(true/false 문자열)를 가져와서 진짜 Boolean(참/거짓) 값으로 변환
             const isSecret = document.querySelector('input[name="w-secret"]:checked').value === "true";
+            const fileInput = document.getElementById('w-images');
 
             if (!title || !author || !password || !content) {
                 return alert("모든 항목을 입력해주세요.");
@@ -92,26 +96,57 @@
 
             if (!confirm("글을 등록하시겠습니까?")) return;
 
-            // HTML 태그 이스케이프 처리 및 줄바꿈 적용
-            const safeContent = window.escapeHtml(content).replace(/\n/g, "<br>");
+            // 중복 클릭 방지 처리
+            const submitBtn = document.getElementById('btn-submit-user');
+            submitBtn.disabled = true;
+            submitBtn.innerText = "업로드 중...";
 
-            // 💡 데이터베이스에 is_secret 값 포함하여 저장
-            const { error } = await window.sb.from('total_posts').insert([{
-                category: targetCategory,  // 파악한 현재 게시판에 저장
-                title: window.escapeHtml(title),
-                content: safeContent,
-                link_url: window.escapeHtml(author), // 작성자
-                video_url: password,                 // 비밀번호
-                order_num: 0,
-                is_visible: true,
-                is_secret: isSecret                  // 🔒 비밀글 여부 저장!
-            }]);
+            let finalImageUrls = null;
 
-            if (error) {
-                alert("오류 발생: " + error.message);
-            } else {
+            try {
+                // 💡 [이미지 업로드 핵심 로직] 첨부된 파일이 있다면 수집하여 Supabase Storage에 업로드
+                if (fileInput.files.length > 0) {
+                    let uploadedUrls = [];
+                    for (let i = 0; i < fileInput.files.length; i++) {
+                        const file = fileInput.files[i];
+                        const ext = file.name.split('.').pop();
+                        // 파일명 중복을 피하기 위해 타임스탬프 기반 고유 키 생성
+                        const safeKey = `user_${Date.now()}_${i}.${ext}`;
+
+                        const { data, error: uploadError } = await window.sb.storage.from('images').upload(safeKey, file);
+                        if (uploadError) throw uploadError;
+
+                        // 업로드된 파일의 공용 URL 획득 후 '구분자(@@)+원본파일명' 조합으로 매핑
+                        const publicUrl = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl;
+                        uploadedUrls.push(publicUrl + '@@' + file.name);
+                    }
+                    finalImageUrls = uploadedUrls.join('||');
+                }
+
+                const safeContent = window.escapeHtml(content).replace(/\n/g, "<br>");
+
+                // 데이터베이스 저장 (image_url 포함)
+                const { error } = await window.sb.from('total_posts').insert([{
+                    category: targetCategory,
+                    title: window.escapeHtml(title),
+                    content: safeContent,
+                    link_url: window.escapeHtml(author), 
+                    video_url: password,                 
+                    order_num: 0,
+                    is_visible: true,
+                    is_secret: isSecret,
+                    image_url: finalImageUrls // 이미지 경로 묶음 저장 
+                }]);
+
+                if (error) throw error;
+
                 alert("글이 성공적으로 등록되었습니다!");
-                location.href = `notice.html#${targetCategory}`; // 작성 후 해당 게시판으로 복귀
+                location.href = `notice.html#${targetCategory}`;
+
+            } catch (err) {
+                alert("등록 중 오류가 발생했습니다: " + err.message);
+                submitBtn.disabled = false;
+                submitBtn.innerText = "글 등록하기";
             }
         }
     </script>

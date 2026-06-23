@@ -40,8 +40,8 @@
                     <input type="text" id="w-author" class="form-input" placeholder="이름 또는 닉네임">
                 </div>
                 <div style="flex:1;">
-                    <label class="form-label">비밀번호 (수정/삭제용)</label>
-                    <input type="password" id="w-password" class="form-input" placeholder="비밀번호 4자리 이상">
+                    <label class="form-label">비밀번호 (연락처 / 수정 및 삭제용)</label>
+                    <input type="password" id="w-password" class="form-input" placeholder="비밀번호 또는 연락처">
                 </div>
             </div>
 
@@ -55,6 +55,7 @@
                 <input type="file" id="w-images" class="form-input" accept="image/*" multiple style="background:#fff;">
                 <p style="font-size: 0.8rem; color: #888; margin-top: 5px;">* 문의글과 관련된 사진이나 이미지를 첨부하실 수 있습니다.</p>
             </div>
+
             <div style="text-align:center; margin-top:30px; display:flex; gap:10px; justify-content:center;">
                 <button id="btn-submit-user" onclick="saveUserPost()" class="btn-action" style="min-width:150px;">글 등록하기</button>
                 <button onclick="history.back()" class="btn-action" style="background:#999; min-width:150px;">취소</button>
@@ -68,7 +69,11 @@
     <script src="config.js"></script>
     <script src="manager.js"></script>
     <script>
+        // 현재 접속한 게시판 카테고리 파악
         const targetCategory = location.hash.replace('#', '') || 'free';
+
+        // 💡 구글 엑셀/이메일 연동 웹 앱 URL (여기에 원장님이 발급받으신 주소를 넣으세요!)
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwg3sdchHSL78qiknJqZwSa1FFAq3klTKB0xXQ7t_mTad5AwLyqQwydemkWP4PdmfdooQ/exec";
 
         document.addEventListener("DOMContentLoaded", () => {
             const checkReady = setInterval(() => {
@@ -104,28 +109,27 @@
             let finalImageUrls = null;
 
             try {
-                // 💡 [이미지 업로드 핵심 로직] 첨부된 파일이 있다면 수집하여 Supabase Storage에 업로드
+                // 1. 첨부파일(이미지)이 있다면 Supabase Storage에 업로드
                 if (fileInput.files.length > 0) {
                     let uploadedUrls = [];
                     for (let i = 0; i < fileInput.files.length; i++) {
                         const file = fileInput.files[i];
                         const ext = file.name.split('.').pop();
-                        // 파일명 중복을 피하기 위해 타임스탬프 기반 고유 키 생성
                         const safeKey = `user_${Date.now()}_${i}.${ext}`;
 
                         const { data, error: uploadError } = await window.sb.storage.from('images').upload(safeKey, file);
                         if (uploadError) throw uploadError;
 
-                        // 업로드된 파일의 공용 URL 획득 후 '구분자(@@)+원본파일명' 조합으로 매핑
                         const publicUrl = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl;
-                        uploadedUrls.push(publicUrl + '@@' + file.name);
+                        uploadedUrls.push(publicUrl + '@@' + file.name); // 첨부파일 다운로드 로직을 위해 원본 파일명 매핑
                     }
                     finalImageUrls = uploadedUrls.join('||');
                 }
 
+                // 줄바꿈 및 태그 처리
                 const safeContent = window.escapeHtml(content).replace(/\n/g, "<br>");
 
-                // 데이터베이스 저장 (image_url 포함)
+                // 2. 🎯 Supabase 데이터베이스에 공통 저장 (어떤 카테고리든 무조건 저장되어 홈페이지에 노출)
                 const { error } = await window.sb.from('total_posts').insert([{
                     category: targetCategory,
                     title: window.escapeHtml(title),
@@ -135,10 +139,36 @@
                     order_num: 0,
                     is_visible: true,
                     is_secret: isSecret,
-                    image_url: finalImageUrls // 이미지 경로 묶음 저장 
+                    image_url: finalImageUrls 
                 }]);
 
                 if (error) throw error;
+
+                // ==========================================================
+                // 🚀 [카테고리 분기 핵심 로직] 
+                // 견적서(proposal)와 발주요청(order)이 '아닐 때만' 구글 엑셀로 신호를 보냅니다.
+                // ==========================================================
+                if (targetCategory !== 'proposal' && targetCategory !== 'order') {
+                    const formData = new URLSearchParams();
+                    formData.append('title', title);
+                    formData.append('author', author);
+                    formData.append('contact', password); // 비밀번호(연락처) 값 전달
+                    formData.append('content', content);
+
+                    // 메일 알림/엑셀 연동 실패가 홈페이지 글 등록 자체를 방해하지 않도록 try-catch 처리
+                    try {
+                        // GOOGLE_SCRIPT_URL이 제대로 입력되어 있을 때만 실행
+                        if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL.includes('script.google.com')) {
+                            await fetch(GOOGLE_SCRIPT_URL, {
+                                method: 'POST',
+                                body: formData,
+                                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                            });
+                        }
+                    } catch (excelError) {
+                        console.error("구글 엑셀 알림 전송 지연 (게시글 등록은 정상 완료됨):", excelError);
+                    }
+                }
 
                 alert("글이 성공적으로 등록되었습니다!");
                 location.href = `notice.html#${targetCategory}`;

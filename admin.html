@@ -750,7 +750,8 @@
                         const ext = croppedCatBlobs[code] ? 'jpg' : ''; const { data, error } = await window.sb.storage.from('images').upload(`h_${Date.now()}_${code}${ext}`, uploadData);
                         if (!error) { const { data: urlData } = window.sb.storage.from('images').getPublicUrl(data.path); imgUrl = urlData.publicUrl; }
                     }
-                    const updateData = { name: document.getElementById(`name-${code}`).value, hero_title: document.getElementById(`title-${code}`).value, hero_desc: document.getElementById(`desc-${code}`).value, menu_text_color: document.getElementById(`m-color-${code}`).value, hero_title_color: document.getElementById(`t-color-${code}`).value, hero_desc_color: document.getElementById(`d-color-${code}`).value, hero_bg_color: document.getElementById(`bg-color-${code}`).value, hero_overlay_color: document.getElementById('#o-color-' + code ? document.getElementById(`o-color-${code}`).value : '#1a3c6e'), hero_overlay_opacity: parseFloat(document.getElementById(`o-op-${code}`).value) };
+                    const updateData = { name: document.getElementById(`name-${code}`).value, hero_title: document.getElementById(`title-${code}`).value, hero_desc: document.getElementById(`desc-${code}`).value, menu_text_color: document.getElementById(`m-color-${code}`).value, hero_title_color: document.getElementById(`t-color-${code}`).value, hero_desc_color: document.getElementById(`d-color-${code}`).value, hero_bg_color: document.getElementById(`bg-color-${code}`).value, hero_overlay_color: document.getElementById(`o-color-${code}`).value, 
+    hero_overlay_opacity: parseFloat(document.getElementById(`o-op-${code}`).value) };
                     if (imgUrl) updateData.hero_image = imgUrl; return window.sb.from('program_categories').update(updateData).eq('code', code);
                 });
             }

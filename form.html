@@ -1,0 +1,193 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>뉴키즈 - 폼/투표 참여</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header></header>
+
+    <section class="sub-hero" id="view-hero" style="background-color: #1a3c6e;">
+        <div class="container">
+            <h1 id="form-title">불러오는 중...</h1>
+            <p id="form-desc">잠시만 기다려주세요.</p>
+        </div>
+    </section>
+
+    <section style="background-color: #f8f9fa; padding: 50px 0;">
+        <div class="container">
+            <div id="form-container" class="proposal-box" style="max-width: 800px; margin: 0 auto;">
+                <!-- 로딩 또는 마감 메시지 영역 -->
+                <div id="form-status" style="text-align:center; padding:50px; color:#666;">데이터를 불러오는 중입니다...</div>
+
+                <!-- 투표 입력 폼 -->
+                <form id="customForm" style="display:none;">
+                    <h3 class="form-section-title">👤 응답자 정보 (선택사항)</h3>
+                    <div class="form-group">
+                        <label class="form-label">이름 또는 소속</label>
+                        <input type="text" id="respondent-info" class="form-input" placeholder="예: 홍길동 / 해바라기 어린이집">
+                    </div>
+
+                    <h3 class="form-section-title" style="margin-top:40px;">📝 응답 항목</h3>
+                    <div id="questions-area"></div>
+
+                    <div class="btn-center-wrap" style="margin-top: 40px; padding-top:20px; border-top: 1px solid #eee;">
+                        <button type="submit" class="btn-action" style="width: 200px; font-size:1.1rem;">제출하기</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <footer></footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script src="manager.js"></script>
+    <script>
+        let currentFormId = null;
+        let currentSchema = null;
+
+        document.addEventListener("DOMContentLoaded", () => {
+            // URL에서 ?id=숫자 형태의 파라미터를 가져옵니다.
+            const urlParams = new URLSearchParams(window.location.search);
+            currentFormId = urlParams.get('id');
+
+            if (!currentFormId) {
+                document.getElementById('form-status').innerHTML = "<div style='color:#ff6b6b; font-size:1.2rem;'>잘못된 접근입니다. 폼 ID가 없습니다.</div>";
+                return;
+            }
+
+            const checkReady = setInterval(() => {
+                if (window.sb) {
+                    clearInterval(checkReady);
+                    loadForm();
+                }
+            }, 100);
+        });
+
+        async function loadForm() {
+            // 데이터베이스에서 해당 ID의 폼 스키마를 불러옵니다.
+            const { data, error } = await window.sb.from('custom_forms').select('*').eq('id', currentFormId).single();
+
+            const statusDiv = document.getElementById('form-status');
+            const formEl = document.getElementById('customForm');
+
+            if (error || !data) {
+                statusDiv.innerHTML = "<div style='color:#ff6b6b; font-size:1.2rem;'>폼을 찾을 수 없거나 삭제되었습니다.</div>";
+                return;
+            }
+
+            document.getElementById('form-title').innerText = data.title;
+            document.getElementById('form-desc').innerText = data.description || "아래 항목을 꼼꼼히 확인하고 작성해 주세요.";
+            document.title = "뉴키즈 - " + data.title;
+
+            // 관리자가 폼을 마감처리(is_active = false) 했을 경우
+            if (!data.is_active) {
+                statusDiv.innerHTML = "<div><h3 style='color:#ff6b6b; margin-bottom:10px;'>마감된 폼입니다.</h3><p style='color:#666;'>현재 응답을 받고 있지 않습니다.</p></div>";
+                return;
+            }
+
+            currentSchema = data.form_schema;
+            statusDiv.style.display = 'none';
+            formEl.style.display = 'block';
+
+            renderQuestions();
+        }
+
+        // JSON 스키마를 분석하여 HTML 질문 폼으로 그려주는 핵심 함수
+        function renderQuestions() {
+            const container = document.getElementById('questions-area');
+            let html = '';
+
+            currentSchema.forEach((q, index) => {
+                html += `<div class="form-group" style="margin-bottom:25px; padding:20px; background:#fff; border:1px solid #eee; border-radius:8px;">`;
+                html += `<label class="form-label" style="font-size:1.1rem; color:#1a3c6e; margin-bottom:15px;">${index + 1}. ${window.escapeHtml(q.title)}</label>`;
+
+                if (q.type === 'text') {
+                    // 주관식
+                    html += `<input type="text" name="${q.id}" class="form-input" required placeholder="답변을 입력하세요">`;
+                } else if (q.type === 'radio') {
+                    // 객관식 (단일선택)
+                    html += `<div style="display:flex; flex-direction:column; gap:10px;">`;
+                    q.options.forEach((opt, oIdx) => {
+                        html += `<label style="cursor:pointer; display:flex; align-items:center; gap:8px;">
+                                    <input type="radio" name="${q.id}" value="${window.escapeHtml(opt)}" required style="width:18px; height:18px;">
+                                    ${window.escapeHtml(opt)}
+                                 </label>`;
+                    });
+                    html += `</div>`;
+                } else if (q.type === 'checkbox') {
+                    // 객관식 (다중선택)
+                    html += `<div style="display:flex; flex-direction:column; gap:10px;">`;
+                    q.options.forEach((opt, oIdx) => {
+                        html += `<label style="cursor:pointer; display:flex; align-items:center; gap:8px;">
+                                    <input type="checkbox" name="${q.id}" value="${window.escapeHtml(opt)}" style="width:18px; height:18px;">
+                                    ${window.escapeHtml(opt)}
+                                 </label>`;
+                    });
+                    html += `</div><p style="font-size:0.8rem; color:#888; margin-top:10px;">* 다중 선택 가능</p>`;
+                }
+                html += `</div>`;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // 폼 제출 이벤트 처리
+        document.getElementById('customForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            let answers = {};
+            let isValid = true;
+
+            // 각 질문 항목의 응답값을 수집합니다.
+            currentSchema.forEach(q => {
+                if (q.type === 'text') {
+                    const val = document.querySelector(`input[name="${q.id}"]`).value.trim();
+                    if (!val) isValid = false;
+                    answers[q.id] = val;
+                } else if (q.type === 'radio') {
+                    const checked = document.querySelector(`input[name="${q.id}"]:checked`);
+                    if (!checked) isValid = false;
+                    else answers[q.id] = checked.value;
+                } else if (q.type === 'checkbox') {
+                    const checkedNodes = document.querySelectorAll(`input[name="${q.id}"]:checked`);
+                    let checkedValues = [];
+                    checkedNodes.forEach(n => checkedValues.push(n.value));
+                    if (checkedValues.length === 0) isValid = false;
+                    answers[q.id] = checkedValues;
+                }
+            });
+
+            if (!isValid) {
+                return alert("모든 질문 항목에 빠짐없이 응답해 주세요.");
+            }
+
+            const respondentInfo = document.getElementById('respondent-info').value.trim();
+            const btn = this.querySelector('button[type="submit"]');
+            const origText = btn.innerText;
+            btn.innerText = '제출 중...';
+            btn.disabled = true;
+
+            // 수집된 데이터를 DB에 전송
+            const { error } = await window.sb.from('form_responses').insert([{
+                form_id: currentFormId,
+                respondent_info: respondentInfo,
+                answers: answers
+            }]);
+
+            if (error) {
+                alert("제출 실패: " + error.message);
+                btn.innerText = origText;
+                btn.disabled = false;
+            } else {
+                alert("응답이 성공적으로 제출되었습니다. 참여해 주셔서 감사합니다!");
+                location.reload(); // 제출 성공 후 페이지 새로고침
+            }
+        });
+    </script>
+</body>
+</html>

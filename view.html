@@ -85,6 +85,7 @@
                         <div id="download-list-container" style="display: flex; flex-direction: column; gap: 8px;"></div>
                     </div>
 
+                    <!-- 수정 및 삭제 버튼 영역 (관리자 또는 일반 작성자 조건부 노출) -->
                     <div id="author-actions-area" style="display:none; margin-top:30px; padding-top:20px; border-top:1px dashed #ddd; display:flex; gap:10px; justify-content:flex-end;">
                         <button onclick="openEditPost()" class="btn-action" style="background:#f4a261; padding:8px 20px; font-size:0.9rem;">수정</button>
                         <button onclick="deleteCurrentPost()" class="btn-action" style="background:#ff6b6b; padding:8px 20px; font-size:0.9rem;">삭제</button>
@@ -107,6 +108,7 @@
         let currentPostId = null;
         let postDataCache = null;
         let pendingAction = null;
+        let isAdminLoggedIn = false;
 
         document.addEventListener("DOMContentLoaded", () => {
             const urlParams = new URLSearchParams(window.location.search);
@@ -118,9 +120,13 @@
                 return;
             }
 
-            const checkReady = setInterval(() => {
+            const checkReady = setInterval(async () => {
                 if (window.sb) {
                     clearInterval(checkReady);
+                    // 관리자 로그인 세션 사전 체크
+                    const { data: { session } } = await window.sb.auth.getSession();
+                    isAdminLoggedIn = !!session;
+
                     loadPostDetail(currentPostId);
                 }
             }, 100);
@@ -142,14 +148,12 @@
             document.title = "뉴키즈 - " + data.title;
             document.getElementById('v-date').innerText = "작성일: " + new Date(data.created_at).toISOString().split('T')[0];
 
-            // ★ 핵심: is_secret이 명확하게 true인 경우에만 비밀글로 인식 (비밀번호가 있더라도 체크를 안 했다면 공개글로 취급)
             const isSecretPost = (data.is_secret === true || data.is_secret === 'true') && data.actualPassword.trim() !== '';
 
             if (isSecretPost) {
-                const { data: { session } } = await window.sb.auth.getSession();
-                if (session) {
+                if (isAdminLoggedIn) {
                     revealPostContent();
-                    document.getElementById('author-actions-area').style.display = 'flex';
+                    checkActionAuth();
                 } else {
                     document.getElementById('lock-box-title').innerText = "🔒 비밀글입니다";
                     document.getElementById('lock-box-desc').innerText = "작성 시 설정한 비밀번호를 입력해주세요.";
@@ -157,6 +161,20 @@
                 }
             } else {
                 revealPostContent();
+                checkActionAuth();
+            }
+        }
+
+        // 수정/삭제 버튼을 노출할지 결정하는 함수 (공지사항 카테고리이면서 관리자가 아니면 버튼 숨김)
+        function checkActionAuth() {
+            // 예: 카테고리가 'notice'이거나 공지 성격인 경우, 관리자가 아니면 수정/삭제 버튼 숨김
+            const isNoticeCategory = postDataCache.category === 'notice';
+
+            if (isNoticeCategory && !isAdminLoggedIn) {
+                // 공지글인데 일반 사용자인 경우 버튼 노출 안 함
+                document.getElementById('author-actions-area').style.display = 'none';
+            } else {
+                // 관리자이거나 일반 게시판 글인 경우 버튼 노출
                 document.getElementById('author-actions-area').style.display = 'flex';
             }
         }
@@ -181,7 +199,7 @@
 
                 alert("비밀번호가 확인되었습니다.");
                 revealPostContent();
-                document.getElementById('author-actions-area').style.display = 'flex';
+                checkActionAuth();
             } else {
                 alert("비밀번호가 일치하지 않습니다.");
             }
@@ -234,8 +252,12 @@
         }
 
         async function openEditPost() {
-            const { data: { session } } = await window.sb.auth.getSession();
-            if (session) {
+            // 공지글이고 관리자가 아예 아닌 경우 2차 차단
+            if (postDataCache.category === 'notice' && !isAdminLoggedIn) {
+                return alert("공지글은 수정할 수 없습니다.");
+            }
+
+            if (isAdminLoggedIn) {
                 location.href = `write.html?edit=${currentPostId}#${postDataCache.category}`;
                 return;
             }
@@ -253,8 +275,12 @@
         }
 
         async function deleteCurrentPost() {
-            const { data: { session } } = await window.sb.auth.getSession();
-            if (session) {
+            // 공지글이고 관리자가 아예 아닌 경우 2차 차단
+            if (postDataCache.category === 'notice' && !isAdminLoggedIn) {
+                return alert("공지글은 삭제할 수 없습니다.");
+            }
+
+            if (isAdminLoggedIn) {
                 if (confirm("정말 이 게시글을 삭제하시겠습니까?")) executeDeletePost();
                 return;
             }

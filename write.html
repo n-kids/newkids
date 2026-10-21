@@ -63,11 +63,10 @@
     <script>
         const urlParams = new URLSearchParams(location.search);
         const editPostId = urlParams.get('edit');
-        const passedPw = urlParams.get('pw'); // 상세페이지에서 넘겨준 인증된 비밀번호
+        const passedPw = urlParams.get('pw');
         const targetCategory = location.hash.replace('#', '') || 'free';
         let selectedFiles = [];
         let existingImageUrl = null;
-        let loadedPostData = null;
 
         document.addEventListener("DOMContentLoaded", () => {
             const checkReady = setInterval(async () => {
@@ -95,9 +94,6 @@
                 return;
             }
 
-            loadedPostData = data;
-
-            // 관리자 세션이 없고, 상세 페이지에서 인증된 비밀번호를 들고 오지 않았다면 비밀번호 확인 창 띄우기
             const { data: { session } } = await window.sb.auth.getSession();
             if (!session && data.password && data.password.trim() !== '' && passedPw !== data.password) {
                 const inputPw = prompt("게시글 수정을 위해 작성 시 설정한 비밀번호를 입력해주세요.");
@@ -111,7 +107,7 @@
             document.getElementById('w-title').value = data.title || '';
             document.getElementById('w-author').value = data.link_url || '';
             document.getElementById('w-password').value = data.password || '';
-            document.getElementById('w-is-secret').checked = data.is_secret || false;
+            document.getElementById('w-is-secret').checked = data.is_secret === true; // 확실한 불리언 체크
 
             let rawContent = data.content || '';
             rawContent = rawContent.replace(/<br\s*[\/]?>/gi, '\n');
@@ -174,7 +170,7 @@
             const title = document.getElementById('w-title').value.trim();
             const author = document.getElementById('w-author').value.trim();
             const password = document.getElementById('w-password').value.trim();
-            const isSecret = document.getElementById('w-is-secret').checked;
+            const isSecret = document.getElementById('w-is-secret').checked; // 체크 여부에 따른 true / false
             const content = document.getElementById('w-content').value.trim();
 
             if (!title || !author || !password || !content) {
@@ -217,7 +213,7 @@
                     content: safeContent,
                     link_url: window.escapeHtml(author),
                     password: password,
-                    is_secret: isSecret,
+                    is_secret: Boolean(isSecret), // 명시적 불리언 변환
                     image_url: finalImageUrl
                 }).eq('id', editPostId);
                 error = res.error;
@@ -228,7 +224,7 @@
                     content: safeContent,
                     link_url: window.escapeHtml(author),
                     password: password,
-                    is_secret: isSecret,
+                    is_secret: Boolean(isSecret), // 명시적 불리언 변환
                     image_url: finalImageUrl,
                     order_num: 0,
                     is_visible: true

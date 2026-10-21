@@ -66,7 +66,7 @@
         <div class="container">
             <div class="proposal-box" style="max-width: 900px; margin: 0 auto; background: #fff; padding: 40px; border-radius: 12px;">
 
-                <!-- 비밀글 인증 박스 -->
+                <!-- 비밀번호 입력 인증 박스 -->
                 <div id="secret-lock-box" style="display:none; text-align:center; padding: 50px 20px;">
                     <h3 style="color:#1a3c6e; margin-bottom:15px;" id="lock-box-title">🔒 비밀글입니다</h3>
                     <p style="color:#666; margin-bottom:20px;" id="lock-box-desc">작성 시 설정한 비밀번호를 입력해주세요.</p>
@@ -106,7 +106,7 @@
     <script>
         let currentPostId = null;
         let postDataCache = null;
-        let pendingAction = null; // 'edit' 또는 'delete' 작업 대기용
+        let pendingAction = null;
 
         document.addEventListener("DOMContentLoaded", () => {
             const urlParams = new URLSearchParams(window.location.search);
@@ -135,13 +135,15 @@
                 return;
             }
 
+            data.actualPassword = data.password || data.video_url || '';
             postDataCache = data;
+
             document.getElementById('v-title').innerText = data.title;
             document.title = "뉴키즈 - " + data.title;
             document.getElementById('v-date').innerText = "작성일: " + new Date(data.created_at).toISOString().split('T')[0];
 
-            // 비밀글인 경우 최초 진입 시 비밀번호 확인 필수
-            const isSecretPost = data.is_secret === true || (data.password && data.password.trim() !== '');
+            // ★ 핵심: is_secret이 명확하게 true인 경우에만 비밀글로 인식 (비밀번호가 있더라도 체크를 안 했다면 공개글로 취급)
+            const isSecretPost = (data.is_secret === true || data.is_secret === 'true') && data.actualPassword.trim() !== '';
 
             if (isSecretPost) {
                 const { data: { session } } = await window.sb.auth.getSession();
@@ -154,7 +156,6 @@
                     document.getElementById('secret-lock-box').style.display = 'block';
                 }
             } else {
-                // 공개글은 바로 내용 오픈 및 수정/삭제 버튼 활성화
                 revealPostContent();
                 document.getElementById('author-actions-area').style.display = 'flex';
             }
@@ -164,7 +165,7 @@
             const inputPw = document.getElementById('secret-pw-input').value.trim();
             if (!inputPw) return alert("비밀번호를 입력해주세요.");
 
-            if (inputPw === postDataCache.password) {
+            if (inputPw === postDataCache.actualPassword) {
                 document.getElementById('secret-lock-box').style.display = 'none';
                 document.getElementById('secret-pw-input').value = '';
 
@@ -232,7 +233,6 @@
             document.getElementById('main-content-wrap').style.display = 'block';
         }
 
-        // 수정 버튼: 공개글이든 비밀번호가 걸려있든 비밀번호 확인을 거쳐서 수정 페이지로 이동
         async function openEditPost() {
             const { data: { session } } = await window.sb.auth.getSession();
             if (session) {
@@ -240,12 +240,10 @@
                 return;
             }
 
-            const isSecretPost = postDataCache.is_secret === true || (postDataCache.password && postDataCache.password.trim() !== '');
+            const isSecretPost = (postDataCache.is_secret === true || postDataCache.is_secret === 'true') && postDataCache.actualPassword.trim() !== '';
             if (isSecretPost && document.getElementById('main-content-wrap').style.display === 'block') {
-                // 이미 비밀글 비밀번호를 풀고 들어온 경우 바로 수정 페이지로 비밀번호를 들고 이동
-                location.href = `write.html?edit=${currentPostId}&pw=${encodeURIComponent(postDataCache.password)}#${postDataCache.category}`;
+                location.href = `write.html?edit=${currentPostId}&pw=${encodeURIComponent(postDataCache.actualPassword)}#${postDataCache.category}`;
             } else {
-                // 공개글이거나 잠겨있는 경우 비밀번호 입력 요구
                 pendingAction = 'edit';
                 document.getElementById('main-content-wrap').style.display = 'none';
                 document.getElementById('lock-box-title').innerText = "✍️ 글 수정 인증";
@@ -254,7 +252,6 @@
             }
         }
 
-        // 삭제 버튼: 비밀글은 이미 인증됨, 공개글은 비밀번호 확인 후 삭제
         async function deleteCurrentPost() {
             const { data: { session } } = await window.sb.auth.getSession();
             if (session) {
@@ -262,7 +259,7 @@
                 return;
             }
 
-            const isSecretPost = postDataCache.is_secret === true || (postDataCache.password && postDataCache.password.trim() !== '');
+            const isSecretPost = (postDataCache.is_secret === true || postDataCache.is_secret === 'true') && postDataCache.actualPassword.trim() !== '';
 
             if (!isSecretPost) {
                 pendingAction = 'delete';

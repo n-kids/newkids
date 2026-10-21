@@ -6,7 +6,6 @@
     <title>뉴키즈 - 상세 보기</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* ★ 제공해주신 이미지처럼 상단 헤더의 세로 폭을 아주 슬림하고 콤팩트하게 맞춤 ★ */
         #view-hero.sub-hero {
             height: auto !important;
             background-color: #ffffff !important;
@@ -56,7 +55,6 @@
 <body>
     <header></header>
 
-    <!-- 상단 히어로 섹션 -->
     <section class="sub-hero" id="view-hero">
         <div class="container">
             <h1 id="v-title">불러오는 중...</h1>
@@ -123,14 +121,13 @@
             document.getElementById('v-title').innerText = data.title;
             document.title = "뉴키즈 - " + data.title;
 
-            // 본문 내용 매립 (투표 iframe 포함)
             let finalContent = data.content || '';
             finalContent = finalContent.replace(/\[투표:(\d+)\]/g, '<iframe id="form-iframe-$1" src="form.html?id=$1" width="100%" frameborder="0" scrolling="no" style="border:1px solid #ddd; border-radius:12px; margin:30px 0; overflow:hidden; transition:height 0.3s ease;"></iframe>');
 
             document.getElementById('v-content').innerHTML = finalContent;
             document.getElementById('v-date').innerText = "작성일: " + new Date(data.created_at).toISOString().split('T')[0];
 
-            // 첨부파일 렌더링
+            // 첨부파일 렌더링 (자바스크립트 함수로 원본 이름 강제 다운로드 연결)
             if (data.image_url && data.image_url.trim() !== '' && data.image_url !== 'null') {
                 const files = data.image_url.split('||').map(u => u.trim()).filter(u => u);
                 if (files.length > 0) {
@@ -152,17 +149,41 @@
                             fileName = rawName.includes('___') ? rawName.split('___').pop() : rawName;
                         }
 
+                        // 인코딩 문제 방지를 위해 작은따옴표 처리
+                        const safeUrl = fileUrl.replace(/'/g, "\\'");
+                        const safeName = fileName.replace(/'/g, "\\'");
+
                         fileHtml += `
-                                <a href="${fileUrl}" target="_blank" download style="display:flex; justify-content:space-between; align-items:center; background:#f8f9fa; padding:12px 15px; border-radius:8px; border:1px solid #e9ecef; text-decoration:none; color:#1a3c6e; font-weight:bold; transition: background 0.2s;">
+                                <div onclick="downloadFileWithOriginalName('${safeUrl}', '${safeName}')" style="display:flex; justify-content:space-between; align-items:center; background:#f8f9fa; padding:12px 15px; border-radius:8px; border:1px solid #e9ecef; cursor:pointer; text-decoration:none; color:#1a3c6e; font-weight:bold; transition: background 0.2s;">
                                     <span>📥 ${fileName}</span>
                                     <span style="font-size:0.85rem; background:#1a3c6e; color:#fff; padding:4px 10px; border-radius:4px;">다운로드</span>
-                                </a>
+                                </div>
                             `;
                     });
 
                     downloadList.innerHTML = fileHtml;
                     downloadArea.style.display = 'block';
                 }
+            }
+        }
+
+        // ★ 원본 파일명으로 강제 다운로드하는 자바스크립트 함수
+        async function downloadFileWithOriginalName(url, filename) {
+            try {
+                const response = await fetch(url);
+                const blob = await response.blob();
+                const blobUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(blobUrl);
+            } catch (e) {
+                console.error("다운로드 실패:", e);
+                // 네트워크 정책으로 실패 시 새 창으로 열기 보완
+                window.open(url, '_blank');
             }
         }
 

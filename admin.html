@@ -226,22 +226,30 @@
                         </div>
                         <div class="form-group w-col-title" style="margin-bottom:0;"><label class="form-label">제목 (교재명)</label><input type="text" id="post-title" class="form-input" placeholder="제목을 입력하세요"></div>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">썸네일 이미지 (선택 - 자동 편집 지원)</label>
-                        <input type="file" id="post-thumb-file" class="form-input" accept="image/*">
-                        <div id="thumb-manage-area" style="display:none; margin-top:5px;"><label><input type="checkbox" id="delete-thumb-check"> 기존 썸네일 삭제</label></div>
-                    </div>
 
-                    <!-- 폼/투표 간편 삽입 툴바 -->
-                    <div class="form-group" style="background:#eef6ff; padding:15px; border-radius:8px; border:1px solid #cce5ff; margin-bottom:20px;">
-                        <label class="form-label" style="color:#1a3c6e; margin-bottom:10px;">📊 폼/투표 간편 삽입 (직접 번호를 칠 필요가 없습니다)</label>
-                        <div style="display:flex; gap:10px;">
-                            <select id="form-insert-select" class="form-input" style="flex:1;">
-                                <option value="">삽입할 투표/신청서를 선택하세요</option>
-                            </select>
-                            <button type="button" onclick="insertFormToEditor()" class="btn-action" style="width:160px; background:#f4a261; border:none; height:46px;">⬇️ 본문에 넣기</button>
+                    <!-- ★ 썸네일과 폼 삽입을 한 줄로 묶은 컨테이너 ★ -->
+                    <div style="display: flex; gap: 20px; align-items: flex-end; margin-bottom: 20px;">
+
+                        <!-- 1. 썸네일 이미지 영역 (왼쪽 절반) -->
+                        <div class="form-group" style="flex: 1; margin-bottom: 0; padding: 15px; border: 1px solid #ddd; border-radius: 8px; background: #fff;">
+                            <label class="form-label">썸네일 이미지 (선택 - 자동 편집 지원)</label>
+                            <input type="file" id="post-thumb-file" class="form-input" accept="image/*" style="margin-bottom:0;">
+                            <div id="thumb-manage-area" style="display:none; margin-top:10px;"><label style="font-size:0.9rem; color:#d63031;"><input type="checkbox" id="delete-thumb-check"> 기존 썸네일 삭제</label></div>
                         </div>
+
+                        <!-- 2. 폼/투표 간편 삽입 툴바 (오른쪽 절반) -->
+                        <div class="form-group" style="flex: 1; margin-bottom: 0; background:#eef6ff; padding:15px; border-radius:8px; border:1px solid #cce5ff;">
+                            <label class="form-label" style="color:#1a3c6e; margin-bottom:10px;">📊 폼/투표 간편 삽입</label>
+                            <div style="display:flex; gap:10px;">
+                                <select id="form-insert-select" class="form-input" style="flex:1;">
+                                    <option value="">삽입할 투표를 선택하세요</option>
+                                </select>
+                                <button type="button" onclick="insertFormToEditor()" class="btn-action" style="width:120px; background:#f4a261; border:none; height:46px; padding:0;">⬇️ 본문에 넣기</button>
+                            </div>
+                        </div>
+
                     </div>
+                    <!-- ★ 한 줄 컨테이너 끝 ★ -->
 
                     <div class="form-group" id="editor-area">
                         <div style="margin-bottom:5px;">
@@ -924,7 +932,6 @@
                 allTypes.forEach(t => { if (!mainOrder.includes(t)) mainOrder.push(t); });
 
                 mainOrder.forEach(type => {
-                    // 👇 수정된 부분: 무조건 닫혀있는 상태로 시작하도록 빈 문자열과 아래 화살표(▼) 지정
                     const isActive = '';
                     const iconStr = '▼';
 
@@ -1406,7 +1413,7 @@
             });
             listDiv.innerHTML = html;
 
-            // ★ 추가: 완성된 드롭다운 옵션을 화면에 반영
+            // ★ 완성된 드롭다운 옵션을 화면에 반영
             const selectEl = document.getElementById('form-insert-select');
             if (selectEl) selectEl.innerHTML = selectHtml;
         }
@@ -1474,7 +1481,7 @@
             contentDiv.innerHTML = html;
         }
 
-        // ★ 누락되었던 에디터 폼 자동 삽입 함수 추가!
+        // ★ 에디터 폼 자동 삽입 함수
         function insertFormToEditor() {
             const formId = document.getElementById('form-insert-select').value;
             if (!formId) return alert("삽입할 투표/신청서를 드롭다운에서 먼저 선택하세요.");

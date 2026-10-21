@@ -6,6 +6,32 @@
     <title>뉴키즈 - 상세 보기</title>
     <link rel="stylesheet" href="style.css">
     <style>
+        /* ★ 제공해주신 이미지처럼 상단 헤더의 세로 폭을 아주 슬림하고 콤팩트하게 맞춤 ★ */
+        #view-hero.sub-hero {
+            height: auto !important;
+            background-color: #ffffff !important;
+            border-bottom: 1px solid #eaeaea !important;
+            padding: 30px 0 !important;
+            margin: 0 !important;
+            box-shadow: none !important;
+            text-align: center !important;
+        }
+
+        #view-hero h1 {
+            color: #111111 !important;
+            font-size: 2.2rem !important;
+            font-weight: bold !important;
+            margin-bottom: 5px !important;
+            text-shadow: none !important;
+        }
+
+        #view-hero p {
+            color: #666666 !important;
+            font-size: 0.95rem !important;
+            margin: 0 !important;
+            text-shadow: none !important;
+        }
+
         .post-title {
             font-size: 2rem;
             color: #1a3c6e;
@@ -30,19 +56,29 @@
 <body>
     <header></header>
 
-    <section class="sub-hero" id="view-hero" style="background-color: #1a3c6e;">
+    <!-- 상단 히어로 섹션 -->
+    <section class="sub-hero" id="view-hero">
         <div class="container">
             <h1 id="v-title">불러오는 중...</h1>
             <p id="v-date">작성일: -</p>
         </div>
     </section>
 
-    <section style="background-color: #f8f9fa; padding: 50px 0;">
+    <section style="background-color: #f8f9fa; padding: 40px 0;">
         <div class="container">
             <div class="proposal-box" style="max-width: 900px; margin: 0 auto; background: #fff; padding: 40px; border-radius: 12px;">
+
+                <!-- 게시글 본문 영역 -->
                 <div id="v-content" style="line-height: 1.6; color: #333;">
                     데이터를 불러오는 중입니다...
                 </div>
+
+                <!-- 첨부파일 및 다운로드 영역 -->
+                <div id="download-files-area" style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; display: none;">
+                    <h4 style="color: #1a3c6e; margin-bottom: 15px;">📎 첨부파일 및 다운로드</h4>
+                    <div id="download-list-container" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                </div>
+
                 <div class="btn-center-wrap" style="margin-top: 40px;">
                     <button onclick="history.back()" class="btn-action" style="background:#666; width: 150px;">목록으로</button>
                 </div>
@@ -87,13 +123,50 @@
             document.getElementById('v-title').innerText = data.title;
             document.title = "뉴키즈 - " + data.title;
 
+            // 본문 내용 매립 (투표 iframe 포함)
             let finalContent = data.content || '';
             finalContent = finalContent.replace(/\[투표:(\d+)\]/g, '<iframe id="form-iframe-$1" src="form.html?id=$1" width="100%" frameborder="0" scrolling="no" style="border:1px solid #ddd; border-radius:12px; margin:30px 0; overflow:hidden; transition:height 0.3s ease;"></iframe>');
 
             document.getElementById('v-content').innerHTML = finalContent;
             document.getElementById('v-date').innerText = "작성일: " + new Date(data.created_at).toISOString().split('T')[0];
+
+            // 첨부파일 렌더링
+            if (data.image_url && data.image_url.trim() !== '' && data.image_url !== 'null') {
+                const files = data.image_url.split('||').map(u => u.trim()).filter(u => u);
+                if (files.length > 0) {
+                    const downloadArea = document.getElementById('download-files-area');
+                    const downloadList = document.getElementById('download-list-container');
+                    let fileHtml = '';
+
+                    files.forEach(item => {
+                        let fileUrl = item;
+                        let fileName = "다운로드 파일";
+
+                        if (item.includes('@@')) {
+                            const parts = item.split('@@');
+                            fileUrl = parts[0];
+                            fileName = parts[1];
+                        } else {
+                            let rawName = item.split('/').pop().split('?')[0];
+                            try { rawName = decodeURIComponent(rawName); } catch (e) { }
+                            fileName = rawName.includes('___') ? rawName.split('___').pop() : rawName;
+                        }
+
+                        fileHtml += `
+                                <a href="${fileUrl}" target="_blank" download style="display:flex; justify-content:space-between; align-items:center; background:#f8f9fa; padding:12px 15px; border-radius:8px; border:1px solid #e9ecef; text-decoration:none; color:#1a3c6e; font-weight:bold; transition: background 0.2s;">
+                                    <span>📥 ${fileName}</span>
+                                    <span style="font-size:0.85rem; background:#1a3c6e; color:#fff; padding:4px 10px; border-radius:4px;">다운로드</span>
+                                </a>
+                            `;
+                    });
+
+                    downloadList.innerHTML = fileHtml;
+                    downloadArea.style.display = 'block';
+                }
+            }
         }
 
+        // 폼 iframe 높이 조절 리스너
         window.addEventListener('message', function (event) {
             if (event.data && event.data.type === 'resizeIframe') {
                 let iframe = document.getElementById('form-iframe-' + event.data.formId);

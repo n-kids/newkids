@@ -1,4 +1,4 @@
-﻿@charset "utf-8";
+@charset "utf-8";
 
 /* style.css 파일 최상단 */
 @import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
@@ -38,7 +38,6 @@ body {
     flex-direction: column;
     min-height: 100vh;
 }
-/* 💡 오타 수정됨: }} 에서 } 로 변경 */
 
 input, textarea, [contenteditable] {
     -webkit-user-select: text;
@@ -1254,12 +1253,10 @@ footer {
     border-bottom: 1px solid #eee;
 }
 
-/* 💡 오타 수정됨: 양옆 마진 400px 삭제, 자동 중앙 정렬(0 auto)로 변경 */
-/* 게시판 목록 가로 넓이 1200px 시원하게 확장 */
 .board-container {
     max-width: 1200px !important;
     width: 100% !important;
-    margin: 0 auto !important; /* 강제 여백을 없애고 화면 정중앙에 배치 */
+    margin: 0 auto !important;
     padding: 50px 20px;
     box-sizing: border-box;
 }
@@ -1336,15 +1333,18 @@ footer {
     font-weight: 600;
 }
 
+/* ★ 모바일 게시판 제목 수정 적용 영역 ★ */
 @media (max-width: 768px) {
     .board-list-head {
         display: none;
     }
 
     .board-list-row {
-        flex-wrap: wrap;
         position: relative;
         padding: 15px;
+        display: flex;
+        flex-direction: column; /* 세로 정렬로 안정적인 레이아웃 구성 */
+        align-items: flex-start;
     }
 
     .b-num {
@@ -1352,25 +1352,30 @@ footer {
     }
 
     .b-cat {
-        position: absolute;
-        top: 15px;
-        left: 15px;
         width: auto;
         text-align: left;
+        margin-bottom: 8px; /* 제목과의 간격 띄우기 */
     }
 
     .b-title {
-        width: 100%;
-        margin-top: 30px;
-        margin-bottom: 10px;
-        padding: 0;
+        display: block !important;
+        flex: none !important; /* 넓이가 0으로 찌그러지는 현상 방지 */
+        width: 100% !important;
+        margin-top: 0 !important;
+        margin-bottom: 10px !important;
+        padding: 0 !important;
         font-size: 1.1rem;
+        white-space: normal !important; /* 긴 제목이 잘리지 않고 줄바꿈 되도록 처리 */
+        overflow: visible !important;
+        text-overflow: clip !important;
+        line-height: 1.4;
     }
 
     .b-date {
         width: 100%;
         text-align: left;
         font-size: 0.85rem;
+        color: #888;
     }
 }
 
@@ -1648,5 +1653,3 @@ footer {
     line-height: 1.6;
     word-break: break-all;
 }
-
-

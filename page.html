@@ -2,22 +2,28 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>뉴키즈</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>뉴키즈 - 페이지</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <header></header>
 
-    <section class="sub-hero" id="view-hero">
+    <section class="sub-hero" id="page-hero" style="background-color: #1a3c6e; display:none;">
         <div class="container">
-            <h1 id="page-title">로딩 중...</h1>
-            <p id="page-desc"></p>
+            <h1 id="page-hero-title">불러오는 중...</h1>
+            <p id="page-hero-desc"></p>
         </div>
     </section>
 
-    <section class="container" style="padding: 50px 0;">
-        <div id="page-content" class="view-content" style="min-height: 400px; max-width: 1200px; margin: 0 auto;">
-            <div style="text-align:center; padding:50px; color:#999;">내용을 불러오는 중입니다...</div>
+    <section style="background-color: #f8f9fa; padding: 50px 0;">
+        <div class="container">
+            <div class="proposal-box" style="max-width: 900px; margin: 0 auto; background: #fff; padding: 40px; border-radius: 12px;">
+                <h2 id="page-title" style="color:#1a3c6e; margin-bottom:20px; font-weight:bold;"></h2>
+                <div id="page-content" style="line-height: 1.6; color: #333;">
+                    데이터를 불러오는 중입니다...
+                </div>
+            </div>
         </div>
     </section>
 
@@ -26,7 +32,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js"></script>
     <script src="manager.js"></script>
-
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             const urlParams = new URLSearchParams(window.location.search);
@@ -47,7 +52,6 @@
         });
 
         async function loadPageContent(code) {
-            // 카테고리 정보 로드 (상단 배경이미지 등)
             const { data: catData } = await window.sb.from('program_categories').select('*').eq('code', code).single();
             if (catData) {
                 if (catData.hero_image) {
@@ -72,13 +76,11 @@
                 document.title = "뉴키즈 - " + catData.name;
             }
 
-            // 본문 내용 로드
             const { data, error } = await window.sb.from('total_posts').select('*').eq('category', code).order('created_at', { ascending: true }).limit(1).single();
 
             if (error || !data) {
-                document.getElementById('page-content').innerHTML = "<div style='text-align:center; padding:100px 20px; color:#999; font-size:1.1rem;'>아직 등록된 페이지 내용이 없습니다.</div>";
+                document.getElementById('page-content').innerHTML = "<div style='text-align:center; padding:50px; color:#999;'>아직 등록된 페이지 내용이 없습니다.</div>";
             } else {
-                // ★ 본문 내용에서 [투표:ID숫자]를 찾아 스크롤바 없는 iframe으로 화면에 매립
                 let finalContent = data.content || '';
                 finalContent = finalContent.replace(/\[투표:(\d+)\]/g, '<iframe id="form-iframe-$1" src="form.html?id=$1" width="100%" frameborder="0" scrolling="no" style="border:1px solid #ddd; border-radius:12px; margin:30px 0; overflow:hidden; transition:height 0.3s ease;"></iframe>');
 
@@ -86,7 +88,6 @@
             }
         }
 
-        // HEX 색상 변환 헬퍼 함수
         function hexToRgb(hex) {
             const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
             return result ? {
@@ -96,12 +97,20 @@
             } : null;
         }
 
-        // ★ form.html에서 보낸 폼 높이 데이터를 받아 iframe의 세로 길이를 쫙 늘려줌
         window.addEventListener('message', function (event) {
             if (event.data && event.data.type === 'resizeIframe') {
-                const iframe = document.getElementById('form-iframe-' + event.data.formId);
+                let iframe = document.getElementById('form-iframe-' + event.data.formId);
+                if (!iframe) {
+                    const iframes = document.querySelectorAll('iframe');
+                    for (let f of iframes) {
+                        if (f.src && f.src.includes('id=' + event.data.formId)) {
+                            iframe = f;
+                            break;
+                        }
+                    }
+                }
                 if (iframe) {
-                    iframe.style.height = (event.data.height + 20) + 'px';
+                    iframe.style.height = (event.data.height + 30) + 'px';
                 }
             }
         });

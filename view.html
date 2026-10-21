@@ -3,19 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>뉴키즈 - 글 읽기</title>
+    <title>뉴키즈 - 상세 보기</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        #view-hero {
-            display: none !important;
-        }
-
-        .post-detail-box {
-            max-width: 1200px !important;
-            margin: 0 auto;
-            padding: 40px 20px;
-        }
-
         .post-title {
             font-size: 2rem;
             color: #1a3c6e;
@@ -35,146 +25,36 @@
             padding-bottom: 20px;
             margin-bottom: 30px;
         }
-
-        .post-content {
-            min-height: 300px;
-            font-size: 1.1rem;
-            line-height: 1.8;
-            color: #333;
-        }
-
-        .post-actions {
-            text-align: right;
-            margin-top: 40px;
-            border-top: 1px solid #eee;
-            padding-top: 20px;
-        }
-
-        #v-youtube iframe {
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-
-        /* 답변 영역 100% 채우기 */
-        .comments-section {
-            width: 100%;
-            margin-top: 50px;
-            display: none;
-        }
-
-        .comments-header {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #1a3c6e;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #1a3c6e;
-        }
-
-        .comment-item {
-            width: 100%;
-            box-sizing: border-box;
-            padding: 25px;
-            background: #f0f7ff;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            border-left: 4px solid #f4a261;
-        }
-
-        .comment-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-
-        .comment-author {
-            font-weight: bold;
-            color: #1a3c6e;
-            font-size: 1.1rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .comment-date {
-            font-size: 0.85rem;
-            color: #888;
-        }
-
-        .comment-content {
-            font-size: 1.05rem;
-            color: #333;
-            line-height: 1.6;
-            word-break: break-all;
-        }
-
-        #v-files {
-            margin: 30px 0;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 10px;
-            display: none;
-            border: 1px solid #eee;
-        }
-
-        .file-download-link {
-            display: inline-block;
-            color: #1a3c6e;
-            text-decoration: none;
-            font-weight: 600;
-            padding: 5px 10px;
-            border-radius: 5px;
-            transition: background 0.2s;
-        }
-
-            .file-download-link:hover {
-                background: #e0efff;
-                text-decoration: underline;
-            }
     </style>
 </head>
 <body>
     <header></header>
 
-    <div class="container post-detail-box">
-        <h1 id="v-title" class="post-title">불러오는 중...</h1>
-        <div class="post-meta">
-            <span id="v-author">작성자: -</span>
-            <span id="v-date">작성일: -</span>
+    <section class="sub-hero" id="view-hero" style="background-color: #1a3c6e;">
+        <div class="container">
+            <h1 id="v-title">불러오는 중...</h1>
+            <p id="v-date">작성일: -</p>
         </div>
+    </section>
 
-        <div id="v-youtube" style="display:none; margin-bottom: 30px;"></div>
-        <div id="v-content" class="post-content"></div>
-
-        <div id="v-files">
-            <div style="font-weight:bold; margin-bottom:10px; color:#1a3c6e;">📎 첨부파일</div>
-            <div id="file-list-container"></div>
-        </div>
-
-        <div id="v-link-box" style="display:none; margin-top: 40px;">
-            <a id="v-link" href="#" target="_blank" class="btn-action" style="background:#f4a261; text-decoration:none;">🔗 관련 링크 이동</a>
-        </div>
-
-        <div class="post-actions">
-            <button onclick="history.back()" class="btn-action" style="background:#666;">목록으로</button>
-            <button id="btn-user-delete" onclick="deleteUserPost()" class="btn-action" style="background:#ff6b6b; display:none;">🗑️ 본인 글 삭제</button>
-        </div>
-
-        <div class="comments-section" id="comments-section">
-            <div class="comments-header">💬 관리자 답변 <span id="comment-count" style="color:#f4a261;">0</span></div>
-            <div id="comment-list">
-                <div style="text-align:center; padding:20px; color:#999;">답변을 불러오는 중입니다...</div>
+    <section style="background-color: #f8f9fa; padding: 50px 0;">
+        <div class="container">
+            <div class="proposal-box" style="max-width: 900px; margin: 0 auto; background: #fff; padding: 40px; border-radius: 12px;">
+                <div id="v-content" style="line-height: 1.6; color: #333;">
+                    데이터를 불러오는 중입니다...
+                </div>
+                <div class="btn-center-wrap" style="margin-top: 40px;">
+                    <button onclick="history.back()" class="btn-action" style="background:#666; width: 150px;">목록으로</button>
+                </div>
             </div>
         </div>
-    </div>
+    </section>
 
     <footer></footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js"></script>
     <script src="manager.js"></script>
-
     <script>
         let currentPostId = null;
 
@@ -207,7 +87,6 @@
             document.getElementById('v-title').innerText = data.title;
             document.title = "뉴키즈 - " + data.title;
 
-            // ★ 본문 내용에서 [투표:ID숫자]를 찾아 스크롤바 없는 iframe으로 화면에 매립
             let finalContent = data.content || '';
             finalContent = finalContent.replace(/\[투표:(\d+)\]/g, '<iframe id="form-iframe-$1" src="form.html?id=$1" width="100%" frameborder="0" scrolling="no" style="border:1px solid #ddd; border-radius:12px; margin:30px 0; overflow:hidden; transition:height 0.3s ease;"></iframe>');
 
@@ -215,12 +94,20 @@
             document.getElementById('v-date').innerText = "작성일: " + new Date(data.created_at).toISOString().split('T')[0];
         }
 
-        // ★ form.html에서 보낸 폼 높이 데이터를 받아 iframe의 세로 길이를 쫙 늘려줌
         window.addEventListener('message', function (event) {
             if (event.data && event.data.type === 'resizeIframe') {
-                const iframe = document.getElementById('form-iframe-' + event.data.formId);
+                let iframe = document.getElementById('form-iframe-' + event.data.formId);
+                if (!iframe) {
+                    const iframes = document.querySelectorAll('iframe');
+                    for (let f of iframes) {
+                        if (f.src && f.src.includes('id=' + event.data.formId)) {
+                            iframe = f;
+                            break;
+                        }
+                    }
+                }
                 if (iframe) {
-                    iframe.style.height = (event.data.height + 20) + 'px';
+                    iframe.style.height = (event.data.height + 30) + 'px';
                 }
             }
         });

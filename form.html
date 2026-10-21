@@ -6,7 +6,6 @@
     <title>뉴키즈 - 폼/투표 참여</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* 게시판에 매립(iframe) 되었을 때 불필요한 요소 숨김 및 여백/그림자 제거 */
         body.is-iframe header,
         body.is-iframe footer,
         body.is-iframe #view-hero,
@@ -51,12 +50,9 @@
     <section style="background-color: #f8f9fa; padding: 50px 0;">
         <div class="container">
             <div id="form-container" class="proposal-box" style="max-width: 800px; margin: 0 auto;">
-                <!-- 로딩 또는 마감 메시지 영역 -->
                 <div id="form-status" style="text-align:center; padding:50px; color:#666;">데이터를 불러오는 중입니다...</div>
 
-                <!-- 투표 입력 폼 -->
                 <form id="customForm" style="display:none;">
-
                     <h3 class="form-section-title">👤 응답자 정보</h3>
                     <div class="form-grid">
                         <div class="form-group">
@@ -70,7 +66,6 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">연락처 (선택사항)</label>
-                        <!-- ★ 추가: 연락처 자동 하이픈 및 숫자만 입력 허용 (oninput 활용) ★ -->
                         <input type="tel" id="res-contact" class="form-input" placeholder="숫자만 입력하세요" oninput="this.value = autoHyphenPhone(this.value)" maxlength="13">
                     </div>
 
@@ -110,71 +105,44 @@
                 }
             }, 100);
 
-            // 페이지 렌더링 시작 시 높이 전송 옵저버 실행
-            sendHeightToParent();
+            initHeightObserver();
         });
 
-        // ★ 내용물의 높이가 바뀔 때마다 부모 페이지로 높이 신호 쏘기
         function sendHeightToParent() {
             if (window !== window.parent) {
+                const height = Math.max(
+                    document.body.scrollHeight,
+                    document.documentElement.scrollHeight,
+                    document.body.offsetHeight
+                );
+                window.parent.postMessage({ type: 'resizeIframe', formId: currentFormId, height: height }, '*');
+            }
+        }
+
+        function initHeightObserver() {
+            if (window !== window.parent) {
                 const observer = new ResizeObserver(() => {
-                    const height = document.body.scrollHeight;
-                    window.parent.postMessage({ type: 'resizeIframe', formId: currentFormId, height: height }, '*');
+                    sendHeightToParent();
                 });
                 observer.observe(document.body);
             }
         }
 
-        // ★ 추가: 연락처 자동 하이픈 변환 함수
         function autoHyphenPhone(str) {
-            str = str.replace(/[^0-9]/g, ''); // 숫자가 아닌 모든 문자 제거
+            str = str.replace(/[^0-9]/g, '');
             let tmp = '';
-
-            if (str.startsWith('02')) { // 서울 지역번호(02) 처리
+            if (str.startsWith('02')) {
                 if (str.length < 3) return str;
-                else if (str.length < 6) {
-                    tmp += str.substr(0, 2);
-                    tmp += '-';
-                    tmp += str.substr(2);
-                    return tmp;
-                } else if (str.length < 10) {
-                    tmp += str.substr(0, 2);
-                    tmp += '-';
-                    tmp += str.substr(2, 3);
-                    tmp += '-';
-                    tmp += str.substr(5);
-                    return tmp;
-                } else {
-                    tmp += str.substr(0, 2);
-                    tmp += '-';
-                    tmp += str.substr(2, 4);
-                    tmp += '-';
-                    tmp += str.substr(6, 4); // 4자리 초과 입력 무시
-                    return tmp;
-                }
-            } else { // 일반 휴대폰(010) 및 기타 지역번호 처리
+                else if (str.length < 6) tmp += str.substr(0, 2) + '-' + str.substr(2);
+                else if (str.length < 10) tmp += str.substr(0, 2) + '-' + str.substr(2, 3) + '-' + str.substr(5);
+                else tmp += str.substr(0, 2) + '-' + str.substr(2, 4) + '-' + str.substr(6, 4);
+            } else {
                 if (str.length < 4) return str;
-                else if (str.length < 7) {
-                    tmp += str.substr(0, 3);
-                    tmp += '-';
-                    tmp += str.substr(3);
-                    return tmp;
-                } else if (str.length < 11) {
-                    tmp += str.substr(0, 3);
-                    tmp += '-';
-                    tmp += str.substr(3, 3);
-                    tmp += '-';
-                    tmp += str.substr(6);
-                    return tmp;
-                } else {
-                    tmp += str.substr(0, 3);
-                    tmp += '-';
-                    tmp += str.substr(3, 4);
-                    tmp += '-';
-                    tmp += str.substr(7, 4); // 4자리 초과 입력 무시
-                    return tmp;
-                }
+                else if (str.length < 7) tmp += str.substr(0, 3) + '-' + str.substr(3);
+                else if (str.length < 11) tmp += str.substr(0, 3) + '-' + str.substr(3, 3) + '-' + str.substr(6);
+                else tmp += str.substr(0, 3) + '-' + str.substr(3, 4) + '-' + str.substr(7, 4);
             }
+            return tmp;
         }
 
         async function loadForm() {
@@ -185,6 +153,7 @@
 
             if (error || !data) {
                 statusDiv.innerHTML = "<div style='color:#ff6b6b; font-size:1.2rem;'>폼을 찾을 수 없거나 삭제되었습니다.</div>";
+                sendHeightToParent();
                 return;
             }
 
@@ -194,6 +163,7 @@
 
             if (!data.is_active) {
                 statusDiv.innerHTML = "<div><h3 style='color:#ff6b6b; margin-bottom:10px;'>마감된 폼입니다.</h3><p style='color:#666;'>현재 응답을 받고 있지 않습니다.</p></div>";
+                sendHeightToParent();
                 return;
             }
 
@@ -202,6 +172,7 @@
             formEl.style.display = 'block';
 
             renderQuestions();
+            setTimeout(sendHeightToParent, 100);
         }
 
         function renderQuestions() {
@@ -216,7 +187,7 @@
                     html += `<input type="text" name="${q.id}" class="form-input" required placeholder="답변을 입력하세요">`;
                 } else if (q.type === 'radio') {
                     html += `<div style="display:flex; flex-direction:column; gap:10px;">`;
-                    q.options.forEach((opt, oIdx) => {
+                    q.options.forEach((opt) => {
                         html += `<label style="cursor:pointer; display:flex; align-items:center; gap:8px;">
                                         <input type="radio" name="${q.id}" value="${window.escapeHtml(opt)}" required style="width:18px; height:18px;">
                                         ${window.escapeHtml(opt)}
@@ -225,7 +196,7 @@
                     html += `</div>`;
                 } else if (q.type === 'checkbox') {
                     html += `<div style="display:flex; flex-direction:column; gap:10px;">`;
-                    q.options.forEach((opt, oIdx) => {
+                    q.options.forEach((opt) => {
                         html += `<label style="cursor:pointer; display:flex; align-items:center; gap:8px;">
                                         <input type="checkbox" name="${q.id}" value="${window.escapeHtml(opt)}" style="width:18px; height:18px;">
                                         ${window.escapeHtml(opt)}
@@ -237,6 +208,7 @@
             });
 
             container.innerHTML = html;
+            setTimeout(sendHeightToParent, 50);
         }
 
         document.getElementById('customForm').addEventListener('submit', async function (e) {

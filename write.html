@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>뉴키즈 - 글쓰기</title>
+    <title>뉴키즈 - 글쓰기/수정</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="admin.css">
 </head>
@@ -36,7 +36,6 @@
                 </div>
             </div>
 
-            <!-- ★ 파일 및 이미지 첨부 영역 추가 ★ -->
             <div class="form-group" style="background: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px dashed #cbd5e1; margin-bottom: 20px;">
                 <label class="form-label" style="margin-bottom: 10px;">📎 첨부파일 및 이미지 업로드</label>
                 <input type="file" id="w-files" class="form-input" multiple onchange="handleFileSelect(this)" style="background: #fff;">
@@ -50,7 +49,7 @@
             </div>
 
             <div style="text-align:center; margin-top:30px; display:flex; gap:10px; justify-content:center;">
-                <button onclick="saveUserPost()" class="btn-action" style="min-width:150px;">글 등록하기</button>
+                <button onclick="saveUserPost()" id="submit-btn" class="btn-action" style="min-width:150px;">글 등록하기</button>
                 <button onclick="history.back()" class="btn-action" style="background:#999; min-width:150px;">취소</button>
             </div>
         </div>
@@ -62,49 +61,113 @@
     <script src="config.js"></script>
     <script src="manager.js"></script>
     <script>
+        const urlParams = new URLSearchParams(location.search);
+        const editPostId = urlParams.get('edit');
+        const passedPw = urlParams.get('pw'); // 상세페이지에서 넘겨준 인증된 비밀번호
         const targetCategory = location.hash.replace('#', '') || 'free';
         let selectedFiles = [];
+        let existingImageUrl = null;
+        let loadedPostData = null;
 
         document.addEventListener("DOMContentLoaded", () => {
-            const checkReady = setInterval(() => {
-                if (window.GLOBAL_CATEGORIES && window.GLOBAL_CATEGORIES.length > 0) {
+            const checkReady = setInterval(async () => {
+                if (window.sb && window.GLOBAL_CATEGORIES) {
                     clearInterval(checkReady);
+
                     const catInfo = window.GLOBAL_CATEGORIES.find(c => c.code === targetCategory);
                     if (catInfo) {
-                        document.getElementById('write-header-title').innerText = `✏️ ${catInfo.name} 글쓰기`;
+                        document.getElementById('write-header-title').innerText = editPostId ? `✏️ ${catInfo.name} 글 수정` : `✏️ ${catInfo.name} 글쓰기`;
+                    }
+
+                    if (editPostId) {
+                        document.getElementById('submit-btn').innerText = "수정 완료";
+                        await loadPostForEdit(editPostId);
                     }
                 }
             }, 100);
         });
 
-        // 파일 선택 시 목록 표시
-        function handleFileSelect(input) {
-            if (input.files) {
-                selectedFiles = Array.from(input.files);
-                renderFileList();
+        async function loadPostForEdit(id) {
+            const { data, error } = await window.sb.from('total_posts').select('*').eq('id', id).single();
+            if (error || !data) {
+                alert("수정할 게시글을 찾을 수 없습니다.");
+                history.back();
+                return;
+            }
+
+            loadedPostData = data;
+
+            // 관리자 세션이 없고, 상세 페이지에서 인증된 비밀번호를 들고 오지 않았다면 비밀번호 확인 창 띄우기
+            const { data: { session } } = await window.sb.auth.getSession();
+            if (!session && data.password && data.password.trim() !== '' && passedPw !== data.password) {
+                const inputPw = prompt("게시글 수정을 위해 작성 시 설정한 비밀번호를 입력해주세요.");
+                if (inputPw !== data.password) {
+                    alert("비밀번호가 일치하지 않습니다.");
+                    history.back();
+                    return;
+                }
+            }
+
+            document.getElementById('w-title').value = data.title || '';
+            document.getElementById('w-author').value = data.link_url || '';
+            document.getElementById('w-password').value = data.password || '';
+            document.getElementById('w-is-secret').checked = data.is_secret || false;
+
+            let rawContent = data.content || '';
+            rawContent = rawContent.replace(/<br\s*[\/]?>/gi, '\n');
+            document.getElementById('w-content').value = rawContent;
+
+            existingImageUrl = data.image_url;
+            if (existingImageUrl) {
+                renderExistingFileList(existingImageUrl);
             }
         }
 
-        function renderFileList() {
+        function renderExistingFileList(urlStr) {
             const container = document.getElementById('file-preview-list');
-            if (selectedFiles.length === 0) {
-                container.innerHTML = '';
-                return;
-            }
-            let html = '';
-            selectedFiles.forEach((file, index) => {
-                html += `<div style="display:flex; justify-content:space-between; align-items:center; background:#fff; padding:8px 12px; border:1px solid #e2e8f0; border-radius:6px; font-size:0.9rem;">
-                                <span>📄 ${file.name} (${(file.size / 1024).toFixed(1)} KB)</span>
-                                <button type="button" onclick="removeFile(${index})" style="background:none; border:none; color:#ff6b6b; font-weight:bold; cursor:pointer;">삭제</button>
+            const files = urlStr.split('||').map(u => u.trim()).filter(u => u);
+            let html = '<div style="font-weight:bold; font-size:0.85rem; color:#1a3c6e; margin-bottom:4px;">기존 첨부파일:</div>';
+            files.forEach((item, idx) => {
+                let fileName = "첨부파일 " + (idx + 1);
+                if (item.includes('@@')) {
+                    fileName = item.split('@@')[1];
+                }
+                html += `<div style="display:flex; justify-content:space-between; align-items:center; background:#fff; padding:6px 10px; border:1px solid #e2e8f0; border-radius:6px; font-size:0.85rem;">
+                                <span>📎 ${fileName}</span>
+                                <span style="color:#888; font-size:0.8rem;">(유지됨)</span>
                              </div>`;
             });
             container.innerHTML = html;
         }
 
-        function removeFile(index) {
+        function handleFileSelect(input) {
+            if (input.files) {
+                selectedFiles = Array.from(input.files);
+                renderNewFileList();
+            }
+        }
+
+        function renderNewFileList() {
+            const container = document.getElementById('file-preview-list');
+            if (selectedFiles.length === 0) {
+                if (existingImageUrl) renderExistingFileList(existingImageUrl);
+                else container.innerHTML = '';
+                return;
+            }
+            let html = '<div style="font-weight:bold; font-size:0.85rem; color:#e67e22; margin-bottom:4px;">새로 첨부할 파일 (기존 파일은 대체됩니다):</div>';
+            selectedFiles.forEach((file, index) => {
+                html += `<div style="display:flex; justify-content:space-between; align-items:center; background:#fff; padding:6px 10px; border:1px solid #e2e8f0; border-radius:6px; font-size:0.85rem;">
+                                <span>📄 ${file.name} (${(file.size / 1024).toFixed(1)} KB)</span>
+                                <button type="button" onclick="removeNewFile(${index})" style="background:none; border:none; color:#ff6b6b; font-weight:bold; cursor:pointer;">삭제</button>
+                             </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function removeNewFile(index) {
             selectedFiles.splice(index, 1);
-            document.getElementById('w-files').value = ''; // input 초기화
-            renderFileList();
+            document.getElementById('w-files').value = '';
+            renderNewFileList();
         }
 
         async function saveUserPost() {
@@ -118,63 +181,68 @@
                 return alert("모든 필수 항목을 입력해주세요.");
             }
 
-            if (!confirm("글을 등록하시겠습니까?")) return;
+            if (!confirm(editPostId ? "게시글을 수정하시겠습니까?" : "글을 등록하시겠습니까?")) return;
 
-            const btn = document.querySelector('button[onclick="saveUserPost()"]');
-            btn.innerText = "업로드 중...";
+            const btn = document.getElementById('submit-btn');
+            btn.innerText = "처리 중...";
             btn.disabled = true;
 
             let uploadedFileUrls = [];
-
-            // Supabase Storage에 파일 업로드 처리
             if (selectedFiles.length > 0) {
                 for (let i = 0; i < selectedFiles.length; i++) {
                     const file = selectedFiles[i];
                     const fileExt = file.name.split('.').pop();
                     const safeFileName = `board_${Date.now()}_${i}.${fileExt}`;
 
-                    // Supabase 스토리지의 'images' 버킷에 업로드 (필요시 버킷명 수정)
                     const { data, error } = await window.sb.storage.from('images').upload(safeFileName, file);
-
                     if (error) {
                         alert("파일 업로드 실패: " + error.message);
-                        btn.innerText = "글 등록하기";
+                        btn.innerText = editPostId ? "수정 완료" : "글 등록하기";
                         btn.disabled = false;
                         return;
                     }
 
-                    // 공개 URL 생성 및 원본 파일명 결합
                     const publicUrlData = window.sb.storage.from('images').getPublicUrl(data.path);
-                    const publicUrl = publicUrlData.data.publicUrl;
-
-                    // 'URL@@파일명' 형태로 저장하여 상세 페이지에서 원본 이름으로 다운로드 가능하게 함
-                    uploadedFileUrls.push(`${publicUrl}@@${file.name}`);
+                    uploadedFileUrls.push(`${publicUrlData.data.publicUrl}@@${file.name}`);
                 }
             }
 
             const safeContent = window.escapeHtml(content).replace(/\n/g, "<br>");
-            const imageUrlsString = uploadedFileUrls.length > 0 ? uploadedFileUrls.join('||') : null;
+            const finalImageUrl = uploadedFileUrls.length > 0 ? uploadedFileUrls.join('||') : existingImageUrl;
 
-            // total_posts 테이블에 데이터 저장
-            const { error } = await window.sb.from('total_posts').insert([{
-                category: targetCategory,
-                title: window.escapeHtml(title),
-                content: safeContent,
-                link_url: window.escapeHtml(author), // 작성자
-                password: password,                  // 비밀번호
-                is_secret: isSecret,                 // 비밀글 여부
-                image_url: imageUrlsString,          // 첨부파일 URL 목록
-                order_num: 0,
-                is_visible: true
-            }]);
+            let error;
+            if (editPostId) {
+                const res = await window.sb.from('total_posts').update({
+                    title: window.escapeHtml(title),
+                    content: safeContent,
+                    link_url: window.escapeHtml(author),
+                    password: password,
+                    is_secret: isSecret,
+                    image_url: finalImageUrl
+                }).eq('id', editPostId);
+                error = res.error;
+            } else {
+                const res = await window.sb.from('total_posts').insert([{
+                    category: targetCategory,
+                    title: window.escapeHtml(title),
+                    content: safeContent,
+                    link_url: window.escapeHtml(author),
+                    password: password,
+                    is_secret: isSecret,
+                    image_url: finalImageUrl,
+                    order_num: 0,
+                    is_visible: true
+                }]);
+                error = res.error;
+            }
 
             if (error) {
                 alert("오류 발생: " + error.message);
-                btn.innerText = "글 등록하기";
+                btn.innerText = editPostId ? "수정 완료" : "글 등록하기";
                 btn.disabled = false;
             } else {
-                alert("글이 성공적으로 등록되었습니다!");
-                location.href = `notice.html#${targetCategory}`;
+                alert(editPostId ? "게시글이 성공적으로 수정되었습니다!" : "글이 성공적으로 등록되었습니다!");
+                location.href = editPostId ? `view.html?id=${editPostId}` : `notice.html#${targetCategory}`;
             }
         }
     </script>

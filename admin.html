@@ -512,7 +512,6 @@
     <script src="manager.js"></script>
 
     <script>
-        // 전역 변수
         let editingId = null; let originalDetailUrl = null; let originalThumbUrl = null; let originalMainHero = null; let isMainHeroDeleted = false;
         let quill; const ITEMS_PER_PAGE = 12; let currentPage = 1; let categoryList = []; const FLAG_ORDER_ONLY = 'ORDER_ITEM'; const FLAG_ORDER_ALL = 'ORDER_ALL';
         let croppedThumbnailBlob = null; let croppedMainHeroBlob = null; let croppedNewCatBlob = null; let croppedCatBlobs = {};
@@ -616,7 +615,6 @@
 
             initEditSystem();
 
-            // 외부 클릭 시 모든 커스텀 셀렉트 드롭다운 닫기
             document.addEventListener('click', function (e) {
                 const writeWrapper = document.querySelector('.w-col-category');
                 if (writeWrapper && !writeWrapper.contains(e.target)) {
@@ -635,7 +633,6 @@
                 const loader = document.getElementById('loading');
                 if (window.sb) {
                     const { data: { session } } = await window.sb.auth.getSession();
-                    // 로그인 세션 확인 시 폼 목록 로드 추가
                     if (session) { showAdminMode(); loadConfigToForm(); loadAdminCategories(); populateCategorySelects(); loadPopups(); loadAdminForms(); }
                     else { document.getElementById('login-section').style.display = 'flex'; }
                     if (loader) loader.style.display = 'none';
@@ -732,7 +729,10 @@
                 let isVis = item.is_visible !== false;
                 let visBtnStr = isVis ? `<button onclick="togglePostVisibility(${item.id}, false)" class="pm-btn" style="background:#2ecc71; color:white; border:none;">👁️ 노출 중</button>` : `<button onclick="togglePostVisibility(${item.id}, true)" class="pm-btn" style="background:#95a5a6; color:white; border:none;">🙈 숨김</button>`;
 
-                list.innerHTML += `<div class="post-manage-card"><img src="${thumb}" class="pm-thumb" alt="thumbnail"><div class="pm-body"><div style="margin-bottom:5px;">${badge} <span class="pm-cat-badge">${catName}</span></div><div class="pm-title" onclick='editPost(${JSON.stringify(item).replace(/'/g, "&#39;")})'>${item.title}</div><div class="pm-info">순서: ${item.order_num}</div></div><div class="pm-actions">${visBtnStr}<button onclick='editPost(${JSON.stringify(item).replace(/'/g, "&#39;")})' class="pm-btn">수정</button><button onclick='deletePost(${item.id})' class="pm-btn" style="background:#ff6b6b; color:white; border:none;">삭제</button><button onclick="openCommentModal(${item.id})" class="pm-btn" style="color:#f4a261; font-weight:bold;">💬 답변</button></div></div>`;
+                // ★ 비밀번호 확인 표시 추가
+                const postPassword = item.password || item.video_url || '없음';
+
+                list.innerHTML += `<div class="post-manage-card"><img src="${thumb}" class="pm-thumb" alt="thumbnail"><div class="pm-body"><div style="margin-bottom:5px;">${badge} <span class="pm-cat-badge">${catName}</span></div><div class="pm-title" onclick='editPost(${JSON.stringify(item).replace(/'/g, "&#39;")})'>${item.title}</div><div class="pm-info">순서: ${item.order_num}</div><div style="font-size:0.85rem; color:#d9534f; font-weight:bold; margin-top:40px;">🔑 비밀번호: ${postPassword}</div></div><div class="pm-actions">${visBtnStr}<button onclick='editPost(${JSON.stringify(item).replace(/'/g, "&#39;")})' class="pm-btn">수정</button><button onclick='deletePost(${item.id})' class="pm-btn" style="background:#ff6b6b; color:white; border:none;">삭제</button><button onclick="openCommentModal(${item.id})" class="pm-btn" style="color:#f4a261; font-weight:bold;">💬 답변</button></div></div>`;
             });
             renderPagination(count, currentPage);
         }
@@ -777,13 +777,7 @@
         function showAdminMode() { document.getElementById('login-section').style.display = 'none'; document.getElementById('admin-layout').style.display = 'flex'; loadManageList(1); }
         function showLoading(s) { document.getElementById('loading').style.display = s ? 'flex' : 'none'; }
 
-        // =======================================================
-        // 👇 아코디언 및 카테고리 관리 로직 (최적화)
-        // =======================================================
-
-        // 1. 아코디언 열고 닫기 (메인 카테고리 관리 탭용)
         window.toggleAccordion = function (groupEl) {
-            // 다른 아코디언 닫기
             const allGroups = document.querySelectorAll('#accordion-wrapper .accordion-group');
             allGroups.forEach(group => {
                 if (group !== groupEl) {
@@ -794,7 +788,6 @@
                 }
             });
 
-            // 현재 클릭한 아코디언 토글
             const body = groupEl.querySelector('.accordion-body');
             const icon = groupEl.querySelector('.accordion-title-area span');
             if (body.classList.contains('active')) {
@@ -806,21 +799,17 @@
             }
         };
 
-        // 2-1. 커스텀 드롭다운 토글 (게시글 작성용)
         window.toggleCustomSelect = function () {
             const dd = document.getElementById('custom-cat-dropdown');
             dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
         };
 
-        // 2-2. 커스텀 드롭다운 토글 (게시글 필터용)
         window.toggleFilterCustomSelect = function () {
             const dd = document.getElementById('filter-cat-dropdown');
             dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
         };
 
-        // 2-3. 커스텀 드롭다운 그룹(아코디언) 토글
         window.toggleCsGroup = function (header) {
-            // 다른 드롭다운 그룹 닫기
             const dropdown = header.closest('.custom-select-dropdown');
             if (dropdown) {
                 const allHeaders = dropdown.querySelectorAll('.cs-group-header');
@@ -834,7 +823,6 @@
                 });
             }
 
-            // 현재 클릭한 그룹 토글
             const body = header.nextElementSibling;
             const icon = header.querySelector('.cs-icon');
             if (body.classList.contains('active')) {
@@ -846,7 +834,6 @@
             }
         };
 
-        // 카테고리 선택 처리 (글쓰기용)
         window.selectCustomCategory = function (code, name) {
             document.getElementById('post-category').value = code;
             document.getElementById('custom-cat-text').innerText = name;
@@ -854,15 +841,13 @@
             document.getElementById('custom-cat-text').style.color = '#333';
         };
 
-        // 카테고리 선택 처리 (필터용)
         window.selectFilterCustomCategory = function (code, name) {
             document.getElementById('filter-category').value = code;
             document.getElementById('filter-cat-text').innerText = name;
             document.getElementById('filter-cat-dropdown').style.display = 'none';
-            loadManageList(1); // 카테고리 고르는 즉시 필터링 적용!
+            loadManageList(1);
         };
 
-        // 3. 드래그 앤 드롭 순서 저장 로직
         async function updateCategoryOrderRealtime() {
             showLoading(true);
             try {
@@ -889,7 +874,7 @@
                 if (error) throw error;
                 if (!data) return listDiv.innerHTML = "<div style='padding:30px; text-align:center;'>카테고리 없음</div>";
 
-                categoryList = data; // 저장 시 사용
+                categoryList = data;
 
                 const gridStyle = "grid-template-columns: 40px 70px 100px 100px 45px 45px 45px 45px 50px 1fr 120px 50px 60px; min-width: 1100px;";
                 const headerHtml = `<div class="cat-manage-layout cat-manage-header" style="${gridStyle}"><div>순서</div><div>코드</div><div>메뉴명</div><div>제목</div><div title="상단 메뉴 글자색">메뉴색</div><div title="배경 큰 제목 색상">제목색</div><div title="배경 설명글 색상">설명색</div><div title="배경 이미지 덮는 필터 색상">필터색</div><div title="필터 색상의 투명도">투명도</div><div>설명글</div><div>이미지</div><div>노출</div><div>삭제</div></div>`;
@@ -902,20 +887,20 @@
                     const visBtn = cat.is_visible !== false ? `<button class="btn-mini" style="background:#27ae60; color:#fff;" onclick="toggleVisibility('${cat.code}', false)">ON</button>` : `<button class="btn-mini" style="background:#999; color:#fff;" onclick="toggleVisibility('${cat.code}', true)">OFF</button>`;
 
                     let rowHtml = `<div class="cat-manage-layout cat-manage-row" data-code="${cat.code}" style="${gridStyle}">
-                                <div class="cat-cell-center"><span class="drag-handle" style="cursor:grab; font-size:1.2rem; display:block;" title="드래그해서 항목 순서 변경">↕️</span></div>
-                                <div class="cat-cell-center" style="font-weight:bold; font-size:0.8rem;">${cat.code}</div>
-                                <div class="cat-cell-input"><input type="text" id="name-${cat.code}" value="${cat.name}"></div>
-                                <div class="cat-cell-input"><input type="text" id="title-${cat.code}" value="${cat.hero_title || ''}"></div>
-                                <div class="cat-cell-center"><input type="color" id="m-color-${cat.code}" value="${cat.menu_text_color || '#333333'}" style="width:25px; border:none;" title="메뉴 글자색"></div>
-                                <div class="cat-cell-center"><input type="color" id="t-color-${cat.code}" value="${cat.hero_title_color || '#ffffff'}" style="width:25px; border:none;" title="배경 큰 제목 색상"></div>
-                                <div class="cat-cell-center"><input type="color" id="d-color-${cat.code}" value="${cat.hero_desc_color || '#ffffff'}" style="width:25px; border:none;" title="배경 설명글 색상"></div>
-                                <div class="cat-cell-center"><input type="color" id="o-color-${cat.code}" value="${cat.hero_overlay_color || '#1a3c6e'}" style="width:25px; border:none;" title="배경 이미지 덮는 필터 색상"></div>
-                                <div class="cat-cell-center"><input type="number" id="o-op-${cat.code}" value="${cat.hero_overlay_opacity !== undefined ? cat.hero_overlay_opacity : 0.8}" step="0.1" style="width:40px;"></div>
-                                <div class="cat-cell-input"><input type="text" id="desc-${cat.code}" value="${cat.hero_desc || ''}"></div>
-                                <div class="cat-cell-center" style="display:flex; flex-direction:column; align-items:center; gap:5px;"><img src="${thumb}" style="width:50px; height:50px; object-fit:cover; cursor:pointer; border:1px solid #ddd;" onclick="document.getElementById('file-${cat.code}').click()" title="이미지 변경"><input type="file" id="file-${cat.code}" class="cat-file-input" data-code="${cat.code}" style="display:none;" accept="image/*"><button class="btn-mini" style="font-size:0.6rem; color:red;" onclick="deleteSubHeroImage('${cat.code}')">삭제</button></div>
-                                <div class="cat-cell-center">${visBtn}</div>
-                                <div class="cat-cell-center"><button onclick="deleteCategory('${cat.code}')" class="btn-mini" style="background:#ff6b6b; color:#fff; width:100%;">삭제</button></div>
-                            </div>`;
+                                    <div class="cat-cell-center"><span class="drag-handle" style="cursor:grab; font-size:1.2rem; display:block;" title="드래그해서 항목 순서 변경">↕️</span></div>
+                                    <div class="cat-cell-center" style="font-weight:bold; font-size:0.8rem;">${cat.code}</div>
+                                    <div class="cat-cell-input"><input type="text" id="name-${cat.code}" value="${cat.name}"></div>
+                                    <div class="cat-cell-input"><input type="text" id="title-${cat.code}" value="${cat.hero_title || ''}"></div>
+                                    <div class="cat-cell-center"><input type="color" id="m-color-${cat.code}" value="${cat.menu_text_color || '#333333'}" style="width:25px; border:none;" title="메뉴 글자색"></div>
+                                    <div class="cat-cell-center"><input type="color" id="t-color-${cat.code}" value="${cat.hero_title_color || '#ffffff'}" style="width:25px; border:none;" title="배경 큰 제목 색상"></div>
+                                    <div class="cat-cell-center"><input type="color" id="d-color-${cat.code}" value="${cat.hero_desc_color || '#ffffff'}" style="width:25px; border:none;" title="배경 설명글 색상"></div>
+                                    <div class="cat-cell-center"><input type="color" id="o-color-${cat.code}" value="${cat.hero_overlay_color || '#1a3c6e'}" style="width:25px; border:none;" title="배경 이미지 덮는 필터 색상"></div>
+                                    <div class="cat-cell-center"><input type="number" id="o-op-${cat.code}" value="${cat.hero_overlay_opacity !== undefined ? cat.hero_overlay_opacity : 0.8}" step="0.1" style="width:40px;"></div>
+                                    <div class="cat-cell-input"><input type="text" id="desc-${cat.code}" value="${cat.hero_desc || ''}"></div>
+                                    <div class="cat-cell-center" style="display:flex; flex-direction:column; align-items:center; gap:5px;"><img src="${thumb}" style="width:50px; height:50px; object-fit:cover; cursor:pointer; border:1px solid #ddd;" onclick="document.getElementById('file-${cat.code}').click()" title="이미지 변경"><input type="file" id="file-${cat.code}" class="cat-file-input" data-code="${cat.code}" style="display:none;" accept="image/*"><button class="btn-mini" style="font-size:0.6rem; color:red;" onclick="deleteSubHeroImage('${cat.code}')">삭제</button></div>
+                                    <div class="cat-cell-center">${visBtn}</div>
+                                    <div class="cat-cell-center"><button onclick="deleteCategory('${cat.code}')" class="btn-mini" style="background:#ff6b6b; color:#fff; width:100%;">삭제</button></div>
+                                </div>`;
 
                     if (groups[cat.type] !== undefined) {
                         groups[cat.type] += rowHtml;
@@ -923,9 +908,8 @@
                 });
 
                 let finalHtml = `<div style="text-align:right; margin-bottom:10px;"><button onclick="saveAllCategories()" class="btn-action" style="background:#2ecc71; border:none; padding:10px 20px;">💾 변경사항 일괄 저장</button></div>`;
-                finalHtml += `<div id="accordion-wrapper">`; // 큰 카테고리 드래그 감싸개
+                finalHtml += `<div id="accordion-wrapper">`;
 
-                // 현재 DB에 저장된 순서를 기반으로 큰 카테고리 순서 파악
                 const mainOrder = [];
                 data.forEach(c => { if (!mainOrder.includes(c.type)) mainOrder.push(c.type); });
                 const allTypes = ['PAGE', 'BOARD', 'EVENT', 'EDU'];
@@ -936,25 +920,25 @@
                     const iconStr = '▼';
 
                     finalHtml += `
-                            <div class="accordion-group" data-type="${type}">
-                                <div class="accordion-header">
-                                    <div class="drag-group-handle" title="큰 카테고리 순서 이동">↕️</div>
-                                    <div class="accordion-title-area" onclick="toggleAccordion(this.parentElement.parentElement)">
-                                        ${groupNames[type]} <span>${iconStr}</span>
-                                    </div>
-                                </div>
-                                <div class="accordion-body ${isActive}">
-                                    <div style="overflow-x:auto;">
-                                        ${headerHtml}
-                                        <div id="sortable-list-${type}" class="sortable-group">
-                                            ${groups[type] || '<div style="padding:30px; text-align:center; color:#999; border:1px dashed #ddd;">이 유형에 등록된 카테고리가 없습니다.</div>'}
+                                <div class="accordion-group" data-type="${type}">
+                                    <div class="accordion-header">
+                                        <div class="drag-group-handle" title="큰 카테고리 순서 이동">↕️</div>
+                                        <div class="accordion-title-area" onclick="toggleAccordion(this.parentElement.parentElement)">
+                                            ${groupNames[type]} <span>${iconStr}</span>
                                         </div>
                                     </div>
-                                </div>
-                            </div>`;
+                                    <div class="accordion-body ${isActive}">
+                                        <div style="overflow-x:auto;">
+                                            ${headerHtml}
+                                            <div id="sortable-list-${type}" class="sortable-group">
+                                                ${groups[type] || '<div style="padding:30px; text-align:center; color:#999; border:1px dashed #ddd;">이 유형에 등록된 카테고리가 없습니다.</div>'}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>`;
                 });
 
-                finalHtml += `</div>`; // wrapper 닫기
+                finalHtml += `</div>`;
                 finalHtml += `<div style="text-align:right; margin-top:20px;"><button onclick="saveAllCategories()" class="btn-action" style="background:#2ecc71; border:none; padding:12px 30px; font-size:1rem;">💾 변경사항 일괄 저장</button></div>`;
 
                 listDiv.innerHTML = finalHtml;
@@ -970,14 +954,12 @@
                 });
 
                 if (typeof Sortable !== 'undefined') {
-                    // 1. 큰 카테고리끼리 순서 변경
                     new Sortable(document.getElementById('accordion-wrapper'), {
                         handle: '.drag-group-handle',
                         animation: 150,
                         onEnd: updateCategoryOrderRealtime
                     });
 
-                    // 2. 각 그룹 내부에서 항목들끼리 순서 변경
                     ['PAGE', 'BOARD', 'EVENT', 'EDU'].forEach(type => {
                         const el = document.getElementById(`sortable-list-${type}`);
                         if (el && !el.innerHTML.includes('등록된 카테고리가 없습니다')) {
@@ -1042,7 +1024,6 @@
         async function deleteCategory(c) { if (confirm("정말 삭제하시겠습니까?")) { await window.sb.from('program_categories').delete().eq('code', c); loadAdminCategories(); populateCategorySelects(); } }
         async function toggleVisibility(c, s) { showLoading(true); await window.sb.from('program_categories').update({ is_visible: s }).eq('code', c); loadAdminCategories(); showLoading(false); }
 
-        // 글쓰기 창과 게시글 목록 필터 양쪽 모두에 아코디언 드롭다운 뿌려주는 로직
         async function populateCategorySelects() {
             const { data } = await window.sb.from('program_categories').select('*').order('order_num');
             if (!data) return;
@@ -1054,28 +1035,24 @@
             data.forEach(c => {
                 const safeName = c.name.replace(/'/g, "\\'");
 
-                // 글쓰기용 항목
                 writeGroups[c.type] += `<div class="cs-item" onclick="selectCustomCategory('${c.code}', '${safeName}')">${c.name}</div>`;
-                // 게시글 필터용 항목
                 filterGroups[c.type] += `<div class="cs-item" onclick="selectFilterCustomCategory('${c.code}', '${safeName}')">${c.name}</div>`;
             });
 
-            // 현재 정렬된 순서대로 그룹화
             const mainOrder = [];
             data.forEach(c => { if (!mainOrder.includes(c.type)) mainOrder.push(c.type); });
             const allTypes = ['PAGE', 'BOARD', 'EVENT', 'EDU'];
             allTypes.forEach(t => { if (!mainOrder.includes(t)) mainOrder.push(t); });
 
             let writeDropdownHtml = '';
-            // 필터용은 제일 상단에 [전체 보기] 메뉴 고정
             let filterDropdownHtml = `<div class="cs-item" onclick="selectFilterCustomCategory('all', '전체 보기')" style="font-weight:bold; color:#1a3c6e; text-align:center; border-bottom:1px solid #ddd; background:#f0f7ff;">전체 보기</div>`;
 
             mainOrder.forEach(type => {
                 if (writeGroups[type]) {
                     const groupHtml = `
-                                    <div class="cs-group-header" onclick="toggleCsGroup(this)">
-                                        ${groupNames[type]} <span class="cs-icon">▼</span>
-                                    </div>`;
+                                <div class="cs-group-header" onclick="toggleCsGroup(this)">
+                                    ${groupNames[type]} <span class="cs-icon">▼</span>
+                                </div>`;
 
                     writeDropdownHtml += `<div class="cs-group">${groupHtml}<div class="cs-group-body">${writeGroups[type]}</div></div>`;
                     filterDropdownHtml += `<div class="cs-group">${groupHtml}<div class="cs-group-body">${filterGroups[type]}</div></div>`;
@@ -1091,9 +1068,6 @@
 
         window.toggleEditorState = function () { const isIntro = document.getElementById('chk-intro').checked; document.getElementById('editor-area').style.opacity = isIntro ? '1' : '0.5'; document.getElementById('editor-area').style.pointerEvents = isIntro ? 'auto' : 'none'; }
 
-        // ==========================================
-        // 설정 및 팝업 저장 로직
-        // ==========================================
         async function loadConfigToForm() {
             const { data } = await window.sb.from('site_config').select('*').eq('id', 1).single();
             if (data) {
@@ -1193,9 +1167,6 @@
         async function deletePopup(id) { if (!confirm("삭제하시겠습니까?")) return; await window.sb.from('site_popups').delete().eq('id', id); loadPopups(); }
         async function togglePopup(id, status) { await window.sb.from('site_popups').update({ is_visible: status }).eq('id', id); loadPopups(); }
 
-        // =======================================================
-        // 관리자 전용 답변 달기(댓글) 로직
-        // =======================================================
         let currentCommentPostId = null;
 
         window.openCommentModal = async function (postId) {
@@ -1261,37 +1232,35 @@
 
         let questionCount = 0;
 
-        // 1) 질문 블록 동적 생성
         function addQuestionBlock() {
             questionCount++;
             const container = document.getElementById('question-list');
             const qId = `q_block_${questionCount}`;
 
             const html = `
-                <div id="${qId}" style="background:#f9fbfd; border:1px solid #ddd; padding:20px; border-radius:8px; margin-bottom:15px; position:relative;">
-                    <button onclick="document.getElementById('${qId}').remove()" style="position:absolute; top:15px; right:15px; background:none; border:none; color:#ff6b6b; font-size:1.2rem; cursor:pointer;">✖</button>
-                    <div class="form-group">
-                        <label class="form-label">질문 ${questionCount}</label>
-                        <input type="text" class="form-input q-title" placeholder="질문 내용을 입력하세요">
+                    <div id="${qId}" style="background:#f9fbfd; border:1px solid #ddd; padding:20px; border-radius:8px; margin-bottom:15px; position:relative;">
+                        <button onclick="document.getElementById('${qId}').remove()" style="position:absolute; top:15px; right:15px; background:none; border:none; color:#ff6b6b; font-size:1.2rem; cursor:pointer;">✖</button>
+                        <div class="form-group">
+                            <label class="form-label">질문 ${questionCount}</label>
+                            <input type="text" class="form-input q-title" placeholder="질문 내용을 입력하세요">
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label class="form-label">응답 형식</label>
+                            <select class="form-input q-type" onchange="toggleOptionInput(this, '${qId}')">
+                                <option value="text">주관식 (단답형)</option>
+                                <option value="radio">객관식 (단일선택/투표)</option>
+                                <option value="checkbox">객관식 (다중선택)</option>
+                            </select>
+                        </div>
+                        <div class="q-options-container" style="display:none; margin-top:15px; padding:15px; background:#fff; border:1px dashed #ccc; border-radius:6px;">
+                            <label class="form-label" style="font-size:0.9rem;">선택지 항목 (쉼표(,)로 구분하여 입력)</label>
+                            <input type="text" class="form-input q-options" placeholder="예: 서울대공원, 에버랜드, 롯데월드">
+                        </div>
                     </div>
-                    <div class="form-group" style="margin-bottom:0;">
-                        <label class="form-label">응답 형식</label>
-                        <select class="form-input q-type" onchange="toggleOptionInput(this, '${qId}')">
-                            <option value="text">주관식 (단답형)</option>
-                            <option value="radio">객관식 (단일선택/투표)</option>
-                            <option value="checkbox">객관식 (다중선택)</option>
-                        </select>
-                    </div>
-                    <div class="q-options-container" style="display:none; margin-top:15px; padding:15px; background:#fff; border:1px dashed #ccc; border-radius:6px;">
-                        <label class="form-label" style="font-size:0.9rem;">선택지 항목 (쉼표(,)로 구분하여 입력)</label>
-                        <input type="text" class="form-input q-options" placeholder="예: 서울대공원, 에버랜드, 롯데월드">
-                    </div>
-                </div>
-            `;
+                `;
             container.insertAdjacentHTML('beforeend', html);
         }
 
-        // 2) 응답 형식에 따른 선택지 입력란 노출 토글
         function toggleOptionInput(selectEl, blockId) {
             const container = document.getElementById(blockId).querySelector('.q-options-container');
             if (selectEl.value === 'radio' || selectEl.value === 'checkbox') {
@@ -1301,7 +1270,6 @@
             }
         }
 
-        // 3) 생성된 폼 데이터를 JSON으로 묶어 Supabase에 저장
         async function saveCustomForm() {
             const title = document.getElementById('builder-title').value.trim();
             const desc = document.getElementById('builder-desc').value.trim();
@@ -1338,12 +1306,11 @@
             if (!isValid) return alert("모든 질문 내용과 선택지 항목을 정확히 입력해주세요.");
             if (!confirm("이 폼을 저장하고 발행하시겠습니까?")) return;
 
-            // Supabase DB 저장 요청 (custom_forms 테이블 필요)
             showLoading(true);
             const { data, error } = await window.sb.from('custom_forms').insert([{
                 title: title,
                 description: desc,
-                form_schema: questions, // JSONB 형태로 통째로 저장
+                form_schema: questions,
                 is_active: true
             }]);
             showLoading(false);
@@ -1356,18 +1323,14 @@
                 document.getElementById('builder-desc').value = '';
                 document.getElementById('question-list').innerHTML = '';
                 questionCount = 0;
-                loadAdminForms(); // ★ 폼 저장 직후 목록 새로고침
+                loadAdminForms();
             }
         }
 
-        // ==========================================
-        // 폼/투표 목록 및 결과 확인 로직
-        // ==========================================
         async function loadAdminForms() {
             const listDiv = document.getElementById('admin-form-list');
             if (!listDiv) return;
 
-            // 저장된 폼들을 최신순으로 가져옵니다.
             const { data, error } = await window.sb.from('custom_forms').select('*').order('created_at', { ascending: false });
 
             if (error) return listDiv.innerHTML = "오류 발생: " + error.message;
@@ -1385,7 +1348,6 @@
                 const dateStr = new Date(form.created_at).toISOString().split('T')[0];
                 const statusBadge = form.is_active ? `<span class="badge" style="background:#2ecc71; color:white;">진행중</span>` : `<span class="badge" style="background:#95a5a6; color:white;">마감됨</span>`;
 
-                // ★ 화면용 순서 번호 계산
                 const displayNum = totalForms - index;
 
                 if (form.is_active) {
@@ -1393,27 +1355,26 @@
                 }
 
                 html += `
-                        <div style="background:#fff; border:1px solid #ddd; padding:20px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
-                            <div>
-                                <div style="margin-bottom:5px;">
-                                    <span style="font-weight:bold; color:#1a3c6e; margin-right:10px;">No. ${displayNum}</span>
-                                    ${statusBadge} <span style="color:#888; font-size:0.9rem; margin-left:10px;">${dateStr}</span>
+                            <div style="background:#fff; border:1px solid #ddd; padding:20px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+                                <div>
+                                    <div style="margin-bottom:5px;">
+                                        <span style="font-weight:bold; color:#1a3c6e; margin-right:10px;">No. ${displayNum}</span>
+                                        ${statusBadge} <span style="color:#888; font-size:0.9rem; margin-left:10px;">${dateStr}</span>
+                                    </div>
+                                    <div style="font-size:1.2rem; font-weight:bold; color:#1a3c6e;">${window.escapeHtml(form.title)}</div>
+                                    <div style="color:#666; font-size:0.9rem; margin-top:5px;">
+                                        사용자 접속 링크: <a href="form.html?id=${form.id}" target="_blank" style="color:#f4a261; text-decoration:underline; font-weight:bold;">form.html?id=${form.id}</a>
+                                    </div>
                                 </div>
-                                <div style="font-size:1.2rem; font-weight:bold; color:#1a3c6e;">${window.escapeHtml(form.title)}</div>
-                                <div style="color:#666; font-size:0.9rem; margin-top:5px;">
-                                    사용자 접속 링크: <a href="form.html?id=${form.id}" target="_blank" style="color:#f4a261; text-decoration:underline; font-weight:bold;">form.html?id=${form.id}</a>
+                                <div style="display:flex; gap:10px;">
+                                    <button onclick="toggleFormStatus(${form.id}, ${!form.is_active})" class="btn-mini" style="background:#f8f9fa;">${form.is_active ? '마감하기' : '다시 열기'}</button>
+                                    <button onclick="viewFormResults(${form.id})" class="btn-mini" style="background:#1a3c6e; color:white; padding: 5px 15px;">결과 확인</button>
+                                    <button onclick="deleteForm(${form.id})" class="btn-mini" style="background:#ff6b6b; color:white;">삭제</button>
                                 </div>
-                            </div>
-                            <div style="display:flex; gap:10px;">
-                                <button onclick="toggleFormStatus(${form.id}, ${!form.is_active})" class="btn-mini" style="background:#f8f9fa;">${form.is_active ? '마감하기' : '다시 열기'}</button>
-                                <button onclick="viewFormResults(${form.id})" class="btn-mini" style="background:#1a3c6e; color:white; padding: 5px 15px;">결과 확인</button>
-                                <button onclick="deleteForm(${form.id})" class="btn-mini" style="background:#ff6b6b; color:white;">삭제</button>
-                            </div>
-                        </div>`;
+                            </div>`;
             });
             listDiv.innerHTML = html;
 
-            // ★ 완성된 드롭다운 옵션을 화면에 반영
             const selectEl = document.getElementById('form-insert-select');
             if (selectEl) selectEl.innerHTML = selectHtml;
         }
@@ -1433,7 +1394,6 @@
             loadAdminForms();
         }
 
-        // 결과 확인 버튼 클릭 시 작동하는 모달 로직
         async function viewFormResults(formId) {
             document.getElementById('result-modal').style.display = 'flex';
             const contentDiv = document.getElementById('result-content');
@@ -1452,11 +1412,11 @@
                 const respondent = res.respondent_info ? `<span style="color:#f4a261;">[${window.escapeHtml(res.respondent_info)}]</span>` : `[익명]`;
 
                 html += `
-                        <div style="background:#f9fbfd; border:1px solid #eee; padding:15px; border-radius:8px; margin-bottom:15px;">
-                            <div style="border-bottom:1px dashed #ccc; padding-bottom:10px; margin-bottom:10px; font-size:0.9rem; color:#666;">
-                                <strong>응답 #${responses.length - idx}</strong> | ${respondent} | ${dateStr}
-                            </div>
-                        `;
+                            <div style="background:#f9fbfd; border:1px solid #eee; padding:15px; border-radius:8px; margin-bottom:15px;">
+                                <div style="border-bottom:1px dashed #ccc; padding-bottom:10px; margin-bottom:10px; font-size:0.9rem; color:#666;">
+                                    <strong>응답 #${responses.length - idx}</strong> | ${respondent} | ${dateStr}
+                                </div>
+                            `;
 
                 formData.form_schema.forEach(q => {
                     const ans = res.answers[q.id];
@@ -1471,26 +1431,23 @@
                     }
 
                     html += `
-                            <div style="margin-bottom:8px;">
-                                <div style="font-size:0.85rem; color:#888;">Q. ${window.escapeHtml(q.title)}</div>
-                                <div style="font-weight:bold; color:#333;">A. ${displayAns}</div>
-                            </div>`;
+                                <div style="margin-bottom:8px;">
+                                    <div style="font-size:0.85rem; color:#888;">Q. ${window.escapeHtml(q.title)}</div>
+                                    <div style="font-weight:bold; color:#333;">A. ${displayAns}</div>
+                                </div>`;
                 });
                 html += `</div>`;
             });
             contentDiv.innerHTML = html;
         }
 
-        // ★ 에디터 폼 자동 삽입 함수
         function insertFormToEditor() {
             const formId = document.getElementById('form-insert-select').value;
             if (!formId) return alert("삽입할 투표/신청서를 드롭다운에서 먼저 선택하세요.");
 
-            // 현재 에디터에서 마우스 커서가 마지막으로 위치했던 곳 찾기
             const range = quill.getSelection(true);
             let idx = range ? range.index : quill.getLength();
 
-            // 커서 위치에 [투표:번호] 텍스트를 줄바꿈과 함께 자동으로 적어줍니다.
             quill.insertText(idx, `\n\n[투표:${formId}]\n\n`, 'bold', true);
             quill.setSelection(idx + `\n\n[투표:${formId}]\n\n`.length);
 

@@ -48,9 +48,10 @@
                 <textarea id="w-content" class="form-input" style="height:300px; resize:vertical;" placeholder="내용을 입력해주세요."></textarea>
             </div>
 
+            <!-- ★ 취소 버튼 클릭 시 올바른 페이지로 이동하도록 수정 ★ -->
             <div style="text-align:center; margin-top:30px; display:flex; gap:10px; justify-content:center;">
                 <button onclick="saveUserPost()" id="submit-btn" class="btn-action" style="min-width:150px;">글 등록하기</button>
-                <button onclick="history.back()" class="btn-action" style="background:#999; min-width:150px;">취소</button>
+                <button onclick="cancelAction()" class="btn-action" style="background:#999; min-width:150px;">취소</button>
             </div>
         </div>
     </div>
@@ -90,7 +91,7 @@
             const { data, error } = await window.sb.from('total_posts').select('*').eq('id', id).single();
             if (error || !data) {
                 alert("수정할 게시글을 찾을 수 없습니다.");
-                history.back();
+                location.href = `notice.html#${targetCategory}`;
                 return;
             }
 
@@ -99,7 +100,7 @@
                 const inputPw = prompt("게시글 수정을 위해 작성 시 설정한 비밀번호를 입력해주세요.");
                 if (inputPw !== data.password) {
                     alert("비밀번호가 일치하지 않습니다.");
-                    history.back();
+                    location.href = `view.html?id=${id}`;
                     return;
                 }
             }
@@ -107,7 +108,7 @@
             document.getElementById('w-title').value = data.title || '';
             document.getElementById('w-author').value = data.link_url || '';
             document.getElementById('w-password').value = data.password || '';
-            document.getElementById('w-is-secret').checked = data.is_secret === true; // 확실한 불리언 체크
+            document.getElementById('w-is-secret').checked = data.is_secret === true;
 
             let rawContent = data.content || '';
             rawContent = rawContent.replace(/<br\s*[\/]?>/gi, '\n');
@@ -116,6 +117,15 @@
             existingImageUrl = data.image_url;
             if (existingImageUrl) {
                 renderExistingFileList(existingImageUrl);
+            }
+        }
+
+        // ★ 취소 버튼 동작 함수 (수정 중이었으면 상세 페이지로, 신규 작성이었으면 목록으로 이동)
+        function cancelAction() {
+            if (editPostId) {
+                location.href = `view.html?id=${editPostId}`;
+            } else {
+                location.href = `notice.html#${targetCategory}`;
             }
         }
 
@@ -170,7 +180,7 @@
             const title = document.getElementById('w-title').value.trim();
             const author = document.getElementById('w-author').value.trim();
             const password = document.getElementById('w-password').value.trim();
-            const isSecret = document.getElementById('w-is-secret').checked; // 체크 여부에 따른 true / false
+            const isSecret = document.getElementById('w-is-secret').checked;
             const content = document.getElementById('w-content').value.trim();
 
             if (!title || !author || !password || !content) {
@@ -213,7 +223,7 @@
                     content: safeContent,
                     link_url: window.escapeHtml(author),
                     password: password,
-                    is_secret: Boolean(isSecret), // 명시적 불리언 변환
+                    is_secret: Boolean(isSecret),
                     image_url: finalImageUrl
                 }).eq('id', editPostId);
                 error = res.error;
@@ -224,7 +234,7 @@
                     content: safeContent,
                     link_url: window.escapeHtml(author),
                     password: password,
-                    is_secret: Boolean(isSecret), // 명시적 불리언 변환
+                    is_secret: Boolean(isSecret),
                     image_url: finalImageUrl,
                     order_num: 0,
                     is_visible: true

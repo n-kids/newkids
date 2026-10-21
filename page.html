@@ -29,49 +29,82 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            // URL 파라미터 파악 (예: page.html?id=introduce -> 'introduce' 추출)
             const urlParams = new URLSearchParams(window.location.search);
-            const pageCode = urlParams.get('id');
+            const categoryCode = urlParams.get('c');
 
-            if (!pageCode) {
-                document.getElementById('page-content').innerHTML = "<div style='text-align:center; padding:50px;'>잘못된 접근입니다.</div>";
+            if (!categoryCode) {
+                alert("잘못된 접근입니다.");
+                location.href = 'index.html';
                 return;
             }
 
             const checkReady = setInterval(() => {
-                if (window.GLOBAL_CATEGORIES && window.GLOBAL_CATEGORIES.length > 0) {
+                if (window.sb) {
                     clearInterval(checkReady);
-                    loadPageContent(pageCode);
+                    loadPageContent(categoryCode);
                 }
             }, 100);
         });
 
         async function loadPageContent(code) {
-            const cat = window.GLOBAL_CATEGORIES.find(c => c.code === code);
+            // 카테고리 정보 로드 (상단 배경이미지 등)
+            const { data: catData } = await window.sb.from('program_categories').select('*').eq('code', code).single();
+            if (catData) {
+                if (catData.hero_image) {
+                    const heroEl = document.getElementById('page-hero');
+                    heroEl.style.backgroundImage = `url('${catData.hero_image}')`;
+                    heroEl.style.display = 'block';
 
-            if (cat) {
-                document.title = "뉴키즈 - " + cat.name; // 브라우저 탭 이름 변경
+                    document.getElementById('page-hero-title').innerText = catData.hero_title || catData.name;
+                    document.getElementById('page-hero-desc').innerText = catData.hero_desc || '';
 
-                // 데이터베이스에서 해당 카테고리의 첫 번째 글 내용을 가져옵니다.
-                const { data, error } = await window.sb.from('total_posts')
-                    .select('content')
-                    .eq('category', code)
-                    .order('created_at', { ascending: false })
-                    .limit(1)
-                    .single();
-
-                if (data && data.content) {
-                    // ★ 추가: [투표:ID숫자] 텍스트를 찾아 실제 폼 화면(iframe)으로 바꿔주는 마법의 코드 ★
-                    let finalContent = data.content.replace(/\[투표:(\d+)\]/g, '<iframe src="form.html?id=$1" width="100%" height="700" frameborder="0" style="border:1px solid #ddd; border-radius:12px; margin:30px 0;"></iframe>');
-
-                    document.getElementById('page-content').innerHTML = data.content;
-                } else {
-                    document.getElementById('page-content').innerHTML = "<div style='text-align:center; color:#999; padding:50px;'>아직 작성된 내용이 없습니다.<br>관리자 페이지 [게시글 작성하기] 탭에서 새 글을 작성해 주세요.</div>";
+                    if (catData.hero_overlay_color) {
+                        const opacity = catData.hero_overlay_opacity !== undefined ? catData.hero_overlay_opacity : 0.8;
+                        const rgb = hexToRgb(catData.hero_overlay_color);
+                        if (rgb) {
+                            heroEl.style.boxShadow = `inset 0 0 0 2000px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${opacity})`;
+                        }
+                    }
+                    if (catData.hero_title_color) document.getElementById('page-hero-title').style.color = catData.hero_title_color;
+                    if (catData.hero_desc_color) document.getElementById('page-hero-desc').style.color = catData.hero_desc_color;
                 }
+                document.getElementById('page-title').innerText = catData.name;
+                document.title = "뉴키즈 - " + catData.name;
+            }
+
+            // 본문 내용 로드
+            const { data, error } = await window.sb.from('total_posts').select('*').eq('category', code).order('created_at', { ascending: true }).limit(1).single();
+
+            if (error || !data) {
+                document.getElementById('page-content').innerHTML = "<div style='text-align:center; padding:100px 20px; color:#999; font-size:1.1rem;'>아직 등록된 페이지 내용이 없습니다.</div>";
             } else {
-                document.getElementById('page-content').innerHTML = "<div style='text-align:center; padding:50px;'>존재하지 않는 페이지입니다.</div>";
+                // ★ 본문 내용에서 [투표:ID숫자]를 찾아 스크롤바 없는 iframe으로 화면에 매립
+                let finalContent = data.content || '';
+                finalContent = finalContent.replace(/\[투표:(\d+)\]/g, '<iframe id="form-iframe-$1" src="form.html?id=$1" width="100%" frameborder="0" scrolling="no" style="border:1px solid #ddd; border-radius:12px; margin:30px 0; overflow:hidden; transition:height 0.3s ease;"></iframe>');
+
+                document.getElementById('page-content').innerHTML = finalContent;
             }
         }
+
+        // HEX 색상 변환 헬퍼 함수
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : null;
+        }
+
+        // ★ form.html에서 보낸 폼 높이 데이터를 받아 iframe의 세로 길이를 쫙 늘려줌
+        window.addEventListener('message', function (event) {
+            if (event.data && event.data.type === 'resizeIframe') {
+                const iframe = document.getElementById('form-iframe-' + event.data.formId);
+                if (iframe) {
+                    iframe.style.height = (event.data.height + 20) + 'px';
+                }
+            }
+        });
     </script>
 </body>
 </html>

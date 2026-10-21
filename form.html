@@ -6,7 +6,7 @@
     <title>뉴키즈 - 폼/투표 참여</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* ★ 핵심: 게시판에 매립(iframe) 되었을 때 불필요한 요소 숨김 및 여백/그림자 제거 ★ */
+        /* 게시판에 매립(iframe) 되었을 때 불필요한 요소 숨김 및 여백/그림자 제거 */
         body.is-iframe header,
         body.is-iframe footer,
         body.is-iframe #view-hero,
@@ -34,7 +34,6 @@
 </head>
 <body>
     <script>
-        // 현재 페이지가 다른 페이지 안에 매립된 상태인지 확인하여 'is-iframe' 클래스를 부여합니다.
         if (window !== window.parent) {
             document.body.classList.add('is-iframe');
         }
@@ -109,7 +108,21 @@
                     loadForm();
                 }
             }, 100);
+
+            // 페이지 렌더링 시작 시 높이 전송 옵저버 실행
+            sendHeightToParent();
         });
+
+        // ★ 내용물의 높이가 바뀔 때마다 부모 페이지로 높이 신호 쏘기
+        function sendHeightToParent() {
+            if (window !== window.parent) {
+                const observer = new ResizeObserver(() => {
+                    const height = document.body.scrollHeight;
+                    window.parent.postMessage({ type: 'resizeIframe', formId: currentFormId, height: height }, '*');
+                });
+                observer.observe(document.body);
+            }
+        }
 
         async function loadForm() {
             const { data, error } = await window.sb.from('custom_forms').select('*').eq('id', currentFormId).single();

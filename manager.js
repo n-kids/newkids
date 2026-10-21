@@ -254,7 +254,20 @@ function loadFooter() {
 // [4] 이벤트 리스너 및 헬퍼 함수
 // ============================================================
 window.toggleMenu = function () { document.getElementById('navMenu').classList.toggle('active'); };
-window.toggleSubMenu = function (el) { if (window.innerWidth <= 768) { const p = el.parentElement; const o = p.classList.contains('sub-open'); document.querySelectorAll('.nav-menu li.has-sub').forEach(li => li.classList.remove('sub-open')); if (!o) p.classList.add('sub-open'); } };
+
+window.toggleSubMenu = function (el) { 
+    if (window.innerWidth <= 768) { 
+        const p = el.parentElement; 
+        const o = p.classList.contains('sub-open'); 
+        
+        // 열려있는 다른 서브 메뉴 닫기
+        document.querySelectorAll('.nav-menu li.has-sub').forEach(li => li.classList.remove('sub-open')); 
+        
+        // 클릭한 메뉴 열기
+        if (!o) p.classList.add('sub-open'); 
+    } 
+};
+
 function addScrollButtons() { if (document.querySelector('.scroll-btns')) return; document.body.insertAdjacentHTML('beforeend', `<div class="scroll-btns"><button class="btn-scroll" onclick="scrollToTop()">▲</button><button class="btn-scroll" onclick="scrollToBottom()">▼</button></div>`); }
 window.scrollToTop = () => { window.scrollTo({ top: 0, behavior: 'smooth' }) };
 window.scrollToBottom = () => { window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }) };
@@ -263,7 +276,7 @@ window.formatDate = (d) => { return d ? d.split('T')[0] : ''; };
 function enableAutoResizeTextarea() { document.querySelectorAll('textarea.form-input').forEach(t => { t.style.minHeight = '120px'; t.style.height = 'auto'; t.style.height = (t.scrollHeight) + 'px'; t.addEventListener('input', function () { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; }); }); }
 
 // ============================================================
-// [5] DOMContentLoaded
+// [5] DOMContentLoaded 및 모바일 메뉴 닫기 통합 제어
 // ============================================================
 document.addEventListener("DOMContentLoaded", function () {
     loadHeader();
@@ -285,20 +298,29 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
-    // 모바일 메뉴 제어 로직 통합
-    const mobileBtn = document.querySelector('.mobile-btn');
-    const navMenu = document.getElementById('navMenu');
+    // ★ 모바일 네비게이션 제어 이벤트 통합 관리
+    document.addEventListener('click', function(e) {
+        const navMenu = document.getElementById('navMenu');
+        const mobileBtn = document.querySelector('.mobile-btn');
+        if (!navMenu) return;
 
-    if (mobileBtn && navMenu) {
-        mobileBtn.addEventListener('click', function (e) { e.stopPropagation(); navMenu.classList.toggle('active'); });
-    }
+        // 1) 햄버거 버튼 클릭 시 토글
+        if (mobileBtn && mobileBtn.contains(e.target)) {
+            // toggleMenu는 inline onclick에서 처리되므로 여기선 무시하거나 중복 방지
+            return;
+        }
 
-    document.querySelectorAll('.nav-menu a').forEach(link => {
-        link.addEventListener('click', () => { if (navMenu && navMenu.classList.contains('active')) navMenu.classList.remove('active'); });
-    });
+        // 2) 네비게이션 메뉴 바깥(빈 공간)을 클릭했을 때 전체 닫기
+        if (navMenu.classList.contains('active') && !navMenu.contains(e.target)) {
+            navMenu.classList.remove('active');
+            document.querySelectorAll('.nav-menu > li').forEach(li => li.classList.remove('sub-open'));
+        }
 
-    document.addEventListener('click', e => {
-        if (navMenu && navMenu.classList.contains('active') && !navMenu.contains(e.target) && (!mobileBtn || !mobileBtn.contains(e.target))) navMenu.classList.remove('active');
+        // 3) 드롭다운 하위 메뉴(알림/소식 등) 내부의 링크를 클릭했을 때 전체 닫기
+        if (e.target.closest('.dropdown li a')) {
+            navMenu.classList.remove('active');
+            document.querySelectorAll('.nav-menu > li').forEach(li => li.classList.remove('sub-open'));
+        }
     });
 
     window.addEventListener('hashchange', () => {

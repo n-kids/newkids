@@ -66,15 +66,32 @@
         <div class="container">
             <div class="proposal-box" style="max-width: 900px; margin: 0 auto; background: #fff; padding: 40px; border-radius: 12px;">
 
-                <!-- 게시글 본문 영역 -->
-                <div id="v-content" style="line-height: 1.6; color: #333;">
-                    데이터를 불러오는 중입니다...
+                <!-- ★ 비밀글 비밀번호 입력 인증 박스 (비밀글일 경우에만 노출) ★ -->
+                <div id="secret-lock-box" style="display:none; text-align:center; padding: 50px 20px;">
+                    <h3 style="color:#1a3c6e; margin-bottom:15px;">🔒 비밀글입니다</h3>
+                    <p style="color:#666; margin-bottom:20px;">작성 시 설정한 비밀번호를 입력해주세요.</p>
+                    <div style="display:inline-flex; gap:10px; max-width:400px; width:100%;">
+                        <input type="password" id="secret-pw-input" class="form-input" placeholder="비밀번호 입력">
+                        <button onclick="verifySecretPassword()" class="btn-action" style="white-space:nowrap;">확인</button>
+                    </div>
                 </div>
 
-                <!-- 첨부파일 및 다운로드 영역 -->
-                <div id="download-files-area" style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; display: none;">
-                    <h4 style="color: #1a3c6e; margin-bottom: 15px;">📎 첨부파일 및 다운로드</h4>
-                    <div id="download-list-container" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                <!-- 메인 콘텐츠 영역 (인증 완료 시 노출) -->
+                <div id="main-content-wrap" style="display:none;">
+                    <!-- 게시글 본문 영역 -->
+                    <div id="v-content" style="line-height: 1.6; color: #333;"></div>
+
+                    <!-- 첨부파일 및 다운로드 영역 -->
+                    <div id="download-files-area" style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; display: none;">
+                        <h4 style="color: #1a3c6e; margin-bottom: 15px;">📎 첨부파일 및 다운로드</h4>
+                        <div id="download-list-container" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                    </div>
+
+                    <!-- ★ 수정 및 삭제 버튼 영역 (비밀번호 확인 후 또는 관리자용) ★ -->
+                    <div id="author-actions-area" style="display:none; margin-top:30px; padding-top:20px; border-top:1px dashed #ddd; display:flex; gap:10px; justify-content:flex-end;">
+                        <button onclick="openEditPost()" class="btn-action" style="background:#f4a261; padding:8px 20px; font-size:0.9rem;">수정</button>
+                        <button onclick="deleteCurrentPost()" class="btn-action" style="background:#ff6b6b; padding:8px 20px; font-size:0.9rem;">삭제</button>
+                    </div>
                 </div>
 
                 <div class="btn-center-wrap" style="margin-top: 40px;">
@@ -91,6 +108,7 @@
     <script src="manager.js"></script>
     <script>
         let currentPostId = null;
+        let postDataCache = null;
 
         document.addEventListener("DOMContentLoaded", () => {
             const urlParams = new URLSearchParams(window.location.search);
@@ -115,21 +133,59 @@
 
             if (error || !data) {
                 document.getElementById('v-content').innerHTML = "<div style='text-align:center; padding:50px;'>게시글을 찾을 수 없습니다.</div>";
+                document.getElementById('main-content-wrap').style.display = 'block';
                 return;
             }
 
+            postDataCache = data;
             document.getElementById('v-title').innerText = data.title;
             document.title = "뉴키즈 - " + data.title;
+            document.getElementById('v-date').innerText = "작성일: " + new Date(data.created_at).toISOString().split('T')[0];
 
-            let finalContent = data.content || '';
+            // ★ 비밀글 체크 로직 (is_secret 필드가 true 이거나 password가 존재하는 경우)
+            if (data.is_secret === true || (data.password && data.password.trim() !== '')) {
+                // 세션 확인 (로그인된 관리자라면 비밀번호 입력 없이 패스 가능)
+                const { data: { session } } = await window.sb.auth.getSession();
+                if (session) {
+                    // 관리자 로그인 상태면 바로 콘텐츠 오픈 및 수정/삭제 권한 부여
+                    revealPostContent();
+                    document.getElementById('author-actions-area').style.display = 'flex';
+                } else {
+                    // 일반 사용자라면 비밀번호 입력 박스 노출
+                    document.getElementById('secret-lock-box').style.display = 'block';
+                }
+            } else {
+                // 일반 공개글인 경우 바로 오픈
+                revealPostContent();
+            }
+        }
+
+        // 비밀번호 확인 검증 함수
+        function verifySecretPassword() {
+            const inputPw = document.getElementById('secret-pw-input').value.trim();
+            if (!inputPw) return alert("비밀번호를 입력해주세요.");
+
+            if (inputPw === postDataCache.password) {
+                alert("비밀번호가 확인되었습니다.");
+                document.getElementById('secret-lock-box').style.display = 'none';
+                revealPostContent();
+                // 비밀번호가 맞았으므로 수정/삭제 버튼 활성화 노출
+                document.getElementById('author-actions-area').style.display = 'flex';
+            } else {
+                alert("비밀번호가 일치하지 않습니다.");
+            }
+        }
+
+        // 콘텐츠 정상 노출 렌더링 함수
+        function revealPostContent() {
+            let finalContent = postDataCache.content || '';
             finalContent = finalContent.replace(/\[투표:(\d+)\]/g, '<iframe id="form-iframe-$1" src="form.html?id=$1" width="100%" frameborder="0" scrolling="no" style="border:1px solid #ddd; border-radius:12px; margin:30px 0; overflow:hidden; transition:height 0.3s ease;"></iframe>');
 
             document.getElementById('v-content').innerHTML = finalContent;
-            document.getElementById('v-date').innerText = "작성일: " + new Date(data.created_at).toISOString().split('T')[0];
 
-            // 첨부파일 렌더링 (자바스크립트 함수로 원본 이름 강제 다운로드 연결)
-            if (data.image_url && data.image_url.trim() !== '' && data.image_url !== 'null') {
-                const files = data.image_url.split('||').map(u => u.trim()).filter(u => u);
+            // 첨부파일 렌더링
+            if (postDataCache.image_url && postDataCache.image_url.trim() !== '' && postDataCache.image_url !== 'null') {
+                const files = postDataCache.image_url.split('||').map(u => u.trim()).filter(u => u);
                 if (files.length > 0) {
                     const downloadArea = document.getElementById('download-files-area');
                     const downloadList = document.getElementById('download-list-container');
@@ -149,7 +205,6 @@
                             fileName = rawName.includes('___') ? rawName.split('___').pop() : rawName;
                         }
 
-                        // 인코딩 문제 방지를 위해 작은따옴표 처리
                         const safeUrl = fileUrl.replace(/'/g, "\\'");
                         const safeName = fileName.replace(/'/g, "\\'");
 
@@ -165,9 +220,28 @@
                     downloadArea.style.display = 'block';
                 }
             }
+
+            document.getElementById('main-content-wrap').style.display = 'block';
         }
 
-        // ★ 원본 파일명으로 강제 다운로드하는 자바스크립트 함수
+        // 수정 페이지로 이동 (관리자 또는 비밀번호 인증된 경우)
+        function openEditPost() {
+            // admin.html 또는 수정 페이지로 해당 게시글 ID 전달
+            location.href = `admin.html?edit=${currentPostId}`;
+        }
+
+        // 게시글 삭제 함수
+        async function deleteCurrentPost() {
+            if (!confirm("정말 이 게시글을 삭제하시겠습니까?")) return;
+            const { error } = await window.sb.from('total_posts').delete().eq('id', currentPostId);
+            if (error) {
+                alert("삭제 실패: " + error.message);
+            } else {
+                alert("게시글이 삭제되었습니다.");
+                history.back();
+            }
+        }
+
         async function downloadFileWithOriginalName(url, filename) {
             try {
                 const response = await fetch(url);
@@ -181,13 +255,10 @@
                 document.body.removeChild(a);
                 window.URL.revokeObjectURL(blobUrl);
             } catch (e) {
-                console.error("다운로드 실패:", e);
-                // 네트워크 정책으로 실패 시 새 창으로 열기 보완
                 window.open(url, '_blank');
             }
         }
 
-        // 폼 iframe 높이 조절 리스너
         window.addEventListener('message', function (event) {
             if (event.data && event.data.type === 'resizeIframe') {
                 let iframe = document.getElementById('form-iframe-' + event.data.formId);

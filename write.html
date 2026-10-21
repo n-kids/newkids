@@ -29,12 +29,19 @@
                     <label class="form-label">비밀번호 (수정/삭제용)</label>
                     <input type="password" id="w-password" class="form-input" placeholder="비밀번호 4자리 이상">
                 </div>
-                <!-- ★ 비밀글 여부 체크박스 추가 ★ -->
                 <div style="flex:0 0 120px; display:flex; align-items:center; height:46px;">
                     <label style="cursor:pointer; display:flex; align-items:center; gap:8px; font-weight:bold; color:#1a3c6e;">
                         <input type="checkbox" id="w-is-secret" style="width:18px; height:18px;"> 🔒 비밀글
                     </label>
                 </div>
+            </div>
+
+            <!-- ★ 파일 및 이미지 첨부 영역 추가 ★ -->
+            <div class="form-group" style="background: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px dashed #cbd5e1; margin-bottom: 20px;">
+                <label class="form-label" style="margin-bottom: 10px;">📎 첨부파일 및 이미지 업로드</label>
+                <input type="file" id="w-files" class="form-input" multiple onchange="handleFileSelect(this)" style="background: #fff;">
+                <p style="font-size: 0.85rem; color: #666; margin-top: 5px;">* 이미지 및 일반 문서 파일(PDF, HWP, ZIP 등)을 여러 개 선택하실 수 있습니다.</p>
+                <div id="file-preview-list" style="margin-top: 12px; display: flex; flex-direction: column; gap: 6px;"></div>
             </div>
 
             <div class="form-group">
@@ -56,6 +63,7 @@
     <script src="manager.js"></script>
     <script>
         const targetCategory = location.hash.replace('#', '') || 'free';
+        let selectedFiles = [];
 
         document.addEventListener("DOMContentLoaded", () => {
             const checkReady = setInterval(() => {
@@ -69,35 +77,101 @@
             }, 100);
         });
 
+        // 파일 선택 시 목록 표시
+        function handleFileSelect(input) {
+            if (input.files) {
+                selectedFiles = Array.from(input.files);
+                renderFileList();
+            }
+        }
+
+        function renderFileList() {
+            const container = document.getElementById('file-preview-list');
+            if (selectedFiles.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+            let html = '';
+            selectedFiles.forEach((file, index) => {
+                html += `<div style="display:flex; justify-content:space-between; align-items:center; background:#fff; padding:8px 12px; border:1px solid #e2e8f0; border-radius:6px; font-size:0.9rem;">
+                                <span>📄 ${file.name} (${(file.size / 1024).toFixed(1)} KB)</span>
+                                <button type="button" onclick="removeFile(${index})" style="background:none; border:none; color:#ff6b6b; font-weight:bold; cursor:pointer;">삭제</button>
+                             </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            document.getElementById('w-files').value = ''; // input 초기화
+            renderFileList();
+        }
+
         async function saveUserPost() {
             const title = document.getElementById('w-title').value.trim();
             const author = document.getElementById('w-author').value.trim();
             const password = document.getElementById('w-password').value.trim();
-            const isSecret = document.getElementById('w-is-secret').checked; // 비밀글 체크 여부
+            const isSecret = document.getElementById('w-is-secret').checked;
             const content = document.getElementById('w-content').value.trim();
 
             if (!title || !author || !password || !content) {
-                return alert("모든 항목을 입력해주세요.");
+                return alert("모든 필수 항목을 입력해주세요.");
             }
 
             if (!confirm("글을 등록하시겠습니까?")) return;
 
-            const safeContent = window.escapeHtml(content).replace(/\n/g, "<br>");
+            const btn = document.querySelector('button[onclick="saveUserPost()"]');
+            btn.innerText = "업로드 중...";
+            btn.disabled = true;
 
-            // ★ Supabase에 is_secret과 password, 작성자 정보(link_url 또는 password 컬럼) 반영
+            let uploadedFileUrls = [];
+
+            // Supabase Storage에 파일 업로드 처리
+            if (selectedFiles.length > 0) {
+                for (let i = 0; i < selectedFiles.length; i++) {
+                    const file = selectedFiles[i];
+                    const fileExt = file.name.split('.').pop();
+                    const safeFileName = `board_${Date.now()}_${i}.${fileExt}`;
+
+                    // Supabase 스토리지의 'images' 버킷에 업로드 (필요시 버킷명 수정)
+                    const { data, error } = await window.sb.storage.from('images').upload(safeFileName, file);
+
+                    if (error) {
+                        alert("파일 업로드 실패: " + error.message);
+                        btn.innerText = "글 등록하기";
+                        btn.disabled = false;
+                        return;
+                    }
+
+                    // 공개 URL 생성 및 원본 파일명 결합
+                    const publicUrlData = window.sb.storage.from('images').getPublicUrl(data.path);
+                    const publicUrl = publicUrlData.data.publicUrl;
+
+                    // 'URL@@파일명' 형태로 저장하여 상세 페이지에서 원본 이름으로 다운로드 가능하게 함
+                    uploadedFileUrls.push(`${publicUrl}@@${file.name}`);
+                }
+            }
+
+            const safeContent = window.escapeHtml(content).replace(/\n/g, "<br>");
+            const imageUrlsString = uploadedFileUrls.length > 0 ? uploadedFileUrls.join('||') : null;
+
+            // total_posts 테이블에 데이터 저장
             const { error } = await window.sb.from('total_posts').insert([{
                 category: targetCategory,
                 title: window.escapeHtml(title),
                 content: safeContent,
                 link_url: window.escapeHtml(author), // 작성자
-                password: password,                  // 비밀글 인증용 비밀번호
-                is_secret: isSecret,                 // 비밀글 여부 (true/false)
+                password: password,                  // 비밀번호
+                is_secret: isSecret,                 // 비밀글 여부
+                image_url: imageUrlsString,          // 첨부파일 URL 목록
                 order_num: 0,
                 is_visible: true
             }]);
 
             if (error) {
                 alert("오류 발생: " + error.message);
+                btn.innerText = "글 등록하기";
+                btn.disabled = false;
             } else {
                 alert("글이 성공적으로 등록되었습니다!");
                 location.href = `notice.html#${targetCategory}`;

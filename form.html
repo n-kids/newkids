@@ -70,7 +70,8 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">연락처 (선택사항)</label>
-                        <input type="tel" id="res-contact" class="form-input" placeholder="예: 010-0000-0000">
+                        <!-- ★ 추가: 연락처 자동 하이픈 및 숫자만 입력 허용 (oninput 활용) ★ -->
+                        <input type="tel" id="res-contact" class="form-input" placeholder="숫자만 입력하세요" oninput="this.value = autoHyphenPhone(this.value)" maxlength="13">
                     </div>
 
                     <h3 class="form-section-title" style="margin-top:40px;">📝 응답 항목</h3>
@@ -121,6 +122,58 @@
                     window.parent.postMessage({ type: 'resizeIframe', formId: currentFormId, height: height }, '*');
                 });
                 observer.observe(document.body);
+            }
+        }
+
+        // ★ 추가: 연락처 자동 하이픈 변환 함수
+        function autoHyphenPhone(str) {
+            str = str.replace(/[^0-9]/g, ''); // 숫자가 아닌 모든 문자 제거
+            let tmp = '';
+
+            if (str.startsWith('02')) { // 서울 지역번호(02) 처리
+                if (str.length < 3) return str;
+                else if (str.length < 6) {
+                    tmp += str.substr(0, 2);
+                    tmp += '-';
+                    tmp += str.substr(2);
+                    return tmp;
+                } else if (str.length < 10) {
+                    tmp += str.substr(0, 2);
+                    tmp += '-';
+                    tmp += str.substr(2, 3);
+                    tmp += '-';
+                    tmp += str.substr(5);
+                    return tmp;
+                } else {
+                    tmp += str.substr(0, 2);
+                    tmp += '-';
+                    tmp += str.substr(2, 4);
+                    tmp += '-';
+                    tmp += str.substr(6, 4); // 4자리 초과 입력 무시
+                    return tmp;
+                }
+            } else { // 일반 휴대폰(010) 및 기타 지역번호 처리
+                if (str.length < 4) return str;
+                else if (str.length < 7) {
+                    tmp += str.substr(0, 3);
+                    tmp += '-';
+                    tmp += str.substr(3);
+                    return tmp;
+                } else if (str.length < 11) {
+                    tmp += str.substr(0, 3);
+                    tmp += '-';
+                    tmp += str.substr(3, 3);
+                    tmp += '-';
+                    tmp += str.substr(6);
+                    return tmp;
+                } else {
+                    tmp += str.substr(0, 3);
+                    tmp += '-';
+                    tmp += str.substr(3, 4);
+                    tmp += '-';
+                    tmp += str.substr(7, 4); // 4자리 초과 입력 무시
+                    return tmp;
+                }
             }
         }
 

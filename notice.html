@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
@@ -18,7 +18,8 @@
     </div>
 
     <div class="board-container">
-        <div style="text-align: right; margin-bottom: 15px;">
+        <!-- 글쓰기 버튼 (우측 정렬) -->
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 15px;">
             <button id="btn-user-write" class="btn-action" style="display: none;" onclick="location.href='write.html#' + currentCategory">✏️ 글쓰기</button>
         </div>
 
@@ -34,7 +35,13 @@
         </div>
 
         <div id="pagination-box" class="pagination" style="margin-top:40px;"></div>
-    </div>
+
+        <!-- ★ 하단 중앙 검색창 영역 ★ -->
+        <div style="display: flex; justify-content: center; align-items: center; margin-top: 30px; gap: 5px;">
+            <input type="text" id="search-input" class="form-input" style="width: 250px; padding: 8px;" placeholder="제목 검색" onkeypress="if(event.keyCode==13) executeSearch();">
+            <button onclick="executeSearch()" class="btn-action" style="padding: 8px 15px;">검색</button>
+        </div>
+    </div> <!-- // board-container 끝 -->
 
     <footer></footer>
 
@@ -46,6 +53,7 @@
         const ITEMS_PER_PAGE = 10;
         let currentPage = 1;
         let currentCategory = location.hash.replace('#', '') || 'notice';
+        let currentSearchKeyword = ''; // 추가: 검색어를 저장할 변수
 
         document.addEventListener("DOMContentLoaded", () => {
             const checkReady = setInterval(() => {
@@ -59,6 +67,12 @@
 
         window.addEventListener('hashchange', () => {
             currentCategory = location.hash.replace('#', '') || 'notice';
+
+            // 추가: 탭 이동 시 검색어 상태 및 입력창 초기화
+            currentSearchKeyword = '';
+            const searchInput = document.getElementById('search-input');
+            if (searchInput) searchInput.value = '';
+
             updateBoardHeader();
             loadBoardList(1);
         });
@@ -80,18 +94,35 @@
             }
         }
 
+        // 추가: 검색 버튼 클릭 및 엔터 입력 시 실행되는 함수
+        function executeSearch() {
+            const inputVal = document.getElementById('search-input').value.trim();
+            currentSearchKeyword = inputVal;
+            loadBoardList(1); // 검색 시 무조건 1페이지부터 보여주기
+        }
+
         async function loadBoardList(page) {
             currentPage = page;
             const listDiv = document.getElementById('board-list-wrapper');
+
+            // 깨져있던 수식 정상 복구
             const from = (page - 1) * ITEMS_PER_PAGE;
             const to = from + ITEMS_PER_PAGE - 1;
 
             listDiv.innerHTML = '<div style="text-align:center; padding:50px; color:#999;">로딩 중...</div>';
 
-            // 💡 DB에서 데이터를 가져올 때 'is_secret(비밀글 여부)' 컬럼도 같이 가져오도록 수정
-            const { data, count, error } = await window.sb.from('total_posts')
-                .select('id, title, category, created_at, link_url, is_secret', { count: 'exact' })
-                .eq('category', currentCategory)
+            // 1단계: Supabase 쿼리 객체 생성 (아직 서버에 요청을 보내지 않은 상태)
+            let query = window.sb.from('total_posts')
+                .select('id, title, category, created_at, link_url', { count: 'exact' })
+                .eq('category', currentCategory);
+
+            // 2단계: 검색어가 존재할 경우에만 제목 기준 부분 일치(ilike) 조건 추가
+            if (currentSearchKeyword !== '') {
+                query = query.ilike('title', `%${currentSearchKeyword}%`);
+            }
+
+            // 3단계: 최종 쿼리에 정렬 및 페이지 범위 적용 후 서버로 요청 전송
+            const { data, count, error } = await query
                 .order('created_at', { ascending: false })
                 .range(from, to);
 
@@ -101,21 +132,10 @@
             }
 
             if (!data || data.length === 0) {
-                listDiv.innerHTML = `<div style="text-align:center; padding:50px; border-bottom:1px solid #eee;">등록된 글이 없습니다.</div>`;
+                listDiv.innerHTML = `<div style="text-align:center; padding:50px; border-bottom:1px solid #eee;">등록되거나 검색된 글이 없습니다.</div>`;
                 document.getElementById('pagination-box').innerHTML = '';
                 return;
             }
-
-            // 👇 [핵심 로직 추가] 현재 페이지의 게시글들에 대해 관리자 답변이 달렸는지 한 번에 조회
-            const postIds = data.map(p => p.id);
-            const { data: comments } = await window.sb
-                .from('post_comments')
-                .select('post_id')
-                .in('post_id', postIds)
-                .eq('author', '관리자');
-
-            // 답변이 달린 게시글 ID들만 모아서 빠르게 검색할 수 있도록 Set으로 변환
-            const repliedPostIds = new Set(comments ? comments.map(c => c.post_id) : []);
 
             let html = '';
             data.forEach(item => {
@@ -124,21 +144,13 @@
                 // 공지사항이면 무조건 '관리자', 자유게시판이면 작성자가 쓴 이름(link_url) 표시
                 const authorName = (currentCategory === 'notice') ? '관리자' : (item.link_url || '익명');
 
-                // 💡 [비밀글 로직] is_secret 값이 true면 제목 앞에 자물쇠 아이콘 추가
-                const secretIcon = item.is_secret ? '<span style="color:#d35400; margin-right:5px;" title="비밀글">🔒</span>' : '';
-
-                // 💡 [답변완료 로직] 관리자 답변이 있는 글이면 제목 뒤에 뱃지 추가
-                const replyBadge = repliedPostIds.has(item.id) 
-                    ? `<span style="background:#1a3c6e; color:white; font-size:0.75rem; padding:2px 6px; border-radius:4px; margin-left:6px; vertical-align:middle;">✅ 답변완료</span>` 
-                    : '';
-
                 html += `
-                        <div class="board-list-row" onclick="location.href='view.html?id=${item.id}'">
-                            <div class="b-num">${item.id}</div>
-                            <div class="b-cat"><span class="badge" style="background:#f1f3f5; color:#555;">${authorName}</span></div>
-                            <div class="b-title">${secretIcon}${item.title} ${replyBadge}</div>
-                            <div class="b-date">${date}</div>
-                        </div>`;
+                                <div class="board-list-row" onclick="location.href='view.html?id=${item.id}'">
+                                    <div class="b-num">${item.id}</div>
+                                    <div class="b-cat"><span class="badge" style="background:#f1f3f5; color:#555;">${authorName}</span></div>
+                                    <div class="b-title">${item.title}</div>
+                                    <div class="b-date">${date}</div>
+                                </div>`;
             });
             listDiv.innerHTML = html;
 

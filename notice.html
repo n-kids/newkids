@@ -138,11 +138,14 @@
             }
 
             let html = '';
-            data.forEach(item => {
+            data.forEach((item, index) => {
                 const date = new Date(item.created_at).toISOString().split('T')[0];
 
                 // 공지사항이면 무조건 '관리자', 자유게시판이면 작성자가 쓴 이름(link_url) 표시
                 const authorName = (currentCategory === 'notice') ? '관리자' : (item.link_url || '익명');
+
+                // ★ 핵심: DB 고유 ID 대신, 전체 개수에서 차례대로 뺀 '화면용 순번'을 계산합니다.
+                const displayNum = count - from - index;
 
                 html += `
                                 <div class="board-list-row" onclick="location.href='view.html?id=${item.id}'">

@@ -1356,9 +1356,14 @@
             if (!data || data.length === 0) return listDiv.innerHTML = "<div style='text-align:center; padding:20px; color:#999;'>등록된 폼이 없습니다.</div>";
 
             let html = '';
-            data.forEach(form => {
+            const totalForms = data.length;
+
+            data.forEach((form, index) => {
                 const dateStr = new Date(form.created_at).toISOString().split('T')[0];
                 const statusBadge = form.is_active ? `<span class="badge" style="background:#2ecc71; color:white;">진행중</span>` : `<span class="badge" style="background:#95a5a6; color:white;">마감됨</span>`;
+
+                // ★ 화면용 순서 번호 계산
+                const displayNum = totalForms - index;
 
                 html += `
                     <div style="background:#fff; border:1px solid #ddd; padding:20px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">

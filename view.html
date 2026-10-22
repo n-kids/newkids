@@ -441,4 +441,69 @@
 
         async function deleteCurrentPost() {
             if (postDataCache.category === 'notice') {
-                return alert("공지글은 삭제
+                return alert("공지글은 삭제할 수 없습니다.");
+            }
+
+            if (isAdminLoggedIn) {
+                if (confirm("정말 이 게시글을 영구 삭제하시겠습니까?")) executeDeletePost();
+                return;
+            }
+
+            const isSecretPost = (postDataCache.is_secret === true || String(postDataCache.is_secret) === 'true');
+            if (isSecretPost) {
+                if (confirm("정말 이 게시글을 영구 삭제하시겠습니까?")) {
+                    executeDeletePost();
+                }
+            } else {
+                showLockBox("🗑️ 글 삭제 본인 인증", "본인 확인을 위해 글 작성 시 설정한 비밀번호를 입력해주세요.", "delete");
+            }
+        }
+
+        async function executeDeletePost() {
+            const { error } = await window.sb.from('total_posts').delete().eq('id', currentPostId);
+            if (error) {
+                alert("삭제 실패: " + error.message);
+            } else {
+                alert("게시글이 안전하게 삭제되었습니다.");
+                // 삭제 후에도 정확한 목록 페이지로 이동하도록 적용
+                goBackToList();
+            }
+        }
+
+        async function downloadFileWithOriginalName(url, filename) {
+            try {
+                const response = await fetch(url);
+                const blob = await response.blob();
+                const blobUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(blobUrl);
+            } catch (e) {
+                window.open(url, '_blank');
+            }
+        }
+
+        window.addEventListener('message', function (event) {
+            if (event.data && event.data.type === 'resizeIframe') {
+                let iframe = document.getElementById('form-iframe-' + event.data.formId);
+                if (!iframe) {
+                    const iframes = document.querySelectorAll('iframe');
+                    for (let f of iframes) {
+                        if (f.src && f.src.includes('id=' + event.data.formId)) {
+                            iframe = f;
+                            break;
+                        }
+                    }
+                }
+                if (iframe) {
+                    iframe.style.height = (event.data.height + 30) + 'px';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

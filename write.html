@@ -10,27 +10,36 @@
 
     <style>
         body {
-            background-color: #f4f6f9;
+            background-color: #f4f7fa !important;
+            margin: 0;
+            padding: 0;
         }
 
+        /* ★ 글쓰기 폼 가로 폭 강제 확장 및 고정 (view.html과 완벽하게 동일한 900px 기준) ★ */
         .write-container {
-            max-width: 800px;
-            margin: 50px auto;
-            padding: 0 15px;
+            width: 100% !important;
+            max-width: 900px !important;
+            margin: 50px auto !important;
+            padding: 0 20px !important;
+            box-sizing: border-box !important;
+            display: block !important;
         }
 
         .write-card {
-            background: #fff;
-            border: 1px solid #eaeaea;
-            border-radius: 12px;
-            padding: 40px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            width: 100% !important;
+            background: #fff !important;
+            border: 1px solid #eaeaea !important;
+            border-radius: 12px !important;
+            padding: 50px 40px !important;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03) !important;
+            box-sizing: border-box !important;
+            display: block !important;
         }
 
         .write-title-main {
             text-align: center;
             color: #1a3c6e;
-            font-size: 2rem;
+            font-size: 2.2rem;
             font-weight: 800;
             margin-bottom: 30px;
         }
@@ -102,7 +111,7 @@
             display: flex;
             justify-content: center;
             gap: 10px;
-            margin-top: 30px;
+            margin-top: 40px;
         }
 
         .btn-submit {
@@ -138,8 +147,13 @@
         }
 
         @media screen and (max-width: 768px) {
+            .write-container {
+                margin: 20px auto !important;
+                padding: 0 15px !important;
+            }
+
             .write-card {
-                padding: 25px 15px;
+                padding: 30px 20px !important;
             }
 
             .form-row {

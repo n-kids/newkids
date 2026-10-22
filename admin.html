@@ -130,19 +130,19 @@
                 padding-left: 35px;
             }
 
-        /* ★ PC 환경 그리드 기본 설정 ★ */
-        .cat-manage-layout {
+        /* ★ 캐시 우회를 위한 새로운 그리드 클래스 적용 ★ */
+        .cm-layout {
             display: grid;
             align-items: center;
             border-bottom: 1px solid #eee;
             padding: 10px;
         }
-        .cat-cell-center {
+        .cm-cell-center {
             display: flex;
             justify-content: center;
             align-items: center;
         }
-        .cat-cell-input input {
+        .cm-cell-input input {
             width: 100%;
             padding: 5px;
             border: 1px solid #ccc;
@@ -188,7 +188,7 @@
             #preview-main-hero { width: 100% !important; height: auto !important; aspect-ratio: 16/9; }
             .ql-toolbar { display: flex; flex-wrap: wrap; justify-content: flex-start; padding: 5px !important; }
 
-            /* ★ 게시글 목록 (게시판 관리) 모바일 카드형 레이아웃 복구 ★ */
+            /* 게시글 관리 목록 카드형 */
             #manage-list { display: flex !important; flex-direction: column !important; gap: 15px !important; }
             .post-manage-card { display: flex !important; flex-direction: column !important; width: 100% !important; height: auto !important; border: 1px solid #eee; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
             .pm-thumb { width: 100% !important; height: 180px !important; object-fit: cover !important; border-bottom: 1px solid #eee; }
@@ -196,59 +196,56 @@
             .pm-actions { display: flex !important; flex-wrap: wrap !important; gap: 8px !important; padding: 15px !important; width: 100% !important; box-sizing: border-box; background: #f9f9f9; border-top: 1px solid #eee; }
             .pm-actions button.pm-btn { flex: 1 1 calc(50% - 10px) !important; margin: 0 !important; padding: 10px !important; font-size: 0.9rem !important; border-radius: 6px !important; }
 
-
             /* ★ 서브페이지 카테고리 관리: 컴팩트 카드형 레이아웃 ★ */
+            .cm-header { display: none !important; } /* 긴 헤더 완전 숨김 */
             
-            /* 긴 헤더 박스 강제 숨김 (우선순위 상향) */
-            .cat-manage-layout.cat-manage-header { display: none !important; border: none !important; padding: 0 !important; margin: 0 !important; } 
-
-            .cat-manage-layout {
+            .cm-layout {
                 display: flex !important; flex-wrap: wrap !important; min-width: 0 !important;
                 background: #fff; border: 1px solid #ccc; border-radius: 8px;
                 margin-bottom: 15px; padding: 15px !important; gap: 10px 0;
                 box-shadow: 0 2px 8px rgba(0,0,0,0.05);
             }
-            .cat-manage-row > div { display: flex !important; align-items: center; }
+            .cm-row > div { display: flex !important; align-items: center; }
             
             /* 1. 순서이동 핸들 & 코드명 (넓이 조정으로 글자 꺾임 방지) */
-            .cat-manage-row > div:nth-child(1) { width: 25%; justify-content: flex-start; }
-            .cat-manage-row > div:nth-child(2) { width: 75%; font-size: 1.1rem !important; justify-content: flex-end; color: #1a3c6e; font-weight: 800 !important; }
+            .cm-row > div:nth-child(1) { width: 25%; justify-content: flex-start; }
+            .cm-row > div:nth-child(2) { width: 75%; font-size: 1.1rem !important; justify-content: flex-end; color: #1a3c6e; font-weight: 800 !important; }
             
             /* 2. 메뉴명, 제목, 설명글 */
-            .cat-manage-row > div:nth-child(3),
-            .cat-manage-row > div:nth-child(4),
-            .cat-manage-row > div:nth-child(10) { width: 100%; margin-top: 5px; }
+            .cm-row > div:nth-child(3),
+            .cm-row > div:nth-child(4),
+            .cm-row > div:nth-child(10) { width: 100%; margin-top: 5px; }
             
-            .cat-manage-row > div:nth-child(3)::before { content: '메뉴명:'; width: 60px; font-size: 0.85rem; color:#888; font-weight:bold; }
-            .cat-manage-row > div:nth-child(4)::before { content: '타이틀:'; width: 60px; font-size: 0.85rem; color:#888; font-weight:bold; }
-            .cat-manage-row > div:nth-child(10)::before { content: '설명글:'; width: 60px; font-size: 0.85rem; color:#888; font-weight:bold; }
-            .cat-cell-input input { flex: 1; padding: 8px !important; border: 1px solid #ccc !important; border-radius: 4px !important; width: calc(100% - 60px) !important; font-size: 0.95rem; }
+            .cm-row > div:nth-child(3)::before { content: '메뉴명:'; width: 60px; font-size: 0.85rem; color:#888; font-weight:bold; }
+            .cm-row > div:nth-child(4)::before { content: '타이틀:'; width: 60px; font-size: 0.85rem; color:#888; font-weight:bold; }
+            .cm-row > div:nth-child(10)::before { content: '설명글:'; width: 60px; font-size: 0.85rem; color:#888; font-weight:bold; }
+            .cm-cell-input input { flex: 1; padding: 8px !important; border: 1px solid #ccc !important; border-radius: 4px !important; width: calc(100% - 60px) !important; font-size: 0.95rem; }
             
             /* 3. 색상 및 투명도 설정 (한 줄로 예쁘게 묶기) */
-            .cat-manage-row > div:nth-child(5)::before { content: '메뉴색'; font-size:0.7rem; color:#666; display:block; text-align:center; margin-bottom: 5px; }
-            .cat-manage-row > div:nth-child(6)::before { content: '제목색'; font-size:0.7rem; color:#666; display:block; text-align:center; margin-bottom: 5px; }
-            .cat-manage-row > div:nth-child(7)::before { content: '설명색'; font-size:0.7rem; color:#666; display:block; text-align:center; margin-bottom: 5px; }
-            .cat-manage-row > div:nth-child(8)::before { content: '필터색'; font-size:0.7rem; color:#666; display:block; text-align:center; margin-bottom: 5px; }
-            .cat-manage-row > div:nth-child(9)::before { content: '투명도'; font-size:0.7rem; color:#666; display:block; text-align:center; margin-bottom: 5px; }
+            .cm-row > div:nth-child(5)::before { content: '메뉴색'; font-size:0.7rem; color:#666; display:block; text-align:center; margin-bottom: 5px; }
+            .cm-row > div:nth-child(6)::before { content: '제목색'; font-size:0.7rem; color:#666; display:block; text-align:center; margin-bottom: 5px; }
+            .cm-row > div:nth-child(7)::before { content: '설명색'; font-size:0.7rem; color:#666; display:block; text-align:center; margin-bottom: 5px; }
+            .cm-row > div:nth-child(8)::before { content: '필터색'; font-size:0.7rem; color:#666; display:block; text-align:center; margin-bottom: 5px; }
+            .cm-row > div:nth-child(9)::before { content: '투명도'; font-size:0.7rem; color:#666; display:block; text-align:center; margin-bottom: 5px; }
 
-            .cat-manage-row > div:nth-child(5),
-            .cat-manage-row > div:nth-child(6),
-            .cat-manage-row > div:nth-child(7),
-            .cat-manage-row > div:nth-child(8),
-            .cat-manage-row > div:nth-child(9) {
+            .cm-row > div:nth-child(5),
+            .cm-row > div:nth-child(6),
+            .cm-row > div:nth-child(7),
+            .cm-row > div:nth-child(8),
+            .cm-row > div:nth-child(9) {
                 flex-direction: column; width: 20%; justify-content: center; align-items: center;
                 margin-top: 10px; background: #f4f6f9; padding: 10px 0 !important;
             }
-            .cat-manage-row > div:nth-child(5) { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
-            .cat-manage-row > div:nth-child(9) { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+            .cm-row > div:nth-child(5) { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+            .cm-row > div:nth-child(9) { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
 
-            .cat-manage-row input[type="color"] { width: 35px !important; height: 35px !important; border: 1px solid #ddd !important; border-radius: 4px; padding: 0 !important; }
-            .cat-manage-row input[type="number"] { width: 90% !important; text-align: center; padding: 6px 2px !important; border: 1px solid #ccc; border-radius: 4px; font-size:0.85rem;}
+            .cm-row input[type="color"] { width: 35px !important; height: 35px !important; border: 1px solid #ddd !important; border-radius: 4px; padding: 0 !important; }
+            .cm-row input[type="number"] { width: 90% !important; text-align: center; padding: 6px 2px !important; border: 1px solid #ccc; border-radius: 4px; font-size:0.85rem;}
 
             /* 4. 이미지, 상태, 삭제 버튼 (하단) */
-            .cat-manage-row > div:nth-child(11) { width: 40%; justify-content: flex-start; margin-top: 15px; flex-direction: row !important; gap: 10px; }
-            .cat-manage-row > div:nth-child(12) { width: 30%; justify-content: center; margin-top: 15px; }
-            .cat-manage-row > div:nth-child(13) { width: 30%; justify-content: flex-end; margin-top: 15px; }
+            .cm-row > div:nth-child(11) { width: 40%; justify-content: flex-start; margin-top: 15px; flex-direction: row !important; gap: 10px; }
+            .cm-row > div:nth-child(12) { width: 30%; justify-content: center; margin-top: 15px; }
+            .cm-row > div:nth-child(13) { width: 30%; justify-content: flex-end; margin-top: 15px; }
         }
     </style>
 </head>
@@ -1005,7 +1002,7 @@
         async function updateCategoryOrderRealtime() {
             showLoading(true);
             try {
-                const allRows = document.querySelectorAll('.cat-manage-row');
+                const allRows = document.querySelectorAll('.cm-row');
                 const updatePromises = Array.from(allRows).map((row, idx) => {
                     const code = row.getAttribute('data-code');
                     return window.sb.from('program_categories').update({ order_num: idx }).eq('code', code);
@@ -1031,7 +1028,10 @@
                 categoryList = data;
 
                 const gridStyle = "grid-template-columns: 40px 70px 100px 100px 45px 45px 45px 45px 50px 1fr 120px 50px 60px; min-width: 1100px;";
-                const headerHtml = `<div class="cat-manage-layout cat-manage-header" style="${gridStyle}"><div>순서</div><div>코드</div><div>메뉴명</div><div>제목</div><div title="상단 메뉴 글자색">메뉴색</div><div title="배경 큰 제목 색상">제목색</div><div title="배경 설명글 색상">설명색</div><div title="배경 이미지 덮는 필터 색상">필터색</div><div title="필터 색상의 투명도">투명도</div><div>설명글</div><div>이미지</div><div>노출</div><div>삭제</div></div>`;
+                const isMobile = window.innerWidth <= 768;
+                
+                // 모바일일 경우 헤더 HTML을 아예 출력하지 않음으로써 캐시 충돌 원천 차단
+                const headerHtml = isMobile ? '' : `<div class="cm-layout cm-header" style="${gridStyle}"><div>순서</div><div>코드</div><div>메뉴명</div><div>제목</div><div title="상단 메뉴 글자색">메뉴색</div><div title="배경 큰 제목 색상">제목색</div><div title="배경 설명글 색상">설명색</div><div title="배경 이미지 덮는 필터 색상">필터색</div><div title="필터 색상의 투명도">투명도</div><div>설명글</div><div>이미지</div><div>노출</div><div>삭제</div></div>`;
 
                 let groups = { 'PAGE': '', 'BOARD': '', 'EVENT': '', 'EDU': '' };
                 const groupNames = { 'PAGE': '⚙️ 고정 페이지', 'BOARD': '📢 게시판', 'EVENT': '🎉 행사', 'EDU': '🎓 교육' };
@@ -1040,21 +1040,20 @@
                     const thumb = cat.hero_image || 'https://via.placeholder.com/50?text=None';
                     const visBtn = cat.is_visible !== false ? `<button class="btn-mini" style="background:#27ae60; color:#fff;" onclick="toggleVisibility('${cat.code}', false)">ON</button>` : `<button class="btn-mini" style="background:#999; color:#fff;" onclick="toggleVisibility('${cat.code}', true)">OFF</button>`;
 
-                    // ★ 모바일 최적화 라벨 추가된 HTML (모바일용 가짜 테이블)
-                    let rowHtml = `<div class="cat-manage-layout cat-manage-row" data-code="${cat.code}" style="${gridStyle}">
-                                <div class="cat-cell-center"><span class="mob-label">순서</span><span class="drag-handle" style="cursor:grab; font-size:1.2rem; display:block;" title="드래그해서 항목 순서 변경">↕️</span></div>
-                                <div class="cat-cell-center" style="font-weight:bold; font-size:0.8rem;"><span class="mob-label">코드</span>${cat.code}</div>
-                                <div class="cat-cell-input"><span class="mob-label">메뉴명</span><input type="text" id="name-${cat.code}" value="${cat.name}"></div>
-                                <div class="cat-cell-input"><span class="mob-label">제목</span><input type="text" id="title-${cat.code}" value="${cat.hero_title || ''}"></div>
-                                <div class="cat-cell-center"><span class="mob-label">메뉴색</span><input type="color" id="m-color-${cat.code}" value="${cat.menu_text_color || '#333333'}" style="width:25px; border:none;" title="메뉴 글자색"></div>
-                                <div class="cat-cell-center"><span class="mob-label">제목색</span><input type="color" id="t-color-${cat.code}" value="${cat.hero_title_color || '#ffffff'}" style="width:25px; border:none;" title="배경 큰 제목 색상"></div>
-                                <div class="cat-cell-center"><span class="mob-label">설명색</span><input type="color" id="d-color-${cat.code}" value="${cat.hero_desc_color || '#ffffff'}" style="width:25px; border:none;" title="배경 설명글 색상"></div>
-                                <div class="cat-cell-center"><span class="mob-label">필터색</span><input type="color" id="o-color-${cat.code}" value="${cat.hero_overlay_color || '#1a3c6e'}" style="width:25px; border:none;" title="배경 이미지 덮는 필터 색상"></div>
-                                <div class="cat-cell-center"><span class="mob-label">투명도</span><input type="number" id="o-op-${cat.code}" value="${cat.hero_overlay_opacity !== undefined ? cat.hero_overlay_opacity : 0.8}" step="0.1" style="width:40px;"></div>
-                                <div class="cat-cell-input"><span class="mob-label">설명글</span><input type="text" id="desc-${cat.code}" value="${cat.hero_desc || ''}"></div>
-                                <div class="cat-cell-center" style="display:flex; flex-direction:column; align-items:center; gap:5px;"><span class="mob-label">이미지</span><img src="${thumb}" style="width:50px; height:50px; object-fit:cover; cursor:pointer; border:1px solid #ddd; border-radius:4px;" onclick="document.getElementById('file-${cat.code}').click()" title="이미지 변경"><input type="file" id="file-${cat.code}" class="cat-file-input" data-code="${cat.code}" style="display:none;" accept="image/*"><button class="btn-mini" style="font-size:0.6rem; color:red;" onclick="deleteSubHeroImage('${cat.code}')">삭제</button></div>
-                                <div class="cat-cell-center"><span class="mob-label">노출상태</span>${visBtn}</div>
-                                <div class="cat-cell-center"><span class="mob-label">영구삭제</span><button onclick="deleteCategory('${cat.code}')" class="btn-mini" style="background:#ff6b6b; color:#fff; width:100%;">삭제</button></div>
+                    let rowHtml = `<div class="cm-layout cm-row" data-code="${cat.code}" style="${gridStyle}">
+                                <div class="cm-cell-center"><span class="cm-mob-label">순서</span><span class="drag-handle" style="cursor:grab; font-size:1.2rem; display:block;" title="드래그해서 항목 순서 변경">↕️</span></div>
+                                <div class="cm-cell-center" style="font-weight:bold; font-size:0.8rem;"><span class="cm-mob-label">코드</span>${cat.code}</div>
+                                <div class="cm-cell-input"><input type="text" id="name-${cat.code}" value="${cat.name}"></div>
+                                <div class="cm-cell-input"><input type="text" id="title-${cat.code}" value="${cat.hero_title || ''}"></div>
+                                <div class="cm-cell-center"><input type="color" id="m-color-${cat.code}" value="${cat.menu_text_color || '#333333'}" style="width:25px; border:none;" title="메뉴 글자색"></div>
+                                <div class="cm-cell-center"><input type="color" id="t-color-${cat.code}" value="${cat.hero_title_color || '#ffffff'}" style="width:25px; border:none;" title="배경 큰 제목 색상"></div>
+                                <div class="cm-cell-center"><input type="color" id="d-color-${cat.code}" value="${cat.hero_desc_color || '#ffffff'}" style="width:25px; border:none;" title="배경 설명글 색상"></div>
+                                <div class="cm-cell-center"><input type="color" id="o-color-${cat.code}" value="${cat.hero_overlay_color || '#1a3c6e'}" style="width:25px; border:none;" title="배경 이미지 덮는 필터 색상"></div>
+                                <div class="cm-cell-center"><input type="number" id="o-op-${cat.code}" value="${cat.hero_overlay_opacity !== undefined ? cat.hero_overlay_opacity : 0.8}" step="0.1" style="width:40px;"></div>
+                                <div class="cm-cell-input"><input type="text" id="desc-${cat.code}" value="${cat.hero_desc || ''}"></div>
+                                <div class="cm-cell-center" style="display:flex; flex-direction:column; align-items:center; gap:5px;"><img src="${thumb}" style="width:50px; height:50px; object-fit:cover; cursor:pointer; border:1px solid #ddd; border-radius:4px;" onclick="document.getElementById('file-${cat.code}').click()" title="이미지 변경"><input type="file" id="file-${cat.code}" class="cat-file-input" data-code="${cat.code}" style="display:none;" accept="image/*"><button class="btn-mini" style="font-size:0.6rem; color:red;" onclick="deleteSubHeroImage('${cat.code}')">삭제</button></div>
+                                <div class="cm-cell-center">${visBtn}</div>
+                                <div class="cm-cell-center"><button onclick="deleteCategory('${cat.code}')" class="btn-mini" style="background:#ff6b6b; color:#fff; width:100%;">삭제</button></div>
                             </div>`;
 
                     if (groups[cat.type] !== undefined) {
@@ -1083,7 +1082,7 @@
                                     </div>
                                 </div>
                                 <div class="accordion-body ${isActive}">
-                                    <div class="mobile-no-scroll"> <!-- ★ 모바일 가로 스크롤 방지용 래퍼 클래스 적용 -->
+                                    <div class="mobile-no-scroll">
                                         ${headerHtml}
                                         <div id="sortable-list-${type}" class="sortable-group">
                                             ${groups[type] || '<div style="padding:30px; text-align:center; color:#999; border:1px dashed #ddd;">이 유형에 등록된 카테고리가 없습니다.</div>'}

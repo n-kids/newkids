@@ -3,99 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>뉴키즈 - 상세 보기</title>
+    <title>뉴키즈 - 상세 내용</title>
     <link rel="stylesheet" href="style.css">
+
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+
     <style>
-        #view-hero.sub-hero {
-            height: auto !important;
-            background-color: #ffffff !important;
-            border-bottom: 1px solid #eaeaea !important;
-            padding: 30px 0 !important;
-            margin: 0 !important;
-            box-shadow: none !important;
+        .view-content .ql-align-center {
             text-align: center !important;
         }
 
-        #view-hero h1 {
-            color: #111111 !important;
-            font-size: 2.2rem !important;
-            font-weight: bold !important;
-            margin-bottom: 5px !important;
-            text-shadow: none !important;
+        .view-content .ql-align-right {
+            text-align: right !important;
         }
 
-        #view-hero p {
-            color: #666666 !important;
-            font-size: 0.95rem !important;
-            margin: 0 !important;
-            text-shadow: none !important;
+        .view-content .ql-align-justify {
+            text-align: justify !important;
         }
 
-        .post-title {
-            font-size: 2rem;
-            color: #1a3c6e;
-            margin-bottom: 15px;
-            font-weight: bold;
-            line-height: 1.3;
-            text-align: center;
+        .view-content .ql-align-center img {
+            display: block;
+            margin: 0 auto !important;
         }
 
-        .post-meta {
-            display: flex;
-            justify-content: flex-end;
-            gap: 15px;
-            color: #666;
-            font-size: 0.95rem;
-            border-bottom: 2px solid #eee;
-            padding-bottom: 20px;
-            margin-bottom: 30px;
+        .view-content .ql-align-right img {
+            display: block;
+            margin-left: auto !important;
+            margin-right: 0 !important;
+        }
+
+        .view-content .ql-align-left img {
+            display: block;
+            margin-left: 0 !important;
+            margin-right: auto !important;
         }
     </style>
 </head>
 <body>
     <header></header>
+    <div id="loading" class="loading-overlay">내용을 불러오는 중입니다...</div>
 
-    <section class="sub-hero" id="view-hero">
+    <section class="sub-hero" id="view-hero" style="background-color: #1a3c6e;">
         <div class="container">
-            <h1 id="v-title">불러오는 중...</h1>
-            <p id="v-date">작성일: -</p>
+            <h1 id="page-title"></h1>
+            <p id="page-desc"></p>
         </div>
     </section>
 
-    <section style="background-color: #f8f9fa; padding: 40px 0;">
-        <div class="container">
-            <div class="proposal-box" style="max-width: 900px; margin: 0 auto; background: #fff; padding: 40px; border-radius: 12px;">
-
-                <!-- 비밀번호 입력 인증 박스 -->
-                <div id="secret-lock-box" style="display:none; text-align:center; padding: 50px 20px;">
-                    <h3 style="color:#1a3c6e; margin-bottom:15px;" id="lock-box-title">🔒 비밀글입니다</h3>
-                    <p style="color:#666; margin-bottom:20px;" id="lock-box-desc">작성 시 설정한 비밀번호를 입력해주세요.</p>
-                    <div style="display:inline-flex; gap:10px; max-width:400px; width:100%;">
-                        <input type="password" id="secret-pw-input" class="form-input" placeholder="비밀번호 입력">
-                        <button onclick="verifySecretPassword()" class="btn-action" style="white-space:nowrap;">확인</button>
-                    </div>
+    <section>
+        <div class="container-wide">
+            <div class="view-box">
+                <div class="view-header">
+                    <h2 class="view-title" id="post-title"></h2>
+                    <p class="view-date" id="post-date"></p>
                 </div>
 
-                <!-- 메인 콘텐츠 영역 -->
-                <div id="main-content-wrap" style="display:none;">
-                    <div id="v-content" style="line-height: 1.6; color: #333;"></div>
+                <div class="view-media" id="view-media" style="display:none;"></div>
 
-                    <div id="download-files-area" style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; display: none;">
-                        <h4 style="color: #1a3c6e; margin-bottom: 15px;">📎 첨부파일 및 다운로드</h4>
-                        <div id="download-list-container" style="display: flex; flex-direction: column; gap: 8px;"></div>
-                    </div>
+                <div id="download-container" class="download-container"></div>
 
-                    <!-- 수정 및 삭제 버튼 영역 (관리자 또는 일반 작성자 조건부 노출) -->
-                    <div id="author-actions-area" style="display:none; margin-top:30px; padding-top:20px; border-top:1px dashed #ddd; display:flex; gap:10px; justify-content:flex-end;">
-                        <button onclick="openEditPost()" class="btn-action" style="background:#f4a261; padding:8px 20px; font-size:0.9rem;">수정</button>
-                        <button onclick="deleteCurrentPost()" class="btn-action" style="background:#ff6b6b; padding:8px 20px; font-size:0.9rem;">삭제</button>
-                    </div>
-                </div>
+                <div class="view-content ql-editor" id="post-content"></div>
 
-                <div class="btn-center-wrap" style="margin-top: 40px;">
-                    <!-- ★ history.back() 대신 카테고리 목록으로 정확히 이동하도록 수정됨 ★ -->
-                    <button onclick="location.href='notice.html#' + (postDataCache ? postDataCache.category : '')" class="btn-action" style="background:#666; width: 150px;">목록으로</button>
-                </div>
+                <div id="link-container" style="text-align: center; margin: 40px 0 20px;"></div>
+
+                <a href="javascript:history.back()" class="btn-list">목록으로 돌아가기</a>
             </div>
         </div>
     </section>
@@ -105,246 +76,141 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js"></script>
     <script src="manager.js"></script>
+
     <script>
-        let currentPostId = null;
-        let postDataCache = null;
-        let pendingAction = null;
-        let isAdminLoggedIn = false;
+        document.addEventListener("DOMContentLoaded", function () {
+            const params = new URLSearchParams(window.location.search);
+            const postId = params.get('id');
 
-        document.addEventListener("DOMContentLoaded", () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            currentPostId = urlParams.get('id');
-
-            if (!currentPostId) {
-                alert("잘못된 접근입니다.");
-                location.href = 'index.html';
-                return;
+            if (postId) {
+                const checkSb = setInterval(() => {
+                    if (window.sb) {
+                        clearInterval(checkSb);
+                        loadPostDetail(postId);
+                    }
+                }, 100);
             }
-
-            const checkReady = setInterval(async () => {
-                if (window.sb) {
-                    clearInterval(checkReady);
-                    // 관리자 로그인 세션 사전 체크
-                    const { data: { session } } = await window.sb.auth.getSession();
-                    isAdminLoggedIn = !!session;
-
-                    loadPostDetail(currentPostId);
-                }
-            }, 100);
         });
+
+        function isVideo(url) {
+            if (!url) return false;
+            return /\.(mp4|webm|ogg|mov|avi|mkv)(\?|$)/i.test(url);
+        }
+
+        function isImage(url) {
+            if (!url) return false;
+            return /\.(jpeg|jpg|gif|png|webp|svg)(\?|$)/i.test(url);
+        }
 
         async function loadPostDetail(id) {
-            const { data, error } = await window.sb.from('total_posts').select('*').eq('id', id).single();
-
-            if (error || !data) {
-                document.getElementById('v-content').innerHTML = "<div style='text-align:center; padding:50px;'>게시글을 찾을 수 없습니다.</div>";
-                document.getElementById('main-content-wrap').style.display = 'block';
-                return;
-            }
-
-            data.actualPassword = data.password || data.video_url || '';
-            postDataCache = data;
-
-            document.getElementById('v-title').innerText = data.title;
-            document.title = "뉴키즈 - " + data.title;
-            document.getElementById('v-date').innerText = "작성일: " + new Date(data.created_at).toISOString().split('T')[0];
-
-            const isSecretPost = (data.is_secret === true || data.is_secret === 'true') && data.actualPassword.trim() !== '';
-
-            if (isSecretPost) {
-                if (isAdminLoggedIn) {
-                    revealPostContent();
-                    checkActionAuth();
-                } else {
-                    document.getElementById('lock-box-title').innerText = "🔒 비밀글입니다";
-                    document.getElementById('lock-box-desc').innerText = "작성 시 설정한 비밀번호를 입력해주세요.";
-                    document.getElementById('secret-lock-box').style.display = 'block';
-                }
-            } else {
-                revealPostContent();
-                checkActionAuth();
-            }
-        }
-
-        // 수정/삭제 버튼을 노출할지 결정하는 함수 (공지사항 카테고리이면서 관리자가 아니면 버튼 숨김)
-        function checkActionAuth() {
-            // 예: 카테고리가 'notice'이거나 공지 성격인 경우, 관리자가 아니면 수정/삭제 버튼 숨김
-            const isNoticeCategory = postDataCache.category === 'notice';
-
-            if (isNoticeCategory && !isAdminLoggedIn) {
-                // 공지글인데 일반 사용자인 경우 버튼 노출 안 함
-                document.getElementById('author-actions-area').style.display = 'none';
-            } else {
-                // 관리자이거나 일반 게시판 글인 경우 버튼 노출
-                document.getElementById('author-actions-area').style.display = 'flex';
-            }
-        }
-
-        function verifySecretPassword() {
-            const inputPw = document.getElementById('secret-pw-input').value.trim();
-            if (!inputPw) return alert("비밀번호를 입력해주세요.");
-
-            if (inputPw === postDataCache.actualPassword) {
-                document.getElementById('secret-lock-box').style.display = 'none';
-                document.getElementById('secret-pw-input').value = '';
-
-                if (pendingAction === 'edit') {
-                    pendingAction = null;
-                    location.href = `write.html?edit=${currentPostId}&pw=${encodeURIComponent(inputPw)}#${postDataCache.category}`;
-                    return;
-                } else if (pendingAction === 'delete') {
-                    pendingAction = null;
-                    executeDeletePost();
-                    return;
-                }
-
-                alert("비밀번호가 확인되었습니다.");
-                revealPostContent();
-                checkActionAuth();
-            } else {
-                alert("비밀번호가 일치하지 않습니다.");
-            }
-        }
-
-        function revealPostContent() {
-            let finalContent = postDataCache.content || '';
-            finalContent = finalContent.replace(/\[투표:(\d+)\]/g, '<iframe id="form-iframe-$1" src="form.html?id=$1" width="100%" frameborder="0" scrolling="no" style="border:1px solid #ddd; border-radius:12px; margin:30px 0; overflow:hidden; transition:height 0.3s ease;"></iframe>');
-
-            document.getElementById('v-content').innerHTML = finalContent;
-
-            if (postDataCache.image_url && postDataCache.image_url.trim() !== '' && postDataCache.image_url !== 'null') {
-                const files = postDataCache.image_url.split('||').map(u => u.trim()).filter(u => u);
-                if (files.length > 0) {
-                    const downloadArea = document.getElementById('download-files-area');
-                    const downloadList = document.getElementById('download-list-container');
-                    let fileHtml = '';
-
-                    files.forEach(item => {
-                        let fileUrl = item;
-                        let fileName = "다운로드 파일";
-
-                        if (item.includes('@@')) {
-                            const parts = item.split('@@');
-                            fileUrl = parts[0];
-                            fileName = parts[1];
-                        } else {
-                            let rawName = item.split('/').pop().split('?')[0];
-                            try { rawName = decodeURIComponent(rawName); } catch (e) { }
-                            fileName = rawName.includes('___') ? rawName.split('___').pop() : rawName;
-                        }
-
-                        const safeUrl = fileUrl.replace(/'/g, "\\'");
-                        const safeName = fileName.replace(/'/g, "\\'");
-
-                        fileHtml += `
-                                    <div onclick="downloadFileWithOriginalName('${safeUrl}', '${safeName}')" style="display:flex; justify-content:space-between; align-items:center; background:#f8f9fa; padding:12px 15px; border-radius:8px; border:1px solid #e9ecef; cursor:pointer; text-decoration:none; color:#1a3c6e; font-weight:bold; transition: background 0.2s;">
-                                        <span>📥 ${fileName}</span>
-                                        <span style="font-size:0.85rem; background:#1a3c6e; color:#fff; padding:4px 10px; border-radius:4px;">다운로드</span>
-                                    </div>
-                                `;
-                    });
-
-                    downloadList.innerHTML = fileHtml;
-                    downloadArea.style.display = 'block';
-                }
-            }
-
-            document.getElementById('main-content-wrap').style.display = 'block';
-        }
-
-        async function openEditPost() {
-            // 공지글이고 관리자가 아예 아닌 경우 2차 차단
-            if (postDataCache.category === 'notice' && !isAdminLoggedIn) {
-                return alert("공지글은 수정할 수 없습니다.");
-            }
-
-            if (isAdminLoggedIn) {
-                location.href = `write.html?edit=${currentPostId}#${postDataCache.category}`;
-                return;
-            }
-
-            const isSecretPost = (postDataCache.is_secret === true || postDataCache.is_secret === 'true') && postDataCache.actualPassword.trim() !== '';
-            if (isSecretPost && document.getElementById('main-content-wrap').style.display === 'block') {
-                location.href = `write.html?edit=${currentPostId}&pw=${encodeURIComponent(postDataCache.actualPassword)}#${postDataCache.category}`;
-            } else {
-                pendingAction = 'edit';
-                document.getElementById('main-content-wrap').style.display = 'none';
-                document.getElementById('lock-box-title').innerText = "✍️ 글 수정 인증";
-                document.getElementById('lock-box-desc').innerText = "수정을 위해 글 작성 시 설정한 비밀번호를 입력해주세요.";
-                document.getElementById('secret-lock-box').style.display = 'block';
-            }
-        }
-
-        async function deleteCurrentPost() {
-            // 공지글이고 관리자가 아예 아닌 경우 2차 차단
-            if (postDataCache.category === 'notice' && !isAdminLoggedIn) {
-                return alert("공지글은 삭제할 수 없습니다.");
-            }
-
-            if (isAdminLoggedIn) {
-                if (confirm("정말 이 게시글을 삭제하시겠습니까?")) executeDeletePost();
-                return;
-            }
-
-            const isSecretPost = (postDataCache.is_secret === true || postDataCache.is_secret === 'true') && postDataCache.actualPassword.trim() !== '';
-
-            if (!isSecretPost) {
-                pendingAction = 'delete';
-                document.getElementById('main-content-wrap').style.display = 'none';
-                document.getElementById('lock-box-title').innerText = "🗑️ 글 삭제 인증";
-                document.getElementById('lock-box-desc').innerText = "삭제를 위해 작성 시 설정한 비밀번호를 입력해주세요.";
-                document.getElementById('secret-lock-box').style.display = 'block';
-            } else {
-                if (confirm("정말 이 게시글을 삭제하시겠습니까?")) {
-                    executeDeletePost();
-                }
-            }
-        }
-
-        async function executeDeletePost() {
-            const { error } = await window.sb.from('total_posts').delete().eq('id', currentPostId);
-            if (error) {
-                alert("삭제 실패: " + error.message);
-            } else {
-                alert("게시글이 삭제되었습니다.");
-                location.href = `notice.html#${postDataCache.category}`;
-            }
-        }
-
-        async function downloadFileWithOriginalName(url, filename) {
+            document.getElementById('loading').style.display = 'flex';
             try {
-                const response = await fetch(url);
-                const blob = await response.blob();
-                const blobUrl = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = blobUrl;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(blobUrl);
-            } catch (e) {
-                window.open(url, '_blank');
-            }
-        }
+                const { data, error } = await window.sb.from('total_posts').select('*').eq('id', id).single();
+                if (error || !data) throw new Error("데이터 없음");
 
-        window.addEventListener('message', function (event) {
-            if (event.data && event.data.type === 'resizeIframe') {
-                let iframe = document.getElementById('form-iframe-' + event.data.formId);
-                if (!iframe) {
-                    const iframes = document.querySelectorAll('iframe');
-                    for (let f of iframes) {
-                        if (f.src && f.src.includes('id=' + event.data.formId)) {
-                            iframe = f;
-                            break;
+                document.getElementById('post-title').innerText = data.title;
+                document.getElementById('post-date').innerText = window.formatDate(data.created_at);
+                document.getElementById('post-content').innerHTML = data.content;
+
+                const mediaBox = document.getElementById('view-media');
+                const downloadBox = document.getElementById('download-container');
+                mediaBox.innerHTML = '';
+                downloadBox.innerHTML = '';
+
+                let rawVideo = data.video_url || "";
+                let videoVal = rawVideo.trim();
+
+                if (videoVal === 'ORDER_ITEM' || videoVal === 'null' || videoVal === '') {
+                    videoVal = null;
+                }
+                else if (videoVal.startsWith('ORDER_ALL|')) {
+                    const parts = videoVal.split('|');
+                    videoVal = (parts.length > 1 && parts[1].trim() !== '') ? parts[1].trim() : null;
+                }
+
+                if (videoVal && !videoVal.startsWith('http')) {
+                    videoVal = null;
+                }
+
+                // 비디오 렌더링
+                if (videoVal) {
+                    const yid = window.getYoutubeId(videoVal);
+                    mediaBox.innerHTML += yid
+                        ? `<iframe src="https://www.youtube.com/embed/${yid}" frameborder="0" allowfullscreen style="margin-bottom:15px;"></iframe>`
+                        : `<video controls style="width:100%; border-radius:10px; margin-bottom:15px;"><source src="${videoVal}"></video>`;
+                    mediaBox.style.display = 'block';
+                }
+
+                // (view.html의 loadPostDetail 함수 내부에 있는 다중 파일 파싱 부분을 이 코드로 교체하세요)
+                if (data.image_url && data.image_url !== 'null' && data.image_url.trim() !== '') {
+                    const urls = data.image_url.split('||');
+
+                    urls.forEach(fileData => {
+                        fileData = fileData.trim();
+                        if (!fileData) return;
+
+                        let fileUrl = fileData;
+                        let displayFilename = "";
+
+                        // '@@' 구분자를 통해 URL과 한글 원본 이름을 분리합니다.
+                        if (fileData.includes('@@')) {
+                            const parts = fileData.split('@@');
+                            fileUrl = parts[0];
+                            displayFilename = parts[1];
+                        } else {
+                            // 과거에 올렸던 파일 하위 호환
+                            let rawFilename = fileUrl.split('/').pop().split('?')[0];
+                            try { rawFilename = decodeURIComponent(rawFilename); } catch (e) { }
+                            displayFilename = rawFilename.includes('___') ? rawFilename.split('___').pop() : rawFilename;
                         }
-                    }
+
+                        const fileExt = displayFilename.split('.').pop().toUpperCase();
+
+                        if (isVideo(fileUrl)) {
+                            mediaBox.innerHTML += `<video controls style="width:100%; border-radius:10px; margin-bottom:15px;"><source src="${fileUrl}"></video>`;
+                            mediaBox.style.display = 'block';
+                        } else if (isImage(fileUrl)) {
+                            mediaBox.innerHTML += `<img src="${fileUrl}" style="width:100%; border-radius:8px; margin-bottom:15px;" onerror="this.style.display='none'">`;
+                            mediaBox.style.display = 'block';
+                        }
+
+                        const forceDownloadUrl = fileUrl + (fileUrl.includes('?') ? '&' : '?') + 'download=' + encodeURIComponent(displayFilename);
+
+                        downloadBox.innerHTML += `
+            <a href="${forceDownloadUrl}" class="link-btn-style btn-download" style="display: inline-block; margin: 5px;">
+                📂 ${displayFilename} 다운로드
+            </a>`;
+                    });
                 }
-                if (iframe) {
-                    iframe.style.height = (event.data.height + 30) + 'px';
+
+                if (!mediaBox.innerHTML.trim()) {
+                    mediaBox.style.display = 'none';
                 }
+
+                const linkBox = document.getElementById('link-container');
+                linkBox.innerHTML = "";
+
+                if (data.link_url && data.link_url.trim() !== "" && data.link_url !== "null") {
+                    let finalLink = data.link_url.trim();
+                    if (!finalLink.startsWith('http')) finalLink = 'https://' + finalLink;
+
+                    linkBox.innerHTML = `
+                                    <a href="${finalLink}" target="_blank" class="link-btn-style">
+                                        🔗 관련 사이트 바로가기
+                                    </a>`;
+                }
+
+                if (typeof window.updateHeroBackground === 'function') {
+                    window.updateHeroBackground(data.category);
+                }
+
+            } catch (err) {
+                console.error(err);
+                alert("불러오기 실패: " + err.message);
+                history.back();
             }
-        });
+            finally { document.getElementById('loading').style.display = 'none'; }
+        }
     </script>
 </body>
 </html>

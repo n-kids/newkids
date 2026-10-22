@@ -4,297 +4,80 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>뉴키즈 - 글쓰기</title>
-
-    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="admin.css">
 </head>
-<body>
-    <header></header>
+<body style="background:#f9fbfd;">
 
-    <div class="board-header-section">
-        <div class="container">
-            <h1 id="page-title" style="font-size: 2.2rem; margin-bottom:10px; color:#1a3c6e;">✏️ 글쓰기</h1>
-            <p style="color:#666;">게시글을 작성하거나 수정합니다.</p>
+    <header>
+        <div class="header-inner">
+            <a href="index.html" class="logo"><img src="logo.jpg" alt="로고" class="logo-img"></a>
         </div>
-    </div>
+    </header>
 
-    <div class="container" style="max-width: 900px; margin: 40px auto; padding: 0 20px;">
-        <div class="panel-box" style="background: #fff; padding: 40px; border-radius: 12px; border: 1px solid #eee; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
+    <div class="container" style="padding-top:100px;">
+        <div class="write-box">
+            <h2 style="text-align:center; color:#1a3c6e; margin-bottom:30px;">✏️ 자유게시판 글쓰기</h2>
 
-            <div class="form-group" style="margin-bottom: 20px;">
-                <label class="form-label">카테고리</label>
-                <select id="write-category" class="form-input"></select>
-            </div>
-
-            <div class="form-group" style="margin-bottom: 20px;">
+            <div class="form-group">
                 <label class="form-label">제목</label>
-                <input type="text" id="write-title" class="form-input" placeholder="제목을 입력하세요">
+                <input type="text" id="w-title" class="form-input" placeholder="제목을 입력하세요">
             </div>
 
-            <!-- ★ 비밀번호 및 비밀글 설정 폼 추가 완료 ★ -->
-            <div class="form-group" style="margin-bottom: 20px; background:#fff8e1; padding:15px; border-radius:8px; border:1px solid #ffe082;">
-                <label class="form-label" style="color:#b78103;">🔑 비밀번호 (나중에 글을 수정/삭제할 때 필요합니다)</label>
-                <input type="text" id="write-password" class="form-input" placeholder="비밀번호를 입력하세요 (필수)">
-
-                <div style="margin-top: 15px;">
-                    <label style="cursor:pointer; display:inline-flex; align-items:center; font-weight: bold; color: #d63031;">
-                        <input type="checkbox" id="write-is-secret" style="width:18px; height:18px; margin-right:8px;">
-                        🔒 이 글을 비밀글로 설정합니다
-                    </label>
-                    <p style="font-size:0.85rem; color:#888; margin-top:5px; margin-left: 26px;">* 체크하면 관리자와 비밀번호를 아는 사람만 글을 읽을 수 있습니다.</p>
+            <div style="display:flex; gap:15px; margin-bottom:20px;">
+                <div style="flex:1;">
+                    <label class="form-label">작성자</label>
+                    <input type="text" id="w-author" class="form-input" placeholder="이름">
+                </div>
+                <div style="flex:1;">
+                    <label class="form-label">비밀번호</label>
+                    <input type="password" id="w-password" class="form-input" placeholder="삭제 시 필요">
                 </div>
             </div>
 
-            <div class="form-group" style="margin-bottom: 20px;">
-                <label class="form-label">내용 (이미지를 끌어다 놓아도 첨부됩니다)</label>
-                <div id="editor-container" style="height: 300px;"></div>
-                <input type="file" id="hidden-image-input" accept="image/*" multiple style="display:none;">
+            <div class="form-group">
+                <label class="form-label">내용</label>
+                <textarea id="w-content" class="form-input" style="height:300px; resize:vertical;" placeholder="내용을 자유롭게 작성해주세요."></textarea>
             </div>
 
-            <div class="form-group" style="margin-bottom: 20px; background:#fcfcfc; padding:15px; border:1px dashed #ccc; border-radius:8px;">
-                <label class="form-label">첨부파일 / 다중 미디어 추가</label>
-                <input type="file" id="write-file" class="form-input" accept="*/*" multiple>
-                <div id="existing-files-list" style="margin-top:10px; display:flex; flex-direction:column; gap:5px;"></div>
-            </div>
-
-            <div class="form-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
-                <div class="form-group"><label class="form-label">유튜브 URL (선택)</label><input type="text" id="write-youtube" class="form-input" placeholder="https://youtu.be/..."></div>
-                <div class="form-group"><label class="form-label">작성자 이름 (선택)</label><input type="text" id="write-link" class="form-input" placeholder="이름을 입력하세요"></div>
-            </div>
-
-            <div class="btn-center-wrap" style="margin-top: 40px; display:flex; gap:10px; justify-content:center;">
-                <button id="btn-submit" onclick="submitPost()" class="btn-action" style="min-width: 150px; font-size:1.1rem;">작성 완료</button>
-                <button onclick="history.back()" class="btn-action" style="background:#666; min-width: 100px;">취소</button>
+            <div class="btn-center-wrap">
+                <button onclick="saveUserPost()" class="btn-action" style="width:200px;">등록하기</button>
+                <button onclick="history.back()" class="btn-action" style="background:#999;">취소</button>
             </div>
         </div>
     </div>
 
-    <footer></footer>
-
-    <!-- 로딩 오버레이 -->
-    <div id="loading" class="loading-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.8); z-index:9999; justify-content:center; align-items:center; font-size:1.5rem; font-weight:bold; color:#1a3c6e;">
-        처리 중입니다...
-    </div>
-
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
-    <script src="https://unpkg.com/quill-blot-formatter@1.0.5/dist/quill-blot-formatter.min.js"></script>
     <script src="config.js"></script>
-    <script src="manager.js"></script>
-
     <script>
-        let quill;
-        let editId = null;
-        let keptFiles = [];
-        let originalThumbUrl = null;
+        async function saveUserPost() {
+            const title = document.getElementById('w-title').value;
+            const author = document.getElementById('w-author').value;
+            const password = document.getElementById('w-password').value;
+            const content = document.getElementById('w-content').value;
 
-        document.addEventListener("DOMContentLoaded", async function () {
-            if (typeof Quill !== 'undefined') {
-                Quill.register('modules/blotFormatter', QuillBlotFormatter.default);
-                quill = new Quill('#editor-container', {
-                    theme: 'snow',
-                    modules: {
-                        blotFormatter: {},
-                        toolbar: {
-                            container: [[{ 'header': [1, 2, 3, false] }], ['bold', 'italic', 'underline', { 'color': [] }, { 'background': [] }], [{ 'align': [] }, 'link', 'image', 'video']],
-                            handlers: { image: function () { document.getElementById('hidden-image-input').click(); } }
-                        }
-                    }
-                });
-
-                document.getElementById('hidden-image-input').addEventListener('change', async function () {
-                    if (this.files && this.files.length > 0) {
-                        showLoading(true);
-                        try {
-                            for (let i = 0; i < this.files.length; i++) {
-                                const file = this.files[i];
-                                if (!file.type.startsWith('image/')) continue;
-                                const ext = file.name.split('.').pop();
-                                const safeKey = `user_${Date.now()}_${i}.${ext}`;
-                                const { data, error } = await window.sb.storage.from('images').upload(safeKey, file);
-                                if (error) throw error;
-                                const publicUrl = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl;
-                                const range = quill.getSelection(true);
-                                let idx = range ? range.index : quill.getLength();
-                                quill.insertEmbed(idx, 'image', publicUrl);
-                                quill.setSelection(idx + 1);
-                            }
-                        } catch (e) {
-                            alert("이미지 업로드 실패: " + e.message);
-                        } finally {
-                            showLoading(false);
-                            this.value = '';
-                        }
-                    }
-                });
+            if(!title || !author || !password || !content) {
+                return alert("모든 항목을 입력해주세요.");
             }
 
-            const checkReady = setInterval(async () => {
-                if (window.sb && window.GLOBAL_CATEGORIES && window.GLOBAL_CATEGORIES.length > 0) {
-                    clearInterval(checkReady);
+            if(!confirm("글을 등록하시겠습니까?")) return;
 
-                    // 카테고리 세팅
-                    const catSelect = document.getElementById('write-category');
-                    window.GLOBAL_CATEGORIES.forEach(c => {
-                        const opt = document.createElement('option');
-                        opt.value = c.code;
-                        opt.text = c.name;
-                        catSelect.appendChild(opt);
-                    });
-
-                    // 파라미터 확인 (수정 모드인지 확인)
-                    const urlParams = new URLSearchParams(window.location.search);
-                    editId = urlParams.get('edit');
-                    const hashCat = location.hash.replace('#', '');
-
-                    if (editId) {
-                        document.getElementById('page-title').innerText = "✏️ 글 수정";
-                        document.getElementById('btn-submit').innerText = "수정 완료";
-                        await loadEditData(editId);
-                    } else if (hashCat) {
-                        catSelect.value = hashCat;
-                    }
-                }
-            }, 100);
-        });
-
-        function showLoading(show) {
-            document.getElementById('loading').style.display = show ? 'flex' : 'none';
-        }
-
-        async function loadEditData(id) {
-            showLoading(true);
-            const { data, error } = await window.sb.from('total_posts').select('*').eq('id', id).single();
-            showLoading(false);
-
-            if (error || !data) {
-                alert("게시글 정보를 불러올 수 없습니다.");
-                history.back();
-                return;
-            }
-
-            document.getElementById('write-category').value = data.category;
-            document.getElementById('write-title').value = data.title;
-            document.getElementById('write-password').value = data.password || data.video_url || '';
-            document.getElementById('write-is-secret').checked = (data.is_secret === true || data.is_secret === 'true');
-
-            quill.root.innerHTML = data.content || '';
-
-            let val = data.video_url || "";
-            if (val.startsWith('ORDER_ALL|')) val = val.replace('ORDER_ALL|', '');
-            else if (val === 'ORDER_ITEM' || val === 'ORDER_ALL') val = '';
-            document.getElementById('write-youtube').value = val;
-            document.getElementById('write-link').value = data.link_url || '';
-
-            originalThumbUrl = data.thumbnail_url;
-
-            if (data.image_url && data.image_url !== 'null') {
-                keptFiles = data.image_url.split('||').map(u => u.trim()).filter(u => u);
-                renderExistingFiles();
-            }
-        }
-
-        function renderExistingFiles() {
-            const list = document.getElementById('existing-files-list');
-            list.innerHTML = '';
-            keptFiles.forEach((item, idx) => {
-                let display = item;
-                if (item.includes('@@')) { display = item.split('@@')[1]; }
-                else {
-                    let rawFilename = item.split('/').pop().split('?')[0];
-                    try { rawFilename = decodeURIComponent(rawFilename); } catch (e) { }
-                    display = rawFilename.includes('___') ? rawFilename.split('___').pop() : rawFilename;
-                }
-                list.innerHTML += `
-                        <div style="display:flex; justify-content:space-between; align-items:center; background:#f0f7ff; padding:8px 12px; border-radius:6px; border:1px solid #cce5ff;">
-                            <span style="font-size:0.9rem; color:#1a3c6e;">📎 ${display}</span>
-                            <button type="button" onclick="removeExistingFile(${idx})" style="background:#ff6b6b; color:white; border:none; border-radius:4px; padding:4px 10px; cursor:pointer; font-size:0.8rem;">삭제</button>
-                        </div>`;
-            });
-        }
-        window.removeExistingFile = function (idx) { keptFiles.splice(idx, 1); renderExistingFiles(); };
-
-        function getYoutubeId(url) {
-            if (!url) return null;
-            const m = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/);
-            return (m && m[2].length === 11) ? m[2] : null;
-        }
-
-        function getFirstImageFromContent(html) {
-            const d = document.createElement('div');
-            d.innerHTML = html;
-            const i = d.querySelector('img');
-            return i ? i.src : null;
-        }
-
-        async function submitPost() {
-            const title = document.getElementById('write-title').value.trim();
-            const category = document.getElementById('write-category').value;
-            const password = document.getElementById('write-password').value.trim();
-            const isSecret = document.getElementById('write-is-secret').checked;
-
-            if (!title) return alert("제목을 입력해주세요.");
-            if (!password) return alert("게시글 보호를 위해 비밀번호를 입력해주세요.");
-
-            showLoading(true);
-
-            // 첨부파일 업로드 처리
-            const fileInput = document.getElementById('write-file');
-            let newUploadedUrls = [];
-            if (fileInput.files.length > 0) {
-                for (let i = 0; i < fileInput.files.length; i++) {
-                    const df = fileInput.files[i];
-                    const ext = df.name.split('.').pop();
-                    const safeKey = `d_${Date.now()}_${i}.${ext}`;
-                    const { data, error } = await window.sb.storage.from('images').upload(safeKey, df);
-                    if (error) { showLoading(false); return alert("첨부파일 업로드 실패: " + error.message); }
-                    const fileUrl = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl;
-                    newUploadedUrls.push(fileUrl + '@@' + df.name);
-                }
-            }
-            const finalFileUrls = [...keptFiles, ...newUploadedUrls];
-            let du = finalFileUrls.length > 0 ? finalFileUrls.join('||') : null;
-
-            // 썸네일 처리 (유튜브 또는 본문 첫 이미지 자동 지정)
-            let yId = getYoutubeId(document.getElementById('write-youtube').value);
-            let thumbUrl = originalThumbUrl;
-            if (yId) thumbUrl = `https://img.youtube.com/vi/${yId}/hqdefault.jpg`;
-            else {
-                const firstImg = getFirstImageFromContent(quill.root.innerHTML);
-                if (firstImg) thumbUrl = firstImg;
-            }
-
-            const pd = {
+            // DB 저장 (카테고리: 'free' 고정)
+            // 작성자는 link_url 컬럼에, 비밀번호는 video_url 컬럼에 임시 저장 (DB 구조 변경 없이 사용하기 위함)
+            const { error } = await window.sb.from('total_posts').insert([{
+                category: 'free',
                 title: title,
-                content: quill.root.innerHTML,
-                category: category,
-                video_url: document.getElementById('write-youtube').value,
-                link_url: document.getElementById('write-link').value,
-                thumbnail_url: thumbUrl,
-                image_url: du,
-                password: password,
-                is_secret: isSecret, // ★ 비밀글 여부를 데이터베이스에 정상적으로 전달!
-                is_visible: true
-            };
+                content: content, // 줄바꿈을 <br>로 치환하려면: content.replace(/\n/g, "<br>")
+                link_url: author,   // 작성자 이름 저장용
+                video_url: password, // 비밀번호 저장용
+                order_num: 0
+            }]);
 
-            let resultError;
-            if (editId) {
-                const { error } = await window.sb.from('total_posts').update(pd).eq('id', editId);
-                resultError = error;
+            if(error) {
+                alert("저장 실패: " + error.message);
             } else {
-                pd.order_num = 0; // 새 글은 기본 순서 0
-                const { error } = await window.sb.from('total_posts').insert([pd]);
-                resultError = error;
-            }
-
-            showLoading(false);
-
-            if (resultError) {
-                alert("저장 중 오류 발생: " + resultError.message);
-            } else {
-                alert("성공적으로 저장되었습니다.");
-                // 작성 완료 후 해당 카테고리 게시판 목록으로 정상 이동!
-                location.href = `notice.html#${category}`;
+                alert("등록되었습니다.");
+                location.href = "notice.html";
             }
         }
     </script>

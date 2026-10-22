@@ -188,6 +188,15 @@
             #preview-main-hero { width: 100% !important; height: auto !important; aspect-ratio: 16/9; }
             .ql-toolbar { display: flex; flex-wrap: wrap; justify-content: flex-start; padding: 5px !important; }
 
+            /* ★ 게시글 목록 (게시판 관리) 모바일 카드형 레이아웃 복구 ★ */
+            #manage-list { display: flex !important; flex-direction: column !important; gap: 15px !important; }
+            .post-manage-card { display: flex !important; flex-direction: column !important; width: 100% !important; height: auto !important; border: 1px solid #eee; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+            .pm-thumb { width: 100% !important; height: 180px !important; object-fit: cover !important; border-bottom: 1px solid #eee; }
+            .pm-body { padding: 15px !important; width: 100% !important; box-sizing: border-box; }
+            .pm-actions { display: flex !important; flex-wrap: wrap !important; gap: 8px !important; padding: 15px !important; width: 100% !important; box-sizing: border-box; background: #f9f9f9; border-top: 1px solid #eee; }
+            .pm-actions button.pm-btn { flex: 1 1 calc(50% - 10px) !important; margin: 0 !important; padding: 10px !important; font-size: 0.9rem !important; border-radius: 6px !important; }
+
+
             /* ★ 서브페이지 카테고리 관리: 컴팩트 카드형 레이아웃 ★ */
             
             /* 긴 헤더 박스 강제 숨김 (우선순위 상향) */

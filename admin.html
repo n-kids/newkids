@@ -130,19 +130,19 @@
                 padding-left: 35px;
             }
 
-        /* ★ 캐시 우회를 위한 새로운 그리드 클래스 적용 ★ */
-        .cm-layout {
+        /* ★ PC 환경 그리드 기본 설정 ★ */
+        .cat-manage-layout {
             display: grid;
             align-items: center;
             border-bottom: 1px solid #eee;
             padding: 10px;
         }
-        .cm-cell-center {
+        .cat-cell-center {
             display: flex;
             justify-content: center;
             align-items: center;
         }
-        .cm-cell-input input {
+        .cat-cell-input input {
             width: 100%;
             padding: 5px;
             border: 1px solid #ccc;
@@ -152,7 +152,7 @@
             .mobile-no-scroll { overflow-x: auto; }
         }
 
-        /* ★ 모바일 관리자 페이지 깨짐 방지 및 카드형 뷰 최적화 ★ */
+        /* ★ 모바일 관리자 페이지 깨짐 방지 및 폼 간격 최적화 ★ */
         @media screen and (max-width: 768px) {
             .admin-layout { display: flex !important; flex-direction: column !important; }
             
@@ -178,7 +178,19 @@
             .panel-box { padding: 20px 15px !important; border-radius: 12px !important; }
 
             .flex-row-to-col { display: flex !important; flex-direction: column !important; align-items: stretch !important; gap: 15px !important; height: auto !important; }
-            .write-inline-row, .form-grid { display: flex !important; flex-direction: column !important; gap: 15px !important; }
+            
+            /* ★ 핵심: 폼 입력칸들(순서, 카테고리, 제목 등) 간격 및 정렬 정상화 ★ */
+            .write-inline-row, .form-grid { display: block !important; }
+            .write-inline-row .form-group, .form-grid .form-group { 
+                width: 100% !important; 
+                margin-bottom: 15px !important; 
+                text-align: left !important; 
+            }
+            .form-label { 
+                text-align: left !important; 
+                display: block !important; 
+                margin-bottom: 8px !important; 
+            }
             
             .w-100-mob { width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }
             div[style*="flex: 1"], div[style*="flex: 2"], div[style*="flex: 0 0 150px"] { width: 100% !important; flex: none !important; margin-bottom: 0 !important; }
@@ -192,12 +204,12 @@
             #manage-list { display: flex !important; flex-direction: column !important; gap: 15px !important; }
             .post-manage-card { display: flex !important; flex-direction: column !important; width: 100% !important; height: auto !important; border: 1px solid #eee; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
             .pm-thumb { width: 100% !important; height: 180px !important; object-fit: cover !important; border-bottom: 1px solid #eee; }
-            .pm-body { padding: 15px !important; width: 100% !important; box-sizing: border-box; }
+            .pm-body { padding: 15px !important; width: 100% !important; box-sizing: border-box; text-align: left !important; }
             .pm-actions { display: flex !important; flex-wrap: wrap !important; gap: 8px !important; padding: 15px !important; width: 100% !important; box-sizing: border-box; background: #f9f9f9; border-top: 1px solid #eee; }
             .pm-actions button.pm-btn { flex: 1 1 calc(50% - 10px) !important; margin: 0 !important; padding: 10px !important; font-size: 0.9rem !important; border-radius: 6px !important; }
 
-            /* ★ 서브페이지 카테고리 관리: 컴팩트 카드형 레이아웃 ★ */
-            .cm-header { display: none !important; } /* 긴 헤더 완전 숨김 */
+            /* 서브페이지 카테고리 관리: 컴팩트 카드형 레이아웃 */
+            .cm-header { display: none !important; } 
             
             .cm-layout {
                 display: flex !important; flex-wrap: wrap !important; min-width: 0 !important;
@@ -207,11 +219,9 @@
             }
             .cm-row > div { display: flex !important; align-items: center; }
             
-            /* 1. 순서이동 핸들 & 코드명 (넓이 조정으로 글자 꺾임 방지) */
             .cm-row > div:nth-child(1) { width: 25%; justify-content: flex-start; }
             .cm-row > div:nth-child(2) { width: 75%; font-size: 1.1rem !important; justify-content: flex-end; color: #1a3c6e; font-weight: 800 !important; }
             
-            /* 2. 메뉴명, 제목, 설명글 */
             .cm-row > div:nth-child(3),
             .cm-row > div:nth-child(4),
             .cm-row > div:nth-child(10) { width: 100%; margin-top: 5px; }
@@ -221,7 +231,6 @@
             .cm-row > div:nth-child(10)::before { content: '설명글:'; width: 60px; font-size: 0.85rem; color:#888; font-weight:bold; }
             .cm-cell-input input { flex: 1; padding: 8px !important; border: 1px solid #ccc !important; border-radius: 4px !important; width: calc(100% - 60px) !important; font-size: 0.95rem; }
             
-            /* 3. 색상 및 투명도 설정 (한 줄로 예쁘게 묶기) */
             .cm-row > div:nth-child(5)::before { content: '메뉴색'; font-size:0.7rem; color:#666; display:block; text-align:center; margin-bottom: 5px; }
             .cm-row > div:nth-child(6)::before { content: '제목색'; font-size:0.7rem; color:#666; display:block; text-align:center; margin-bottom: 5px; }
             .cm-row > div:nth-child(7)::before { content: '설명색'; font-size:0.7rem; color:#666; display:block; text-align:center; margin-bottom: 5px; }
@@ -242,7 +251,6 @@
             .cm-row input[type="color"] { width: 35px !important; height: 35px !important; border: 1px solid #ddd !important; border-radius: 4px; padding: 0 !important; }
             .cm-row input[type="number"] { width: 90% !important; text-align: center; padding: 6px 2px !important; border: 1px solid #ccc; border-radius: 4px; font-size:0.85rem;}
 
-            /* 4. 이미지, 상태, 삭제 버튼 (하단) */
             .cm-row > div:nth-child(11) { width: 40%; justify-content: flex-start; margin-top: 15px; flex-direction: row !important; gap: 10px; }
             .cm-row > div:nth-child(12) { width: 30%; justify-content: center; margin-top: 15px; }
             .cm-row > div:nth-child(13) { width: 30%; justify-content: flex-end; margin-top: 15px; }
@@ -328,9 +336,9 @@
                     </div>
                     <input type="file" id="hidden-image-input" accept="image/*" multiple style="display:none;">
                     <div class="write-inline-row">
-                        <div class="form-group w-col-order" style="margin-bottom:0;"><label class="form-label">순서</label><input type="number" id="post-order" class="form-input" value="0" style="text-align:center; padding: 12px 5px;"></div>
+                        <div class="form-group w-col-order"><label class="form-label">순서</label><input type="number" id="post-order" class="form-input" value="0" style="text-align:center; padding: 12px 5px;"></div>
 
-                        <div class="form-group w-col-category" style="margin-bottom:0; position:relative;">
+                        <div class="form-group w-col-category" style="position:relative;">
                             <label class="form-label">카테고리</label>
                             <input type="hidden" id="post-category" value="">
                             <div id="custom-cat-trigger" class="form-input" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;" onclick="toggleCustomSelect()">
@@ -340,10 +348,10 @@
                             <div id="custom-cat-dropdown" class="custom-select-dropdown" style="display:none;">
                             </div>
                         </div>
-                        <div class="form-group w-col-title" style="margin-bottom:0;"><label class="form-label">제목 (교재명)</label><input type="text" id="post-title" class="form-input" placeholder="제목을 입력하세요"></div>
+                        <div class="form-group w-col-title"><label class="form-label">제목 (교재명)</label><input type="text" id="post-title" class="form-input" placeholder="제목을 입력하세요"></div>
                     </div>
 
-                    <div class="form-group" style="margin-top:15px; background:#fff8e1; padding:15px; border-radius:8px; border:1px solid #ffe082;">
+                    <div class="form-group" style="background:#fff8e1; padding:15px; border-radius:8px; border:1px solid #ffe082;">
                         <label class="form-label" style="color:#b78103;">🔑 게시글 비밀번호 (수정/삭제 인증용)</label>
                         <input type="text" id="post-password" class="form-input" placeholder="비밀번호를 입력하세요">
                     </div>
@@ -1030,7 +1038,6 @@
                 const gridStyle = "grid-template-columns: 40px 70px 100px 100px 45px 45px 45px 45px 50px 1fr 120px 50px 60px; min-width: 1100px;";
                 const isMobile = window.innerWidth <= 768;
                 
-                // 모바일일 경우 헤더 HTML을 아예 출력하지 않음으로써 캐시 충돌 원천 차단
                 const headerHtml = isMobile ? '' : `<div class="cm-layout cm-header" style="${gridStyle}"><div>순서</div><div>코드</div><div>메뉴명</div><div>제목</div><div title="상단 메뉴 글자색">메뉴색</div><div title="배경 큰 제목 색상">제목색</div><div title="배경 설명글 색상">설명색</div><div title="배경 이미지 덮는 필터 색상">필터색</div><div title="필터 색상의 투명도">투명도</div><div>설명글</div><div>이미지</div><div>노출</div><div>삭제</div></div>`;
 
                 let groups = { 'PAGE': '', 'BOARD': '', 'EVENT': '', 'EDU': '' };

@@ -189,7 +189,10 @@
             .ql-toolbar { display: flex; flex-wrap: wrap; justify-content: flex-start; padding: 5px !important; }
 
             /* ★ 서브페이지 카테고리 관리: 컴팩트 카드형 레이아웃 ★ */
-            .cat-manage-header { display: none !important; } /* 긴 헤더 숨김 */
+            
+            /* 긴 헤더 박스 강제 숨김 (우선순위 상향) */
+            .cat-manage-layout.cat-manage-header { display: none !important; border: none !important; padding: 0 !important; margin: 0 !important; } 
+
             .cat-manage-layout {
                 display: flex !important; flex-wrap: wrap !important; min-width: 0 !important;
                 background: #fff; border: 1px solid #ccc; border-radius: 8px;
@@ -198,9 +201,9 @@
             }
             .cat-manage-row > div { display: flex !important; align-items: center; }
             
-            /* 1. 순서이동 핸들 & 코드명 */
-            .cat-manage-row > div:nth-child(1) { width: 15%; justify-content: flex-start; }
-            .cat-manage-row > div:nth-child(2) { width: 85%; font-size: 1.1rem !important; justify-content: flex-end; color: #1a3c6e; font-weight: 800 !important; }
+            /* 1. 순서이동 핸들 & 코드명 (넓이 조정으로 글자 꺾임 방지) */
+            .cat-manage-row > div:nth-child(1) { width: 25%; justify-content: flex-start; }
+            .cat-manage-row > div:nth-child(2) { width: 75%; font-size: 1.1rem !important; justify-content: flex-end; color: #1a3c6e; font-weight: 800 !important; }
             
             /* 2. 메뉴명, 제목, 설명글 */
             .cat-manage-row > div:nth-child(3),
@@ -960,7 +963,7 @@
                         const otherBody = h.nextElementSibling;
                         const otherIcon = h.querySelector('.cs-icon');
                         if (otherBody) otherBody.classList.remove('active');
-                        if (otherIcon) outerIcon.innerText = '▼';
+                        if (otherIcon) otherIcon.innerText = '▼';
                     }
                 });
             }
@@ -1040,9 +1043,9 @@
                                 <div class="cat-cell-center"><span class="mob-label">필터색</span><input type="color" id="o-color-${cat.code}" value="${cat.hero_overlay_color || '#1a3c6e'}" style="width:25px; border:none;" title="배경 이미지 덮는 필터 색상"></div>
                                 <div class="cat-cell-center"><span class="mob-label">투명도</span><input type="number" id="o-op-${cat.code}" value="${cat.hero_overlay_opacity !== undefined ? cat.hero_overlay_opacity : 0.8}" step="0.1" style="width:40px;"></div>
                                 <div class="cat-cell-input"><span class="mob-label">설명글</span><input type="text" id="desc-${cat.code}" value="${cat.hero_desc || ''}"></div>
-                                <div class="cat-cell-center" style="display:flex; flex-direction:column; align-items:center; gap:5px;"><span class="mob-label">이미지</span><img src="${thumb}" style="width:50px; height:50px; object-fit:cover; cursor:pointer; border:1px solid #ddd;" onclick="document.getElementById('file-${cat.code}').click()" title="이미지 변경"><input type="file" id="file-${cat.code}" class="cat-file-input" data-code="${cat.code}" style="display:none;" accept="image/*"><button class="btn-mini" style="font-size:0.6rem; color:red;" onclick="deleteSubHeroImage('${cat.code}')">삭제</button></div>
+                                <div class="cat-cell-center" style="display:flex; flex-direction:column; align-items:center; gap:5px;"><span class="mob-label">이미지</span><img src="${thumb}" style="width:50px; height:50px; object-fit:cover; cursor:pointer; border:1px solid #ddd; border-radius:4px;" onclick="document.getElementById('file-${cat.code}').click()" title="이미지 변경"><input type="file" id="file-${cat.code}" class="cat-file-input" data-code="${cat.code}" style="display:none;" accept="image/*"><button class="btn-mini" style="font-size:0.6rem; color:red;" onclick="deleteSubHeroImage('${cat.code}')">삭제</button></div>
                                 <div class="cat-cell-center"><span class="mob-label">노출상태</span>${visBtn}</div>
-                                <div class="cat-cell-center"><span class="mob-label">삭제</span><button onclick="deleteCategory('${cat.code}')" class="btn-mini" style="background:#ff6b6b; color:#fff; width:100%;">삭제</button></div>
+                                <div class="cat-cell-center"><span class="mob-label">영구삭제</span><button onclick="deleteCategory('${cat.code}')" class="btn-mini" style="background:#ff6b6b; color:#fff; width:100%;">삭제</button></div>
                             </div>`;
 
                     if (groups[cat.type] !== undefined) {

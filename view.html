@@ -15,7 +15,6 @@
         .view-box-wrapper {
             width: 100% !important;
             max-width: 900px !important;
-            /* ★ 상단 여백을 100px로 대폭 늘려 헤더 밑으로 내려오게 수정 ★ */
             margin: 100px auto 50px !important; 
             padding: 0 20px !important;
             box-sizing: border-box !important;
@@ -75,8 +74,19 @@
             margin: 15px 0;
         }
 
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            color: #333;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+        .form-input:focus { outline: none; border-color: #1a3c6e; }
+
         @media screen and (max-width: 768px) {
-            /* ★ 모바일에서도 상단 여백 100px 유지하여 제목 잘림 방지 ★ */
             .view-box-wrapper { margin: 100px auto 20px !important; padding: 0 15px !important; }
             .view-box-custom { padding: 30px 20px !important; }
             .view-title { font-size: 1.6rem; }
@@ -89,7 +99,6 @@
     <div class="view-box-wrapper">
         <div class="view-box-custom">
 
-            <!-- 비밀번호 입력 인증 박스 (조회, 수정, 삭제 공용) -->
             <div id="secret-lock-box" style="display:none; text-align:center; padding: 50px 20px;">
                 <h3 style="color:#1a3c6e; margin-bottom:15px;" id="lock-box-title">🔒 비밀글입니다</h3>
                 <p style="color:#666; margin-bottom:20px;" id="lock-box-desc">작성 시 설정한 비밀번호를 입력해주세요.</p>
@@ -100,7 +109,6 @@
                 </div>
             </div>
 
-            <!-- 메인 콘텐츠 영역 -->
             <div id="main-content-wrap" style="display:none; width: 100%;">
                 
                 <div class="view-header">
@@ -118,14 +126,13 @@
                     <div id="download-list-container" style="display: flex; flex-direction: column; gap: 8px;"></div>
                 </div>
 
-                <!-- 관리자 답변 표시 영역 추가 -->
                 <div id="admin-reply-area" style="display:none; margin-top: 40px; padding: 25px; background: #f0f7ff; border-radius: 12px; border: 1px solid #cce5ff;">
                     <h4 style="color: #1a3c6e; margin-bottom: 15px; font-size:1.1rem; display:flex; align-items:center; gap:8px;">
                         <span>💬</span> 관리자 답변
                     </h4>
+                    
                     <div id="admin-reply-content" style="line-height: 1.6; color: #333; font-size: 0.95rem;"></div>
 
-                    <!-- 관리자 로그인 시에만 나타나는 답변 작성 폼 -->
                     <div id="admin-reply-form" style="display:none; margin-top: 20px; border-top: 1px dashed #b8daff; padding-top: 20px;">
                         <textarea id="new-reply-input" class="form-input" style="height:80px; resize:vertical; margin-bottom:10px; width:100%; padding:10px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box;" placeholder="관리자 답변을 입력하세요..."></textarea>
                         <div style="text-align:right;">
@@ -134,7 +141,6 @@
                     </div>
                 </div>
 
-                <!-- 수정 및 삭제 버튼 영역 -->
                 <div id="author-actions-area" style="display:none; margin-top:40px; padding-top:20px; border-top:1px solid #1a3c6e; justify-content:flex-end; gap:10px;">
                     <button onclick="openEditPost()" class="btn-action" style="background:#f4a261; padding:10px 25px; font-size:0.95rem;">수정</button>
                     <button onclick="deleteCurrentPost()" class="btn-action" style="background:#ff6b6b; padding:10px 25px; font-size:0.95rem;">삭제</button>
@@ -179,9 +185,27 @@
             }, 100);
         });
 
+        // ★ 게시글 카테고리에 맞춰 정확한 목록 페이지 URL을 반환하는 기능 추가
+        function getListUrl(categoryCode) {
+            let targetUrl = 'notice.html'; // 기본값 (게시판)
+            
+            if (window.GLOBAL_CATEGORIES && window.GLOBAL_CATEGORIES.length > 0) {
+                const catInfo = window.GLOBAL_CATEGORIES.find(c => c.code === categoryCode);
+                if (catInfo) {
+                    if (catInfo.type === 'EDU') {
+                        targetUrl = 'child.html';
+                    } else if (catInfo.type === 'EVENT') {
+                        targetUrl = 'program.html';
+                    }
+                }
+            }
+            return targetUrl + '#' + categoryCode;
+        }
+
         function goBackToList() {
             if(postDataCache && postDataCache.category) {
-                location.href = 'notice.html#' + postDataCache.category;
+                // 판단된 정확한 목록 URL로 이동
+                location.href = getListUrl(postDataCache.category);
             } else {
                 history.back();
             }
@@ -417,68 +441,4 @@
 
         async function deleteCurrentPost() {
             if (postDataCache.category === 'notice') {
-                return alert("공지글은 삭제할 수 없습니다.");
-            }
-
-            if (isAdminLoggedIn) {
-                if (confirm("정말 이 게시글을 영구 삭제하시겠습니까?")) executeDeletePost();
-                return;
-            }
-
-            const isSecretPost = (postDataCache.is_secret === true || String(postDataCache.is_secret) === 'true');
-            if (isSecretPost) {
-                if (confirm("정말 이 게시글을 영구 삭제하시겠습니까?")) {
-                    executeDeletePost();
-                }
-            } else {
-                showLockBox("🗑️ 글 삭제 본인 인증", "본인 확인을 위해 글 작성 시 설정한 비밀번호를 입력해주세요.", "delete");
-            }
-        }
-
-        async function executeDeletePost() {
-            const { error } = await window.sb.from('total_posts').delete().eq('id', currentPostId);
-            if (error) {
-                alert("삭제 실패: " + error.message);
-            } else {
-                alert("게시글이 안전하게 삭제되었습니다.");
-                location.href = `notice.html#${postDataCache.category}`;
-            }
-        }
-
-        async function downloadFileWithOriginalName(url, filename) {
-            try {
-                const response = await fetch(url);
-                const blob = await response.blob();
-                const blobUrl = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = blobUrl;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(blobUrl);
-            } catch (e) {
-                window.open(url, '_blank');
-            }
-        }
-
-        window.addEventListener('message', function (event) {
-            if (event.data && event.data.type === 'resizeIframe') {
-                let iframe = document.getElementById('form-iframe-' + event.data.formId);
-                if (!iframe) {
-                    const iframes = document.querySelectorAll('iframe');
-                    for (let f of iframes) {
-                        if (f.src && f.src.includes('id=' + event.data.formId)) {
-                            iframe = f;
-                            break;
-                        }
-                    }
-                }
-                if (iframe) {
-                    iframe.style.height = (event.data.height + 30) + 'px';
-                }
-            }
-        });
-    </script>
-</body>
-</html>
+                return alert("공지글은 삭제

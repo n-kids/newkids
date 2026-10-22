@@ -130,9 +130,8 @@
                 padding-left: 35px;
             }
 
-        /* ★ 모바일 관리자 페이지 깨짐 방지 완벽 최적화 CSS ★ */
+        /* ★ 모바일 관리자 페이지 레이아웃 최적화 CSS ★ */
         @media screen and (max-width: 768px) {
-            /* 전체 레이아웃을 세로형으로 변경 */
             .admin-layout { 
                 display: flex !important; 
                 flex-direction: column !important; 
@@ -146,83 +145,74 @@
                 top: auto !important;
                 width: 100% !important; 
                 height: 65px !important;
-                display: flex !important;
+                display: flex !important; 
                 flex-direction: row !important; 
                 overflow-x: auto !important; 
                 overflow-y: hidden !important;
                 white-space: nowrap !important; 
-                padding: 0 10px !important; 
+                padding: 0 !important; 
                 z-index: 9999 !important;
                 box-shadow: 0 -2px 10px rgba(0,0,0,0.1) !important;
                 background: #1a3c6e !important;
+                justify-content: flex-start !important;
             }
-            .sidebar-logo { display: none !important; } /* 좁은 공간이므로 로고 숨김 */
+            .sidebar-logo { display: none !important; } 
             
             .nav-item {
                 flex: 0 0 auto !important; 
-                padding: 10px 15px !important; 
+                padding: 5px 15px !important; 
                 margin: 0 !important;
                 display: flex !important; 
                 flex-direction: column !important; 
                 justify-content: center !important; 
                 align-items: center !important;
-                color: #fff !important;
+                color: #fff !important; 
+                font-size: 1.2rem !important; 
+                border-radius: 0 !important;
             }
-            .nav-item:hover, .nav-item.active {
-                background: rgba(255,255,255,0.1) !important;
-                border-radius: 8px;
-            }
+            .nav-item:hover, .nav-item.active { background: rgba(255,255,255,0.2) !important; }
             .nav-item .nav-text { 
-                display: block !important;
-                font-size: 0.75rem !important; 
-                margin-top: 5px !important; 
+                display: block !important; 
+                font-size: 0.65rem !important; 
+                margin-top: 4px !important; 
             }
 
-            /* 메인 콘텐츠 영역 여백 및 크기 100% 맞춤 */
-            .main-content {
-                margin-left: 0 !important; 
-                width: 100% !important; 
-                padding: 15px !important; 
-                padding-bottom: 90px !important; /* 하단 고정 메뉴 공간 확보 */
-            }
-            .panel-box { 
-                padding: 20px 15px !important; 
-            }
+            /* 콘텐츠 영역 여백 확보 */
+            .main-content { margin-left: 0 !important; width: 100% !important; padding: 15px !important; padding-bottom: 90px !important; }
+            .panel-box { padding: 20px 15px !important; border-radius: 12px !important; }
 
-            /* 가로로 나열된 폼 항목들(인라인 스타일 포함)을 모두 세로로 강제 정렬 */
-            .write-inline-row, .form-grid {
+            /* ★ 핵심: 가로 배열된 Flex 요소를 모바일에서 세로로 정렬해주는 유틸리티 클래스 ★ */
+            .flex-row-to-col { 
                 display: flex !important; 
                 flex-direction: column !important; 
-                gap: 15px !important;
+                align-items: stretch !important; 
+                gap: 15px !important; 
+                height: auto !important; 
             }
             
-            /* style 속성으로 가로 배치된 요소들(썸네일, 팝업, 환경설정 등) 강제 세로화 */
-            .panel-box div[style*="display: flex"],
-            .panel-box div[style*="display:inline-flex"] {
-                flex-direction: column !important;
-                align-items: stretch !important;
-                gap: 15px !important;
+            .write-inline-row, .form-grid { 
+                display: flex !important; 
+                flex-direction: column !important; 
+                gap: 15px !important; 
             }
             
-            /* 가로로 찌그러지던 속성 해제 */
-            .panel-box div[style*="flex: 1"] { 
-                width: 100% !important; 
-                flex: none !important; 
-            }
-
-            /* 에디터 툴바 삐져나옴 방지 */
-            .ql-toolbar { 
-                display: flex; 
-                flex-wrap: wrap; 
+            /* 넓이 강제 100% 적용 */
+            .w-100-mob { width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }
+            div[style*="flex: 1"], div[style*="flex: 2"], div[style*="flex: 0 0 150px"] { 
+                width: 100% !important; flex: none !important; margin-bottom: 0 !important; 
             }
             
-            /* 테이블 가로 스크롤 허용 (표가 잘리지 않도록) */
-            .admin-table { 
-                min-width: 800px !important; 
-            }
-            div[style*="overflow-x:auto;"] { 
-                -webkit-overflow-scrolling: touch; 
-            }
+            /* 헤더, 필터 줄바꿈 */
+            .admin-list-header { flex-direction: column !important; align-items: flex-start !important; gap: 15px !important; }
+            #filter-container { width: 100% !important; }
+            
+            /* 썸네일 이미지 및 에디터 툴바 삐져나옴 방지 */
+            #preview-main-hero { width: 100% !important; height: auto !important; aspect-ratio: 16/9; }
+            .ql-toolbar { display: flex; flex-wrap: wrap; justify-content: flex-start; padding: 5px !important; }
+            
+            /* 테이블 가로 스크롤 허용 */
+            .admin-table { min-width: 800px !important; }
+            div[style*="overflow-x:auto"] { -webkit-overflow-scrolling: touch; }
         }
     </style>
 </head>
@@ -292,7 +282,8 @@
                     <h2 id="form-title" style="border-bottom:2px solid #1a3c6e; padding-bottom:15px; margin-bottom:20px;">📝 게시글 작성/수정</h2>
                     <div style="background:#fff3cd; padding:15px; border-radius:8px; margin-bottom:20px; border:1px solid #ffeeba;">
                         <label style="font-weight:bold; margin-right:20px; color:#856404;">📢 노출 위치 선택</label>
-                        <div style="display:inline-flex; gap:20px; align-items:center;">
+                        <!-- ★ flex-row-to-col 클래스 추가됨 -->
+                        <div style="display:inline-flex; gap:20px; align-items:center;" class="flex-row-to-col">
                             <label style="cursor:pointer; display:flex; align-items:center;">
                                 <input type="checkbox" id="chk-intro" checked onchange="toggleEditorState()" style="width:18px; height:18px; margin-right:5px;">
                                 <strong>소개 페이지</strong> (일반 게시글)
@@ -325,7 +316,8 @@
                         <input type="text" id="post-password" class="form-input" placeholder="비밀번호를 입력하세요">
                     </div>
 
-                    <div style="display: flex; gap: 20px; align-items: flex-end; margin-bottom: 20px; margin-top: 15px;">
+                    <!-- ★ flex-row-to-col 클래스 추가됨 -->
+                    <div style="display: flex; gap: 20px; align-items: flex-end; margin-bottom: 20px; margin-top: 15px;" class="flex-row-to-col">
                         <div class="form-group" style="flex: 1; margin-bottom: 0; padding: 15px; border: 1px solid #ddd; border-radius: 8px; background: #fff;">
                             <label class="form-label">썸네일 이미지 (선택 - 자동 편집 지원)</label>
                             <input type="file" id="post-thumb-file" class="form-input" accept="image/*" style="margin-bottom:0;">
@@ -334,11 +326,12 @@
 
                         <div class="form-group" style="flex: 1; margin-bottom: 0; background:#eef6ff; padding:15px; border-radius:8px; border:1px solid #cce5ff;">
                             <label class="form-label" style="color:#1a3c6e; margin-bottom:10px;">📊 폼/투표 간편 삽입</label>
-                            <div style="display:flex; gap:10px;">
-                                <select id="form-insert-select" class="form-input" style="flex:1;">
+                            <!-- ★ flex-row-to-col 클래스 추가됨 -->
+                            <div style="display:flex; gap:10px;" class="flex-row-to-col">
+                                <select id="form-insert-select" class="form-input w-100-mob" style="flex:1;">
                                     <option value="">삽입할 투표를 선택하세요</option>
                                 </select>
-                                <button type="button" onclick="insertFormToEditor()" class="btn-action" style="width:120px; background:#f4a261; border:none; height:46px; padding:0;">⬇️ 본문에 넣기</button>
+                                <button type="button" onclick="insertFormToEditor()" class="btn-action w-100-mob" style="width:120px; background:#f4a261; border:none; height:46px; padding:0;">⬇️ 본문에 넣기</button>
                             </div>
                         </div>
                     </div>
@@ -362,13 +355,14 @@
                         <div class="form-group"><label class="form-label">관련 링크 URL</label><input type="text" id="post-link" class="form-input" placeholder="이동할 URL"></div>
                     </div>
                     <div class="btn-center-wrap">
-                        <button id="btn-submit" onclick="uploadPost()" class="btn-action" style="min-width: 200px;">업로드 저장</button>
-                        <button id="btn-cancel-edit" onclick="cancelEdit()" class="btn-action" style="display:none; background-color:#666;">취소</button>
+                        <button id="btn-submit" onclick="uploadPost()" class="btn-action w-100-mob" style="min-width: 200px;">업로드 저장</button>
+                        <button id="btn-cancel-edit" onclick="cancelEdit()" class="btn-action w-100-mob" style="display:none; background-color:#666;">취소</button>
                     </div>
                 </div>
 
                 <div class="panel-box" style="margin-top: 30px;">
-                    <div class="admin-list-header">
+                    <!-- ★ flex-row-to-col 클래스 추가됨 -->
+                    <div class="admin-list-header flex-row-to-col">
                         <h3 style="margin:0;">📂 등록된 게시글 목록</h3>
 
                         <div id="filter-container" style="position:relative; width: 220px; z-index: 99;">
@@ -390,16 +384,18 @@
                 <h2 style="border-bottom:2px solid #1a3c6e; padding-bottom:15px;">🖼️ 서브 페이지 관리</h2>
                 <div class="panel-box" style="margin-bottom:30px; border:2px dashed #1a3c6e; background:#f0f7ff;">
                     <h3 style="margin-bottom:15px; color:#1a3c6e;">➕ 새 카테고리(메뉴) 추가</h3>
-                    <div style="display: flex; gap: 15px; margin-bottom: 15px; align-items: flex-end;">
+                    <!-- ★ flex-row-to-col 클래스 추가됨 -->
+                    <div style="display: flex; gap: 15px; margin-bottom: 15px; align-items: flex-end;" class="flex-row-to-col">
                         <div class="form-group" style="flex: 0 0 150px; margin-bottom:0;"><label class="form-label">유형</label><select id="new-cat-type" class="form-input"><option value="EDU">교육 (child.html)</option><option value="EVENT">행사 (program.html)</option><option value="BOARD">📌 게시판 전용</option><option value="PAGE">⚙️ 고정 페이지</option></select></div>
                         <div class="form-group" style="flex: 0 0 150px; margin-bottom:0;"><label class="form-label">코드 (영문)</label><input type="text" id="new-cat-code" class="form-input" placeholder="예: cooking"></div>
                         <div class="form-group" style="flex: 1; margin-bottom:0;"><label class="form-label">메뉴 이름</label><input type="text" id="new-cat-name" class="form-input" placeholder="예: 요리 활동"></div>
                     </div>
-                    <div style="display: flex; gap: 15px; margin-bottom: 15px; align-items: flex-end;">
+                    <!-- ★ flex-row-to-col 클래스 추가됨 -->
+                    <div style="display: flex; gap: 15px; margin-bottom: 15px; align-items: flex-end;" class="flex-row-to-col">
                         <div class="form-group" style="flex: 1; margin-bottom:0;"><label class="form-label">배경 이미지 (편집 가능)</label><input type="file" id="new-cat-file" class="form-input" accept="image/*" style="background:#fff;"></div>
                         <div class="form-group" style="flex: 2; margin-bottom:0;"><label class="form-label">설명글</label><input type="text" id="new-cat-desc" class="form-input"></div>
                     </div>
-                    <div style="text-align: right;"><button onclick="addNewCategory()" class="btn-action">카테고리 생성</button></div>
+                    <div style="text-align: right;"><button onclick="addNewCategory()" class="btn-action w-100-mob">카테고리 생성</button></div>
                 </div>
 
                 <div id="category-list-container">로딩 중...</div>
@@ -421,11 +417,11 @@
                     <div id="question-list" style="margin-top:30px; border-top:2px dashed #eee; padding-top:20px;"></div>
 
                     <div style="text-align:center; margin-top:20px;">
-                        <button onclick="addQuestionBlock()" class="btn-action" style="background:#f4a261; border:none; border-radius:50px;">➕ 질문 추가하기</button>
+                        <button onclick="addQuestionBlock()" class="btn-action w-100-mob" style="background:#f4a261; border:none; border-radius:50px;">➕ 질문 추가하기</button>
                     </div>
 
                     <div class="btn-center-wrap" style="margin-top:40px; border-top:1px solid #ddd; padding-top:30px;">
-                        <button onclick="saveCustomForm()" class="btn-action" style="width: 200px; font-size:1.1rem;">폼 저장 및 발행</button>
+                        <button onclick="saveCustomForm()" class="btn-action w-100-mob" style="width: 200px; font-size:1.1rem;">폼 저장 및 발행</button>
                     </div>
 
                     <h3 class="form-section-title" style="margin-top:50px;">📋 등록된 폼 / 투표 목록</h3>
@@ -462,23 +458,26 @@
                         <div class="form-group"><label class="form-label">메인 설명글</label><textarea id="conf-main-desc" class="form-input"></textarea></div>
                         <div class="form-group" style="margin-top:15px; border-top:1px dashed #ccc; padding-top:15px;">
                             <label class="form-label">텍스트 색상 설정</label>
-                            <div style="display:flex; gap:30px;">
+                            <!-- ★ flex-row-to-col 클래스 추가됨 -->
+                            <div style="display:flex; gap:30px;" class="flex-row-to-col">
                                 <div class="color-picker-group"><span class="color-picker-label">큰 제목</span><input type="color" id="conf-main-title-color" style="cursor:pointer;"></div>
                                 <div class="color-picker-group"><span class="color-picker-label">설명글</span><input type="color" id="conf-main-desc-color" style="cursor:pointer;"></div>
                             </div>
                         </div>
-                        <div style="display:flex; gap:30px; align-items:flex-start; margin-top:30px; border-top:1px dashed #ccc; padding-top:30px;">
+                        <!-- ★ flex-row-to-col 클래스 추가됨 -->
+                        <div style="display:flex; gap:30px; align-items:flex-start; margin-top:30px; border-top:1px dashed #ccc; padding-top:30px;" class="flex-row-to-col">
                             <div style="text-align:center;">
                                 <p style="font-size:0.9rem; margin-bottom:10px; color:#666; font-weight:bold;">현재 배경</p>
                                 <img id="preview-main-hero" src="" style="width:300px; height:170px; object-fit:cover; border-radius:8px; border:1px solid #ccc; background:#e0e0e0;">
-                                <button onclick="deleteMainHeroImage()" class="btn-mini" style="margin-top:10px; background:#ff6b6b; color:#fff; border:none; width:100%;">🗑️ 이미지 삭제</button>
+                                <button onclick="deleteMainHeroImage()" class="btn-mini w-100-mob" style="margin-top:10px; background:#ff6b6b; color:#fff; border:none; padding:10px;">🗑️ 이미지 삭제</button>
                             </div>
                             <div style="flex:1;">
                                 <label class="form-label">배경 이미지 변경 (편집 가능)</label>
                                 <input type="file" id="conf-main-hero" class="form-input" accept="image/*">
-                                <div style="display:flex; gap:30px; margin-top:20px;">
-                                    <div><label class="form-label">배경 색상</label><input type="color" id="conf-main-bg-color" style="height:40px; cursor:pointer;"></div>
-                                    <div><label class="form-label">오버레이 색상</label><input type="color" id="conf-main-overlay-color" style="height:40px; cursor:pointer;"></div>
+                                <!-- ★ flex-row-to-col 클래스 추가됨 -->
+                                <div style="display:flex; gap:30px; margin-top:20px;" class="flex-row-to-col">
+                                    <div><label class="form-label">배경 색상</label><input type="color" id="conf-main-bg-color" style="height:40px; cursor:pointer;" class="w-100-mob"></div>
+                                    <div><label class="form-label">오버레이 색상</label><input type="color" id="conf-main-overlay-color" style="height:40px; cursor:pointer;" class="w-100-mob"></div>
                                     <div><label class="form-label">투명도</label><div style="display:flex; align-items:center; gap:10px;"><input type="range" id="conf-main-overlay-opacity" min="0" max="1" step="0.1" oninput="document.getElementById('op-val-main').innerText=this.value"><span id="op-val-main" class="opacity-val">0.4</span></div></div>
                                 </div>
                             </div>
@@ -489,7 +488,8 @@
                     <div style="background:#fffcf0; padding:20px; border-radius:12px; border:2px solid #ff9f43;">
                         <div class="form-group" style="border-bottom:1px dashed #ccc; padding-bottom:15px; margin-bottom:15px;">
                             <h4 style="margin:0 0 10px 0;">➕ 새 팝업 추가하기</h4>
-                            <div style="display:flex; gap:10px; align-items:flex-end;">
+                            <!-- ★ flex-row-to-col 클래스 추가됨 -->
+                            <div style="display:flex; gap:10px; align-items:flex-end;" class="flex-row-to-col">
                                 <div style="flex:1;">
                                     <label class="form-label">이미지 파일</label>
                                     <input type="file" id="new-popup-file" class="form-input" accept="image/*" style="background:#fff;">
@@ -498,7 +498,7 @@
                                     <label class="form-label">링크 URL (선택)</label>
                                     <input type="text" id="new-popup-link" class="form-input" placeholder="http://...">
                                 </div>
-                                <button onclick="addNewPopup()" class="btn-action" style="height:46px;">추가</button>
+                                <button onclick="addNewPopup()" class="btn-action w-100-mob" style="height:46px;">추가</button>
                             </div>
                         </div>
 
@@ -519,7 +519,7 @@
                         <div class="form-group"><label class="form-label">강조 컬러</label><input type="color" id="conf-accent" class="form-input" style="height:50px;"></div>
                     </div>
                     <div class="btn-center-wrap">
-                        <button onclick="saveSiteConfig()" class="btn-action">설정 저장하기</button>
+                        <button onclick="saveSiteConfig()" class="btn-action w-100-mob">설정 저장하기</button>
                     </div>
                 </div>
             </div>

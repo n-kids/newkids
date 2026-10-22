@@ -225,4 +225,260 @@
 
             const cancelBtn = document.getElementById('btn-cancel-lock');
             if (action === 'edit' || action === 'delete') {
-                cancelBtn.setAttribute('onclick', 'cancelSecretBox()
+                cancelBtn.setAttribute('onclick', 'cancelSecretBox()');
+                cancelBtn.style.display = 'inline-block';
+                cancelBtn.innerText = '취소';
+            } else {
+                cancelBtn.setAttribute('onclick', 'goBackToList()');
+                cancelBtn.style.display = 'inline-block';
+                cancelBtn.innerText = '이전화면';
+            }
+        }
+
+        function cancelSecretBox() {
+            document.getElementById('secret-lock-box').style.display = 'none';
+            document.getElementById('main-content-wrap').style.display = 'block';
+            pendingAction = null;
+        }
+
+        function verifySecretPassword() {
+            const inputPw = document.getElementById('secret-pw-input').value.trim();
+            const actualPw = postDataCache.actualPassword;
+            
+            if (!inputPw) return alert("비밀번호를 입력해주세요.");
+
+            if (inputPw === actualPw) {
+                if (pendingAction === 'view') {
+                    document.getElementById('secret-lock-box').style.display = 'none';
+                    renderContent(); 
+                } else if (pendingAction === 'edit') {
+                    location.href = `write.html?edit=${currentPostId}#${postDataCache.category}`;
+                } else if (pendingAction === 'delete') {
+                    executeDeletePost(); 
+                }
+                pendingAction = null;
+            } else {
+                alert("비밀번호가 일치하지 않습니다.");
+            }
+        }
+
+        function renderContent() {
+            document.getElementById('secret-lock-box').style.display = 'none';
+            document.getElementById('main-content-wrap').style.display = 'block';
+
+            let finalContent = postDataCache.content || '';
+            finalContent = finalContent.replace(/\[투표:(\d+)\]/g, '<iframe id="form-iframe-$1" src="form.html?id=$1" width="100%" frameborder="0" scrolling="no" style="border:1px solid #ddd; border-radius:12px; margin:30px 0; overflow:hidden; transition:height 0.3s ease;"></iframe>');
+
+            document.getElementById('v-content').innerHTML = finalContent;
+
+            if (postDataCache.image_url && postDataCache.image_url.trim() !== '' && postDataCache.image_url !== 'null') {
+                const files = postDataCache.image_url.split('||').map(u => u.trim()).filter(u => u);
+                if (files.length > 0) {
+                    const downloadArea = document.getElementById('download-files-area');
+                    const downloadList = document.getElementById('download-list-container');
+                    let fileHtml = '';
+
+                    files.forEach(item => {
+                        let fileUrl = item;
+                        let fileName = "다운로드 파일";
+
+                        if (item.includes('@@')) {
+                            const parts = item.split('@@');
+                            fileUrl = parts[0];
+                            fileName = parts[1];
+                        } else {
+                            let rawName = item.split('/').pop().split('?')[0];
+                            try { rawName = decodeURIComponent(rawName); } catch (e) { }
+                            fileName = rawName.includes('___') ? rawName.split('___').pop() : rawName;
+                        }
+
+                        const safeUrl = fileUrl.replace(/'/g, "\\'");
+                        const safeName = fileName.replace(/'/g, "\\'");
+
+                        fileHtml += `
+                                <div onclick="downloadFileWithOriginalName('${safeUrl}', '${safeName}')" style="display:flex; justify-content:space-between; align-items:center; background:#f0f7ff; padding:12px 15px; border-radius:8px; border:1px solid #cce5ff; cursor:pointer; color:#1a3c6e; font-weight:bold; transition: background 0.2s;">
+                                    <span>📥 ${fileName}</span>
+                                    <span style="font-size:0.85rem; background:#1a3c6e; color:#fff; padding:4px 10px; border-radius:4px;">다운로드</span>
+                                </div>
+                            `;
+                    });
+
+                    downloadList.innerHTML = fileHtml;
+                    downloadArea.style.display = 'block';
+                }
+            }
+
+            const isNoticeCategory = postDataCache.category === 'notice';
+            if (isNoticeCategory) {
+                document.getElementById('author-actions-area').style.display = 'none';
+            } else {
+                document.getElementById('author-actions-area').style.display = 'flex';
+            }
+
+            loadAdminReplies();
+        }
+
+        async function loadAdminReplies() {
+            const { data, error } = await window.sb.from('post_comments')
+                .select('*')
+                .eq('post_id', currentPostId)
+                .order('created_at', { ascending: true });
+            
+            const replyArea = document.getElementById('admin-reply-area');
+            const replyContent = document.getElementById('admin-reply-content');
+            const replyForm = document.getElementById('admin-reply-form');
+
+            if (isAdminLoggedIn) {
+                replyForm.style.display = 'block';
+            } else {
+                replyForm.style.display = 'none';
+            }
+
+            if (data && data.length > 0) {
+                let html = '';
+                data.forEach((c, idx) => {
+                    const dateStr = new Date(c.created_at).toLocaleString();
+                    
+                    let safeContent = c.content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+                    safeContent = safeContent.replace(/\n/g, '<br>');
+                    
+                    const borderStyle = idx !== data.length - 1 ? 'border-bottom: 1px dashed #b8daff; margin-bottom: 15px; padding-bottom: 15px;' : '';
+                    const deleteBtn = isAdminLoggedIn ? `<button onclick="deleteReply(${c.id})" style="background:none; border:none; color:#ff6b6b; cursor:pointer; font-size:0.8rem; font-weight:bold; float:right;">❌ 삭제</button>` : '';
+
+                    html += `
+                        <div style="${borderStyle}; padding-bottom: 10px;">
+                            ${deleteBtn}
+                            <div style="font-size:0.85rem; color:#666; margin-bottom:8px;">${dateStr}</div>
+                            <div style="font-weight:bold; color:#1a3c6e; font-size:1.05rem;">${safeContent}</div>
+                        </div>`;
+                });
+                replyContent.innerHTML = html;
+                replyContent.style.display = 'block';
+                replyArea.style.display = 'block';
+            } else {
+                replyContent.innerHTML = '';
+                replyContent.style.display = 'none';
+                
+                if (isAdminLoggedIn) {
+                    replyArea.style.display = 'block';
+                } else {
+                    replyArea.style.display = 'none';
+                }
+            }
+        }
+
+        async function submitAdminReply() {
+            const content = document.getElementById('new-reply-input').value.trim();
+            if (!content) return alert("답변 내용을 입력하세요.");
+            if (!isAdminLoggedIn) return alert("관리자 권한이 필요합니다.");
+
+            const { error } = await window.sb.from('post_comments').insert([{
+                post_id: currentPostId,
+                author: '관리자',
+                password: 'admin',
+                content: content
+            }]);
+
+            if (error) {
+                alert("답변 등록 실패: " + error.message);
+            } else {
+                document.getElementById('new-reply-input').value = '';
+                loadAdminReplies(); 
+            }
+        }
+
+        async function deleteReply(replyId) {
+            if (!confirm("이 답변을 삭제하시겠습니까?")) return;
+            const { error } = await window.sb.from('post_comments').delete().eq('id', replyId);
+            if (error) {
+                alert("삭제 실패: " + error.message);
+            } else {
+                loadAdminReplies(); 
+            }
+        }
+
+        async function openEditPost() {
+            if (postDataCache.category === 'notice') {
+                return alert("공지글은 수정할 수 없습니다.");
+            }
+
+            if (isAdminLoggedIn) {
+                location.href = `write.html?edit=${currentPostId}#${postDataCache.category}`;
+                return;
+            }
+
+            const isSecretPost = (postDataCache.is_secret === true || String(postDataCache.is_secret) === 'true');
+            if (isSecretPost) {
+                location.href = `write.html?edit=${currentPostId}#${postDataCache.category}`;
+            } else {
+                showLockBox("✍️ 글 수정 본인 인증", "본인 확인을 위해 글 작성 시 설정한 비밀번호를 입력해주세요.", "edit");
+            }
+        }
+
+        async function deleteCurrentPost() {
+            if (postDataCache.category === 'notice') {
+                return alert("공지글은 삭제할 수 없습니다.");
+            }
+
+            if (isAdminLoggedIn) {
+                if (confirm("정말 이 게시글을 영구 삭제하시겠습니까?")) executeDeletePost();
+                return;
+            }
+
+            const isSecretPost = (postDataCache.is_secret === true || String(postDataCache.is_secret) === 'true');
+            if (isSecretPost) {
+                if (confirm("정말 이 게시글을 영구 삭제하시겠습니까?")) {
+                    executeDeletePost();
+                }
+            } else {
+                showLockBox("🗑️ 글 삭제 본인 인증", "본인 확인을 위해 글 작성 시 설정한 비밀번호를 입력해주세요.", "delete");
+            }
+        }
+
+        async function executeDeletePost() {
+            const { error } = await window.sb.from('total_posts').delete().eq('id', currentPostId);
+            if (error) {
+                alert("삭제 실패: " + error.message);
+            } else {
+                alert("게시글이 안전하게 삭제되었습니다.");
+                location.href = `notice.html#${postDataCache.category}`;
+            }
+        }
+
+        async function downloadFileWithOriginalName(url, filename) {
+            try {
+                const response = await fetch(url);
+                const blob = await response.blob();
+                const blobUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(blobUrl);
+            } catch (e) {
+                window.open(url, '_blank');
+            }
+        }
+
+        window.addEventListener('message', function (event) {
+            if (event.data && event.data.type === 'resizeIframe') {
+                let iframe = document.getElementById('form-iframe-' + event.data.formId);
+                if (!iframe) {
+                    const iframes = document.querySelectorAll('iframe');
+                    for (let f of iframes) {
+                        if (f.src && f.src.includes('id=' + event.data.formId)) {
+                            iframe = f;
+                            break;
+                        }
+                    }
+                }
+                if (iframe) {
+                    iframe.style.height = (event.data.height + 30) + 'px';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -129,6 +129,373 @@
                 font-weight: bold;
                 padding-left: 35px;
             }
+
+        /* PC 환경 그리드 설정 */
+        .cm-mob-label {
+            display: none;
+        }
+
+        .cm-layout {
+            display: grid;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+            padding: 10px;
+        }
+
+        .cm-cell-center {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .cm-cell-input input {
+            width: 100%;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        @media screen and (min-width: 769px) {
+            .mobile-no-scroll {
+                overflow-x: auto;
+            }
+        }
+
+        /* ★ 모바일 레이아웃 강제 덮어쓰기 (화면 깨짐 복구) ★ */
+        @media screen and (max-width: 768px) {
+            .admin-layout {
+                display: flex !important;
+                flex-direction: column !important;
+            }
+
+            /* 하단 고정 네비게이션바 */
+            .sidebar {
+                position: fixed !important;
+                bottom: 0 !important;
+                left: 0 !important;
+                top: auto !important;
+                width: 100% !important;
+                height: 65px !important;
+                display: flex !important;
+                flex-direction: row !important;
+                overflow-x: auto !important;
+                overflow-y: hidden !important;
+                white-space: nowrap !important;
+                padding: 0 !important;
+                z-index: 9999 !important;
+                box-shadow: 0 -2px 10px rgba(0,0,0,0.1) !important;
+                background: #1a3c6e !important;
+                justify-content: flex-start !important;
+            }
+
+            .sidebar-logo {
+                display: none !important;
+            }
+
+            .nav-item {
+                flex: 0 0 auto !important;
+                padding: 5px 15px !important;
+                margin: 0 !important;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: center !important;
+                align-items: center !important;
+                color: #fff !important;
+                font-size: 1.2rem !important;
+                border-radius: 0 !important;
+            }
+
+                .nav-item:hover, .nav-item.active {
+                    background: rgba(255,255,255,0.2) !important;
+                }
+
+                .nav-item .nav-text {
+                    display: block !important;
+                    font-size: 0.65rem !important;
+                    margin-top: 4px !important;
+                }
+
+            .main-content {
+                margin-left: 0 !important;
+                width: 100% !important;
+                padding: 15px !important;
+                padding-bottom: 90px !important;
+            }
+
+            .panel-box {
+                padding: 20px 15px !important;
+                border-radius: 12px !important;
+            }
+
+            .flex-row-to-col {
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 15px !important;
+                height: auto !important;
+            }
+
+            .write-inline-row, .form-grid {
+                display: block !important;
+            }
+
+                .write-inline-row .form-group, .form-grid .form-group {
+                    width: 100% !important;
+                    margin-bottom: 15px !important;
+                    text-align: left !important;
+                }
+
+            .form-label {
+                text-align: left !important;
+                display: block !important;
+                margin-bottom: 8px !important;
+            }
+
+            .w-100-mob {
+                width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+            }
+
+            div[style*="flex: 1"], div[style*="flex: 2"], div[style*="flex: 0 0 150px"] {
+                width: 100% !important;
+                flex: none !important;
+                margin-bottom: 0 !important;
+            }
+
+            .admin-list-header {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 15px !important;
+            }
+
+            #filter-container {
+                width: 100% !important;
+            }
+
+            #preview-main-hero {
+                width: 100% !important;
+                height: auto !important;
+                aspect-ratio: 16/9;
+            }
+
+            .ql-toolbar {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: flex-start;
+                padding: 5px !important;
+            }
+
+            /* ★ 게시글 목록 (카드형 복구) ★ */
+            #manage-list {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 15px !important;
+            }
+
+            .post-manage-card {
+                display: flex !important;
+                flex-direction: column !important;
+                width: 100% !important;
+                height: auto !important;
+                border: 1px solid #eee;
+                border-radius: 8px;
+                overflow: hidden;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            }
+
+            .pm-thumb {
+                width: 100% !important;
+                height: 180px !important;
+                object-fit: cover !important;
+                border-bottom: 1px solid #eee;
+            }
+
+            .pm-body {
+                padding: 15px !important;
+                width: 100% !important;
+                box-sizing: border-box;
+                text-align: left !important;
+            }
+
+            .pm-actions {
+                display: flex !important;
+                flex-wrap: wrap !important;
+                gap: 8px !important;
+                padding: 15px !important;
+                width: 100% !important;
+                box-sizing: border-box;
+                background: #f9f9f9;
+                border-top: 1px solid #eee;
+            }
+
+                .pm-actions button.pm-btn {
+                    flex: 1 1 calc(50% - 10px) !important;
+                    margin: 0 !important;
+                    padding: 10px !important;
+                    font-size: 0.9rem !important;
+                    border-radius: 6px !important;
+                }
+
+            /* ★ 카테고리 관리 목록 (카드형 복구) ★ */
+            .cm-header {
+                display: none !important;
+            }
+
+            .cm-layout {
+                display: flex !important;
+                flex-wrap: wrap !important;
+                min-width: 100% !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+                background: #fff;
+                border: 1px solid #ccc;
+                border-radius: 8px;
+                margin-bottom: 15px;
+                padding: 15px !important;
+                gap: 10px 0;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            }
+
+            .cm-row > div {
+                display: flex !important;
+                align-items: center;
+                width: 100%;
+                justify-content: flex-start;
+            }
+
+            .cm-mob-label {
+                display: block !important;
+                width: 70px;
+                font-size: 0.85rem;
+                color: #888;
+                font-weight: bold;
+                flex-shrink: 0;
+            }
+
+            .cm-row > div:nth-child(1) {
+                width: 30%;
+            }
+
+            .cm-row > div:nth-child(2) {
+                width: 70%;
+                font-size: 1.1rem !important;
+                justify-content: flex-end;
+                color: #1a3c6e;
+                font-weight: 800 !important;
+            }
+
+                .cm-row > div:nth-child(2) .cm-mob-label {
+                    display: none !important;
+                }
+
+            .cm-row > div:nth-child(3),
+            .cm-row > div:nth-child(4),
+            .cm-row > div:nth-child(10) {
+                width: 100%;
+                margin-top: 5px;
+            }
+
+            .cm-cell-input input {
+                flex: 1;
+                padding: 8px !important;
+                border: 1px solid #ccc !important;
+                border-radius: 4px !important;
+                font-size: 0.95rem;
+            }
+
+            .cm-row > div:nth-child(5),
+            .cm-row > div:nth-child(6),
+            .cm-row > div:nth-child(7),
+            .cm-row > div:nth-child(8),
+            .cm-row > div:nth-child(9) {
+                flex-direction: column !important;
+                width: 20%;
+                justify-content: center !important;
+                align-items: center !important;
+                margin-top: 10px;
+                background: #f4f6f9;
+                padding: 10px 0 !important;
+            }
+
+            .cm-row > div:nth-child(5) {
+                border-top-left-radius: 8px;
+                border-bottom-left-radius: 8px;
+            }
+
+            .cm-row > div:nth-child(9) {
+                border-top-right-radius: 8px;
+                border-bottom-right-radius: 8px;
+            }
+
+                .cm-row > div:nth-child(5) .cm-mob-label,
+                .cm-row > div:nth-child(6) .cm-mob-label,
+                .cm-row > div:nth-child(7) .cm-mob-label,
+                .cm-row > div:nth-child(8) .cm-mob-label,
+                .cm-row > div:nth-child(9) .cm-mob-label {
+                    width: auto;
+                    text-align: center;
+                    margin-bottom: 5px;
+                    font-size: 0.7rem;
+                    color: #666;
+                }
+
+            .cm-row input[type="color"] {
+                width: 35px !important;
+                height: 35px !important;
+                border: 1px solid #ddd !important;
+                border-radius: 4px;
+                padding: 0 !important;
+            }
+
+            .cm-row input[type="number"] {
+                width: 90% !important;
+                text-align: center;
+                padding: 6px 2px !important;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                font-size: 0.85rem;
+            }
+
+            .cm-row > div:nth-child(11) {
+                width: 40%;
+                margin-top: 15px;
+                flex-direction: column !important;
+                align-items: center !important;
+            }
+
+                .cm-row > div:nth-child(11) .cm-mob-label {
+                    width: auto;
+                    text-align: center;
+                    margin-bottom: 5px;
+                }
+
+            .cm-row > div:nth-child(12) {
+                width: 30%;
+                margin-top: 15px;
+                flex-direction: column !important;
+                align-items: center !important;
+            }
+
+                .cm-row > div:nth-child(12) .cm-mob-label {
+                    width: auto;
+                    text-align: center;
+                    margin-bottom: 5px;
+                }
+
+            .cm-row > div:nth-child(13) {
+                width: 30%;
+                margin-top: 15px;
+                flex-direction: column !important;
+                align-items: center !important;
+            }
+
+                .cm-row > div:nth-child(13) .cm-mob-label {
+                    width: auto;
+                    text-align: center;
+                    margin-bottom: 5px;
+                }
+        }
     </style>
 </head>
 <body>
@@ -136,6 +503,7 @@
     <div id="loading" class="loading-overlay">처리 중입니다...</div>
     <button id="img-edit-btn" onclick="openEditorForSelectedImage()">✏️ 이미지 편집</button>
 
+    <!-- 로그인 폼 -->
     <div id="login-section">
         <div class="login-box">
             <h2 style="text-align:center; margin-bottom:30px; color:#1a3c6e;">🔒 관리자 로그인</h2>
@@ -156,6 +524,7 @@
         </div>
     </div>
 
+    <!-- 메인 레이아웃 -->
     <div id="admin-layout" class="admin-layout" style="display:none;">
         <nav class="sidebar">
             <div class="sidebar-logo">🏢 <span>뉴키즈 관리자</span></div>
@@ -170,6 +539,7 @@
         </nav>
 
         <main class="main-content">
+            <!-- 1. 대시보드 탭 -->
             <div id="tab-dashboard" class="admin-section active">
                 <h1 style="color:#333; border-bottom:2px solid #ddd; padding-bottom:15px;">관리자 대시보드</h1>
                 <div class="dash-grid">
@@ -192,12 +562,13 @@
                 </div>
             </div>
 
+            <!-- 2. 게시글 관리 탭 -->
             <div id="tab-posts" class="admin-section">
                 <div class="panel-box">
                     <h2 id="form-title" style="border-bottom:2px solid #1a3c6e; padding-bottom:15px; margin-bottom:20px;">📝 게시글 작성/수정</h2>
                     <div style="background:#fff3cd; padding:15px; border-radius:8px; margin-bottom:20px; border:1px solid #ffeeba;">
                         <label style="font-weight:bold; margin-right:20px; color:#856404;">📢 노출 위치 선택</label>
-                        <div style="display:inline-flex; gap:20px; align-items:center;">
+                        <div style="display:inline-flex; gap:20px; align-items:center;" class="flex-row-to-col">
                             <label style="cursor:pointer; display:flex; align-items:center;">
                                 <input type="checkbox" id="chk-intro" checked onchange="toggleEditorState()" style="width:18px; height:18px; margin-right:5px;">
                                 <strong>소개 페이지</strong> (일반 게시글)
@@ -208,10 +579,11 @@
                             </label>
                         </div>
                     </div>
+
                     <input type="file" id="hidden-image-input" accept="image/*" multiple style="display:none;">
+
                     <div class="write-inline-row">
                         <div class="form-group w-col-order" style="margin-bottom:0;"><label class="form-label">순서</label><input type="number" id="post-order" class="form-input" value="0" style="text-align:center; padding: 12px 5px;"></div>
-
                         <div class="form-group w-col-category" style="margin-bottom:0; position:relative;">
                             <label class="form-label">카테고리</label>
                             <input type="hidden" id="post-category" value="">
@@ -219,26 +591,27 @@
                                 <span id="custom-cat-text" style="color:#666;">카테고리를 선택하세요</span>
                                 <span style="font-size:0.8rem; color:#888;">▼</span>
                             </div>
-                            <div id="custom-cat-dropdown" class="custom-select-dropdown" style="display:none;">
-                            </div>
+                            <div id="custom-cat-dropdown" class="custom-select-dropdown" style="display:none;"></div>
                         </div>
                         <div class="form-group w-col-title" style="margin-bottom:0;"><label class="form-label">제목 (교재명)</label><input type="text" id="post-title" class="form-input" placeholder="제목을 입력하세요"></div>
                     </div>
 
-                    <div style="display: flex; gap: 20px; align-items: flex-end; margin-bottom: 20px;">
+                    <div class="form-group" style="margin-top:15px; background:#fff8e1; padding:15px; border-radius:8px; border:1px solid #ffe082;">
+                        <label class="form-label" style="color:#b78103;">🔑 게시글 비밀번호 (수정/삭제 인증용)</label>
+                        <input type="text" id="post-password" class="form-input" placeholder="비밀번호를 입력하세요">
+                    </div>
+
+                    <div style="display: flex; gap: 20px; align-items: flex-end; margin-bottom: 20px; margin-top: 15px;" class="flex-row-to-col">
                         <div class="form-group" style="flex: 1; margin-bottom: 0; padding: 15px; border: 1px solid #ddd; border-radius: 8px; background: #fff;">
                             <label class="form-label">썸네일 이미지 (선택 - 자동 편집 지원)</label>
                             <input type="file" id="post-thumb-file" class="form-input" accept="image/*" style="margin-bottom:0;">
                             <div id="thumb-manage-area" style="display:none; margin-top:10px;"><label style="font-size:0.9rem; color:#d63031;"><input type="checkbox" id="delete-thumb-check"> 기존 썸네일 삭제</label></div>
                         </div>
-
                         <div class="form-group" style="flex: 1; margin-bottom: 0; background:#eef6ff; padding:15px; border-radius:8px; border:1px solid #cce5ff;">
                             <label class="form-label" style="color:#1a3c6e; margin-bottom:10px;">📊 폼/투표 간편 삽입</label>
-                            <div style="display:flex; gap:10px;">
-                                <select id="form-insert-select" class="form-input" style="flex:1;">
-                                    <option value="">삽입할 투표를 선택하세요</option>
-                                </select>
-                                <button type="button" onclick="insertFormToEditor()" class="btn-action" style="width:120px; background:#f4a261; border:none; height:46px; padding:0;">⬇️ 본문에 넣기</button>
+                            <div style="display:flex; gap:10px;" class="flex-row-to-col">
+                                <select id="form-insert-select" class="form-input w-100-mob" style="flex:1;"><option value="">삽입할 투표를 선택하세요</option></select>
+                                <button type="button" onclick="insertFormToEditor()" class="btn-action w-100-mob" style="width:120px; background:#f4a261; border:none; height:46px; padding:0;">⬇️ 본문에 넣기</button>
                             </div>
                         </div>
                     </div>
@@ -262,23 +635,21 @@
                         <div class="form-group"><label class="form-label">관련 링크 URL</label><input type="text" id="post-link" class="form-input" placeholder="이동할 URL"></div>
                     </div>
                     <div class="btn-center-wrap">
-                        <button id="btn-submit" onclick="uploadPost()" class="btn-action" style="min-width: 200px;">업로드 저장</button>
-                        <button id="btn-cancel-edit" onclick="cancelEdit()" class="btn-action" style="display:none; background-color:#666;">취소</button>
+                        <button id="btn-submit" onclick="uploadPost()" class="btn-action w-100-mob" style="min-width: 200px;">업로드 저장</button>
+                        <button id="btn-cancel-edit" onclick="cancelEdit()" class="btn-action w-100-mob" style="display:none; background-color:#666;">취소</button>
                     </div>
                 </div>
 
                 <div class="panel-box" style="margin-top: 30px;">
-                    <div class="admin-list-header">
+                    <div class="admin-list-header flex-row-to-col">
                         <h3 style="margin:0;">📂 등록된 게시글 목록</h3>
-
                         <div id="filter-container" style="position:relative; width: 220px; z-index: 99;">
                             <input type="hidden" id="filter-category" value="all">
                             <div id="filter-cat-trigger" class="form-input" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; background:#fff;" onclick="toggleFilterCustomSelect()">
                                 <span id="filter-cat-text" style="color:#1a3c6e; font-weight:bold;">전체 보기</span>
                                 <span style="font-size:0.8rem; color:#888;">▼</span>
                             </div>
-                            <div id="filter-cat-dropdown" class="custom-select-dropdown" style="display:none; left:auto; right:0; min-width: 100%;">
-                            </div>
+                            <div id="filter-cat-dropdown" class="custom-select-dropdown" style="display:none; left:auto; right:0; min-width: 100%;"></div>
                         </div>
                     </div>
                     <div id="manage-list"></div>
@@ -286,26 +657,26 @@
                 </div>
             </div>
 
+            <!-- 3. 서브 페이지 관리 탭 -->
             <div id="tab-category" class="admin-section">
                 <h2 style="border-bottom:2px solid #1a3c6e; padding-bottom:15px;">🖼️ 서브 페이지 관리</h2>
                 <div class="panel-box" style="margin-bottom:30px; border:2px dashed #1a3c6e; background:#f0f7ff;">
                     <h3 style="margin-bottom:15px; color:#1a3c6e;">➕ 새 카테고리(메뉴) 추가</h3>
-                    <div style="display: flex; gap: 15px; margin-bottom: 15px; align-items: flex-end;">
+                    <div style="display: flex; gap: 15px; margin-bottom: 15px; align-items: flex-end;" class="flex-row-to-col">
                         <div class="form-group" style="flex: 0 0 150px; margin-bottom:0;"><label class="form-label">유형</label><select id="new-cat-type" class="form-input"><option value="EDU">교육 (child.html)</option><option value="EVENT">행사 (program.html)</option><option value="BOARD">📌 게시판 전용</option><option value="PAGE">⚙️ 고정 페이지</option></select></div>
                         <div class="form-group" style="flex: 0 0 150px; margin-bottom:0;"><label class="form-label">코드 (영문)</label><input type="text" id="new-cat-code" class="form-input" placeholder="예: cooking"></div>
                         <div class="form-group" style="flex: 1; margin-bottom:0;"><label class="form-label">메뉴 이름</label><input type="text" id="new-cat-name" class="form-input" placeholder="예: 요리 활동"></div>
                     </div>
-                    <div style="display: flex; gap: 15px; margin-bottom: 15px; align-items: flex-end;">
+                    <div style="display: flex; gap: 15px; margin-bottom: 15px; align-items: flex-end;" class="flex-row-to-col">
                         <div class="form-group" style="flex: 1; margin-bottom:0;"><label class="form-label">배경 이미지 (편집 가능)</label><input type="file" id="new-cat-file" class="form-input" accept="image/*" style="background:#fff;"></div>
                         <div class="form-group" style="flex: 2; margin-bottom:0;"><label class="form-label">설명글</label><input type="text" id="new-cat-desc" class="form-input"></div>
                     </div>
-                    <div style="text-align: right;"><button onclick="addNewCategory()" class="btn-action">카테고리 생성</button></div>
+                    <div style="text-align: right;"><button onclick="addNewCategory()" class="btn-action w-100-mob">카테고리 생성</button></div>
                 </div>
-
                 <div id="category-list-container">로딩 중...</div>
-
             </div>
 
+            <!-- 4. 폼/투표 관리 탭 -->
             <div id="tab-forms" class="admin-section">
                 <h2 style="border-bottom:2px solid #1a3c6e; padding-bottom:15px; margin-bottom:20px;">📋 폼 / 투표 생성기</h2>
                 <div class="panel-box">
@@ -319,23 +690,21 @@
                     </div>
 
                     <div id="question-list" style="margin-top:30px; border-top:2px dashed #eee; padding-top:20px;"></div>
-
                     <div style="text-align:center; margin-top:20px;">
-                        <button onclick="addQuestionBlock()" class="btn-action" style="background:#f4a261; border:none; border-radius:50px;">➕ 질문 추가하기</button>
+                        <button onclick="addQuestionBlock()" class="btn-action w-100-mob" style="background:#f4a261; border:none; border-radius:50px;">➕ 질문 추가하기</button>
                     </div>
-
                     <div class="btn-center-wrap" style="margin-top:40px; border-top:1px solid #ddd; padding-top:30px;">
-                        <button onclick="saveCustomForm()" class="btn-action" style="width: 200px; font-size:1.1rem;">폼 저장 및 발행</button>
+                        <button onclick="saveCustomForm()" class="btn-action w-100-mob" style="width: 200px; font-size:1.1rem;">폼 저장 및 발행</button>
                     </div>
 
                     <h3 class="form-section-title" style="margin-top:50px;">📋 등록된 폼 / 투표 목록</h3>
                     <div id="admin-form-list" style="display:flex; flex-direction:column; gap:15px;">
                         <div style="text-align:center; padding:20px; color:#999;">데이터를 불러오는 중입니다...</div>
                     </div>
-
                 </div>
             </div>
 
+            <!-- 5. 신청서 확인 탭 -->
             <div id="tab-sheets" class="admin-section">
                 <h2 style="border-bottom:2px solid #1a3c6e; padding-bottom:15px;">📑 신청서 관리</h2>
                 <div class="form-group">
@@ -353,6 +722,7 @@
                 </div>
             </div>
 
+            <!-- 6. 환경 설정 탭 -->
             <div id="tab-settings" class="admin-section">
                 <h2 style="border-bottom:2px solid #1a3c6e; padding-bottom:15px;">⚙️ 환경 설정</h2>
                 <div class="panel-box">
@@ -362,23 +732,23 @@
                         <div class="form-group"><label class="form-label">메인 설명글</label><textarea id="conf-main-desc" class="form-input"></textarea></div>
                         <div class="form-group" style="margin-top:15px; border-top:1px dashed #ccc; padding-top:15px;">
                             <label class="form-label">텍스트 색상 설정</label>
-                            <div style="display:flex; gap:30px;">
+                            <div style="display:flex; gap:30px;" class="flex-row-to-col">
                                 <div class="color-picker-group"><span class="color-picker-label">큰 제목</span><input type="color" id="conf-main-title-color" style="cursor:pointer;"></div>
                                 <div class="color-picker-group"><span class="color-picker-label">설명글</span><input type="color" id="conf-main-desc-color" style="cursor:pointer;"></div>
                             </div>
                         </div>
-                        <div style="display:flex; gap:30px; align-items:flex-start; margin-top:30px; border-top:1px dashed #ccc; padding-top:30px;">
+                        <div style="display:flex; gap:30px; align-items:flex-start; margin-top:30px; border-top:1px dashed #ccc; padding-top:30px;" class="flex-row-to-col">
                             <div style="text-align:center;">
                                 <p style="font-size:0.9rem; margin-bottom:10px; color:#666; font-weight:bold;">현재 배경</p>
                                 <img id="preview-main-hero" src="" style="width:300px; height:170px; object-fit:cover; border-radius:8px; border:1px solid #ccc; background:#e0e0e0;">
-                                <button onclick="deleteMainHeroImage()" class="btn-mini" style="margin-top:10px; background:#ff6b6b; color:#fff; border:none; width:100%;">🗑️ 이미지 삭제</button>
+                                <button onclick="deleteMainHeroImage()" class="btn-mini w-100-mob" style="margin-top:10px; background:#ff6b6b; color:#fff; border:none; padding:10px;">🗑️ 이미지 삭제</button>
                             </div>
                             <div style="flex:1;">
                                 <label class="form-label">배경 이미지 변경 (편집 가능)</label>
                                 <input type="file" id="conf-main-hero" class="form-input" accept="image/*">
-                                <div style="display:flex; gap:30px; margin-top:20px;">
-                                    <div><label class="form-label">배경 색상</label><input type="color" id="conf-main-bg-color" style="height:40px; cursor:pointer;"></div>
-                                    <div><label class="form-label">오버레이 색상</label><input type="color" id="conf-main-overlay-color" style="height:40px; cursor:pointer;"></div>
+                                <div style="display:flex; gap:30px; margin-top:20px;" class="flex-row-to-col">
+                                    <div><label class="form-label">배경 색상</label><input type="color" id="conf-main-bg-color" style="height:40px; cursor:pointer;" class="w-100-mob"></div>
+                                    <div><label class="form-label">오버레이 색상</label><input type="color" id="conf-main-overlay-color" style="height:40px; cursor:pointer;" class="w-100-mob"></div>
                                     <div><label class="form-label">투명도</label><div style="display:flex; align-items:center; gap:10px;"><input type="range" id="conf-main-overlay-opacity" min="0" max="1" step="0.1" oninput="document.getElementById('op-val-main').innerText=this.value"><span id="op-val-main" class="opacity-val">0.4</span></div></div>
                                 </div>
                             </div>
@@ -389,7 +759,7 @@
                     <div style="background:#fffcf0; padding:20px; border-radius:12px; border:2px solid #ff9f43;">
                         <div class="form-group" style="border-bottom:1px dashed #ccc; padding-bottom:15px; margin-bottom:15px;">
                             <h4 style="margin:0 0 10px 0;">➕ 새 팝업 추가하기</h4>
-                            <div style="display:flex; gap:10px; align-items:flex-end;">
+                            <div style="display:flex; gap:10px; align-items:flex-end;" class="flex-row-to-col">
                                 <div style="flex:1;">
                                     <label class="form-label">이미지 파일</label>
                                     <input type="file" id="new-popup-file" class="form-input" accept="image/*" style="background:#fff;">
@@ -398,10 +768,9 @@
                                     <label class="form-label">링크 URL (선택)</label>
                                     <input type="text" id="new-popup-link" class="form-input" placeholder="http://...">
                                 </div>
-                                <button onclick="addNewPopup()" class="btn-action" style="height:46px;">추가</button>
+                                <button onclick="addNewPopup()" class="btn-action w-100-mob" style="height:46px;">추가</button>
                             </div>
                         </div>
-
                         <div id="popup-list-container">
                             <div style="text-align:center; padding:20px; color:#999;">등록된 팝업이 없습니다.</div>
                         </div>
@@ -419,13 +788,14 @@
                         <div class="form-group"><label class="form-label">강조 컬러</label><input type="color" id="conf-accent" class="form-input" style="height:50px;"></div>
                     </div>
                     <div class="btn-center-wrap">
-                        <button onclick="saveSiteConfig()" class="btn-action">설정 저장하기</button>
+                        <button onclick="saveSiteConfig()" class="btn-action w-100-mob">설정 저장하기</button>
                     </div>
                 </div>
             </div>
         </main>
     </div>
 
+    <!-- 이미지 편집 모달 -->
     <div id="crop-modal" class="modal-overlay">
         <div class="modal-content">
             <div class="crop-header">🎨 이미지 편집 스튜디오</div>
@@ -468,18 +838,7 @@
         </div>
     </div>
 
-    <div id="comment-admin-modal" class="modal-overlay" style="display:none;">
-        <div class="modal-content" style="max-width: 600px;">
-            <div class="crop-header">💬 관리자 답변 달기</div>
-            <div id="admin-comment-list" style="width:100%; max-height:250px; overflow-y:auto; margin-bottom:15px; border:1px solid #ddd; padding:15px; background:#f9f9f9; border-radius:8px;"></div>
-            <textarea id="admin-comment-input" class="form-input" style="height:100px; resize:vertical; margin-bottom:15px;" placeholder="사용자 질문에 달아줄 공식 답변을 입력하세요"></textarea>
-            <div class="modal-btns">
-                <button onclick="closeCommentAdminModal()" class="btn-cancel">닫기</button>
-                <button onclick="saveAdminComment()" class="btn-confirm">답변 등록</button>
-            </div>
-        </div>
-    </div>
-
+    <!-- 결과 모달 -->
     <div id="result-modal" class="modal-overlay" style="display:none;">
         <div class="modal-content" style="max-width: 800px; max-height: 85vh; overflow-y:auto;">
             <div class="crop-header" style="width:100%; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #1a3c6e; padding-bottom:10px; margin-bottom:20px;">
@@ -688,11 +1047,23 @@
             const finalFileUrls = [...keptFiles, ...newUploadedUrls]; let du = finalFileUrls.length > 0 ? finalFileUrls.join('||') : null;
             let videoVal = document.getElementById('youtube-url').value; if (isOrder && isIntro) videoVal = FLAG_ORDER_ALL + (videoVal ? '|' + videoVal : ''); else if (isOrder && !isIntro) videoVal = FLAG_ORDER_ONLY;
 
-            const pd = { title: ti, content: quill.root.innerHTML, category: cat, order_num: parseInt(document.getElementById('post-order').value) || 0, video_url: videoVal, link_url: document.getElementById('post-link').value, thumbnail_url: tu, image_url: du };
+            const passwordVal = document.getElementById('post-password').value.trim();
+
+            const pd = {
+                title: ti,
+                content: quill.root.innerHTML,
+                category: cat,
+                order_num: parseInt(document.getElementById('post-order').value) || 0,
+                video_url: videoVal,
+                link_url: document.getElementById('post-link').value,
+                thumbnail_url: tu,
+                image_url: du,
+                password: passwordVal
+            };
             if (!editingId) pd.is_visible = true;
 
             const { error } = editingId ? await window.sb.from('total_posts').update(pd).eq('id', editingId) : await window.sb.from('total_posts').insert([pd]);
-            showLoading(false); if (error) alert(error.message); else { alert("저장되었습니다."); cancelEdit(); loadManageList(currentPage); }
+            showLoading(false); if (error) alert(error.message); else { alert("저장되었습니다."); cancelEdit(); loadManageList(currentPage); const navItems = document.querySelectorAll('.nav-item'); if (navItems && navItems.length > 2) { switchTab('posts', navItems[2]); } }
         }
 
         window.togglePostVisibility = async function (id, status) {
@@ -714,10 +1085,9 @@
                 let isVis = item.is_visible !== false;
                 let visBtnStr = isVis ? `<button onclick="togglePostVisibility(${item.id}, false)" class="pm-btn" style="background:#2ecc71; color:white; border:none;">👁️ 노출 중</button>` : `<button onclick="togglePostVisibility(${item.id}, true)" class="pm-btn" style="background:#95a5a6; color:white; border:none;">🙈 숨김</button>`;
 
-                // ★ 등록된 비밀번호 데이터 명시적 추출 및 표시
                 const postPassword = item.password || item.video_url || '없음';
 
-                list.innerHTML += `<div class="post-manage-card"><img src="${thumb}" class="pm-thumb" alt="thumbnail"><div class="pm-body"><div style="margin-bottom:5px;">${badge} <span class="pm-cat-badge">${catName}</span></div><div class="pm-title" onclick='editPost(${JSON.stringify(item).replace(/'/g, "&#39;")})'>${item.title}</div><div class="pm-info">순서: ${item.order_num}</div><div style="font-size:0.85rem; color:#d9534f; font-weight:bold; margin-top:40px;">🔑 비밀번호: ${postPassword}</div></div><div class="pm-actions">${visBtnStr}<button onclick='editPost(${JSON.stringify(item).replace(/'/g, "&#39;")})' class="pm-btn">수정</button><button onclick='deletePost(${item.id})' class="pm-btn" style="background:#ff6b6b; color:white; border:none;">삭제</button><button onclick="openCommentModal(${item.id})" class="pm-btn" style="color:#f4a261; font-weight:bold;">💬 답변</button></div></div>`;
+                list.innerHTML += `<div class="post-manage-card"><img src="${thumb}" class="pm-thumb" alt="thumbnail"><div class="pm-body"><div style="margin-bottom:5px;">${badge} <span class="pm-cat-badge">${catName}</span></div><div class="pm-title" onclick='editPost(${JSON.stringify(item).replace(/'/g, "&#39;")})'>${item.title}</div><div class="pm-info">순서: ${item.order_num}</div><div style="font-size:0.85rem; color:#d9534f; font-weight:bold; margin-top:20px;">🔑 비밀번호: ${postPassword}</div></div><div class="pm-actions">${visBtnStr}<button onclick='editPost(${JSON.stringify(item).replace(/'/g, "&#39;")})' class="pm-btn">수정</button><button onclick='deletePost(${item.id})' class="pm-btn" style="background:#ff6b6b; color:white; border:none;">삭제</button></div></div>`;
             });
             renderPagination(count, currentPage);
         }
@@ -733,6 +1103,8 @@
             document.getElementById('custom-cat-text').innerText = catName;
             document.getElementById('custom-cat-text').style.color = '#333';
 
+            document.getElementById('post-password').value = i.password || i.video_url || '';
+
             document.getElementById('post-title').value = i.title; quill.root.innerHTML = i.content || ""; document.getElementById('post-link').value = i.link_url || ""; document.getElementById('post-order').value = i.order_num || 0;
             keptFiles = [];
             const existingList = document.getElementById('existing-files-list');
@@ -747,7 +1119,7 @@
         };
 
         window.cancelEdit = function () {
-            editingId = null; croppedThumbnailBlob = null; document.getElementById('post-title').value = ""; quill.root.innerHTML = ""; document.querySelectorAll('input[type="file"]').forEach(i => i.value = ""); document.getElementById('chk-intro').checked = true; document.getElementById('chk-order').checked = false; toggleEditorState(); document.getElementById('form-title').innerText = "📝 게시글 작성/수정"; document.getElementById('btn-submit').innerText = "업로드 저장"; document.getElementById('btn-cancel-edit').style.display = "none";
+            editingId = null; croppedThumbnailBlob = null; document.getElementById('post-title').value = ""; document.getElementById('post-password').value = ""; quill.root.innerHTML = ""; document.querySelectorAll('input[type="file"]').forEach(i => i.value = ""); document.getElementById('chk-intro').checked = true; document.getElementById('chk-order').checked = false; toggleEditorState(); document.getElementById('form-title').innerText = "📝 게시글 작성/수정"; document.getElementById('btn-submit').innerText = "업로드 저장"; document.getElementById('btn-cancel-edit').style.display = "none";
             document.getElementById('post-category').value = '';
             document.getElementById('custom-cat-text').innerText = '카테고리를 선택하세요';
             document.getElementById('custom-cat-text').style.color = '#666';
@@ -755,7 +1127,7 @@
         };
 
         window.deletePost = async function (id) { if (confirm("삭제?")) { await window.sb.from('total_posts').delete().eq('id', id); loadManageList(currentPage); } };
-        window.adminLogin = async function () { const emailEl = document.getElementById('admin-email'); const pwEl = document.getElementById('admin-password'); if (!emailEl || !pwEl) return alert("입력창을 찾을 수 없습니다."); if (!window.sb) { alert("❌ 시스템 오류: Supabase 연결 실패"); return; } try { const { data, error } = await window.sb.auth.signInWithPassword({ email: emailEl.value, password: pwEl.value }); if (error) { alert("로그인 실패: " + error.message); } else { showAdminMode(); loadConfigToForm(); loadAdminCategories(); populateCategorySelects(); loadPopups(); loadAdminForms(); } } catch (e) { alert("오류 발생: " + e.message); console.error(e); } };
+        window.adminLogin = async function () { const emailEl = document.getElementById('admin-email'); const pwEl = document.getElementById('admin-password'); if (!emailEl || !pwEl) return alert("입력창을 찾을 수 없습니다."); if (!window.sb) { alert("❌ 시스템 오류: Supabase 연결 실패"); return; } try { const { data, error } = await window.sb.auth.signInWithPassword({ email: emailEl.value, password: pwEl.value }); if (error) { alert("로그인 실패: " + error.message); } else { showAdminMode(); loadConfigToForm(); loadAdminCategories(); populateCategorySelects(); loadPopups(); } } catch (e) { alert("오류 발생: " + e.message); console.error(e); } };
 
         window.switchTab = function (t, n) { document.querySelectorAll('.nav-item').forEach(e => e.classList.remove('active')); if (n) n.classList.add('active'); document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active')); document.getElementById('tab-' + t).classList.add('active'); if (t === 'posts') loadManageList(1); };
         window.adminLogout = async function () { await window.sb.auth.signOut(); location.reload(); };
@@ -836,7 +1208,7 @@
         async function updateCategoryOrderRealtime() {
             showLoading(true);
             try {
-                const allRows = document.querySelectorAll('.cat-manage-row');
+                const allRows = document.querySelectorAll('.cm-row');
                 const updatePromises = Array.from(allRows).map((row, idx) => {
                     const code = row.getAttribute('data-code');
                     return window.sb.from('program_categories').update({ order_num: idx }).eq('code', code);
@@ -862,7 +1234,9 @@
                 categoryList = data;
 
                 const gridStyle = "grid-template-columns: 40px 70px 100px 100px 45px 45px 45px 45px 50px 1fr 120px 50px 60px; min-width: 1100px;";
-                const headerHtml = `<div class="cat-manage-layout cat-manage-header" style="${gridStyle}"><div>순서</div><div>코드</div><div>메뉴명</div><div>제목</div><div title="상단 메뉴 글자색">메뉴색</div><div title="배경 큰 제목 색상">제목색</div><div title="배경 설명글 색상">설명색</div><div title="배경 이미지 덮는 필터 색상">필터색</div><div title="필터 색상의 투명도">투명도</div><div>설명글</div><div>이미지</div><div>노출</div><div>삭제</div></div>`;
+                const isMobile = window.innerWidth <= 768;
+
+                const headerHtml = isMobile ? '' : `<div class="cm-layout cm-header" style="${gridStyle}"><div>순서</div><div>코드</div><div>메뉴명</div><div>제목</div><div title="상단 메뉴 글자색">메뉴색</div><div title="배경 큰 제목 색상">제목색</div><div title="배경 설명글 색상">설명색</div><div title="배경 이미지 덮는 필터 색상">필터색</div><div title="필터 색상의 투명도">투명도</div><div>설명글</div><div>이미지</div><div>노출</div><div>삭제</div></div>`;
 
                 let groups = { 'PAGE': '', 'BOARD': '', 'EVENT': '', 'EDU': '' };
                 const groupNames = { 'PAGE': '⚙️ 고정 페이지', 'BOARD': '📢 게시판', 'EVENT': '🎉 행사', 'EDU': '🎓 교육' };
@@ -871,21 +1245,21 @@
                     const thumb = cat.hero_image || 'https://via.placeholder.com/50?text=None';
                     const visBtn = cat.is_visible !== false ? `<button class="btn-mini" style="background:#27ae60; color:#fff;" onclick="toggleVisibility('${cat.code}', false)">ON</button>` : `<button class="btn-mini" style="background:#999; color:#fff;" onclick="toggleVisibility('${cat.code}', true)">OFF</button>`;
 
-                    let rowHtml = `<div class="cat-manage-layout cat-manage-row" data-code="${cat.code}" style="${gridStyle}">
-                                    <div class="cat-cell-center"><span class="drag-handle" style="cursor:grab; font-size:1.2rem; display:block;" title="드래그해서 항목 순서 변경">↕️</span></div>
-                                    <div class="cat-cell-center" style="font-weight:bold; font-size:0.8rem;">${cat.code}</div>
-                                    <div class="cat-cell-input"><input type="text" id="name-${cat.code}" value="${cat.name}"></div>
-                                    <div class="cat-cell-input"><input type="text" id="title-${cat.code}" value="${cat.hero_title || ''}"></div>
-                                    <div class="cat-cell-center"><input type="color" id="m-color-${cat.code}" value="${cat.menu_text_color || '#333333'}" style="width:25px; border:none;" title="메뉴 글자색"></div>
-                                    <div class="cat-cell-center"><input type="color" id="t-color-${cat.code}" value="${cat.hero_title_color || '#ffffff'}" style="width:25px; border:none;" title="배경 큰 제목 색상"></div>
-                                    <div class="cat-cell-center"><input type="color" id="d-color-${cat.code}" value="${cat.hero_desc_color || '#ffffff'}" style="width:25px; border:none;" title="배경 설명글 색상"></div>
-                                    <div class="cat-cell-center"><input type="color" id="o-color-${cat.code}" value="${cat.hero_overlay_color || '#1a3c6e'}" style="width:25px; border:none;" title="배경 이미지 덮는 필터 색상"></div>
-                                    <div class="cat-cell-center"><input type="number" id="o-op-${cat.code}" value="${cat.hero_overlay_opacity !== undefined ? cat.hero_overlay_opacity : 0.8}" step="0.1" style="width:40px;"></div>
-                                    <div class="cat-cell-input"><input type="text" id="desc-${cat.code}" value="${cat.hero_desc || ''}"></div>
-                                    <div class="cat-cell-center" style="display:flex; flex-direction:column; align-items:center; gap:5px;"><img src="${thumb}" style="width:50px; height:50px; object-fit:cover; cursor:pointer; border:1px solid #ddd;" onclick="document.getElementById('file-${cat.code}').click()" title="이미지 변경"><input type="file" id="file-${cat.code}" class="cat-file-input" data-code="${cat.code}" style="display:none;" accept="image/*"><button class="btn-mini" style="font-size:0.6rem; color:red;" onclick="deleteSubHeroImage('${cat.code}')">삭제</button></div>
-                                    <div class="cat-cell-center">${visBtn}</div>
-                                    <div class="cat-cell-center"><button onclick="deleteCategory('${cat.code}')" class="btn-mini" style="background:#ff6b6b; color:#fff; width:100%;">삭제</button></div>
-                                </div>`;
+                    let rowHtml = `<div class="cm-layout cm-row" data-code="${cat.code}" style="${gridStyle}">
+                                        <div class="cm-cell-center"><span class="cm-mob-label">순서</span><span class="drag-handle" style="cursor:grab; font-size:1.2rem; display:block;" title="드래그해서 항목 순서 변경">↕️</span></div>
+                                        <div class="cm-cell-center" style="font-weight:bold; font-size:0.8rem;"><span class="cm-mob-label">코드</span>${cat.code}</div>
+                                        <div class="cm-cell-input"><span class="cm-mob-label">메뉴명</span><input type="text" id="name-${cat.code}" value="${cat.name}"></div>
+                                        <div class="cm-cell-input"><span class="cm-mob-label">제목</span><input type="text" id="title-${cat.code}" value="${cat.hero_title || ''}"></div>
+                                        <div class="cm-cell-center"><span class="cm-mob-label">메뉴색</span><input type="color" id="m-color-${cat.code}" value="${cat.menu_text_color || '#333333'}" style="width:25px; border:none;" title="메뉴 글자색"></div>
+                                        <div class="cm-cell-center"><span class="cm-mob-label">제목색</span><input type="color" id="t-color-${cat.code}" value="${cat.hero_title_color || '#ffffff'}" style="width:25px; border:none;" title="배경 큰 제목 색상"></div>
+                                        <div class="cm-cell-center"><span class="cm-mob-label">설명색</span><input type="color" id="d-color-${cat.code}" value="${cat.hero_desc_color || '#ffffff'}" style="width:25px; border:none;" title="배경 설명글 색상"></div>
+                                        <div class="cm-cell-center"><span class="cm-mob-label">필터색</span><input type="color" id="o-color-${cat.code}" value="${cat.hero_overlay_color || '#1a3c6e'}" style="width:25px; border:none;" title="배경 이미지 덮는 필터 색상"></div>
+                                        <div class="cm-cell-center"><span class="cm-mob-label">투명도</span><input type="number" id="o-op-${cat.code}" value="${cat.hero_overlay_opacity !== undefined ? cat.hero_overlay_opacity : 0.8}" step="0.1" style="width:40px;"></div>
+                                        <div class="cm-cell-input"><span class="cm-mob-label">설명글</span><input type="text" id="desc-${cat.code}" value="${cat.hero_desc || ''}"></div>
+                                        <div class="cm-cell-center" style="display:flex; flex-direction:column; align-items:center; gap:5px;"><span class="cm-mob-label">이미지</span><img src="${thumb}" style="width:50px; height:50px; object-fit:cover; cursor:pointer; border:1px solid #ddd; border-radius:4px;" onclick="document.getElementById('file-${cat.code}').click()" title="이미지 변경"><input type="file" id="file-${cat.code}" class="cat-file-input" data-code="${cat.code}" style="display:none;" accept="image/*"><button class="btn-mini" style="font-size:0.6rem; color:red;" onclick="deleteSubHeroImage('${cat.code}')">삭제</button></div>
+                                        <div class="cm-cell-center"><span class="cm-mob-label">노출상태</span>${visBtn}</div>
+                                        <div class="cm-cell-center"><span class="cm-mob-label">영구삭제</span><button onclick="deleteCategory('${cat.code}')" class="btn-mini" style="background:#ff6b6b; color:#fff; width:100%;">삭제</button></div>
+                                    </div>`;
 
                     if (groups[cat.type] !== undefined) {
                         groups[cat.type] += rowHtml;
@@ -905,22 +1279,22 @@
                     const iconStr = '▼';
 
                     finalHtml += `
-                                <div class="accordion-group" data-type="${type}">
-                                    <div class="accordion-header">
-                                        <div class="drag-group-handle" title="큰 카테고리 순서 이동">↕️</div>
-                                        <div class="accordion-title-area" onclick="toggleAccordion(this.parentElement.parentElement)">
-                                            ${groupNames[type]} <span>${iconStr}</span>
-                                        </div>
-                                    </div>
-                                    <div class="accordion-body ${isActive}">
-                                        <div style="overflow-x:auto;">
-                                            ${headerHtml}
-                                            <div id="sortable-list-${type}" class="sortable-group">
-                                                ${groups[type] || '<div style="padding:30px; text-align:center; color:#999; border:1px dashed #ddd;">이 유형에 등록된 카테고리가 없습니다.</div>'}
+                                    <div class="accordion-group" data-type="${type}">
+                                        <div class="accordion-header">
+                                            <div class="drag-group-handle" title="큰 카테고리 순서 이동">↕️</div>
+                                            <div class="accordion-title-area" onclick="toggleAccordion(this.parentElement.parentElement)">
+                                                ${groupNames[type]} <span>${iconStr}</span>
                                             </div>
                                         </div>
-                                    </div>
-                                </div>`;
+                                        <div class="accordion-body ${isActive}">
+                                            <div class="mobile-no-scroll">
+                                                ${headerHtml}
+                                                <div id="sortable-list-${type}" class="sortable-group">
+                                                    ${groups[type] || '<div style="padding:30px; text-align:center; color:#999; border:1px dashed #ddd;">이 유형에 등록된 카테고리가 없습니다.</div>'}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>`;
                 });
 
                 finalHtml += `</div>`;
@@ -1035,9 +1409,9 @@
             mainOrder.forEach(type => {
                 if (writeGroups[type]) {
                     const groupHtml = `
-                                <div class="cs-group-header" onclick="toggleCsGroup(this)">
-                                    ${groupNames[type]} <span class="cs-icon">▼</span>
-                                </div>`;
+                                    <div class="cs-group-header" onclick="toggleCsGroup(this)">
+                                        ${groupNames[type]} <span class="cs-icon">▼</span>
+                                    </div>`;
 
                     writeDropdownHtml += `<div class="cs-group">${groupHtml}<div class="cs-group-body">${writeGroups[type]}</div></div>`;
                     filterDropdownHtml += `<div class="cs-group">${groupHtml}<div class="cs-group-body">${filterGroups[type]}</div></div>`;
@@ -1146,7 +1520,7 @@
             }
         };
 
-        async function loadPopups() { const listDiv = document.getElementById('popup-list-container'); const { data, error } = await window.sb.from('site_popups').select('*').order('order_num', { ascending: true }).order('created_at', { ascending: false }); if (!data || data.length === 0) { listDiv.innerHTML = "<div style='text-align:center; padding:20px; color:#999;'>등록된 팝업이 없습니다.</div>"; popupList = []; return; } popupList = data; listDiv.innerHTML = ""; data.forEach((p, index) => { const visBtn = p.is_visible ? `<button onclick="togglePopup(${p.id}, false)" class="btn-mini" style="background:#2ecc71; color:white;">노출 중</button>` : `<button onclick="togglePopup(${p.id}, true)" class="btn-mini" style="background:#999; color:white;">숨김</button>`; listDiv.innerHTML += ` <div class="popup-list-item" style="display:flex; gap:15px; align-items:center;"> <div style="display:flex; flex-direction:column; gap:5px;"><button onclick="movePopup(${index}, -1)" class="btn-mini" style="padding:2px 8px; font-size:10px;">▲</button><button onclick="movePopup(${index}, 1)" class="btn-mini" style="padding:2px 8px; font-size:10px;">▼</button></div><img src="${p.image_url}" class="popup-preview"> <div class="popup-info"> <div style="font-weight:bold; margin-bottom:5px;">링크: ${p.link_url || '(없음)'}</div> <div>상태: ${visBtn}</div> </div> <button onclick="deletePopup(${p.id})" class="btn-mini" style="background:#ff6b6b; color:white;">삭제</button> </div>`; }); }
+        async function loadPopups() { const listDiv = document.getElementById('popup-list-container'); const { data, error } = await window.sb.from('site_popups').select('*').order('order_num', { ascending: true }).order('created_at', { ascending: false }); if (!data || data.length === 0) { listDiv.innerHTML = "<div style='text-align:center; padding:20px; color:#999;'>등록된 팝업이 없습니다.</div>"; popupList = []; return; } popupList = data; listDiv.innerHTML = ""; data.forEach((p, index) => { const visBtn = p.is_visible ? `<button onclick="togglePopup('${p.id}', false)" class="btn-mini" style="background:#2ecc71; color:white;">노출 중</button>` : `<button onclick="togglePopup('${p.id}', true)" class="btn-mini" style="background:#999; color:white;">숨김</button>`; listDiv.innerHTML += ` <div class="popup-list-item" style="display:flex; gap:15px; align-items:center;"> <div style="display:flex; flex-direction:column; gap:5px;"><button onclick="movePopup(${index}, -1)" class="btn-mini" style="padding:2px 8px; font-size:10px;">▲</button><button onclick="movePopup(${index}, 1)" class="btn-mini" style="padding:2px 8px; font-size:10px;">▼</button></div><img src="${p.image_url}" class="popup-preview"> <div class="popup-info"> <div style="font-weight:bold; margin-bottom:5px;">링크: ${p.link_url || '(없음)'}</div> <div>상태: ${visBtn}</div> </div> <button onclick="deletePopup('${p.id}')" class="btn-mini" style="background:#ff6b6b; color:white;">삭제</button> </div>`; }); }
         window.movePopup = async function (index, direction) { const targetIndex = index + direction; if (targetIndex < 0 || targetIndex >= popupList.length) return; const temp = popupList[index]; popupList[index] = popupList[targetIndex]; popupList[targetIndex] = temp; showLoading(true); try { const updatePromises = popupList.map((item, idx) => { return window.sb.from('site_popups').update({ order_num: idx }).eq('id', item.id); }); await Promise.all(updatePromises); loadPopups(); } catch (e) { alert("순서 변경 중 오류가 발생했습니다: " + e.message); } finally { showLoading(false); } };
         async function addNewPopup() { const file = document.getElementById('new-popup-file').files[0]; const link = document.getElementById('new-popup-link').value; if (!file) return alert("이미지 파일을 선택해주세요."); showLoading(true); try { const { data: fileData } = await window.sb.storage.from('images').upload(`popup_${Date.now()}`, file); const imgUrl = window.sb.storage.from('images').getPublicUrl(fileData.path).data.publicUrl; await window.sb.from('site_popups').insert([{ image_url: imgUrl, link_url: link, is_visible: true, order_num: 999 }]); document.getElementById('new-popup-file').value = ""; document.getElementById('new-popup-link').value = ""; loadPopups(); alert("팝업이 추가되었습니다."); } catch (e) { alert("업로드 실패: " + e.message); } finally { showLoading(false); } }
         async function deletePopup(id) { if (!confirm("삭제하시겠습니까?")) return; await window.sb.from('site_popups').delete().eq('id', id); loadPopups(); }
@@ -1180,7 +1554,7 @@
                 const safeContent = window.escapeHtml(c.content).replace(/\n/g, '<br>');
                 html += `<div style="background:#fff; padding:10px; border:1px solid #eee; margin-bottom:8px; border-radius:6px; display:flex; justify-content:space-between; align-items:flex-start;">
                                 <div style="font-size:0.95rem; color:#333; line-height:1.5;">${safeContent}</div>
-                                <button onclick="deleteAdminComment(${c.id})" class="btn-mini" style="color:red; background:none; border:none; cursor:pointer;" title="답변 삭제">❌</button>
+                                <button onclick="deleteAdminComment('${c.id}')" class="btn-mini" style="color:red; background:none; border:none; cursor:pointer;" title="답변 삭제">❌</button>
                             </div>`;
             });
             listDiv.innerHTML = html;
@@ -1352,9 +1726,9 @@
                                     </div>
                                 </div>
                                 <div style="display:flex; gap:10px;">
-                                    <button onclick="toggleFormStatus(${form.id}, ${!form.is_active})" class="btn-mini" style="background:#f8f9fa;">${form.is_active ? '마감하기' : '다시 열기'}</button>
-                                    <button onclick="viewFormResults(${form.id})" class="btn-mini" style="background:#1a3c6e; color:white; padding: 5px 15px;">결과 확인</button>
-                                    <button onclick="deleteForm(${form.id})" class="btn-mini" style="background:#ff6b6b; color:white;">삭제</button>
+                                    <button onclick="toggleFormStatus('${form.id}', ${!form.is_active})" class="btn-mini" style="background:#f8f9fa;">${form.is_active ? '마감하기' : '다시 열기'}</button>
+                                    <button onclick="viewFormResults('${form.id}')" class="btn-mini" style="background:#1a3c6e; color:white; padding: 5px 15px;">결과 확인</button>
+                                    <button onclick="deleteForm('${form.id}')" class="btn-mini" style="background:#ff6b6b; color:white;">삭제</button>
                                 </div>
                             </div>`;
             });

@@ -146,7 +146,7 @@
                 return;
             }
 
-            // ★ 답변 상태 표시를 위해 현재 페이지의 게시물들의 댓글(post_comments) 존재 여부를 일괄 조회
+            // 답변 상태 표시를 위해 현재 페이지의 게시물들의 댓글(post_comments) 존재 여부를 일괄 조회
             const postIds = data.map(item => item.id);
             let answeredSet = new Set();
 
@@ -160,15 +160,29 @@
             let html = '';
             data.forEach((item, index) => {
                 const date = new Date(item.created_at).toISOString().split('T')[0];
-                const authorName = (currentCategory === 'notice') ? '관리자' : (item.link_url || '익명');
+                let authorName = item.link_url ? item.link_url.trim() : '익명';
+                let isAdminPost = false;
+
+                // ★ 1. 관리자 글 필터링 로직 (공지사항이거나, 이름이 관리자이거나, 관리자 페이지에서 작성된 경우)
+                if (currentCategory === 'notice') {
+                    authorName = '관리자';
+                    isAdminPost = true;
+                } else if (authorName === '관리자') {
+                    isAdminPost = true;
+                } else if (authorName === '익명' || authorName.startsWith('http://') || authorName.startsWith('https://')) {
+                    // admin.html에서 작성한 경우 link_url(작성자 필드)이 비어있거나 웹 주소가 들어감
+                    authorName = '관리자';
+                    isAdminPost = true;
+                }
+
                 const displayNum = count - from - index;
 
                 // 비밀글 아이콘 표시
                 const secretIcon = (item.is_secret === true || String(item.is_secret) === 'true') ? '🔒 ' : '';
 
-                // ★ 답변 상태 뱃지 생성 (공지사항은 제외)
+                // ★ 2. 관리자 글이 아닐 때(일반 사용자 글일 때)만 답변 상태 뱃지 생성
                 let statusBadge = '';
-                if (currentCategory !== 'notice') {
+                if (!isAdminPost) {
                     if (answeredSet.has(item.id)) {
                         statusBadge = `<span class="badge" style="background:#1a3c6e; color:white; margin-right:8px; border-radius:12px; padding:3px 8px; font-size:0.75rem;">답변완료</span>`;
                     } else {
@@ -202,3 +216,9 @@
     </script>
 </body>
 </html>
+```
+<br>
+
+<ElicitationsGroup>
+    <FollowUp>수정된 파일을 적용하신 후, 관리자가 올린 글에서 의도하신 대로 '답변 대기' 아이콘이 사라졌는지 확인해 보시겠어요? 추가적으로 수정이 필요한 부분이 있다면 언제든 말씀해 주세요!</FollowUp>
+</ElicitationsGroup>

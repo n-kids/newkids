@@ -93,7 +93,8 @@
                 </div>
 
                 <div class="btn-center-wrap" style="margin-top: 40px;">
-                    <button onclick="history.back()" class="btn-action" style="background:#666; width: 150px;">목록으로</button>
+                    <!-- ★ history.back() 대신 카테고리 목록으로 정확히 이동하도록 수정됨 ★ -->
+                    <button onclick="location.href='notice.html#' + (postDataCache ? postDataCache.category : '')" class="btn-action" style="background:#666; width: 150px;">목록으로</button>
                 </div>
             </div>
         </div>
@@ -236,11 +237,11 @@
                         const safeName = fileName.replace(/'/g, "\\'");
 
                         fileHtml += `
-                                <div onclick="downloadFileWithOriginalName('${safeUrl}', '${safeName}')" style="display:flex; justify-content:space-between; align-items:center; background:#f8f9fa; padding:12px 15px; border-radius:8px; border:1px solid #e9ecef; cursor:pointer; text-decoration:none; color:#1a3c6e; font-weight:bold; transition: background 0.2s;">
-                                    <span>📥 ${fileName}</span>
-                                    <span style="font-size:0.85rem; background:#1a3c6e; color:#fff; padding:4px 10px; border-radius:4px;">다운로드</span>
-                                </div>
-                            `;
+                                    <div onclick="downloadFileWithOriginalName('${safeUrl}', '${safeName}')" style="display:flex; justify-content:space-between; align-items:center; background:#f8f9fa; padding:12px 15px; border-radius:8px; border:1px solid #e9ecef; cursor:pointer; text-decoration:none; color:#1a3c6e; font-weight:bold; transition: background 0.2s;">
+                                        <span>📥 ${fileName}</span>
+                                        <span style="font-size:0.85rem; background:#1a3c6e; color:#fff; padding:4px 10px; border-radius:4px;">다운로드</span>
+                                    </div>
+                                `;
                     });
 
                     downloadList.innerHTML = fileHtml;

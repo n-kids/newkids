@@ -146,6 +146,17 @@
                 return;
             }
 
+            // ★ 답변 상태 표시를 위해 현재 페이지의 게시물들의 댓글(post_comments) 존재 여부를 일괄 조회
+            const postIds = data.map(item => item.id);
+            let answeredSet = new Set();
+
+            if (postIds.length > 0) {
+                const { data: commentsData } = await window.sb.from('post_comments').select('post_id').in('post_id', postIds);
+                if (commentsData) {
+                    commentsData.forEach(c => answeredSet.add(c.post_id));
+                }
+            }
+
             let html = '';
             data.forEach((item, index) => {
                 const date = new Date(item.created_at).toISOString().split('T')[0];
@@ -155,11 +166,21 @@
                 // 비밀글 아이콘 표시
                 const secretIcon = (item.is_secret === true || String(item.is_secret) === 'true') ? '🔒 ' : '';
 
+                // ★ 답변 상태 뱃지 생성 (공지사항은 제외)
+                let statusBadge = '';
+                if (currentCategory !== 'notice') {
+                    if (answeredSet.has(item.id)) {
+                        statusBadge = `<span class="badge" style="background:#1a3c6e; color:white; margin-right:8px; border-radius:12px; padding:3px 8px; font-size:0.75rem;">답변완료</span>`;
+                    } else {
+                        statusBadge = `<span class="badge" style="background:#e9ecef; color:#888; margin-right:8px; border-radius:12px; padding:3px 8px; font-size:0.75rem;">답변대기</span>`;
+                    }
+                }
+
                 html += `
                                     <div class="board-list-row" onclick="location.href='view.html?id=${item.id}'">
                                         <div class="b-num">${displayNum}</div>
                                         <div class="b-cat"><span class="badge" style="background:#f1f3f5; color:#555;">${authorName}</span></div>
-                                        <div class="b-title" style="text-align:left;">${secretIcon}${item.title}</div>
+                                        <div class="b-title" style="text-align:left; display:flex; align-items:center;">${statusBadge}${secretIcon}${item.title}</div>
                                         <div class="b-date">${date}</div>
                                     </div>`;
             });

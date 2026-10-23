@@ -86,6 +86,23 @@
         }
         .form-input:focus { outline: none; border-color: #1a3c6e; }
 
+        /* 유튜브 반응형 크기 조절 */
+        .video-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 16:9 비율 */
+            margin-bottom: 30px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .video-container iframe, .video-container video {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            border: none;
+        }
+
         @media screen and (max-width: 768px) {
             .view-box-wrapper { margin: 100px auto 20px !important; padding: 0 15px !important; }
             .view-box-custom { padding: 30px 20px !important; }
@@ -118,6 +135,9 @@
                         <span id="v-date">작성일: -</span>
                     </div>
                 </div>
+
+                <!-- ★ 유튜브 등 미디어 영상 출력 영역 ★ -->
+                <div id="view-media" style="display:none;"></div>
 
                 <div class="view-content" id="v-content"></div>
 
@@ -185,9 +205,8 @@
             }, 100);
         });
 
-        // ★ 게시글 카테고리에 맞춰 정확한 목록 페이지 URL을 반환하는 기능 추가
         function getListUrl(categoryCode) {
-            let targetUrl = 'notice.html'; // 기본값 (게시판)
+            let targetUrl = 'notice.html'; 
             
             if (window.GLOBAL_CATEGORIES && window.GLOBAL_CATEGORIES.length > 0) {
                 const catInfo = window.GLOBAL_CATEGORIES.find(c => c.code === categoryCode);
@@ -204,11 +223,17 @@
 
         function goBackToList() {
             if(postDataCache && postDataCache.category) {
-                // 판단된 정확한 목록 URL로 이동
                 location.href = getListUrl(postDataCache.category);
             } else {
                 history.back();
             }
+        }
+
+        // 유튜브 링크 추출 함수
+        function getYoutubeId(url) {
+            if (!url) return null;
+            const m = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/);
+            return (m && m[2].length === 11) ? m[2] : null;
         }
 
         async function loadPostDetail(id) {
@@ -292,8 +317,37 @@
 
             let finalContent = postDataCache.content || '';
             finalContent = finalContent.replace(/\[투표:(\d+)\]/g, '<iframe id="form-iframe-$1" src="form.html?id=$1" width="100%" frameborder="0" scrolling="no" style="border:1px solid #ddd; border-radius:12px; margin:30px 0; overflow:hidden; transition:height 0.3s ease;"></iframe>');
-
             document.getElementById('v-content').innerHTML = finalContent;
+
+            // ★ 유튜브 비디오 렌더링 로직 복구
+            const mediaBox = document.getElementById('view-media');
+            mediaBox.innerHTML = '';
+            mediaBox.style.display = 'none';
+
+            let rawVideo = postDataCache.video_url || "";
+            let videoVal = rawVideo.trim();
+
+            if (videoVal === 'ORDER_ITEM' || videoVal === 'null' || videoVal === '') {
+                videoVal = null;
+            } else if (videoVal.startsWith('ORDER_ALL|')) {
+                const parts = videoVal.split('|');
+                videoVal = (parts.length > 1 && parts[1].trim() !== '') ? parts[1].trim() : null;
+            }
+
+            // 진짜 링크(http)일 때만 미디어로 인식 (비밀번호 방지)
+            if (videoVal && !videoVal.startsWith('http')) {
+                videoVal = null;
+            }
+
+            if (videoVal) {
+                const yid = getYoutubeId(videoVal);
+                if (yid) {
+                    mediaBox.innerHTML = `<div class="video-container"><iframe src="https://www.youtube.com/embed/${yid}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
+                } else if (/\.(mp4|webm|ogg|mov|avi|mkv)(\?|$)/i.test(videoVal)) {
+                    mediaBox.innerHTML = `<div class="video-container"><video controls><source src="${videoVal}"></video></div>`;
+                }
+                if(mediaBox.innerHTML !== '') mediaBox.style.display = 'block';
+            }
 
             if (postDataCache.image_url && postDataCache.image_url.trim() !== '' && postDataCache.image_url !== 'null') {
                 const files = postDataCache.image_url.split('||').map(u => u.trim()).filter(u => u);
@@ -465,7 +519,6 @@
                 alert("삭제 실패: " + error.message);
             } else {
                 alert("게시글이 안전하게 삭제되었습니다.");
-                // 삭제 후에도 정확한 목록 페이지로 이동하도록 적용
                 goBackToList();
             }
         }

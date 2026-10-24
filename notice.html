@@ -6,50 +6,22 @@
     <title>뉴키즈 - 게시판</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* 기본 라이트모드 변수 설정 */
-        :root {
-            --bg-color: #f4f7fa;
-            --card-bg: #fff;
-            --text-color: #333;
-            --sub-text: #666;
-            --border-color: #eaeaea;
-            --primary: #1a3c6e;
-        }
-
-        /* ★ 시스템 환경이 다크모드일 때 자동 적용되는 스타일 ★ */
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --bg-color: #121212;
-                --card-bg: #1e1e1e;
-                --text-color: #e0e0e0;
-                --sub-text: #aaa;
-                --border-color: #333;
-                --primary: #bb86fc;
-            }
-        }
-
-        body {
-            background-color: var(--bg-color) !important;
-            color: var(--text-color) !important;
-            transition: background 0.3s, color 0.3s;
-        }
-
         .board-container {
-            background-color: var(--card-bg);
+            background-color: #fff;
             border-radius: 12px;
             padding: 30px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-            border: 1px solid var(--border-color);
+            border: 1px solid #eaeaea;
         }
 
         .board-list-row {
-            background-color: var(--card-bg) !important;
-            border-bottom: 1px solid var(--border-color) !important;
-            color: var(--text-color) !important;
+            background-color: #fff;
+            border-bottom: 1px solid #eaeaea;
+            color: #333;
         }
 
             .board-list-row:hover {
-                background-color: rgba(255,255,255,0.05) !important;
+                background-color: #fcfcfc;
             }
 
         .hashtag-container {
@@ -59,9 +31,9 @@
         }
 
         .hashtag-btn {
-            background: var(--card-bg);
-            border: 1px solid var(--primary);
-            color: var(--primary);
+            background: #fff;
+            border: 1px solid #1a3c6e;
+            color: #1a3c6e;
             padding: 8px 18px;
             border-radius: 25px;
             font-size: 0.95rem;
@@ -73,19 +45,19 @@
         }
 
             .hashtag-btn:hover {
-                background: rgba(187, 134, 252, 0.1);
+                background: #f0f7ff;
             }
 
             .hashtag-btn.active {
-                background: var(--primary);
+                background: #1a3c6e;
                 color: #fff;
                 box-shadow: 0 3px 8px rgba(26, 60, 110, 0.3);
             }
 
         .btn-load-more {
-            background: var(--card-bg);
-            border: 2px solid var(--primary);
-            color: var(--primary);
+            background: #fff;
+            border: 2px solid #1a3c6e;
+            color: #1a3c6e;
             padding: 12px 30px;
             font-size: 1.1rem;
             font-weight: bold;
@@ -98,7 +70,7 @@
         }
 
             .btn-load-more:hover {
-                background: var(--primary);
+                background: #1a3c6e;
                 color: #fff;
             }
 
@@ -145,8 +117,8 @@
 
     <div class="board-header-section" id="view-hero">
         <div class="container">
-            <h1 id="board-title" style="font-size: 2.2rem; margin-bottom:10px; color:var(--primary);">📢 알림 & 소식</h1>
-            <p id="board-desc" style="color:var(--sub-text);">데이터를 불러오는 중입니다...</p>
+            <h1 id="board-title" style="font-size: 2.2rem; margin-bottom:10px; color:#1a3c6e;">📢 알림 & 소식</h1>
+            <p id="board-desc" style="color:#666;">데이터를 불러오는 중입니다...</p>
         </div>
     </div>
 
@@ -179,11 +151,11 @@
         <!-- 해시태그 영역 -->
         <div class="filter-wrap" style="display:flex; margin-bottom: 25px; width: 100%;">
             <div class="hashtag-container" id="hashtag-area" style="flex:1; min-width: 0; width: 100%;">
-                <span style="color:var(--sub-text); font-size:0.9rem;">태그 분석 중...</span>
+                <span style="color:#666; font-size:0.9rem;">태그 분석 중...</span>
             </div>
         </div>
 
-        <div class="board-list-head" style="display:grid; grid-template-columns: 80px 100px 1fr 120px; padding:12px 10px; font-weight:bold; border-bottom:2px solid var(--primary); color:var(--text-color);">
+        <div class="board-list-head" style="display:grid; grid-template-columns: 80px 100px 1fr 120px; padding:12px 10px; font-weight:bold; border-bottom:2px solid #1a3c6e; color:#333;">
             <div style="text-align:center;">번호</div>
             <div style="text-align:center;">작성자</div>
             <div style="padding-left:10px;">제목</div>
@@ -191,7 +163,7 @@
         </div>
 
         <div id="board-list-wrapper">
-            <div style="text-align:center; padding:50px; color:var(--sub-text);">데이터를 불러오는 중입니다...</div>
+            <div style="text-align:center; padding:50px; color:#666;">데이터를 불러오는 중입니다...</div>
         </div>
 
         <div id="load-more-box" style="display:none; justify-content:center; margin-top:40px;">
@@ -340,7 +312,7 @@
         window.toggleScrapMode = function () {
             isScrapMode = !isScrapMode;
             isRecentMode = false;
-            document.getElementById('btn-recent-mode').style.background = 'var(--card-bg)';
+            document.getElementById('btn-recent-mode').style.background = '#fff';
             document.getElementById('btn-recent-mode').style.color = '#2a9d8f';
 
             const btn = document.getElementById('btn-scrap-mode');
@@ -349,7 +321,7 @@
                 btn.style.color = '#fff';
                 btn.innerText = '⭐ 찜한 자료 보는 중';
             } else {
-                btn.style.background = 'var(--card-bg)';
+                btn.style.background = '#fff';
                 btn.style.color = '#f4a261';
                 btn.innerText = '⭐ 찜한 자료';
             }
@@ -359,7 +331,7 @@
         window.toggleRecentMode = function () {
             isRecentMode = !isRecentMode;
             isScrapMode = false;
-            document.getElementById('btn-scrap-mode').style.background = 'var(--card-bg)';
+            document.getElementById('btn-scrap-mode').style.background = '#fff';
             document.getElementById('btn-scrap-mode').style.color = '#f4a261';
 
             const btn = document.getElementById('btn-recent-mode');
@@ -368,7 +340,7 @@
                 btn.style.color = '#fff';
                 btn.innerText = '🕒 최근 본 자료 보는 중';
             } else {
-                btn.style.background = 'var(--card-bg)';
+                btn.style.background = '#fff';
                 btn.style.color = '#2a9d8f';
                 btn.innerText = '🕒 최근 본 자료';
             }
@@ -409,19 +381,19 @@
             const loadMoreBox = document.getElementById('load-more-box');
 
             if (!append) {
-                listDiv.innerHTML = '<div style="text-align:center; padding:50px; color:var(--sub-text);">로딩 중...</div>';
+                listDiv.innerHTML = '<div style="text-align:center; padding:50px; color:#666;">로딩 중...</div>';
             }
 
             let savedScraps = JSON.parse(localStorage.getItem('nk_scraps') || '[]');
             let recentList = JSON.parse(localStorage.getItem('nk_recent') || '[]');
 
             if (isScrapMode && savedScraps.length === 0) {
-                listDiv.innerHTML = `<div style="text-align:center; padding:50px; border-bottom:1px solid var(--border-color);">찜(⭐)해둔 자료가 없습니다.</div>`;
+                listDiv.innerHTML = `<div style="text-align:center; padding:50px; border-bottom:1px solid #eaeaea;">찜(⭐)해둔 자료가 없습니다.</div>`;
                 loadMoreBox.style.display = 'none';
                 return;
             }
             if (isRecentMode && recentList.length === 0) {
-                listDiv.innerHTML = `<div style="text-align:center; padding:50px; border-bottom:1px solid var(--border-color);">최근 본 자료가 없습니다.</div>`;
+                listDiv.innerHTML = `<div style="text-align:center; padding:50px; border-bottom:1px solid #eaeaea;">최근 본 자료가 없습니다.</div>`;
                 loadMoreBox.style.display = 'none';
                 return;
             }
@@ -464,7 +436,7 @@
             }
 
             if (processedData.length === 0) {
-                if (!append) listDiv.innerHTML = `<div style="text-align:center; padding:50px; border-bottom:1px solid var(--border-color);">등록되거나 조건에 맞는 글이 없습니다.</div>`;
+                if (!append) listDiv.innerHTML = `<div style="text-align:center; padding:50px; border-bottom:1px solid #eaeaea;">등록되거나 조건에 맞는 글이 없습니다.</div>`;
                 loadMoreBox.style.display = 'none';
                 return;
             }
@@ -519,18 +491,18 @@
                 const noticeIcon = isNoticePost ? '📌 ' : '';
 
                 html += `
-                        <div class="board-list-row" onclick="recordRecentAndGo(${item.id}, 'view.html?id=${item.id}')" style="display:grid; grid-template-columns: 80px 100px 1fr 120px; padding:15px 10px; align-items:center; cursor:pointer; ${rowBg}">
-                            <div style="text-align:center; font-weight:bold; color:var(--sub-text);">${displayNumHtml}</div>
-                            <div style="text-align:center;"><span class="badge" style="background:#f1f3f5; color:#555; padding:3px 8px; border-radius:4px; font-size:0.8rem;">${authorName}</span></div>
-                            <div style="padding-left:10px; display:flex; align-items:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-                                <button class="scrap-btn" onclick="toggleScrap(event, ${item.id})">${starIcon}</button>
-                                ${statusBadge}${secretIcon}${noticeIcon}<span style="overflow:hidden; text-overflow:ellipsis;">${item.title}</span>
-                            </div>
-                            <div style="text-align:center; display:flex; flex-direction:column; align-items:center; gap:4px;">
-                                <span style="font-size:0.85rem; color:var(--sub-text);">${date}</span>
-                                <span style="font-size:0.75rem; color:#888; background:rgba(0,0,0,0.05); padding:2px 6px; border-radius:4px;">📥 ${dlCount}</span>
-                            </div>
-                        </div>`;
+                            <div class="board-list-row" onclick="recordRecentAndGo(${item.id}, 'view.html?id=${item.id}')" style="display:grid; grid-template-columns: 80px 100px 1fr 120px; padding:15px 10px; align-items:center; cursor:pointer; ${rowBg}">
+                                <div style="text-align:center; font-weight:bold; color:#666;">${displayNumHtml}</div>
+                                <div style="text-align:center;"><span class="badge" style="background:#f1f3f5; color:#555; padding:3px 8px; border-radius:4px; font-size:0.8rem;">${authorName}</span></div>
+                                <div style="padding-left:10px; display:flex; align-items:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                                    <button class="scrap-btn" onclick="toggleScrap(event, ${item.id})">${starIcon}</button>
+                                    ${statusBadge}${secretIcon}${noticeIcon}<span style="overflow:hidden; text-overflow:ellipsis;">${item.title}</span>
+                                </div>
+                                <div style="text-align:center; display:flex; flex-direction:column; align-items:center; gap:4px;">
+                                    <span style="font-size:0.85rem; color:#666;">${date}</span>
+                                    <span style="font-size:0.75rem; color:#888; background:rgba(0,0,0,0.05); padding:2px 6px; border-radius:4px;">📥 ${dlCount}</span>
+                                </div>
+                            </div>`;
             });
 
             listDiv.innerHTML += html;

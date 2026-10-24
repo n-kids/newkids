@@ -2004,3 +2004,18 @@ body {
     border: none;
     display: block;
 }
+
+/* =========================================
+   상단 유튜브 플레이어 및 본문 영상 반응형 고정
+   ========================================= */
+#youtube-player-area iframe,
+.view-content iframe,
+.view-content video {
+    width: 100% !important;
+    aspect-ratio: 16 / 9 !important;
+    height: auto !important;
+    border-radius: 8px;
+    margin: 20px 0;
+    border: none;
+    display: block;
+}

@@ -24,7 +24,7 @@ body {
     font-size: 16px;
     color: var(--text-color);
     line-height: 1.6;
-    background-color: #fff;
+    background-color: #f4f7fa !important; /* 관리자 및 상세페이지 공통 배경 적용 */
     padding-top: 70px;
     -webkit-user-select: none;
     -moz-user-select: none;
@@ -1238,7 +1238,7 @@ footer {
 
 .board-header-section {
     text-align: center;
-    padding: 120px 0 40px;
+    padding: 120px 0 40px; /* 120px 여백 적용됨 */
     background-color: #f9fbfd;
     border-bottom: 1px solid #eee;
 }
@@ -1632,6 +1632,7 @@ footer {
     line-height: 1.6;
     word-break: break-all;
 }
+
 /* =========================================
    13. 상세 보기 페이지 스타일 (View Page)
    ========================================= */
@@ -1834,12 +1835,6 @@ footer {
 /* =========================================
    15. 글쓰기 페이지 스타일 (Write Page)
    ========================================= */
-body {
-    background-color: #f4f7fa !important;
-    margin: 0;
-    padding: 0;
-}
-
 .write-container {
     width: 100% !important;
     max-width: 900px !important;
@@ -1992,24 +1987,11 @@ body {
 }
 
 /* =========================================
-   16. 상세 보기 유튜브 영상 반응형 스타일
-   ========================================= */
-.view-content iframe,
-.view-content video {
-    width: 100% !important;
-    aspect-ratio: 16 / 9 !important;
-    height: auto !important;
-    border-radius: 8px;
-    margin: 20px 0;
-    border: none;
-    display: block;
-}
-
-/* =========================================
-   상단 유튜브 플레이어 및 본문 영상 반응형 고정
+   유튜브 및 동영상 iframe만 16:9 반응형 적용 (투표 폼 iframe 제외)
    ========================================= */
 #youtube-player-area iframe,
-.view-content iframe,
+.view-content iframe[src*="youtube.com"],
+.view-content iframe[src*="youtu.be"],
 .view-content video {
     width: 100% !important;
     aspect-ratio: 16 / 9 !important;

@@ -16,7 +16,7 @@
         body.is-iframe {
             padding-top: 0 !important;
             background-color: transparent !important;
-            overflow: hidden !important; /* 내부 스크롤 방지 */
+            overflow: hidden !important;
         }
 
             body.is-iframe section {
@@ -50,7 +50,6 @@
 
     <section style="background-color: #f8f9fa; padding: 50px 0;">
         <div class="container">
-            <!-- ★ 측정 기준이 되는 컨테이너에 id 추가 (form-content-wrap) ★ -->
             <div id="form-content-wrap" style="max-width: 800px; margin: 0 auto;">
                 <div id="form-container" class="proposal-box" style="padding: 20px;">
                     <div id="form-status" style="text-align:center; padding:50px; color:#666;">데이터를 불러오는 중입니다...</div>
@@ -109,29 +108,20 @@
                 }
             }, 100);
 
-            initHeightObserver();
+            // 실시간 자동 맞춤을 위해 높이 감지 루프 실행 (0.3초마다 체크)
+            setInterval(sendHeightToParent, 300);
         });
 
-        // ★ body 전체가 아니라 실제 폼 콘텐츠 박스의 높이만 정확하게 측정하여 전송
         function sendHeightToParent() {
             if (window !== window.parent) {
-                const wrap = document.getElementById('form-content-wrap');
-                if (wrap) {
-                    const height = wrap.offsetHeight + 40; // 여유 공간 40px 포함
-                    window.parent.postMessage({ type: 'resizeIframe', formId: currentFormId, height: height }, '*');
-                }
-            }
-        }
+                const body = document.body;
+                const html = document.documentElement;
+                const height = Math.max(
+                    body.scrollHeight, body.offsetHeight,
+                    html.clientHeight, html.scrollHeight, html.offsetHeight
+                ) + 50; // 여유 공간 50px
 
-        function initHeightObserver() {
-            if (window !== window.parent) {
-                const wrap = document.getElementById('form-content-wrap');
-                if (wrap) {
-                    const observer = new ResizeObserver(() => {
-                        sendHeightToParent();
-                    });
-                    observer.observe(wrap);
-                }
+                window.parent.postMessage({ type: 'resizeIframe', formId: currentFormId, height: height }, '*');
             }
         }
 
@@ -179,7 +169,7 @@
             formEl.style.display = 'block';
 
             renderQuestions();
-            setTimeout(sendHeightToParent, 100);
+            sendHeightToParent();
         }
 
         function renderQuestions() {
@@ -215,7 +205,7 @@
             });
 
             container.innerHTML = html;
-            setTimeout(sendHeightToParent, 50);
+            sendHeightToParent();
         }
 
         document.getElementById('customForm').addEventListener('submit', async function (e) {

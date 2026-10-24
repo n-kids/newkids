@@ -54,7 +54,9 @@
             font-size: 0.95rem;
             display: flex;
             justify-content: center;
-            gap: 20px;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
         }
 
         .view-content {
@@ -112,7 +114,6 @@
     <div class="view-box-wrapper">
         <div class="view-box-custom">
 
-            <!-- 수정/삭제/비밀글 열람용 비밀번호 폼 -->
             <div id="secret-lock-box" style="display:none; text-align:center; padding: 50px 20px;">
                 <h3 style="color:#1a3c6e; margin-bottom:15px;" id="lock-box-title">🔒 비밀글입니다</h3>
                 <p style="color:#666; margin-bottom:20px;" id="lock-box-desc">작성 시 설정한 비밀번호를 입력해주세요.</p>
@@ -131,6 +132,8 @@
                         <span id="v-author">작성자: -</span>
                         <span id="v-date">작성일: -</span>
                         <span id="v-download-count" style="color:#f4a261; font-weight:bold;">📥 0회</span>
+                        <!-- ★ 원클릭 링크 복사(공유) 버튼 추가 ★ -->
+                        <button onclick="copyCurrentLink()" style="background:#eef6ff; border:1px solid #cce5ff; color:#1a3c6e; padding:5px 15px; border-radius:20px; font-size:0.85rem; font-weight:bold; cursor:pointer; transition:0.2s;" onmouseover="this.style.background='#d0e4ff'" onmouseout="this.style.background='#eef6ff'">🔗 공유하기</button>
                     </div>
                 </div>
 
@@ -160,6 +163,10 @@
                     <button onclick="openEditPost()" class="btn-action" style="background:#f4a261; padding:10px 25px; font-size:0.95rem;">수정</button>
                     <button onclick="deleteCurrentPost()" class="btn-action" style="background:#ff6b6b; padding:10px 25px; font-size:0.95rem;">삭제</button>
                 </div>
+
+                <!-- ★ 연관 추천 자료 영역 추가 ★ -->
+                <div id="related-posts-area" style="display:none; margin-top: 40px; padding-top: 30px; border-top: 1px solid #ddd;"></div>
+
             </div>
 
             <div class="btn-center-wrap" style="margin-top: 40px; text-align: center;">
@@ -169,7 +176,7 @@
         </div>
     </div>
 
-    <!-- ★ 다운로드 전용 인증 폼 ★ -->
+    <!-- 다운로드 전용 인증 폼 -->
     <div id="download-auth-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center;">
         <div style="background:#fff; padding:30px; border-radius:12px; width:90%; max-width:400px; text-align:center; box-shadow:0 5px 15px rgba(0,0,0,0.3);">
             <h3 style="color:#1a3c6e; margin-bottom:10px;">🔒 다운로드 권한 인증</h3>
@@ -193,10 +200,9 @@
         let pendingAction = null;
         let isAdminLoggedIn = false;
 
-        let isPostPasswordVerified = false; // 글 수정/삭제 인증 플래그
-        let isDlPasswordVerified = false;   // 다운로드 인증 플래그
+        let isPostPasswordVerified = false;
+        let isDlPasswordVerified = false;
 
-        // 다운로드 대기용 전역 변수
         let pendingDownloadUrl = '';
         let pendingDownloadName = '';
 
@@ -222,15 +228,11 @@
 
         function getListUrl(categoryCode) {
             let targetUrl = 'notice.html';
-
             if (window.GLOBAL_CATEGORIES && window.GLOBAL_CATEGORIES.length > 0) {
                 const catInfo = window.GLOBAL_CATEGORIES.find(c => c.code === categoryCode);
                 if (catInfo) {
-                    if (catInfo.type === 'EDU') {
-                        targetUrl = 'child.html';
-                    } else if (catInfo.type === 'EVENT') {
-                        targetUrl = 'program.html';
-                    }
+                    if (catInfo.type === 'EDU') targetUrl = 'child.html';
+                    else if (catInfo.type === 'EVENT') targetUrl = 'program.html';
                 }
             }
             return targetUrl + '#' + categoryCode;
@@ -241,6 +243,34 @@
                 location.href = getListUrl(postDataCache.category);
             } else {
                 history.back();
+            }
+        }
+
+        // ★ 주소 복사 (공유 기능)
+        function copyCurrentLink() {
+            const url = window.location.href;
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(url).then(() => {
+                    alert("게시글 주소가 복사되었습니다!\n원하는 곳에 붙여넣기 해주세요.");
+                }).catch(err => {
+                    alert("복사에 실패했습니다. 주소창의 URL을 직접 복사해주세요.");
+                });
+            } else {
+                // 호환성 대체 방법
+                let textArea = document.createElement("textarea");
+                textArea.value = url;
+                textArea.style.position = "fixed";
+                textArea.style.left = "-999999px";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    alert("게시글 주소가 복사되었습니다!\n원하는 곳에 붙여넣기 해주세요.");
+                } catch (err) {
+                    alert("복사에 실패했습니다. 주소창의 URL을 직접 복사해주세요.");
+                }
+                textArea.remove();
             }
         }
 
@@ -255,7 +285,6 @@
 
             postDataCache = data;
 
-            // ★ 게시글 자체 비밀번호와 다운로드 전용 비밀번호를 명확히 분리하여 캐싱
             postDataCache.actualPassword = data.password || data.video_url || '';
             postDataCache.dlPassword = data.download_password || '';
 
@@ -269,7 +298,6 @@
 
             const isSecretPost = (data.is_secret === true || String(data.is_secret) === 'true');
 
-            // 게시글 자체가 비밀글이면 열람을 막음
             if (isSecretPost && !isAdminLoggedIn) {
                 showLockBox("🔒 비밀글입니다", "이 글의 내용을 보려면 작성 시 설정한 비밀번호를 입력해주세요.", "view");
             } else {
@@ -277,7 +305,6 @@
             }
         }
 
-        // 게시글 자체 기능(수정/삭제/비밀글) 인증 모달
         function showLockBox(title, desc, action) {
             pendingAction = action;
             document.getElementById('main-content-wrap').style.display = 'none';
@@ -359,7 +386,6 @@
                     const downloadList = document.getElementById('download-list-container');
                     let fileHtml = '';
 
-                    // ★ 오직 '다운로드 전용 비밀번호(dlPassword)' 여부로만 잠금 상태를 평가합니다.
                     const isLocked = !isAdminLoggedIn && postDataCache.dlPassword && !isDlPasswordVerified;
 
                     files.forEach(item => {
@@ -408,9 +434,52 @@
             }
 
             loadAdminReplies();
+
+            // ★ 본문 렌더링 완료 후 연관 해시태그 추천 자료 로드
+            loadRelatedPosts(postDataCache.title, postDataCache.category, currentPostId);
         }
 
-        // ★ 다운로드 시크릿 로직 (다운로드 전용 비밀번호가 있을 때만 작동)
+        // ★ 해시태그 분석 및 연관 추천 자료 로드 ★
+        async function loadRelatedPosts(title, category, currentId) {
+            const match = title.match(/\[(.*?)\]/);
+            if (!match || !match[1]) return; // 태그가 없으면 중단
+
+            const parts = match[1].split(/[,-]/).map(p => p.trim()).filter(p => p);
+            if (parts.length === 0) return;
+
+            // 여러 태그 중 하나라도 포함된 게시글을 찾는 쿼리 생성
+            const orQuery = parts.map(tag => `title.ilike.%${tag}%`).join(',');
+
+            const { data, error } = await window.sb.from('total_posts')
+                .select('id, title, created_at, is_secret')
+                .eq('category', category)
+                .neq('id', currentId)         // 현재 보고있는 글 제외
+                .neq('is_visible', false)
+                .or(orQuery)
+                .order('created_at', { ascending: false })
+                .limit(5);                    // 최대 5개까지만 노출
+
+            if (error || !data || data.length === 0) return;
+
+            const relatedArea = document.getElementById('related-posts-area');
+            let html = `<h4 style="color:#1a3c6e; margin-bottom:15px; font-size:1.1rem;">💡 이 자료와 비슷한 추천 자료</h4>
+                            <div style="display:flex; flex-direction:column; gap:8px;">`;
+
+            data.forEach(item => {
+                const secretIcon = (item.is_secret === true || String(item.is_secret) === 'true') ? '🔒 ' : '';
+                html += `
+                        <div onclick="location.href='view.html?id=${item.id}'" style="display:flex; justify-content:space-between; align-items:center; padding:12px 15px; background:#f9f9f9; border:1px solid #eee; border-radius:8px; cursor:pointer; transition:0.2s;" onmouseover="this.style.background='#f0f7ff'" onmouseout="this.style.background='#f9f9f9'">
+                            <span style="color:#333; font-weight:bold; font-size:0.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${secretIcon}${item.title}</span>
+                            <span style="color:#999; font-size:0.8rem; margin-left:10px;">${new Date(item.created_at).toISOString().split('T')[0]}</span>
+                        </div>
+                    `;
+            });
+            html += `</div>`;
+
+            relatedArea.innerHTML = html;
+            relatedArea.style.display = 'block';
+        }
+
         function attemptDownload(url, filename) {
             if (isAdminLoggedIn || !postDataCache.dlPassword || isDlPasswordVerified) {
                 executeDownload(url, filename);
@@ -472,7 +541,6 @@
             }
         }
 
-        // --- 기타 기존 함수 (관리자 답변 등) ---
         async function loadAdminReplies() {
             const { data, error } = await window.sb.from('post_comments')
                 .select('*')

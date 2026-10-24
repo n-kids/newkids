@@ -15,10 +15,10 @@
         .view-box-wrapper {
             width: 100% !important;
             max-width: 900px !important;
-            margin: 100px auto 50px !important; 
+            margin: 100px auto 50px !important;
             padding: 0 20px !important;
             box-sizing: border-box !important;
-            display: block !important; 
+            display: block !important;
         }
 
         .view-box-custom {
@@ -61,18 +61,18 @@
             line-height: 1.8;
             color: #333;
             font-size: 1.1rem;
-            min-height: 300px; 
+            min-height: 300px;
             word-break: break-all;
             width: 100%;
             display: block;
         }
-        
-        .view-content img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 8px;
-            margin: 15px 0;
-        }
+
+            .view-content img {
+                max-width: 100%;
+                height: auto;
+                border-radius: 8px;
+                margin: 15px 0;
+            }
 
         .form-input {
             width: 100%;
@@ -84,29 +84,25 @@
             box-sizing: border-box;
             transition: border-color 0.3s;
         }
-        .form-input:focus { outline: none; border-color: #1a3c6e; }
 
-        /* 유튜브 반응형 크기 조절 */
-        .video-container {
-            position: relative;
-            width: 100%;
-            padding-bottom: 56.25%; /* 16:9 비율 */
-            margin-bottom: 30px;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-        .video-container iframe, .video-container video {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            border: none;
-        }
+            .form-input:focus {
+                outline: none;
+                border-color: #1a3c6e;
+            }
 
         @media screen and (max-width: 768px) {
-            .view-box-wrapper { margin: 100px auto 20px !important; padding: 0 15px !important; }
-            .view-box-custom { padding: 30px 20px !important; }
-            .view-title { font-size: 1.6rem; }
+            .view-box-wrapper {
+                margin: 100px auto 20px !important;
+                padding: 0 15px !important;
+            }
+
+            .view-box-custom {
+                padding: 30px 20px !important;
+            }
+
+            .view-title {
+                font-size: 1.6rem;
+            }
         }
     </style>
 </head>
@@ -127,7 +123,7 @@
             </div>
 
             <div id="main-content-wrap" style="display:none; width: 100%;">
-                
+
                 <div class="view-header">
                     <h2 class="view-title" id="v-title">불러오는 중...</h2>
                     <div class="view-meta">
@@ -136,21 +132,19 @@
                     </div>
                 </div>
 
-                <!-- ★ 유튜브 등 미디어 영상 출력 영역 ★ -->
-                <div id="view-media" style="display:none;"></div>
-
                 <div class="view-content" id="v-content"></div>
 
+                <!-- ★ 첨부파일 영역 (자동 아이콘 기능 적용) ★ -->
                 <div id="download-files-area" style="margin-top: 40px; padding-top: 20px; border-top: 1px dashed #eee; display: none;">
                     <h4 style="color: #1a3c6e; margin-bottom: 15px;">📎 첨부파일</h4>
-                    <div id="download-list-container" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                    <div id="download-list-container" style="display: flex; flex-direction: column; gap: 10px;"></div>
                 </div>
 
                 <div id="admin-reply-area" style="display:none; margin-top: 40px; padding: 25px; background: #f0f7ff; border-radius: 12px; border: 1px solid #cce5ff;">
                     <h4 style="color: #1a3c6e; margin-bottom: 15px; font-size:1.1rem; display:flex; align-items:center; gap:8px;">
                         <span>💬</span> 관리자 답변
                     </h4>
-                    
+
                     <div id="admin-reply-content" style="line-height: 1.6; color: #333; font-size: 0.95rem;"></div>
 
                     <div id="admin-reply-form" style="display:none; margin-top: 20px; border-top: 1px dashed #b8daff; padding-top: 20px;">
@@ -182,7 +176,7 @@
     <script>
         let currentPostId = null;
         let postDataCache = null;
-        let pendingAction = null; 
+        let pendingAction = null;
         let isAdminLoggedIn = false;
 
         document.addEventListener("DOMContentLoaded", () => {
@@ -206,8 +200,8 @@
         });
 
         function getListUrl(categoryCode) {
-            let targetUrl = 'notice.html'; 
-            
+            let targetUrl = 'notice.html';
+
             if (window.GLOBAL_CATEGORIES && window.GLOBAL_CATEGORIES.length > 0) {
                 const catInfo = window.GLOBAL_CATEGORIES.find(c => c.code === categoryCode);
                 if (catInfo) {
@@ -222,18 +216,11 @@
         }
 
         function goBackToList() {
-            if(postDataCache && postDataCache.category) {
+            if (postDataCache && postDataCache.category) {
                 location.href = getListUrl(postDataCache.category);
             } else {
                 history.back();
             }
-        }
-
-        // 유튜브 링크 추출 함수
-        function getYoutubeId(url) {
-            if (!url) return null;
-            const m = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/);
-            return (m && m[2].length === 11) ? m[2] : null;
         }
 
         async function loadPostDetail(id) {
@@ -250,7 +237,7 @@
 
             document.getElementById('v-title').innerText = data.title;
             document.title = "뉴키즈 - " + data.title;
-            
+
             const isNotice = data.category === 'notice';
             document.getElementById('v-author').innerText = "작성자: " + (isNotice ? "관리자" : (data.link_url || '익명'));
             document.getElementById('v-date').innerText = "작성일: " + new Date(data.created_at).toISOString().split('T')[0];
@@ -293,21 +280,38 @@
         function verifySecretPassword() {
             const inputPw = document.getElementById('secret-pw-input').value.trim();
             const actualPw = postDataCache.actualPassword;
-            
+
             if (!inputPw) return alert("비밀번호를 입력해주세요.");
 
             if (inputPw === actualPw) {
                 if (pendingAction === 'view') {
                     document.getElementById('secret-lock-box').style.display = 'none';
-                    renderContent(); 
+                    renderContent();
                 } else if (pendingAction === 'edit') {
                     location.href = `write.html?edit=${currentPostId}#${postDataCache.category}`;
                 } else if (pendingAction === 'delete') {
-                    executeDeletePost(); 
+                    executeDeletePost();
                 }
                 pendingAction = null;
             } else {
                 alert("비밀번호가 일치하지 않습니다.");
+            }
+        }
+
+        // ★ 확장자에 따른 아이콘 매핑 함수
+        function getFileIcon(filename) {
+            const ext = filename.split('.').pop().toLowerCase();
+            switch (ext) {
+                case 'pdf': return '📕';
+                case 'hwp': case 'hwpx': return '🟦';
+                case 'ppt': case 'pptx': return '🟧';
+                case 'xls': case 'xlsx': case 'csv': return '📗';
+                case 'doc': case 'docx': return '📝';
+                case 'zip': case 'rar': case '7z': return '📦';
+                case 'jpg': case 'jpeg': case 'png': case 'gif': return '🖼️';
+                case 'mp4': case 'avi': case 'mov': return '🎬';
+                case 'mp3': case 'wav': return '🎵';
+                default: return '📎';
             }
         }
 
@@ -317,37 +321,8 @@
 
             let finalContent = postDataCache.content || '';
             finalContent = finalContent.replace(/\[투표:(\d+)\]/g, '<iframe id="form-iframe-$1" src="form.html?id=$1" width="100%" frameborder="0" scrolling="no" style="border:1px solid #ddd; border-radius:12px; margin:30px 0; overflow:hidden; transition:height 0.3s ease;"></iframe>');
+
             document.getElementById('v-content').innerHTML = finalContent;
-
-            // ★ 유튜브 비디오 렌더링 로직 복구
-            const mediaBox = document.getElementById('view-media');
-            mediaBox.innerHTML = '';
-            mediaBox.style.display = 'none';
-
-            let rawVideo = postDataCache.video_url || "";
-            let videoVal = rawVideo.trim();
-
-            if (videoVal === 'ORDER_ITEM' || videoVal === 'null' || videoVal === '') {
-                videoVal = null;
-            } else if (videoVal.startsWith('ORDER_ALL|')) {
-                const parts = videoVal.split('|');
-                videoVal = (parts.length > 1 && parts[1].trim() !== '') ? parts[1].trim() : null;
-            }
-
-            // 진짜 링크(http)일 때만 미디어로 인식 (비밀번호 방지)
-            if (videoVal && !videoVal.startsWith('http')) {
-                videoVal = null;
-            }
-
-            if (videoVal) {
-                const yid = getYoutubeId(videoVal);
-                if (yid) {
-                    mediaBox.innerHTML = `<div class="video-container"><iframe src="https://www.youtube.com/embed/${yid}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
-                } else if (/\.(mp4|webm|ogg|mov|avi|mkv)(\?|$)/i.test(videoVal)) {
-                    mediaBox.innerHTML = `<div class="video-container"><video controls><source src="${videoVal}"></video></div>`;
-                }
-                if(mediaBox.innerHTML !== '') mediaBox.style.display = 'block';
-            }
 
             if (postDataCache.image_url && postDataCache.image_url.trim() !== '' && postDataCache.image_url !== 'null') {
                 const files = postDataCache.image_url.split('||').map(u => u.trim()).filter(u => u);
@@ -373,12 +348,18 @@
                         const safeUrl = fileUrl.replace(/'/g, "\\'");
                         const safeName = fileName.replace(/'/g, "\\'");
 
+                        // ★ 새롭게 적용된 아이콘과 개선된 디자인 레이아웃
+                        const fileIcon = getFileIcon(fileName);
+
                         fileHtml += `
-                                <div onclick="downloadFileWithOriginalName('${safeUrl}', '${safeName}')" style="display:flex; justify-content:space-between; align-items:center; background:#f0f7ff; padding:12px 15px; border-radius:8px; border:1px solid #cce5ff; cursor:pointer; color:#1a3c6e; font-weight:bold; transition: background 0.2s;">
-                                    <span>📥 ${fileName}</span>
-                                    <span style="font-size:0.85rem; background:#1a3c6e; color:#fff; padding:4px 10px; border-radius:4px;">다운로드</span>
-                                </div>
-                            `;
+                                    <div onclick="downloadFileWithOriginalName('${safeUrl}', '${safeName}')" style="display:flex; justify-content:space-between; align-items:center; background:#f0f7ff; padding:15px; border-radius:10px; border:1px solid #cce5ff; cursor:pointer; transition: background 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
+                                        <div style="display:flex; align-items:center; gap:12px; flex: 1; min-width: 0;">
+                                            <span style="font-size:1.6rem;">${fileIcon}</span>
+                                            <span style="font-size:1.05rem; color:#1a3c6e; font-weight:bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${fileName}</span>
+                                        </div>
+                                        <span style="font-size:0.85rem; background:#1a3c6e; color:#fff; padding:6px 14px; border-radius:6px; margin-left:15px; white-space:nowrap; box-shadow: 0 2px 4px rgba(26, 60, 110, 0.2);">다운로드</span>
+                                    </div>
+                                `;
                     });
 
                     downloadList.innerHTML = fileHtml;
@@ -401,7 +382,7 @@
                 .select('*')
                 .eq('post_id', currentPostId)
                 .order('created_at', { ascending: true });
-            
+
             const replyArea = document.getElementById('admin-reply-area');
             const replyContent = document.getElementById('admin-reply-content');
             const replyForm = document.getElementById('admin-reply-form');
@@ -416,19 +397,19 @@
                 let html = '';
                 data.forEach((c, idx) => {
                     const dateStr = new Date(c.created_at).toLocaleString();
-                    
+
                     let safeContent = c.content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
                     safeContent = safeContent.replace(/\n/g, '<br>');
-                    
+
                     const borderStyle = idx !== data.length - 1 ? 'border-bottom: 1px dashed #b8daff; margin-bottom: 15px; padding-bottom: 15px;' : '';
                     const deleteBtn = isAdminLoggedIn ? `<button onclick="deleteReply(${c.id})" style="background:none; border:none; color:#ff6b6b; cursor:pointer; font-size:0.8rem; font-weight:bold; float:right;">❌ 삭제</button>` : '';
 
                     html += `
-                        <div style="${borderStyle}; padding-bottom: 10px;">
-                            ${deleteBtn}
-                            <div style="font-size:0.85rem; color:#666; margin-bottom:8px;">${dateStr}</div>
-                            <div style="font-weight:bold; color:#1a3c6e; font-size:1.05rem;">${safeContent}</div>
-                        </div>`;
+                            <div style="${borderStyle}; padding-bottom: 10px;">
+                                ${deleteBtn}
+                                <div style="font-size:0.85rem; color:#666; margin-bottom:8px;">${dateStr}</div>
+                                <div style="font-weight:bold; color:#1a3c6e; font-size:1.05rem;">${safeContent}</div>
+                            </div>`;
                 });
                 replyContent.innerHTML = html;
                 replyContent.style.display = 'block';
@@ -436,7 +417,7 @@
             } else {
                 replyContent.innerHTML = '';
                 replyContent.style.display = 'none';
-                
+
                 if (isAdminLoggedIn) {
                     replyArea.style.display = 'block';
                 } else {
@@ -461,7 +442,7 @@
                 alert("답변 등록 실패: " + error.message);
             } else {
                 document.getElementById('new-reply-input').value = '';
-                loadAdminReplies(); 
+                loadAdminReplies();
             }
         }
 
@@ -471,7 +452,7 @@
             if (error) {
                 alert("삭제 실패: " + error.message);
             } else {
-                loadAdminReplies(); 
+                loadAdminReplies();
             }
         }
 

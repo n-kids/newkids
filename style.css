@@ -1319,7 +1319,7 @@ footer {
 }
 
 /* =========================================
-   모바일 게시판 목록 박스 넘침 방지 및 줄바꿈 설정
+   모바일 게시판 목록 박스 넘침 방지 및 글쓰기 버튼 정렬 미디어 쿼리
    ========================================= */
 @media (max-width: 768px) {
     .board-container {
@@ -1341,7 +1341,7 @@ footer {
         position: relative !important;
         width: 100% !important;
         max-width: 100% !important;
-        padding: 15px 10px !important;
+        padding: 15px 12px !important;
         box-sizing: border-box !important;
         gap: 8px !important;
         overflow: hidden !important;
@@ -1372,19 +1372,43 @@ footer {
         padding: 0 !important;
     }
 
-    /* 제목이 박스 밖으로 나가지 않고 안에서 안전하게 줄바꿈되도록 설정 */
+    /* ★ 제목이 박스 밖으로 삐져나가지 않도록 너비 및 줄바꿈 철저히 제한 ★ */
     .b-title {
         width: 100% !important;
         max-width: 100% !important;
+        min-width: 0 !important;
         margin: 0 !important;
         padding: 0 !important;
         font-size: 1.05rem !important;
         white-space: normal !important;
         word-break: break-all !important;
+        overflow-wrap: break-word !important;
         box-sizing: border-box !important;
-        overflow: hidden !important;
     }
+
+    /* ★ 찜한 자료, 최근 본 자료, 글쓰기 버튼을 한 줄에 나란히 정렬 ★ */
+    .top-btn-row {
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: center !important;
+        align-items: center !important;
+        gap: 8px !important;
+        width: 100% !important;
+        margin-bottom: 20px !important;
+        flex-wrap: nowrap !important;
+    }
+
+        .top-btn-row a,
+        .top-btn-row button {
+            flex: 1 !important;
+            padding: 8px 4px !important;
+            font-size: 0.85rem !important;
+            white-space: nowrap !important;
+            text-align: center !important;
+            box-sizing: border-box !important;
+        }
 }
+
 .board-tab-menu {
     display: flex;
     justify-content: center;

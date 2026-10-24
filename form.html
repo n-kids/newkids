@@ -91,6 +91,7 @@
     <script>
         let currentFormId = null;
         let currentSchema = null;
+        let lastSentHeight = 0; // 무한 확장 루프 방지를 위한 높이 캐시 변수
 
         document.addEventListener("DOMContentLoaded", () => {
             const urlParams = new URLSearchParams(window.location.search);
@@ -108,20 +109,21 @@
                 }
             }, 100);
 
-            // 실시간 자동 맞춤을 위해 높이 감지 루프 실행 (0.3초마다 체크)
+            // 높이 감지 루프 실행 (변경 사항이 있을 때만 안전하게 반영)
             setInterval(sendHeightToParent, 300);
         });
 
+        // ★ 실제 콘텐츠 높이가 5px 이상 유의미하게 바뀔 때만 부모 창으로 전송하여 무한 루프 차단
         function sendHeightToParent() {
             if (window !== window.parent) {
-                const body = document.body;
-                const html = document.documentElement;
-                const height = Math.max(
-                    body.scrollHeight, body.offsetHeight,
-                    html.clientHeight, html.scrollHeight, html.offsetHeight
-                ) + 50; // 여유 공간 50px
-
-                window.parent.postMessage({ type: 'resizeIframe', formId: currentFormId, height: height }, '*');
+                const wrap = document.getElementById('form-content-wrap');
+                if (wrap) {
+                    const height = wrap.scrollHeight + 50; // 여유 공간 50px
+                    if (Math.abs(height - lastSentHeight) > 5) {
+                        lastSentHeight = height;
+                        window.parent.postMessage({ type: 'resizeIframe', formId: currentFormId, height: height }, '*');
+                    }
+                }
             }
         }
 

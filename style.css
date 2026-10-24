@@ -24,7 +24,7 @@ body {
     font-size: 16px;
     color: var(--text-color);
     line-height: 1.6;
-    background-color: #f4f7fa !important; /* 관리자 및 상세페이지 공통 배경 적용 */
+    background-color: #f4f7fa !important;
     padding-top: 70px;
     -webkit-user-select: none;
     -moz-user-select: none;
@@ -652,13 +652,6 @@ header {
     color: var(--primary-color);
 }
 
-.view-media iframe, .view-media video {
-    width: 100%;
-    aspect-ratio: 16/9;
-    border-radius: 10px;
-    max-width: 100%;
-}
-
 .btn-list {
     display: block;
     width: 200px;
@@ -1238,7 +1231,7 @@ footer {
 
 .board-header-section {
     text-align: center;
-    padding: 120px 0 40px; /* 120px 여백 적용됨 */
+    padding: 120px 0 40px;
     background-color: #f9fbfd;
     border-bottom: 1px solid #eee;
 }
@@ -1634,12 +1627,12 @@ footer {
 }
 
 /* =========================================
-   13. 상세 보기 페이지 스타일 (View Page)
+   13. 상세 보기 페이지 스타일 (View Page) 수정
    ========================================= */
 .view-box-wrapper {
     width: 100% !important;
     max-width: 900px !important;
-    margin: 100px auto 50px !important;
+    margin: 80px auto 40px !important;
     padding: 0 20px !important;
     box-sizing: border-box !important;
     display: block !important;
@@ -1648,7 +1641,7 @@ footer {
 .view-box-custom {
     width: 100% !important;
     background: #fff !important;
-    padding: 50px 40px !important;
+    padding: 30px 30px !important; /* 상하좌우 패딩을 30px로 축소 */
     border-radius: 12px !important;
     border: 1px solid #eaeaea !important;
     box-shadow: 0 4px 15px rgba(0,0,0,0.03) !important;
@@ -1658,17 +1651,17 @@ footer {
 
     .view-box-custom .view-header {
         border-bottom: 2px solid #1a3c6e;
-        padding-bottom: 20px;
-        margin-bottom: 30px;
+        padding-bottom: 12px; /* 하단 패딩 축소 */
+        margin-bottom: 15px !important; /* 타이틀 아래 여백을 15px로 대폭 축소 */
         text-align: center;
         width: 100%;
         display: block;
     }
 
     .view-box-custom .view-title {
-        font-size: 2.2rem;
+        font-size: 2rem;
         color: #1a3c6e;
-        margin-bottom: 15px;
+        margin-bottom: 10px; /* 타이틀과 메타 정보 사이 여백 축소 */
         font-weight: 800;
         word-break: keep-all;
     }
@@ -1684,10 +1677,10 @@ footer {
     }
 
     .view-box-custom .view-content {
-        line-height: 1.8;
+        line-height: 1.6;
         color: #333;
-        font-size: 1.1rem;
-        min-height: 300px;
+        font-size: 1.05rem;
+        min-height: 0 !important;
         word-break: break-all;
         width: 100%;
         display: block;
@@ -1697,17 +1690,7 @@ footer {
             max-width: 100%;
             height: auto;
             border-radius: 8px;
-            margin: 15px 0;
-        }
-
-        .view-box-custom .view-content iframe,
-        .view-box-custom .view-content video {
-            width: 100% !important;
-            aspect-ratio: 16 / 9 !important;
-            height: auto !important;
-            border-radius: 8px;
-            margin: 20px 0;
-            border: none;
+            margin: 10px 0; /* 이미지 상하 여백 축소 */
         }
 
 @media screen and (max-width: 768px) {
@@ -1987,7 +1970,7 @@ footer {
 }
 
 /* =========================================
-   유튜브 및 동영상 iframe만 16:9 반응형 적용 (투표 폼 iframe 제외)
+   16. 유튜브 및 동영상 반응형 통합 스타일
    ========================================= */
 #youtube-player-area iframe,
 .view-content iframe[src*="youtube.com"],

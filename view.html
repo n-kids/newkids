@@ -278,8 +278,7 @@
             let finalContent = postDataCache.content || '';
 
             // ★ 고정 높이 제거 및 초기 최소 높이(200px) 적용으로 자바스크립트 수신 대기
-            finalContent = finalContent.replace(/\[투표:([^\]]+)\]/g, '<iframe id="form-iframe-$1" src="form.html?id=$1" width="100%" frameborder="0" scrolling="no" style="border:1px solid #ddd; border-radius:12px; margin:30px 0; overflow:hidden; min-height:200px; transition:height 0.2s ease;"></iframe>');
-
+            finalContent = finalContent.replace(/\[투표:([^\]]+)\]/g, '<iframe id="form-iframe-$1" src="form.html?id=$1" width="100%" frameborder="0" scrolling="no" style="border:1px solid #ddd; border-radius:12px; margin:10px 0; overflow:hidden; min-height:200px; transition:height 0.2s ease;"></iframe>');
             const playerArea = document.getElementById('youtube-player-area');
             let rawVideoUrl = postDataCache.video_url || '';
             if (rawVideoUrl.startsWith('ORDER_ALL|')) {

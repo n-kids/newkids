@@ -33,8 +33,17 @@
         const NO_IMAGE_URL = "https://placehold.co/400x300/e0e0e0/666666?text=No+Image";
 
         document.addEventListener("DOMContentLoaded", function () {
-            loadCategoryPosts();
-            window.addEventListener('hashchange', loadCategoryPosts);
+            // ★ 수정 1: Supabase DB 연결이 완료될 때까지 0.1초 단위로 대기한 후 데이터 호출
+            const checkReady = setInterval(() => {
+                if (window.sb) {
+                    clearInterval(checkReady);
+                    loadCategoryPosts();
+                }
+            }, 100);
+
+            window.addEventListener('hashchange', () => {
+                if (window.sb) loadCategoryPosts();
+            });
         });
 
         async function loadCategoryPosts() {
@@ -46,43 +55,48 @@
             postListEl.innerHTML = '';
 
             try {
-                // [수정] video_url이 'ORDER_ITEM' (발주 전용)이 아닌 것만 가져오기
-                // SELECT 문에 video_url 포함 필수
+                // ★ 수정 2: video_url이 비어있는(null) 일반 게시글도 정상적으로 불러오도록 or 조건 추가
                 const { data, error } = await window.sb.from('total_posts')
                     .select('id, title, thumbnail_url, content, created_at, video_url')
                     .eq('category', category)
                     .eq('is_visible', true)
-                    .neq('video_url', 'ORDER_ITEM') // ★ 핵심 수정
+                    .or('video_url.neq.ORDER_ITEM,video_url.is.null')
                     .order('order_num', { ascending: true })
                     .order('created_at', { ascending: false });
 
+                if (error) throw error;
+
                 if (!data || data.length === 0) {
-                    listContainer.innerHTML = `
-        <div style="text-align:center; padding: 80px 20px; color:#888; background-color:#f9f9f9; border-radius:12px; grid-column: 1 / -1; width: 100%;">
-            <div style="font-size: 3rem; margin-bottom: 15px;">📭</div>
-            <h3 style="color:#555; margin-bottom: 10px;">현재 준비 중인 프로그램입니다.</h3>
-            <p style="font-size: 1rem;">새로운 콘텐츠가 곧 업데이트될 예정입니다. 조금만 기다려주세요!</p>
-        </div>
-    `;
+                    postListEl.innerHTML = `
+                        <div style="text-align:center; padding: 80px 20px; color:#888; background-color:#f9f9f9; border-radius:12px; grid-column: 1 / -1; width: 100%;">
+                            <div style="font-size: 3rem; margin-bottom: 15px;">📭</div>
+                            <h3 style="color:#555; margin-bottom: 10px;">현재 준비 중인 프로그램입니다.</h3>
+                            <p style="font-size: 1rem;">새로운 콘텐츠가 곧 업데이트될 예정입니다. 조금만 기다려주세요!</p>
+                        </div>
+                    `;
                     return;
                 }
+
                 data.forEach(item => {
                     let thumb = item.thumbnail_url || NO_IMAGE_URL;
                     let desc = item.content ? item.content.replace(/<[^>]*>?/gm, '').substring(0, 50) + '...' : '';
 
                     postListEl.insertAdjacentHTML('beforeend', `
-                                <a href="view.html?id=${item.id}" class="card post-card">
-                                    <div class="card-img-wrap post-thumb">
-                                        <img src="${thumb}" alt="${item.title}" onerror="this.src='${NO_IMAGE_URL}';">
-                                    </div>
-                                    <div class="card-body post-info">
-                                        <h3 class="card-title post-title">${item.title}</h3>
-                                        <p class="card-text post-desc">${desc}</p>
-                                    </div>
-                                </a>`);
+                                    <a href="view.html?id=${item.id}" class="card post-card">
+                                        <div class="card-img-wrap post-thumb">
+                                            <img src="${thumb}" alt="${item.title}" onerror="this.src='${NO_IMAGE_URL}';">
+                                        </div>
+                                        <div class="card-body post-info">
+                                            <h3 class="card-title post-title">${item.title}</h3>
+                                            <p class="card-text post-desc">${desc}</p>
+                                        </div>
+                                    </a>`);
                 });
-            } catch (err) { console.error(err); }
-            finally { document.getElementById('loading').style.display = 'none'; }
+            } catch (err) {
+                console.error("데이터 불러오기 실패:", err);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
         }
     </script>
 </body>

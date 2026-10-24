@@ -5,6 +5,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>뉴키즈 - 게시판</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* ★ 해시태그 버튼 전용 스타일 ★ */
+        .hashtag-container {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 25px;
+        }
+
+        .hashtag-btn {
+            background: #fff;
+            border: 1px solid #1a3c6e;
+            color: #1a3c6e;
+            padding: 8px 18px;
+            border-radius: 25px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+            .hashtag-btn:hover {
+                background: #eef6ff;
+            }
+
+            .hashtag-btn.active {
+                background: #1a3c6e;
+                color: #fff;
+                box-shadow: 0 3px 8px rgba(26, 60, 110, 0.3);
+            }
+    </style>
 </head>
 <body>
 
@@ -22,6 +55,15 @@
         <!-- 글쓰기 버튼 (우측 정렬) -->
         <div style="display: flex; justify-content: flex-end; margin-bottom: 15px;">
             <button id="btn-user-write" class="btn-action" style="display: none;" onclick="location.href='write.html#' + currentCategory">✏️ 글쓰기</button>
+        </div>
+
+        <!-- ★ 원클릭 해시태그 필터 영역 ★ -->
+        <div class="hashtag-container" id="hashtag-area">
+            <button class="hashtag-btn active" onclick="clickHashtag('', this)">#전체보기</button>
+            <button class="hashtag-btn" onclick="clickHashtag('OT', this)">#OT자료</button>
+            <button class="hashtag-btn" onclick="clickHashtag('계획안', this)">#계획안</button>
+            <button class="hashtag-btn" onclick="clickHashtag('가정통신문', this)">#가정통신문</button>
+            <button class="hashtag-btn" onclick="clickHashtag('설명회', this)">#설명회</button>
         </div>
 
         <div class="board-list-head">
@@ -61,11 +103,9 @@
                 if (window.sb && window.GLOBAL_CATEGORIES && window.GLOBAL_CATEGORIES.length > 0) {
                     clearInterval(checkReady);
 
-                    // 관리자가 생성한 BOARD 카테고리만 추출
                     boardCategories = window.GLOBAL_CATEGORIES.filter(c => c.type === 'BOARD');
 
                     if (boardCategories.length > 0) {
-                        // 해시값이 없거나 잘못된 경우 첫 번째 게시판으로 강제 지정
                         if (!currentCategory || !boardCategories.find(c => c.code === currentCategory)) {
                             currentCategory = boardCategories[0].code;
                         }
@@ -87,6 +127,10 @@
             const searchInput = document.getElementById('search-input');
             if (searchInput) searchInput.value = '';
 
+            // 탭 변경 시 해시태그 버튼 초기화
+            document.querySelectorAll('.hashtag-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('.hashtag-btn').classList.add('active'); // 전체보기 활성화
+
             updateBoardHeader();
             loadBoardList(1);
         });
@@ -99,7 +143,6 @@
                 document.title = "뉴키즈 - " + catInfo.name;
             }
 
-            // '공지사항(notice)'이라는 코드를 가진 게시판만 글쓰기 버튼 숨김
             const writeBtn = document.getElementById('btn-user-write');
             if (currentCategory === 'notice') {
                 writeBtn.style.display = 'none';
@@ -108,9 +151,34 @@
             }
         }
 
+        // ★ 해시태그 클릭 처리 함수 ★
+        window.clickHashtag = function (keyword, btnEl) {
+            // 버튼 스타일 업데이트
+            document.querySelectorAll('.hashtag-btn').forEach(btn => btn.classList.remove('active'));
+            if (btnEl) btnEl.classList.add('active');
+
+            // 검색창 값 동기화 및 검색 실행
+            document.getElementById('search-input').value = keyword;
+            currentSearchKeyword = keyword;
+            loadBoardList(1);
+        };
+
         function executeSearch() {
             const inputVal = document.getElementById('search-input').value.trim();
             currentSearchKeyword = inputVal;
+
+            // 수동으로 검색했을 때 해시태그 버튼의 활성화 상태 연동
+            document.querySelectorAll('.hashtag-btn').forEach(btn => {
+                let btnKeyword = btn.innerText.replace('#', '');
+                if (btnKeyword === '전체보기') btnKeyword = '';
+
+                if (inputVal === btnKeyword || (inputVal === '' && btnKeyword === '')) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+
             loadBoardList(1);
         }
 
@@ -123,7 +191,7 @@
             listDiv.innerHTML = '<div style="text-align:center; padding:50px; color:#999;">로딩 중...</div>';
 
             let query = window.sb.from('total_posts')
-                .select('id, title, category, created_at, link_url, is_secret', { count: 'exact' })
+                .select('id, title, category, created_at, link_url, is_secret, download_count', { count: 'exact' })
                 .eq('category', currentCategory)
                 .neq('is_visible', false);
 
@@ -146,7 +214,6 @@
                 return;
             }
 
-            // 답변 상태 표시를 위해 현재 페이지의 게시물들의 댓글(post_comments) 존재 여부를 일괄 조회
             const postIds = data.map(item => item.id);
             let answeredSet = new Set();
 
@@ -163,24 +230,21 @@
                 let authorName = item.link_url ? item.link_url.trim() : '익명';
                 let isAdminPost = false;
 
-                // ★ 1. 관리자 글 필터링 로직 (공지사항이거나, 이름이 관리자이거나, 관리자 페이지에서 작성된 경우)
                 if (currentCategory === 'notice') {
                     authorName = '관리자';
                     isAdminPost = true;
                 } else if (authorName === '관리자') {
                     isAdminPost = true;
                 } else if (authorName === '익명' || authorName.startsWith('http://') || authorName.startsWith('https://')) {
-                    // admin.html에서 작성한 경우 link_url(작성자 필드)이 비어있거나 웹 주소가 들어감
                     authorName = '관리자';
                     isAdminPost = true;
                 }
 
                 const displayNum = count - from - index;
-
-                // 비밀글 아이콘 표시
                 const secretIcon = (item.is_secret === true || String(item.is_secret) === 'true') ? '🔒 ' : '';
 
-                // ★ 2. 관리자 글이 아닐 때(일반 사용자 글일 때)만 답변 상태 뱃지 생성
+                const dlCount = item.download_count || 0;
+
                 let statusBadge = '';
                 if (!isAdminPost) {
                     if (answeredSet.has(item.id)) {
@@ -195,7 +259,11 @@
                                         <div class="b-num">${displayNum}</div>
                                         <div class="b-cat"><span class="badge" style="background:#f1f3f5; color:#555;">${authorName}</span></div>
                                         <div class="b-title" style="text-align:left; display:flex; align-items:center;">${statusBadge}${secretIcon}${item.title}</div>
-                                        <div class="b-date">${date}</div>
+
+                                        <div class="b-date" style="display:flex; flex-direction:column; align-items:center; gap:4px;">
+                                            <span>${date}</span>
+                                            <span style="font-size:0.75rem; color:#888; background:#f4f7fa; padding:2px 6px; border-radius:4px;">📥 ${dlCount}</span>
+                                        </div>
                                     </div>`;
             });
             listDiv.innerHTML = html;

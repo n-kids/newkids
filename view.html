@@ -129,12 +129,12 @@
                     <div class="view-meta">
                         <span id="v-author">작성자: -</span>
                         <span id="v-date">작성일: -</span>
+                        <span id="v-download-count" style="color:#f4a261; font-weight:bold;">📥 0회</span>
                     </div>
                 </div>
 
                 <div class="view-content" id="v-content"></div>
 
-                <!-- ★ 첨부파일 영역 (자동 아이콘 기능 적용) ★ -->
                 <div id="download-files-area" style="margin-top: 40px; padding-top: 20px; border-top: 1px dashed #eee; display: none;">
                     <h4 style="color: #1a3c6e; margin-bottom: 15px;">📎 첨부파일</h4>
                     <div id="download-list-container" style="display: flex; flex-direction: column; gap: 10px;"></div>
@@ -168,6 +168,19 @@
         </div>
     </div>
 
+    <!-- ★ 다운로드 권한 인증 모달 ★ -->
+    <div id="download-auth-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center;">
+        <div style="background:#fff; padding:30px; border-radius:12px; width:90%; max-width:400px; text-align:center; box-shadow:0 5px 15px rgba(0,0,0,0.3);">
+            <h3 style="color:#1a3c6e; margin-bottom:10px;">🔒 다운로드 권한 인증</h3>
+            <p style="color:#666; font-size:0.9rem; margin-bottom:20px;">이 자료를 다운로드하려면 학원 코드(비밀번호)를 입력해주세요.</p>
+            <input type="password" id="dl-pw-input" class="form-input" placeholder="비밀번호 입력" style="margin-bottom:15px;" onkeypress="if(event.keyCode==13) verifyDownloadPassword();">
+            <div style="display:flex; gap:10px; justify-content:center;">
+                <button onclick="verifyDownloadPassword()" class="btn-action" style="flex:1;">확인</button>
+                <button onclick="closeDownloadModal()" class="btn-action" style="background:#666; flex:1;">취소</button>
+            </div>
+        </div>
+    </div>
+
     <footer></footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -178,6 +191,11 @@
         let postDataCache = null;
         let pendingAction = null;
         let isAdminLoggedIn = false;
+        let isPasswordVerified = false; // ★ 이미 비밀번호를 인증했는지 확인하는 플래그
+
+        // 다운로드 대기용 전역 변수
+        let pendingDownloadUrl = '';
+        let pendingDownloadName = '';
 
         document.addEventListener("DOMContentLoaded", () => {
             const urlParams = new URLSearchParams(window.location.search);
@@ -241,6 +259,7 @@
             const isNotice = data.category === 'notice';
             document.getElementById('v-author').innerText = "작성자: " + (isNotice ? "관리자" : (data.link_url || '익명'));
             document.getElementById('v-date').innerText = "작성일: " + new Date(data.created_at).toISOString().split('T')[0];
+            document.getElementById('v-download-count').innerText = `📥 다운로드 ${data.download_count || 0}회`;
 
             const isSecretPost = (data.is_secret === true || String(data.is_secret) === 'true');
 
@@ -284,6 +303,8 @@
             if (!inputPw) return alert("비밀번호를 입력해주세요.");
 
             if (inputPw === actualPw) {
+                isPasswordVerified = true; // ★ 인증 통과 기록 저장 (다운로드 시 프리패스용)
+
                 if (pendingAction === 'view') {
                     document.getElementById('secret-lock-box').style.display = 'none';
                     renderContent();
@@ -298,7 +319,6 @@
             }
         }
 
-        // ★ 확장자에 따른 아이콘 매핑 함수
         function getFileIcon(filename) {
             const ext = filename.split('.').pop().toLowerCase();
             switch (ext) {
@@ -331,6 +351,9 @@
                     const downloadList = document.getElementById('download-list-container');
                     let fileHtml = '';
 
+                    // ★ 관리자가 아니고, 게시글에 비번이 걸려있고, 아직 비번을 입력하지 않았다면 잠금 상태로 간주
+                    const isLocked = !isAdminLoggedIn && postDataCache.actualPassword && !isPasswordVerified;
+
                     files.forEach(item => {
                         let fileUrl = item;
                         let fileName = "다운로드 파일";
@@ -347,17 +370,20 @@
 
                         const safeUrl = fileUrl.replace(/'/g, "\\'");
                         const safeName = fileName.replace(/'/g, "\\'");
-
-                        // ★ 새롭게 적용된 아이콘과 개선된 디자인 레이아웃
                         const fileIcon = getFileIcon(fileName);
 
+                        // ★ 잠금 상태에 따른 UI 변경
+                        const btnLabel = isLocked ? '🔒 제한됨' : '다운로드';
+                        const btnBg = isLocked ? 'background:#e67e22;' : 'background:#1a3c6e;';
+                        const btnShadow = isLocked ? 'box-shadow: 0 2px 4px rgba(230, 126, 34, 0.2);' : 'box-shadow: 0 2px 4px rgba(26, 60, 110, 0.2);';
+
                         fileHtml += `
-                                    <div onclick="downloadFileWithOriginalName('${safeUrl}', '${safeName}')" style="display:flex; justify-content:space-between; align-items:center; background:#f0f7ff; padding:15px; border-radius:10px; border:1px solid #cce5ff; cursor:pointer; transition: background 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
+                                    <div onclick="attemptDownload('${safeUrl}', '${safeName}')" style="display:flex; justify-content:space-between; align-items:center; background:#f0f7ff; padding:15px; border-radius:10px; border:1px solid #cce5ff; cursor:pointer; transition: background 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
                                         <div style="display:flex; align-items:center; gap:12px; flex: 1; min-width: 0;">
                                             <span style="font-size:1.6rem;">${fileIcon}</span>
                                             <span style="font-size:1.05rem; color:#1a3c6e; font-weight:bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${fileName}</span>
                                         </div>
-                                        <span style="font-size:0.85rem; background:#1a3c6e; color:#fff; padding:6px 14px; border-radius:6px; margin-left:15px; white-space:nowrap; box-shadow: 0 2px 4px rgba(26, 60, 110, 0.2);">다운로드</span>
+                                        <span style="font-size:0.85rem; color:#fff; padding:6px 14px; border-radius:6px; margin-left:15px; white-space:nowrap; ${btnBg} ${btnShadow}">${btnLabel}</span>
                                     </div>
                                 `;
                     });
@@ -377,6 +403,71 @@
             loadAdminReplies();
         }
 
+        // ★ 다운로드 버튼 클릭 시 권한 검사 함수 ★
+        function attemptDownload(url, filename) {
+            // 관리자이거나, 게시물에 비밀번호가 없거나, 이미 비밀글 인증을 통과했다면 즉시 다운로드 실행
+            if (isAdminLoggedIn || !postDataCache.actualPassword || isPasswordVerified) {
+                executeDownload(url, filename);
+            } else {
+                // 권한이 없으면 모달 띄우기
+                pendingDownloadUrl = url;
+                pendingDownloadName = filename;
+                document.getElementById('dl-pw-input').value = '';
+                document.getElementById('download-auth-modal').style.display = 'flex';
+                setTimeout(() => document.getElementById('dl-pw-input').focus(), 100);
+            }
+        }
+
+        function closeDownloadModal() {
+            document.getElementById('download-auth-modal').style.display = 'none';
+            pendingDownloadUrl = '';
+            pendingDownloadName = '';
+        }
+
+        function verifyDownloadPassword() {
+            const inputPw = document.getElementById('dl-pw-input').value.trim();
+            const actualPw = postDataCache.actualPassword;
+
+            if (!inputPw) return alert("비밀번호(학원코드)를 입력해주세요.");
+
+            if (inputPw === actualPw) {
+                isPasswordVerified = true; // 이번 방문 동안은 다시 묻지 않음
+                document.getElementById('download-auth-modal').style.display = 'none';
+                renderContent(); // 다운로드 버튼 색상을 파란색(활성)으로 변경
+                executeDownload(pendingDownloadUrl, pendingDownloadName); // 실제 다운로드 실행
+            } else {
+                alert("비밀번호가 일치하지 않습니다.");
+            }
+        }
+
+        async function executeDownload(url, filename) {
+            try {
+                const response = await fetch(url);
+                const blob = await response.blob();
+                const blobUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(blobUrl);
+
+                if (postDataCache) {
+                    let currentCount = postDataCache.download_count || 0;
+                    currentCount += 1;
+                    postDataCache.download_count = currentCount;
+
+                    document.getElementById('v-download-count').innerText = `📥 다운로드 ${currentCount}회`;
+                    window.sb.from('total_posts').update({ download_count: currentCount }).eq('id', currentPostId);
+                }
+
+            } catch (e) {
+                window.open(url, '_blank');
+            }
+        }
+
+        // --- 기타 기존 함수 (관리자 답변 등) ---
         async function loadAdminReplies() {
             const { data, error } = await window.sb.from('post_comments')
                 .select('*')
@@ -501,23 +592,6 @@
             } else {
                 alert("게시글이 안전하게 삭제되었습니다.");
                 goBackToList();
-            }
-        }
-
-        async function downloadFileWithOriginalName(url, filename) {
-            try {
-                const response = await fetch(url);
-                const blob = await response.blob();
-                const blobUrl = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = blobUrl;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(blobUrl);
-            } catch (e) {
-                window.open(url, '_blank');
             }
         }
 

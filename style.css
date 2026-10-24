@@ -1283,15 +1283,17 @@ footer {
     text-align: center;
     color: #888;
     font-size: 0.9rem;
+    flex-shrink: 0;
 }
 
 .b-cat {
-    width: 100px;
+    width: 110px;
     text-align: center;
+    flex-shrink: 0;
 }
 
 .b-title {
-    flex: 1;
+    flex: 1; /* 제목 영역이 남은 공간을 유연하게 차지하도록 설정 */
     padding: 0 20px;
     font-size: 1.05rem;
     font-weight: 500;
@@ -1302,10 +1304,12 @@ footer {
 }
 
 .b-date {
-    width: 120px;
+    width: 150px; /* '작성일 / 다운로드' 글자가 잘리지 않도록 넉넉한 너비 지정 */
     text-align: center;
     color: #888;
     font-size: 0.9rem;
+    white-space: nowrap; /* 줄바꿈 방지 */
+    flex-shrink: 0;
 }
 
 .badge {

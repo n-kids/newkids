@@ -48,10 +48,12 @@ window.escapeHtml = function (text) {
     return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 };
 
+// ★ 유튜브 쇼츠(shorts/) 및 다양한 URL 형식을 완벽하게 지원하도록 개선된 파싱 함수 ★
 window.getYoutubeId = function (url) {
     if (!url) return null;
-    const m = url.match(/^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/|watch\?))\??v?=?([^#&?]*).*/);
-    return (m && m[7].length === 11) ? m[7] : null;
+    const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|shorts\/)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
 };
 
 window.formatDate = function (dateStr) {

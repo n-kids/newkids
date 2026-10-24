@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
@@ -15,6 +15,28 @@
     <link rel="stylesheet" href="admin-custom.css">
 
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <style>
+        /* 폰트 드롭다운 한글 표시 설정 */
+        .ql-picker.ql-font .ql-picker-label[data-value="nanum-gothic"]::before,
+        .ql-picker.ql-font .ql-picker-item[data-value="nanum-gothic"]::before { content: '나눔고딕'; font-family: 'Nanum Gothic', sans-serif; }
+        
+        .ql-picker.ql-font .ql-picker-label[data-value="nanum-myeongjo"]::before,
+        .ql-picker.ql-font .ql-picker-item[data-value="nanum-myeongjo"]::before { content: '나눔명조'; font-family: 'Nanum Myeongjo', serif; }
+
+        .ql-picker.ql-font .ql-picker-label[data-value="sans-serif"]::before,
+        .ql-picker.ql-font .ql-picker-item[data-value="sans-serif"]::before { content: '기본 폰트'; font-family: sans-serif; }
+
+        /* 실제 에디터 내 폰트 적용 스타일 */
+        .ql-font-nanum-gothic { font-family: 'Nanum Gothic', sans-serif; }
+        .ql-font-nanum-myeongjo { font-family: 'Nanum Myeongjo', serif; }
+
+        /* 커스텀 표 삽입 버튼 텍스트 처리 */
+        .ql-insertTable:after { content: '표 삽입'; font-weight: bold; font-size: 12px; color: #1a3c6e; width: 40px !important; }
+        .ql-toolbar.ql-snow .ql-insertTable { width: 50px; }
+    </style>
 </head>
 <body>
 
@@ -368,12 +390,31 @@
                     modules: {
                         blotFormatter: {},
                         toolbar: {
-                            container: [[{ 'header': [1, 2, 3, false] }], ['bold', 'italic', 'underline', { 'color': [] }, { 'background': [] }], [{ 'align': [] }, 'link', 'image', 'video']],
+                            container: [
+                                // 1. 제목 크기 및 일반 글자 크기
+                                [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                                [{ 'size': ['small', false, 'large', 'huge'] }],
+                                // 2. 글자 스타일 (굵게, 기울임, 밑줄, 취소선 추가)
+                                ['bold', 'italic', 'underline', 'strike'],
+                                // 3. 글자 색상 및 배경색
+                                [{ 'color': [] }, { 'background': [] }],
+                                // 4. 정렬 및 리스트 (번호 매기기, 글머리 기호 추가)
+                                [{ 'align': [] }],
+                                [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                                // 5. 인용구 및 들여쓰기 추가
+                                ['blockquote'],
+                                [{ 'indent': '-1' }, { 'indent': '+1' }],
+                                // 6. 미디어 및 링크
+                                ['link', 'image', 'video'],
+                                // 7. 서식 지우기 버튼 추가
+                                ['clean']
+                            ],
                             handlers: { image: function () { document.getElementById('hidden-image-input').click(); } }
                         }
                     }
                 });
 
+            // (이하 드래그 앤 드롭 등 기존 코드 동일하게 유지)
                 const editorContainer = document.getElementById('editor-container');
                 let draggedImgBlot = null;
 

@@ -1,22 +1,17 @@
-// manager.js - 통합 관리자 (최적화 및 중복 코드 제거 완료)
+﻿/* =========================================
+   뉴키즈(New Kids) 프로젝트 코어 관리 파일 (manager.js)
+   ========================================= */
 
-// ============================================================
-// [0] 새로고침 시 스크롤 최상단 고정
-// ============================================================
+// 1. 페이지 새로고침 시 스크롤 최상단 고정
 if ('scrollRestoration' in history) {
     history.scrollRestoration = 'manual';
 }
 window.scrollTo(0, 0);
+window.addEventListener('beforeunload', () => window.scrollTo(0, 0));
 
-window.addEventListener('beforeunload', function () {
-    window.scrollTo(0, 0);
-});
-
-// ============================================================
-// [1] 전역 설정 및 유틸리티
-// ============================================================
+// 2. 전역 변수 및 기본 카테고리 정의
 window.GLOBAL_CATEGORIES = [];
-window.NO_IMAGE_URL = "https://placehold.co/400x300/e0e0e0/666666?text=No+Image"; // 공통 기본 이미지
+window.NO_IMAGE_URL = "https://placehold.co/400x300/e0e0e0/666666?text=No+Image";
 
 const DEFAULT_CATEGORIES = [
     { code: 'korean', name: '🇰🇷 한글', type: 'EDU' },
@@ -37,6 +32,7 @@ const DEFAULT_CATEGORIES = [
     { code: 'order', name: '교재 발주', type: 'PAGE' }
 ];
 
+// 3. 유틸리티 함수 (색상 변환, HTML 이스케이프)
 function hexToRgba(hex, opacity) {
     if (!hex) return `rgba(26, 60, 110, ${opacity})`;
     hex = hex.replace('#', '');
@@ -47,34 +43,37 @@ function hexToRgba(hex, opacity) {
     return `rgba(${r}, ${g}, ${b}, ${opacity})`;
 }
 
-// 텍스트 HTML 이스케이프 (공통)
 window.escapeHtml = function (text) {
     if (!text) return "";
     return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 };
 
-// ============================================================
-// [2] Supabase 초기화 및 설정 로드
-// ============================================================
+window.getYoutubeId = function (url) {
+    if (!url) return null;
+    const m = url.match(/^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/|watch\?))\??v?=?([^#&?]*).*/);
+    return (m && m[7].length === 11) ? m[7] : null;
+};
+
+window.formatDate = function (dateStr) {
+    return dateStr ? dateStr.split('T')[0] : '';
+};
+
+// 4. Supabase 초기화 및 설정/카테고리 로드
 (function initSystem() {
-    if (typeof supabase !== 'undefined' && typeof CONFIG !== 'undefined') {
-        startSupabase();
-    } else {
-        let attempts = 0;
-        const waitForSupabase = setInterval(() => {
-            if (typeof supabase !== 'undefined' && typeof CONFIG !== 'undefined') {
-                clearInterval(waitForSupabase);
-                startSupabase();
-            } else {
-                attempts++;
-                if (attempts > 50) {
-                    clearInterval(waitForSupabase);
-                    console.error("Supabase 로드 실패: CDN 또는 config.js 확인 필요");
-                    document.querySelectorAll('.hero, .sub-hero').forEach(el => el.classList.add('loaded'));
-                }
+    let attempts = 0;
+    const waitForReady = setInterval(() => {
+        if (typeof supabase !== 'undefined' && typeof CONFIG !== 'undefined') {
+            clearInterval(waitForReady);
+            startSupabase();
+        } else {
+            attempts++;
+            if (attempts > 50) {
+                clearInterval(waitForReady);
+                console.error("Supabase 로드 실패: CDN 또는 config.js 확인 필요");
+                document.querySelectorAll('.hero, .sub-hero').forEach(el => el.classList.add('loaded'));
             }
-        }, 50);
-    }
+        }
+    }, 50);
 })();
 
 function startSupabase() {
@@ -106,16 +105,14 @@ async function loadSiteConfig() {
             if (data.accent_color) root.style.setProperty('--accent-color', data.accent_color);
 
             if (mainHero) {
-                // 👇 메인 페이지 필터 항상 적용 로직
-                const overlayColor = data.main_hero_overlay_color || '#1a3c6e';
-                const overlayOpacity = data.main_hero_overlay_opacity !== undefined ? data.main_hero_overlay_opacity : 0.4;
-                const rgba = hexToRgba(overlayColor, overlayOpacity);
-
                 if (data.main_hero_image) {
+                    const overlayColor = data.main_hero_overlay_color || '#1a3c6e';
+                    const overlayOpacity = data.main_hero_overlay_opacity !== undefined ? data.main_hero_overlay_opacity : 0.4;
+                    const rgba = hexToRgba(overlayColor, overlayOpacity);
                     mainHero.style.backgroundImage = `linear-gradient(${rgba}, ${rgba}), url('${data.main_hero_image}')`;
                     mainHero.style.backgroundColor = 'transparent';
                 } else {
-                    mainHero.style.backgroundImage = `linear-gradient(${rgba}, ${rgba})`;
+                    mainHero.style.backgroundImage = 'none';
                     mainHero.style.backgroundColor = data.main_hero_bg_color || '#1a3c6e';
                 }
 
@@ -129,7 +126,7 @@ async function loadSiteConfig() {
             }
             loadFooter();
         }
-    } catch (e) { console.error("설정 로드 실패:", e); }
+    } catch (e) { console.error("사이트 설정 로드 실패:", e); }
     if (mainHero) mainHero.classList.add('loaded');
 }
 
@@ -138,43 +135,44 @@ async function loadCategories() {
     try {
         const { data } = await window.sb.from('program_categories').select('*').eq('is_visible', true).order('order_num', { ascending: true });
         window.GLOBAL_CATEGORIES = (data && data.length > 0) ? data : DEFAULT_CATEGORIES;
-    } catch (e) { window.GLOBAL_CATEGORIES = DEFAULT_CATEGORIES; }
+    } catch (e) {
+        window.GLOBAL_CATEGORIES = DEFAULT_CATEGORIES;
+    }
     loadHeader();
-    window.applySubPageHero();
+    if (typeof window.applySubPageHero === 'function') window.applySubPageHero();
 }
 
-// ============================================================
-// [3] UI 및 페이지 제어 함수
-// ============================================================
+// 5. 컴포넌트 렌더링 함수 (헤더, 푸터, 히어로 배너)
 window.applySubPageHero = function () {
     const hero = document.getElementById('view-hero') || document.querySelector('.sub-hero');
     if (!hero) return;
 
     let currentCode = '';
-    if (location.pathname.includes('child.html')) currentCode = location.hash.replace('#', '') || 'korean';
-    else if (location.pathname.includes('program.html')) currentCode = location.hash.replace('#', '');
-    else if (location.pathname.includes('proposal.html')) currentCode = 'proposal';
-    else if (location.pathname.includes('order.html')) currentCode = 'order';
-    else if (location.pathname.includes('page.html')) {
-        const urlParams = new URLSearchParams(window.location.search);
-        currentCode = urlParams.get('id');
+    const pathname = location.pathname;
+    const hash = location.hash.replace('#', '');
+
+    if (pathname.includes('child.html')) currentCode = hash || 'korean';
+    else if (pathname.includes('program.html')) currentCode = hash;
+    else if (pathname.includes('proposal.html')) currentCode = 'proposal';
+    else if (pathname.includes('order.html')) currentCode = 'order';
+    else if (pathname.includes('page.html')) {
+        currentCode = new URLSearchParams(window.location.search).get('id');
+    } else {
+        currentCode = pathname.split('/').pop().replace('.html', '');
     }
-    else currentCode = location.pathname.split('/').pop().replace('.html', '');
 
     const category = window.GLOBAL_CATEGORIES.find(c => c.code === currentCode);
     if (category) {
-        // 👇 서브 페이지 필터 항상 적용 로직
-        const overlayColor = category.hero_overlay_color || '#1a3c6e';
-        const overlayOpacity = category.hero_overlay_opacity !== undefined ? category.hero_overlay_opacity : 0.8;
-        const rgba = hexToRgba(overlayColor, overlayOpacity);
-
         if (category.hero_image) {
+            const overlayColor = category.hero_overlay_color || '#1a3c6e';
+            const overlayOpacity = category.hero_overlay_opacity !== undefined ? category.hero_overlay_opacity : 0.8;
+            const rgba = hexToRgba(overlayColor, overlayOpacity);
             hero.style.backgroundImage = `linear-gradient(${rgba}, ${rgba}), url('${category.hero_image}')`;
             hero.style.backgroundSize = 'cover';
             hero.style.backgroundPosition = 'center';
             hero.style.backgroundColor = 'transparent';
         } else {
-            hero.style.backgroundImage = `linear-gradient(${rgba}, ${rgba})`;
+            hero.style.backgroundImage = 'none';
             hero.style.backgroundColor = category.hero_bg_color || '#1a3c6e';
         }
 
@@ -228,7 +226,7 @@ function loadHeader() {
             const isDouble = (type === 'EDU') ? 'double-col' : '';
             navHtml += `
                 <li class="has-sub">
-                    <a href="javascript:void(0)" onclick="toggleSubMenu(this)">${groupNames[type]} <span class="arrow">▼</span></a>
+                    <a href="javascript:void(0)" onclick="window.toggleSubMenu(this)">${groupNames[type]} <span class="arrow">▼</span></a>
                     <ul class="dropdown ${isDouble}">${groupHtml[type]}</ul>
                 </li>`;
         }
@@ -247,83 +245,94 @@ function loadHeader() {
 
 function loadFooter() {
     const footerEl = document.querySelector('footer');
-    if (footerEl) footerEl.innerHTML = `<div class="container"><p>${CONFIG.COMPANY.NAME} | 대표: <span>${CONFIG.COMPANY.CEO}</span></p><p>주소: <span>${CONFIG.COMPANY.ADDRESS}</span></p><p>문의: <span>${CONFIG.COMPANY.PHONE}</span></p><br><p><a href="admin.html" style="color:inherit; text-decoration:none;">&copy; 2026 New Kids. All rights reserved.</a></p></div>`;
+    if (footerEl) {
+        footerEl.innerHTML = `
+            <div class="container">
+                <p>${CONFIG.COMPANY.NAME} | 대표: <span>${CONFIG.COMPANY.CEO}</span></p>
+                <p>주소: <span>${CONFIG.COMPANY.ADDRESS}</span></p>
+                <p>문의: <span>${CONFIG.COMPANY.PHONE}</span></p>
+                <br>
+                <p><a href="admin.html" style="color:inherit; text-decoration:none;">&copy; 2026 New Kids. All rights reserved.</a></p>
+            </div>`;
+    }
 }
 
-// ============================================================
-// [4] 이벤트 리스너 및 헬퍼 함수
-// ============================================================
-window.toggleMenu = function () { document.getElementById('navMenu').classList.toggle('active'); };
-
-window.toggleSubMenu = function (el) { 
-    if (window.innerWidth <= 768) { 
-        const p = el.parentElement; 
-        const o = p.classList.contains('sub-open'); 
-        
-        // 열려있는 다른 서브 메뉴 닫기
-        document.querySelectorAll('.nav-menu li.has-sub').forEach(li => li.classList.remove('sub-open')); 
-        
-        // 클릭한 메뉴 열기
-        if (!o) p.classList.add('sub-open'); 
-    } 
+// 6. 전역 네비게이션 및 스크롤 헬퍼
+window.toggleMenu = function () {
+    const navMenu = document.getElementById('navMenu');
+    if (navMenu) navMenu.classList.toggle('active');
 };
 
-function addScrollButtons() { if (document.querySelector('.scroll-btns')) return; document.body.insertAdjacentHTML('beforeend', `<div class="scroll-btns"><button class="btn-scroll" onclick="scrollToTop()">▲</button><button class="btn-scroll" onclick="scrollToBottom()">▼</button></div>`); }
-window.scrollToTop = () => { window.scrollTo({ top: 0, behavior: 'smooth' }) };
-window.scrollToBottom = () => { window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }) };
-window.getYoutubeId = (u) => { if (!u) return null; const m = u.match(/^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/); return (m && m[7].length === 11) ? m[7] : null; };
-window.formatDate = (d) => { return d ? d.split('T')[0] : ''; };
-function enableAutoResizeTextarea() { document.querySelectorAll('textarea.form-input').forEach(t => { t.style.minHeight = '120px'; t.style.height = 'auto'; t.style.height = (t.scrollHeight) + 'px'; t.addEventListener('input', function () { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; }); }); }
+window.toggleSubMenu = function (el) {
+    if (window.innerWidth <= 768) {
+        const parent = el.parentElement;
+        const isOpen = parent.classList.contains('sub-open');
+        document.querySelectorAll('.nav-menu li.has-sub').forEach(li => li.classList.remove('sub-open'));
+        if (!isOpen) parent.classList.add('sub-open');
+    }
+};
 
-// ============================================================
-// [5] DOMContentLoaded 및 모바일 메뉴 닫기 통합 제어
-// ============================================================
+function addScrollButtons() {
+    if (document.querySelector('.scroll-btns')) return;
+    document.body.insertAdjacentHTML('beforeend', `
+        <div class="scroll-btns">
+            <button class="btn-scroll" onclick="window.scrollToTop()">▲</button>
+            <button class="btn-scroll" onclick="window.scrollToBottom()">▼</button>
+        </div>`);
+}
+
+window.scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+window.scrollToBottom = () => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+
+// 7. 페이지 초기화 이벤트
 document.addEventListener("DOMContentLoaded", function () {
     loadHeader();
     loadFooter();
     addScrollButtons();
-    enableAutoResizeTextarea();
 
-    // 폼 전화번호 자동 하이픈 (공통 적용)
+    // 연락처 자동 하이픈 포맷팅 공통 적용
     document.querySelectorAll('input[name="phone"]').forEach(input => {
         input.addEventListener('input', function (e) {
-            let number = e.target.value.replace(/[^0-9]/g, "");
+            let num = e.target.value.replace(/[^0-9]/g, "");
             let tel = "";
-            if (number.startsWith('02')) {
-                if (number.length < 3) tel = number; else if (number.length < 6) tel = number.substr(0, 2) + "-" + number.substr(2); else tel = number.substr(0, 2) + "-" + number.substr(2, 4) + "-" + number.substr(6);
+            if (num.startsWith('02')) {
+                if (num.length < 3) tel = num;
+                else if (num.length < 6) tel = num.substr(0, 2) + "-" + num.substr(2);
+                else tel = num.substr(0, 2) + "-" + num.substr(2, 4) + "-" + num.substr(6, 4);
             } else {
-                if (number.length < 4) tel = number; else if (number.length < 7) tel = number.substr(0, 3) + "-" + number.substr(3); else tel = number.substr(0, 3) + "-" + number.substr(3, 4) + "-" + number.substr(7);
+                if (num.length < 4) tel = num;
+                else if (num.length < 7) tel = num.substr(0, 3) + "-" + num.substr(3);
+                else tel = num.substr(0, 3) + "-" + num.substr(3, 4) + "-" + num.substr(7, 4);
             }
             e.target.value = tel;
         });
     });
 
-    // ★ 모바일 네비게이션 제어 이벤트 통합 관리
-    document.addEventListener('click', function(e) {
+    // ★ 모바일 환경에서 드롭다운(하위 메뉴) 링크를 클릭했을 때 메뉴 창 자동 닫기 처리 ★
+    document.addEventListener('click', e => {
         const navMenu = document.getElementById('navMenu');
         const mobileBtn = document.querySelector('.mobile-btn');
-        if (!navMenu) return;
 
-        // 1) 햄버거 버튼 클릭 시 토글
-        if (mobileBtn && mobileBtn.contains(e.target)) {
-            // toggleMenu는 inline onclick에서 처리되므로 여기선 무시하거나 중복 방지
+        // 하위 메뉴 항목(dropdown 안의 a 태그)을 클릭한 경우
+        if (e.target.closest('.dropdown a')) {
+            if (navMenu && navMenu.classList.contains('active')) {
+                navMenu.classList.remove('active');
+            }
+            document.querySelectorAll('.nav-menu li.has-sub').forEach(li => {
+                li.classList.remove('sub-open');
+            });
             return;
         }
 
-        // 2) 네비게이션 메뉴 바깥(빈 공간)을 클릭했을 때 전체 닫기
-        if (navMenu.classList.contains('active') && !navMenu.contains(e.target)) {
+        // 모바일 외부 영역 클릭 시 메뉴 닫기
+        if (navMenu && navMenu.classList.contains('active') && !navMenu.contains(e.target) && (!mobileBtn || !mobileBtn.contains(e.target))) {
             navMenu.classList.remove('active');
-            document.querySelectorAll('.nav-menu > li').forEach(li => li.classList.remove('sub-open'));
-        }
-
-        // 3) 드롭다운 하위 메뉴(알림/소식 등) 내부의 링크를 클릭했을 때 전체 닫기
-        if (e.target.closest('.dropdown li a')) {
-            navMenu.classList.remove('active');
-            document.querySelectorAll('.nav-menu > li').forEach(li => li.classList.remove('sub-open'));
         }
     });
 
     window.addEventListener('hashchange', () => {
-        if (location.pathname.includes('child.html') || location.pathname.includes('program.html')) window.applySubPageHero();
+        if (location.pathname.includes('child.html') || location.pathname.includes('program.html')) {
+            window.applySubPageHero();
+        }
     });
 });

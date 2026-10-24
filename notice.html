@@ -23,6 +23,7 @@
             cursor: pointer;
             transition: all 0.2s;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            white-space: nowrap; /* 텍스트 줄바꿈 방지 */
         }
 
             .hashtag-btn:hover {
@@ -68,6 +69,36 @@
             .scrap-btn:active {
                 transform: scale(1.2);
             }
+
+        /* ★ 모바일 UI 최적화: 가로 스크롤 및 레이아웃 정리 ★ */
+        @media screen and (max-width: 768px) {
+            .filter-wrap {
+                flex-direction: column; /* 세로 배치로 변경 */
+                gap: 15px !important;
+            }
+
+            .hashtag-container {
+                flex-wrap: nowrap; /* 여러 줄 바꿈 방지 */
+                overflow-x: auto; /* 가로 스크롤 활성화 */
+                padding-bottom: 5px; /* 스크롤 여백 */
+                -webkit-overflow-scrolling: touch; /* 부드러운 스크롤 */
+            }
+                /* 크롬, 사파리 등 모바일에서 스크롤바 숨김 (깔끔하게) */
+                .hashtag-container::-webkit-scrollbar {
+                    display: none;
+                }
+
+            .hashtag-btn {
+                flex-shrink: 0; /* 버튼이 찌그러지지 않게 보호 */
+            }
+
+            #btn-scrap-mode {
+                width: 100%; /* 찜하기 버튼은 터치하기 쉽게 전체 너비로 */
+                text-align: center;
+                padding: 12px;
+                font-size: 1.05rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -87,13 +118,14 @@
             <button id="btn-user-write" class="btn-action" style="display: none;" onclick="location.href='write.html#' + currentCategory">✏️ 글쓰기</button>
         </div>
 
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 25px; flex-wrap:wrap; gap:15px;">
-            <div class="hashtag-container" id="hashtag-area" style="flex:1;">
-                <span style="color:#999; font-size:0.9rem;">태그 분석 중...</span>
-            </div>
-            <button id="btn-scrap-mode" onclick="toggleScrapMode()" class="hashtag-btn" style="border-color:#f4a261; color:#f4a261; white-space:nowrap;">
+        <!-- ★ 필터 및 해시태그 래퍼 영역 (모바일 최적화 클래스 적용) ★ -->
+        <div class="filter-wrap" style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 25px; flex-wrap:wrap; gap:15px;">
+            <button id="btn-scrap-mode" onclick="toggleScrapMode()" class="hashtag-btn" style="border-color:#f4a261; color:#f4a261;">
                 ⭐ 찜한 자료만 보기
             </button>
+            <div class="hashtag-container" id="hashtag-area" style="flex:1; min-width: 0; width: 100%;">
+                <span style="color:#999; font-size:0.9rem;">태그 분석 중...</span>
+            </div>
         </div>
 
         <div class="board-list-head">
@@ -312,7 +344,6 @@
             const from = (page - 1) * ITEMS_PER_PAGE;
             const to = from + ITEMS_PER_PAGE - 1;
 
-            // ★ is_notice 데이터 호출 추가
             let query = window.sb.from('total_posts')
                 .select('id, title, category, created_at, link_url, is_secret, download_count, is_notice', { count: 'exact' })
                 .eq('category', currentCategory)
@@ -326,7 +357,6 @@
                 query = query.in('id', savedScraps);
             }
 
-            // ★ 정렬 기준 최우선 순위로 is_notice를 적용
             const { data, count, error } = await query
                 .order('is_notice', { ascending: false, nullsFirst: false })
                 .order('created_at', { ascending: false })
@@ -387,7 +417,6 @@
                 const isScrapped = savedScraps.includes(item.id);
                 const starIcon = isScrapped ? '⭐' : '☆';
 
-                // ★ 공지글 시각적 처리
                 const isNoticePost = (item.is_notice === true);
                 const rowBg = isNoticePost ? 'background-color: #fffaf0;' : '';
                 const displayNumHtml = isNoticePost ? '<span style="color:#e74c3c; font-weight:bold;">공지</span>' : displayNum;

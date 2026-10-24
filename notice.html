@@ -6,6 +6,52 @@
     <title>뉴키즈 - 게시판</title>
     <link rel="stylesheet" href="style.css">
     <style>
+        /* 기본 라이트모드 변수 설정 */
+        :root {
+            --bg-color: #f4f7fa;
+            --card-bg: #fff;
+            --text-color: #333;
+            --sub-text: #666;
+            --border-color: #eaeaea;
+            --primary: #1a3c6e;
+        }
+
+        /* ★ 시스템 환경이 다크모드일 때 자동 적용되는 스타일 ★ */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #121212;
+                --card-bg: #1e1e1e;
+                --text-color: #e0e0e0;
+                --sub-text: #aaa;
+                --border-color: #333;
+                --primary: #bb86fc;
+            }
+        }
+
+        body {
+            background-color: var(--bg-color) !important;
+            color: var(--text-color) !important;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .board-container {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            border: 1px solid var(--border-color);
+        }
+
+        .board-list-row {
+            background-color: var(--card-bg) !important;
+            border-bottom: 1px solid var(--border-color) !important;
+            color: var(--text-color) !important;
+        }
+
+            .board-list-row:hover {
+                background-color: rgba(255,255,255,0.05) !important;
+            }
+
         .hashtag-container {
             display: flex;
             gap: 10px;
@@ -13,9 +59,9 @@
         }
 
         .hashtag-btn {
-            background: #fff;
-            border: 1px solid #1a3c6e;
-            color: #1a3c6e;
+            background: var(--card-bg);
+            border: 1px solid var(--primary);
+            color: var(--primary);
             padding: 8px 18px;
             border-radius: 25px;
             font-size: 0.95rem;
@@ -27,19 +73,19 @@
         }
 
             .hashtag-btn:hover {
-                background: #eef6ff;
+                background: rgba(187, 134, 252, 0.1);
             }
 
             .hashtag-btn.active {
-                background: #1a3c6e;
+                background: var(--primary);
                 color: #fff;
                 box-shadow: 0 3px 8px rgba(26, 60, 110, 0.3);
             }
 
         .btn-load-more {
-            background: #fff;
-            border: 2px solid #1a3c6e;
-            color: #1a3c6e;
+            background: var(--card-bg);
+            border: 2px solid var(--primary);
+            color: var(--primary);
             padding: 12px 30px;
             font-size: 1.1rem;
             font-weight: bold;
@@ -52,7 +98,7 @@
         }
 
             .btn-load-more:hover {
-                background: #1a3c6e;
+                background: var(--primary);
                 color: #fff;
             }
 
@@ -70,7 +116,6 @@
                 transform: scale(1.2);
             }
 
-        /* 모바일 UI 최적화 */
         @media screen and (max-width: 768px) {
             .hashtag-container {
                 flex-wrap: nowrap;
@@ -88,60 +133,65 @@
             }
 
             .top-btn-row {
-                flex-direction: row;
+                flex-direction: column;
                 align-items: stretch;
-            }
-
-            #btn-scrap-mode {
-                padding: 10px 12px;
-                font-size: 0.95rem;
-                flex: 1;
-                text-align: center;
-            }
-
-            #btn-user-write {
-                flex: 1;
             }
         }
     </style>
 </head>
-<body>
+<body id="main-body">
 
     <header></header>
 
     <div class="board-header-section" id="view-hero">
         <div class="container">
-            <h1 id="board-title" style="font-size: 2.2rem; margin-bottom:10px; color:#1a3c6e;">📢 알림 & 소식</h1>
-            <p id="board-desc" style="color:#666;">데이터를 불러오는 중입니다...</p>
+            <h1 id="board-title" style="font-size: 2.2rem; margin-bottom:10px; color:var(--primary);">📢 알림 & 소식</h1>
+            <p id="board-desc" style="color:var(--sub-text);">데이터를 불러오는 중입니다...</p>
         </div>
     </div>
 
-    <div class="board-container">
+    <div class="board-container" style="max-width: 1100px; margin: 40px auto; box-sizing: border-box;">
 
-        <!-- ★ 상단 액션 버튼 영역 (찜하기 버튼 / 글쓰기 버튼 같은 줄 양끝 배치) ★ -->
-        <div class="top-btn-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
-            <button id="btn-scrap-mode" onclick="toggleScrapMode()" class="hashtag-btn" style="border-color:#f4a261; color:#f4a261; margin:0;">
-                ⭐ 찜한 자료만 보기
-            </button>
+        <!-- 상단 유틸리티 버튼 행 (찜하기 / 최근본자료 / 글쓰기) -->
+        <div class="top-btn-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+            <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                <!-- 찜한 자료 버튼 -->
+                <button id="btn-scrap-mode" onclick="toggleScrapMode()" class="hashtag-btn" style="border-color:#f4a261; color:#f4a261;">
+                    ⭐ 찜한 자료
+                </button>
+                <!-- 최근 본 자료 버튼 -->
+                <button id="btn-recent-mode" onclick="toggleRecentMode()" class="hashtag-btn" style="border-color:#2a9d8f; color:#2a9d8f;">
+                    🕒 최근 본 자료
+                </button>
+            </div>
             <button id="btn-user-write" class="btn-action" style="display: none; margin:0;" onclick="location.href='write.html#' + currentCategory">✏️ 글쓰기</button>
         </div>
 
-        <!-- ★ 해시태그 영역 (단독 줄로 깔끔하게 배치) ★ -->
+        <!-- 파일 형식별 필터 영역 -->
+        <div style="display:flex; gap:8px; margin-bottom:15px; overflow-x:auto; padding-bottom:5px;">
+            <button class="hashtag-btn format-filter active" onclick="filterByFormat('ALL', this)">#전체형식</button>
+            <button class="hashtag-btn format-filter" onclick="filterByFormat('PDF', this)">#PDF</button>
+            <button class="hashtag-btn format-filter" onclick="filterByFormat('HWP', this)">#한글(HWP)</button>
+            <button class="hashtag-btn format-filter" onclick="filterByFormat('PPT', this)">#PPT</button>
+            <button class="hashtag-btn format-filter" onclick="filterByFormat('ZIP', this)">#압축파일(ZIP)</button>
+        </div>
+
+        <!-- 해시태그 영역 -->
         <div class="filter-wrap" style="display:flex; margin-bottom: 25px; width: 100%;">
             <div class="hashtag-container" id="hashtag-area" style="flex:1; min-width: 0; width: 100%;">
-                <span style="color:#999; font-size:0.9rem;">태그 분석 중...</span>
+                <span style="color:var(--sub-text); font-size:0.9rem;">태그 분석 중...</span>
             </div>
         </div>
 
-        <div class="board-list-head">
-            <div class="b-num">번호</div>
-            <div class="b-cat">작성자</div>
-            <div class="b-title">제목</div>
-            <div class="b-date">작성일</div>
+        <div class="board-list-head" style="display:grid; grid-template-columns: 80px 100px 1fr 120px; padding:12px 10px; font-weight:bold; border-bottom:2px solid var(--primary); color:var(--text-color);">
+            <div style="text-align:center;">번호</div>
+            <div style="text-align:center;">작성자</div>
+            <div style="padding-left:10px;">제목</div>
+            <div style="text-align:center;">작성일 / 다운로드</div>
         </div>
 
         <div id="board-list-wrapper">
-            <div style="text-align:center; padding:50px; color:#999;">데이터를 불러오는 중입니다...</div>
+            <div style="text-align:center; padding:50px; color:var(--sub-text);">데이터를 불러오는 중입니다...</div>
         </div>
 
         <div id="load-more-box" style="display:none; justify-content:center; margin-top:40px;">
@@ -167,6 +217,8 @@
         let currentSearchKeyword = '';
         let boardCategories = [];
         let isScrapMode = false;
+        let isRecentMode = false;
+        let currentFormatFilter = 'ALL';
 
         document.addEventListener("DOMContentLoaded", () => {
             const checkReady = setInterval(() => {
@@ -264,7 +316,7 @@
         }
 
         window.clickHashtag = function (keyword, btnEl) {
-            document.querySelectorAll('.hashtag-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.hashtag-container .hashtag-btn').forEach(btn => btn.classList.remove('active'));
             if (btnEl) btnEl.classList.add('active');
 
             document.getElementById('search-input').value = keyword;
@@ -272,45 +324,59 @@
             loadBoardList(1);
         };
 
+        window.filterByFormat = function (format, btnEl) {
+            document.querySelectorAll('.format-filter').forEach(b => b.classList.remove('active'));
+            btnEl.classList.add('active');
+            currentFormatFilter = format;
+            loadBoardList(1);
+        };
+
         function executeSearch() {
             const inputVal = document.getElementById('search-input').value.trim();
             currentSearchKeyword = inputVal;
-
-            document.querySelectorAll('.hashtag-btn').forEach(btn => {
-                let btnKeyword = btn.innerText.replace('#', '');
-                if (btnKeyword === '전체보기') btnKeyword = '';
-
-                if (inputVal === btnKeyword || (inputVal === '' && btnKeyword === '')) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
-                }
-            });
-
             loadBoardList(1);
         }
 
         window.toggleScrapMode = function () {
             isScrapMode = !isScrapMode;
-            const btn = document.getElementById('btn-scrap-mode');
+            isRecentMode = false;
+            document.getElementById('btn-recent-mode').style.background = 'var(--card-bg)';
+            document.getElementById('btn-recent-mode').style.color = '#2a9d8f';
 
+            const btn = document.getElementById('btn-scrap-mode');
             if (isScrapMode) {
-                btn.classList.add('active');
                 btn.style.background = '#f4a261';
                 btn.style.color = '#fff';
                 btn.innerText = '⭐ 찜한 자료 보는 중';
             } else {
-                btn.classList.remove('active');
-                btn.style.background = '#fff';
+                btn.style.background = 'var(--card-bg)';
                 btn.style.color = '#f4a261';
-                btn.innerText = '⭐ 찜한 자료만 보기';
+                btn.innerText = '⭐ 찜한 자료';
+            }
+            loadBoardList(1);
+        };
+
+        window.toggleRecentMode = function () {
+            isRecentMode = !isRecentMode;
+            isScrapMode = false;
+            document.getElementById('btn-scrap-mode').style.background = 'var(--card-bg)';
+            document.getElementById('btn-scrap-mode').style.color = '#f4a261';
+
+            const btn = document.getElementById('btn-recent-mode');
+            if (isRecentMode) {
+                btn.style.background = '#2a9d8f';
+                btn.style.color = '#fff';
+                btn.innerText = '🕒 최근 본 자료 보는 중';
+            } else {
+                btn.style.background = 'var(--card-bg)';
+                btn.style.color = '#2a9d8f';
+                btn.innerText = '🕒 최근 본 자료';
             }
             loadBoardList(1);
         };
 
         window.toggleScrap = function (event, postId) {
             event.stopPropagation();
-
             let savedScraps = JSON.parse(localStorage.getItem('nk_scraps') || '[]');
             const btn = event.target;
 
@@ -321,8 +387,16 @@
                 savedScraps.push(postId);
                 btn.innerText = '⭐';
             }
-
             localStorage.setItem('nk_scraps', JSON.stringify(savedScraps));
+        };
+
+        window.recordRecentAndGo = function (postId, url) {
+            let recentList = JSON.parse(localStorage.getItem('nk_recent') || '[]');
+            recentList = recentList.filter(id => id !== postId);
+            recentList.unshift(postId);
+            if (recentList.length > 20) recentList.pop();
+            localStorage.setItem('nk_recent', JSON.stringify(recentList));
+            location.href = url;
         };
 
         window.loadMore = function () {
@@ -335,13 +409,19 @@
             const loadMoreBox = document.getElementById('load-more-box');
 
             if (!append) {
-                listDiv.innerHTML = '<div style="text-align:center; padding:50px; color:#999;">로딩 중...</div>';
+                listDiv.innerHTML = '<div style="text-align:center; padding:50px; color:var(--sub-text);">로딩 중...</div>';
             }
 
             let savedScraps = JSON.parse(localStorage.getItem('nk_scraps') || '[]');
+            let recentList = JSON.parse(localStorage.getItem('nk_recent') || '[]');
 
             if (isScrapMode && savedScraps.length === 0) {
-                listDiv.innerHTML = `<div style="text-align:center; padding:50px; border-bottom:1px solid #eee;">찜(⭐)해둔 자료가 없습니다.</div>`;
+                listDiv.innerHTML = `<div style="text-align:center; padding:50px; border-bottom:1px solid var(--border-color);">찜(⭐)해둔 자료가 없습니다.</div>`;
+                loadMoreBox.style.display = 'none';
+                return;
+            }
+            if (isRecentMode && recentList.length === 0) {
+                listDiv.innerHTML = `<div style="text-align:center; padding:50px; border-bottom:1px solid var(--border-color);">최근 본 자료가 없습니다.</div>`;
                 loadMoreBox.style.display = 'none';
                 return;
             }
@@ -350,7 +430,7 @@
             const to = from + ITEMS_PER_PAGE - 1;
 
             let query = window.sb.from('total_posts')
-                .select('id, title, category, created_at, link_url, is_secret, download_count, is_notice', { count: 'exact' })
+                .select('id, title, category, created_at, link_url, is_secret, download_count, is_notice, image_url', { count: 'exact' })
                 .eq('category', currentCategory)
                 .neq('is_visible', false);
 
@@ -360,6 +440,8 @@
 
             if (isScrapMode) {
                 query = query.in('id', savedScraps);
+            } else if (isRecentMode) {
+                query = query.in('id', recentList);
             }
 
             const { data, count, error } = await query
@@ -372,15 +454,24 @@
                 return;
             }
 
-            if (!data || data.length === 0) {
-                if (!append) listDiv.innerHTML = `<div style="text-align:center; padding:50px; border-bottom:1px solid #eee;">등록되거나 검색된 글이 없습니다.</div>`;
+            let processedData = data || [];
+            if (currentFormatFilter !== 'ALL' && processedData.length > 0) {
+                processedData = processedData.filter(item => {
+                    if (!item.image_url) return false;
+                    const upperUrl = item.image_url.toUpperCase();
+                    return upperUrl.includes('.' + currentFormatFilter);
+                });
+            }
+
+            if (processedData.length === 0) {
+                if (!append) listDiv.innerHTML = `<div style="text-align:center; padding:50px; border-bottom:1px solid var(--border-color);">등록되거나 조건에 맞는 글이 없습니다.</div>`;
                 loadMoreBox.style.display = 'none';
                 return;
             }
 
             if (!append) listDiv.innerHTML = '';
 
-            const postIds = data.map(item => item.id);
+            const postIds = processedData.map(item => item.id);
             let answeredSet = new Set();
 
             if (postIds.length > 0) {
@@ -391,7 +482,7 @@
             }
 
             let html = '';
-            data.forEach((item, index) => {
+            processedData.forEach((item, index) => {
                 const date = new Date(item.created_at).toISOString().split('T')[0];
                 let authorName = item.link_url ? item.link_url.trim() : '익명';
                 let isAdminPost = false;
@@ -423,24 +514,23 @@
                 const starIcon = isScrapped ? '⭐' : '☆';
 
                 const isNoticePost = (item.is_notice === true);
-                const rowBg = isNoticePost ? 'background-color: #fffaf0;' : '';
+                const rowBg = isNoticePost ? 'background-color: rgba(244, 162, 97, 0.08);' : '';
                 const displayNumHtml = isNoticePost ? '<span style="color:#e74c3c; font-weight:bold;">공지</span>' : displayNum;
                 const noticeIcon = isNoticePost ? '📌 ' : '';
 
                 html += `
-                                    <div class="board-list-row" onclick="location.href='view.html?id=${item.id}'" style="${rowBg}">
-                                        <div class="b-num">${displayNumHtml}</div>
-                                        <div class="b-cat"><span class="badge" style="background:#f1f3f5; color:#555;">${authorName}</span></div>
-                                        <div class="b-title" style="text-align:left; display:flex; align-items:center;">
-                                            <button class="scrap-btn" onclick="toggleScrap(event, ${item.id})">${starIcon}</button>
-                                            ${statusBadge}${secretIcon}${noticeIcon}${item.title}
-                                        </div>
-
-                                        <div class="b-date" style="display:flex; flex-direction:column; align-items:center; gap:4px;">
-                                            <span>${date}</span>
-                                            <span style="font-size:0.75rem; color:#888; background:#f4f7fa; padding:2px 6px; border-radius:4px;">📥 ${dlCount}</span>
-                                        </div>
-                                    </div>`;
+                        <div class="board-list-row" onclick="recordRecentAndGo(${item.id}, 'view.html?id=${item.id}')" style="display:grid; grid-template-columns: 80px 100px 1fr 120px; padding:15px 10px; align-items:center; cursor:pointer; ${rowBg}">
+                            <div style="text-align:center; font-weight:bold; color:var(--sub-text);">${displayNumHtml}</div>
+                            <div style="text-align:center;"><span class="badge" style="background:#f1f3f5; color:#555; padding:3px 8px; border-radius:4px; font-size:0.8rem;">${authorName}</span></div>
+                            <div style="padding-left:10px; display:flex; align-items:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                                <button class="scrap-btn" onclick="toggleScrap(event, ${item.id})">${starIcon}</button>
+                                ${statusBadge}${secretIcon}${noticeIcon}<span style="overflow:hidden; text-overflow:ellipsis;">${item.title}</span>
+                            </div>
+                            <div style="text-align:center; display:flex; flex-direction:column; align-items:center; gap:4px;">
+                                <span style="font-size:0.85rem; color:var(--sub-text);">${date}</span>
+                                <span style="font-size:0.75rem; color:#888; background:rgba(0,0,0,0.05); padding:2px 6px; border-radius:4px;">📥 ${dlCount}</span>
+                            </div>
+                        </div>`;
             });
 
             listDiv.innerHTML += html;

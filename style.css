@@ -1,7 +1,4 @@
-@charset "utf-8";
-
-/* style.css 파일 최상단 */
-@import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
+﻿@charset "utf-8";
 
 /* =========================================
    1. 기본 설정 (Reset & Base)
@@ -14,6 +11,73 @@
     --text-sub: #666; /* 보조 텍스트 */
     --border-color: #e0e0e0; /* 테두리 색상 */
     --danger-color: #ff6b6b; /* 경고/삭제 빨간색 */
+    --card-bg: #fff; /* 카드 배경 */
+    --body-bg: #fff; /* 전체 바디 배경 */
+}
+
+/* ★ 시스템 환경(OS/브라우저)이 다크모드일 때 자동으로 적용되는 스타일 ★ */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --primary-color: #90caf9;
+        --accent-color: #f4a261;
+        --bg-light: #181818;
+        --text-color: #e0e0e0;
+        --text-sub: #aaa;
+        --border-color: #333;
+        --danger-color: #ff6b6b;
+        --card-bg: #1e1e1e;
+        --body-bg: #121212;
+    }
+
+    body {
+        background-color: var(--body-bg) !important;
+    }
+
+    /* 모든 섹션 영역 다크모드 배경색 일괄 적용 */
+    section {
+        background-color: var(--body-bg) !important;
+    }
+
+    /* 헤더, 배너, 카드, 폼 박스, 소개 박스(.intro-summary, .intro-box) 다크모드 적용 */
+    header, .dropdown, .card, .post-card, .proposal-box, .panel-box, .view-box, .post-detail-box, .order-category-header, .sub-cat-header, .order-category-content, .proposal-check-grid, .sub-cat-wrapper, .write-box, .board-header-section, .sub-hero, .contact-section, .intro-summary, .intro-box {
+        background-color: var(--card-bg) !important;
+        border-color: var(--border-color) !important;
+        color: var(--text-color) !important;
+    }
+
+    .board-header-section, .sub-hero, .contact-section, .intro-summary {
+        border-bottom: 1px solid var(--border-color) !important;
+        border-top: 1px solid var(--border-color) !important;
+    }
+
+    /* 입력창, 선택창, 텍스트에어리어 다크모드 통일 */
+    input, select, textarea, .form-input, .age-select, .dynamic-qty-input {
+        background-color: #2a2a2a !important;
+        color: var(--text-color) !important;
+        border-color: var(--border-color) !important;
+    }
+
+    .dropdown li a {
+        color: var(--text-color) !important;
+    }
+
+        .dropdown li a:hover {
+            background: #2a2a2a !important;
+            color: var(--accent-color) !important;
+        }
+
+    .card-title, .post-title, .order-item-info h4, .sub-cat-title, h1, h2, h3, h4, .form-label, .form-section-title, .contact-title, .intro-box h3 {
+        color: var(--text-color) !important;
+    }
+
+    .card-text, .order-item-info p, .section-desc, .board-header-section p, .sub-hero p, .contact-desc, .intro-box p {
+        color: var(--text-sub) !important;
+    }
+
+    footer {
+        background: #0d0d0d !important;
+        color: #777 !important;
+    }
 }
 
 * {
@@ -27,13 +91,12 @@ body {
     font-size: 16px;
     color: var(--text-color);
     line-height: 1.6;
-    background-color: #fff;
+    background-color: var(--body-bg);
     padding-top: 70px;
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
-    /* 푸터를 맨 아래로 고정하기 위해 추가 */
     display: flex;
     flex-direction: column;
     min-height: 100vh;
@@ -84,7 +147,7 @@ section {
 }
 
 .bg-gray {
-    background-color: #f9fbfd;
+    background-color: var(--bg-light);
 }
 
 h1 {
@@ -213,7 +276,7 @@ header {
     .nav-menu > li > a {
         font-size: 1.05rem;
         font-weight: 600;
-        color: #333;
+        color: var(--text-color);
         display: flex;
         align-items: center;
         gap: 5px;
@@ -239,7 +302,7 @@ header {
     min-width: 180px;
     box-shadow: 0 5px 15px rgba(0,0,0,0.1);
     border-radius: 8px;
-    border: 1px solid #eee;
+    border: 1px solid var(--border-color);
     padding: 5px 0;
     z-index: 9999;
     text-align: left;
@@ -249,12 +312,12 @@ header {
         display: block;
         padding: 10px 15px;
         font-size: 0.95rem;
-        color: #555;
+        color: var(--text-sub);
         text-align: center;
     }
 
         .dropdown li a:hover {
-            background: #f8f9fa;
+            background: var(--bg-light);
             color: var(--accent-color);
             font-weight: bold;
         }
@@ -300,7 +363,7 @@ header {
 
     .dropdown.double-col li {
         width: 100%;
-        border-right: 1px solid #f0f0f0;
+        border-right: 1px solid var(--border-color);
     }
 
         .dropdown.double-col li:nth-child(even) {
@@ -320,9 +383,9 @@ header {
         top: 70px;
         left: 0;
         width: 100%;
-        background: white;
+        background: var(--card-bg);
         box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-        border-top: 1px solid #eee;
+        border-top: 1px solid var(--border-color);
         padding: 0;
         height: auto;
     }
@@ -335,7 +398,7 @@ header {
         width: 100%;
         text-align: center;
         padding: 0;
-        border-bottom: 1px solid #f9f9f9;
+        border-bottom: 1px solid var(--border-color);
     }
 
         .nav-menu > li > a {
@@ -357,9 +420,9 @@ header {
         transform: none;
         box-shadow: none;
         border: none;
-        background: #f8f9fa;
+        background: var(--bg-light);
         width: 100%;
-        border-top: 1px solid #eee;
+        border-top: 1px solid var(--border-color);
     }
 
         .dropdown li a {
@@ -442,10 +505,10 @@ header {
 }
 
 .card, .post-card {
-    background: white;
+    background: var(--card-bg);
     border-radius: 15px;
     overflow: hidden;
-    border: 1px solid #eee;
+    border: 1px solid var(--border-color);
     box-shadow: 0 5px 15px rgba(0,0,0,0.05);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     display: flex;
@@ -466,8 +529,8 @@ header {
     width: 100%;
     height: 220px;
     overflow: hidden;
-    background: #fff;
-    border-bottom: 1px solid #eee;
+    background: var(--card-bg);
+    border-bottom: 1px solid var(--border-color);
 }
 
     .card-img, .post-thumb img {
@@ -488,12 +551,12 @@ header {
     font-weight: bold;
     font-size: 1.2rem;
     margin-bottom: 8px;
-    color: #333;
+    color: var(--text-color);
 }
 
 .card-text {
     font-size: 0.95rem;
-    color: #666;
+    color: var(--text-sub);
     overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -503,7 +566,7 @@ header {
 .card-icon {
     font-size: 3rem;
     margin: 0 auto 20px;
-    background: #fff;
+    background: var(--card-bg);
     width: 80px;
     height: 80px;
     line-height: 80px;
@@ -547,8 +610,8 @@ header {
         height: 60px !important;
         line-height: 60px !important;
         margin: 0 !important;
-        background: #f0f7ff !important;
-        color: #1a3c6e !important;
+        background: var(--bg-light) !important;
+        color: var(--primary-color) !important;
         border-radius: 50% !important;
         font-size: 2rem !important;
         box-shadow: none !important;
@@ -561,6 +624,7 @@ header {
         margin: 0 0 5px 0 !important;
         font-size: 1.25rem !important;
         font-weight: bold !important;
+        color: var(--text-color) !important;
     }
 
     .program-grid .card p {
@@ -569,7 +633,7 @@ header {
         align-self: start !important;
         margin: 0 !important;
         font-size: 0.95rem !important;
-        color: #666 !important;
+        color: var(--text-sub) !important;
         line-height: 1.4 !important;
         display: -webkit-box;
         -webkit-line-clamp: 2;
@@ -599,28 +663,28 @@ header {
 .proposal-box, .panel-box {
     max-width: 1100px;
     margin: 0 auto 30px;
-    background: #fff;
+    background: var(--card-bg);
     padding: 40px;
     border-radius: 15px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-    border: 1px solid #eee;
+    border: 1px solid var(--border-color);
 }
 
 .view-box, .post-detail-box {
     max-width: 1200px !important;
     width: 100%;
     margin: 0 auto 30px;
-    background: #fff;
+    background: var(--card-bg);
     padding: 40px;
     border-radius: 15px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-    border: 1px solid #eee;
+    border: 1px solid var(--border-color);
 }
 
 .view-content {
     font-size: 1.35rem !important;
     line-height: 2.0 !important;
-    color: #222 !important;
+    color: var(--text-color) !important;
     padding: 20px 0;
 }
 
@@ -642,10 +706,11 @@ header {
         margin-bottom: 20px !important;
         line-height: 1.4 !important;
         font-size: 1.8rem !important;
+        color: var(--text-color) !important;
     }
 
 .view-header {
-    border-bottom: 2px solid #eee;
+    border-bottom: 2px solid var(--border-color);
     padding-bottom: 20px;
     margin-bottom: 30px;
 }
@@ -704,21 +769,21 @@ header {
 
 .order-category-header, .sub-cat-header {
     padding: 15px 20px;
-    background: #fff;
-    border: 1px solid #e0e0e0;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
     border-radius: 12px;
     cursor: pointer;
     display: flex;
     justify-content: space-between;
     align-items: center;
     font-weight: 700;
-    color: #333;
+    color: var(--text-color);
     transition: all 0.2s ease;
 }
 
     .order-category-header:hover, .sub-cat-header:hover {
         border-color: var(--accent-color);
-        background-color: #fcfcfc;
+        background-color: var(--bg-light);
     }
 
 .category-wrapper.active .order-category-header, .sub-cat-wrapper.active .sub-cat-header {
@@ -735,7 +800,7 @@ header {
 
 .toggle-icon, .sub-toggle-icon {
     font-size: 0.8rem;
-    color: #bbb;
+    color: var(--text-sub);
     transition: 0.3s;
 }
 
@@ -746,8 +811,8 @@ header {
 
 .order-category-content, .proposal-check-grid {
     display: none;
-    background: #fff;
-    border: 1px solid #e0e0e0;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
     border-top: none;
     border-bottom-left-radius: 12px;
     border-bottom-right-radius: 12px;
@@ -761,7 +826,7 @@ header {
 
 .order-item-row, .proposal-item {
     padding: 15px 20px;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--border-color);
     cursor: pointer;
     display: block;
 }
@@ -780,11 +845,11 @@ header {
     }
 
     .order-item-row:hover, .proposal-item:hover {
-        background-color: #f9f9f9;
+        background-color: var(--bg-light);
     }
 
 .order-item-row.active {
-    background-color: #f0f7ff;
+    background-color: rgba(26,60,110,0.05);
 }
 
 .order-item-info {
@@ -798,7 +863,7 @@ header {
     .order-item-info h4 {
         font-size: 1.05rem !important;
         font-weight: 600 !important;
-        color: #333 !important;
+        color: var(--text-color) !important;
         margin: 0;
     }
 
@@ -818,9 +883,9 @@ header {
 
 .dynamic-qty-container {
     display: none;
-    background-color: #fafafa;
+    background-color: var(--bg-light);
     padding: 15px;
-    border-top: 1px dashed #eee;
+    border-top: 1px dashed var(--border-color);
     margin-top: 12px;
     border-radius: 8px;
 }
@@ -842,9 +907,10 @@ header {
         padding: 0 10px !important;
         text-align: center !important;
         width: 100% !important;
-        border: 1px solid #ccc !important;
+        border: 1px solid var(--border-color) !important;
         border-radius: 6px !important;
-        background: #fff;
+        background: var(--card-bg);
+        color: var(--text-color);
     }
 
 .btn-remove-row {
@@ -854,9 +920,9 @@ header {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    background: #fff !important;
-    border: 1px solid #ff6b6b !important;
-    color: #ff6b6b !important;
+    background: var(--card-bg) !important;
+    border: 1px solid var(--danger-color) !important;
+    color: var(--danger-color) !important;
     border-radius: 6px !important;
     cursor: pointer !important;
     font-size: 1.2rem !important;
@@ -864,7 +930,7 @@ header {
 }
 
     .btn-remove-row:hover {
-        background: #ff6b6b !important;
+        background: var(--danger-color) !important;
         color: white !important;
     }
 
@@ -873,7 +939,7 @@ header {
     padding: 10px;
     border: 1px solid var(--primary-color);
     color: var(--primary-color);
-    background: #fff;
+    background: var(--card-bg);
     border-radius: 6px;
     cursor: pointer;
     font-weight: 600;
@@ -881,11 +947,11 @@ header {
 }
 
     .btn-add-row:hover {
-        background: #f0f7ff;
+        background: var(--bg-light);
     }
 
 .order-category-header.has-data, .sub-cat-header.has-checked {
-    background-color: #eef6ff !important;
+    background-color: var(--bg-light) !important;
     color: var(--primary-color) !important;
     border-color: var(--primary-color) !important;
     font-weight: 800 !important;
@@ -911,8 +977,8 @@ header {
 }
 
 .sub-cat-wrapper {
-    background: #fff;
-    border: 1px solid #e0e0e0;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
     border-radius: 12px;
     overflow: hidden;
     display: flex;
@@ -933,12 +999,12 @@ header {
     align-items: center;
     gap: 10px;
     font-weight: 700;
-    color: #444;
+    color: var(--text-color);
 }
 
 .sub-toggle-icon {
     transition: transform 0.3s ease;
-    color: #bbb;
+    color: var(--text-sub);
 }
 
 .sub-cat-wrapper.active .sub-toggle-icon {
@@ -949,10 +1015,10 @@ header {
 .proposal-check-grid {
     display: none;
     padding: 15px;
-    background-color: #fafafa;
+    background-color: var(--bg-light);
     flex-direction: column;
     gap: 8px;
-    border-top: 1px solid #eee;
+    border-top: 1px solid var(--border-color);
 }
 
     .proposal-check-grid.show {
@@ -960,10 +1026,10 @@ header {
     }
 
 .proposal-item {
-    border: 1px solid #eee;
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 10px 12px;
-    background: #fff;
+    background: var(--card-bg);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -1121,7 +1187,7 @@ footer {
 
 .contact-section {
     padding: 100px 0;
-    background-color: #fff;
+    background-color: var(--card-bg);
     text-align: center;
 }
 
@@ -1135,7 +1201,7 @@ footer {
 
 .contact-desc {
     font-size: 1.1rem;
-    color: #555;
+    color: var(--text-sub);
     margin-bottom: 50px;
 }
 
@@ -1206,7 +1272,7 @@ footer {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
-    border-bottom: 2px solid #eee;
+    border-bottom: 2px solid var(--border-color);
     padding-bottom: 15px;
 }
 
@@ -1231,6 +1297,8 @@ footer {
     border: 1px solid var(--border-color);
     border-radius: 6px;
     font-size: 1rem;
+    background: var(--card-bg);
+    color: var(--text-color);
 }
 
 .form-section-title {
@@ -1238,19 +1306,19 @@ footer {
     font-weight: 700;
     color: var(--primary-color);
     margin: 10px 0 15px;
-    border-bottom: 2px solid #eee;
+    border-bottom: 2px solid var(--border-color);
     padding-bottom: 10px;
     text-align: left;
 }
 
 /* =========================================
-   13. 일반 게시판 (notice.html) 스타일
+   13. 일반 게시판 스타일
    ========================================= */
 .board-header-section {
     text-align: center;
     padding: 60px 0 40px;
-    background-color: #f9fbfd;
-    border-bottom: 1px solid #eee;
+    background-color: var(--bg-light);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .board-container {
@@ -1260,6 +1328,7 @@ footer {
     padding: 50px 20px;
     box-sizing: border-box;
 }
+
 .board-header-section .container {
     max-width: 1200px !important;
 }
@@ -1267,36 +1336,37 @@ footer {
 .board-list-head {
     display: flex;
     padding: 15px 10px;
-    border-top: 2px solid #1a3c6e;
-    border-bottom: 1px solid #ddd;
-    background: #f8f9fa;
+    border-top: 2px solid var(--primary-color);
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-light);
     font-weight: 700;
-    color: #333;
+    color: var(--text-color);
     text-align: center;
 }
 
 .board-list-row {
     display: flex;
     padding: 20px 10px;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--border-color);
     align-items: center;
     transition: 0.2s;
     cursor: pointer;
+    background: var(--card-bg);
 }
 
     .board-list-row:hover {
-        background-color: #fcfcfc;
+        background-color: var(--bg-light);
     }
 
         .board-list-row:hover .b-title {
             text-decoration: underline;
-            color: #1a3c6e;
+            color: var(--primary-color);
         }
 
 .b-num {
     width: 60px;
     text-align: center;
-    color: #888;
+    color: var(--text-sub);
     font-size: 0.9rem;
 }
 
@@ -1310,7 +1380,7 @@ footer {
     padding: 0 20px;
     font-size: 1.05rem;
     font-weight: 500;
-    color: #333;
+    color: var(--text-color);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1319,7 +1389,7 @@ footer {
 .b-date {
     width: 120px;
     text-align: center;
-    color: #888;
+    color: var(--text-sub);
     font-size: 0.9rem;
 }
 
@@ -1328,23 +1398,20 @@ footer {
     padding: 4px 10px;
     font-size: 0.75rem;
     border-radius: 4px;
-    background: #eef6ff;
-    color: #1a3c6e;
+    background: var(--bg-light);
+    color: var(--primary-color);
     font-weight: 600;
 }
 
-/* ★ 모바일 게시판 제목 수정 적용 영역 ★ */
 @media (max-width: 768px) {
     .board-list-head {
         display: none;
     }
 
     .board-list-row {
+        flex-wrap: wrap;
         position: relative;
         padding: 15px;
-        display: flex;
-        flex-direction: column; /* 세로 정렬로 안정적인 레이아웃 구성 */
-        align-items: flex-start;
     }
 
     .b-num {
@@ -1352,30 +1419,25 @@ footer {
     }
 
     .b-cat {
+        position: absolute;
+        top: 15px;
+        left: 15px;
         width: auto;
         text-align: left;
-        margin-bottom: 8px; /* 제목과의 간격 띄우기 */
     }
 
     .b-title {
-        display: block !important;
-        flex: none !important; /* 넓이가 0으로 찌그러지는 현상 방지 */
-        width: 100% !important;
-        margin-top: 0 !important;
-        margin-bottom: 10px !important;
-        padding: 0 !important;
+        width: 100%;
+        margin-top: 30px;
+        margin-bottom: 10px;
+        padding: 0;
         font-size: 1.1rem;
-        white-space: normal !important; /* 긴 제목이 잘리지 않고 줄바꿈 되도록 처리 */
-        overflow: visible !important;
-        text-overflow: clip !important;
-        line-height: 1.4;
     }
 
     .b-date {
         width: 100%;
         text-align: left;
         font-size: 0.85rem;
-        color: #888;
     }
 }
 
@@ -1388,20 +1450,20 @@ footer {
 
 .tab-btn {
     padding: 12px 30px;
-    border: 1px solid #ddd;
-    background: #fff;
+    border: 1px solid var(--border-color);
+    background: var(--card-bg);
     font-size: 1.1rem;
     font-weight: 600;
-    color: #555;
+    color: var(--text-sub);
     border-radius: 50px;
     cursor: pointer;
     transition: 0.3s;
 }
 
     .tab-btn.active {
-        background: #1a3c6e;
+        background: var(--primary-color);
         color: #fff;
-        border-color: #1a3c6e;
+        border-color: var(--primary-color);
         box-shadow: 0 4px 10px rgba(26, 60, 110, 0.3);
     }
 
@@ -1414,7 +1476,7 @@ footer {
 .btn-write {
     display: inline-block;
     padding: 10px 20px;
-    background-color: #1a3c6e;
+    background-color: var(--primary-color);
     color: #fff;
     border-radius: 5px;
     font-weight: bold;
@@ -1431,16 +1493,16 @@ footer {
     max-width: 800px;
     margin: 50px auto;
     padding: 40px;
-    background: #fff;
-    border: 1px solid #eee;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
     border-radius: 15px;
     box-shadow: 0 5px 20px rgba(0,0,0,0.05);
 }
 
-/* FOUC (데이터 로딩 전 깜빡임 방지) */
+/* FOUC 방지 */
 .hero:not(.loaded), .sub-hero:not(.loaded) {
     background-image: none !important;
-    background-color: #f4f6f9;
+    background-color: var(--bg-light);
     transition: background-image 0.3s ease-in-out, background-color 0.3s ease;
 }
 
@@ -1455,7 +1517,6 @@ footer {
     visibility: visible;
 }
 
-/* 에디터 글자 정렬 호환성 패치 */
 .view-content .ql-align-center {
     text-align: center !important;
 }
@@ -1473,7 +1534,6 @@ footer {
     margin-right: auto;
 }
 
-/* 팝업 창 스타일 */
 .main-popup {
     display: none;
     position: fixed;
@@ -1486,7 +1546,7 @@ footer {
     box-shadow: 0 5px 25px rgba(0,0,0,0.3);
     border-radius: 10px;
     overflow: hidden;
-    background: #fff;
+    background: var(--card-bg);
     animation: popupFadeIn 0.5s ease;
 }
 
@@ -1547,17 +1607,17 @@ footer {
    ========================================= */
 .accordion-group {
     margin-bottom: 10px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     overflow: hidden;
-    background: #fff;
+    background: var(--card-bg);
 }
 
 .accordion-header {
     width: 100%;
     padding: 15px 20px;
-    background: #f0f7ff;
-    color: #1a3c6e;
+    background: var(--bg-light);
+    color: var(--primary-color);
     font-size: 1.1rem;
     font-weight: bold;
     text-align: left;
@@ -1570,14 +1630,14 @@ footer {
 }
 
     .accordion-header:hover {
-        background: #e0efff;
+        background: var(--border-color);
     }
 
 .accordion-body {
     padding: 15px;
     display: none;
-    background: #fafafa;
-    border-top: 1px solid #eee;
+    background: var(--card-bg);
+    border-top: 1px solid var(--border-color);
 }
 
     .accordion-body.active {
@@ -1585,10 +1645,10 @@ footer {
     }
 
 .category-item {
-    background: #fff;
+    background: var(--card-bg);
     padding: 12px;
     margin-bottom: 8px;
-    border: 1px solid #eee;
+    border: 1px solid var(--border-color);
     border-radius: 6px;
     display: flex;
     align-items: center;
@@ -1596,7 +1656,7 @@ footer {
 }
 
 /* =========================================
-   💡 [핵심] 관리자 답변(댓글) 창 1200px 확장 스타일 
+   관리자 답변(댓글) 창 스타일
    ========================================= */
 .comments-section {
     width: 100%;
@@ -1609,10 +1669,10 @@ footer {
 .comments-header {
     font-size: 1.2rem;
     font-weight: bold;
-    color: #1a3c6e;
+    color: var(--primary-color);
     margin-bottom: 20px;
     padding-bottom: 10px;
-    border-bottom: 2px solid #1a3c6e;
+    border-bottom: 2px solid var(--primary-color);
     width: 100%;
 }
 
@@ -1620,10 +1680,10 @@ footer {
     width: 100%;
     box-sizing: border-box;
     padding: 25px;
-    background: #f0f7ff;
+    background: var(--bg-light);
     border-radius: 8px;
     margin-bottom: 15px;
-    border-left: 4px solid #f4a261;
+    border-left: 4px solid var(--accent-color);
 }
 
 .comment-meta {
@@ -1635,7 +1695,7 @@ footer {
 
 .comment-author {
     font-weight: bold;
-    color: #1a3c6e;
+    color: var(--primary-color);
     font-size: 1.1rem;
     display: flex;
     align-items: center;
@@ -1644,12 +1704,12 @@ footer {
 
 .comment-date {
     font-size: 0.85rem;
-    color: #888;
+    color: var(--text-sub);
 }
 
 .comment-content {
     font-size: 1.05rem;
-    color: #333;
+    color: var(--text-color);
     line-height: 1.6;
     word-break: break-all;
 }

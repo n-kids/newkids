@@ -42,7 +42,6 @@
                     </div>
                 </div>
 
-                <!-- ★ 유튜브 영상이 재생될 컨테이너 추가 ★ -->
                 <div id="youtube-player-area" style="display:none; margin-bottom: 30px;"></div>
 
                 <div class="view-content" id="v-content"></div>
@@ -78,6 +77,19 @@
                 <button onclick="goBackToList()" class="btn-action" style="background:#666; width: 150px;">목록으로</button>
             </div>
 
+        </div>
+    </div>
+
+    <!-- 파일 미리 보기 모달 -->
+    <div id="file-preview-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:10000; justify-content:center; align-items:center;">
+        <div style="background:#fff; width:90%; max-width:900px; height:85vh; border-radius:12px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 5px 25px rgba(0,0,0,0.3);">
+            <div style="background:#1a3c6e; color:#fff; padding:15px 20px; display:flex; justify-content:space-between; align-items:center;">
+                <h3 id="preview-file-title" style="margin:0; font-size:1.1rem;">파일 미리보기</h3>
+                <button onclick="closeFilePreview()" style="background:none; border:none; color:#fff; font-size:1.5rem; cursor:pointer;">✖</button>
+            </div>
+            <div id="preview-body" style="flex:1; background:#f9f9f9; display:flex; justify-content:center; align-items:center; overflow:auto; padding:20px;">
+                <!-- 동적 뷰어 영역 -->
+            </div>
         </div>
     </div>
 
@@ -181,7 +193,7 @@
             const { data, error } = await window.sb.from('total_posts').select('*').eq('id', id).single();
 
             if (error || !data) {
-                document.getElementById('v-content').innerHTML = "<div style='text-align:center; padding:50px; data-not-found'>게시글을 찾을 수 없습니다.</div>";
+                document.getElementById('v-content').innerHTML = "<div style='text-align:center; padding:50px;'>게시글을 찾을 수 없습니다.</div>";
                 document.getElementById('main-content-wrap').style.display = 'block';
                 return;
             }
@@ -279,18 +291,16 @@
             let finalContent = postDataCache.content || '';
             finalContent = finalContent.replace(/\[투표:(\d+)\]/g, '<iframe id="form-iframe-$1" src="form.html?id=$1" width="100%" frameborder="0" scrolling="no" style="border:1px solid #ddd; border-radius:12px; margin:30px 0; overflow:hidden; transition:height 0.3s ease;"></iframe>');
 
-            document.getElementById('v-content').innerHTML = finalContent;
-
-            // ★ 유튜브 영상 처리: video_url에 값이 있거나 통합 포맷(ORDER_ALL|유튜브URL)일 때 상단에 플레이어 표시
+            const ytId = window.getYoutubeId(postDataCache.video_url);
             const playerArea = document.getElementById('youtube-player-area');
             let rawVideoUrl = postDataCache.video_url || '';
             if (rawVideoUrl.startsWith('ORDER_ALL|')) {
                 rawVideoUrl = rawVideoUrl.replace('ORDER_ALL|', '');
             }
 
-            const ytId = window.getYoutubeId(rawVideoUrl);
-            if (ytId) {
-                playerArea.innerHTML = `<iframe src="https://www.youtube.com/embed/${ytId}" allowfullscreen></iframe>`;
+            const actualYtId = window.getYoutubeId(rawVideoUrl);
+            if (actualYtId) {
+                playerArea.innerHTML = `<iframe src="https://www.youtube.com/embed/${actualYtId}" allowfullscreen></iframe>`;
                 playerArea.style.display = 'block';
             } else if (rawVideoUrl.startsWith('http')) {
                 playerArea.innerHTML = `<iframe src="${rawVideoUrl}" allowfullscreen></iframe>`;
@@ -298,6 +308,8 @@
             } else {
                 playerArea.style.display = 'none';
             }
+
+            document.getElementById('v-content').innerHTML = finalContent;
 
             if (postDataCache.image_url && postDataCache.image_url.trim() !== '' && postDataCache.image_url !== 'null') {
                 const files = postDataCache.image_url.split('||').map(u => u.trim()).filter(u => u);
@@ -326,9 +338,16 @@
                         const safeName = fileName.replace(/'/g, "\\'");
                         const fileIcon = getFileIcon(fileName);
 
+                        const ext = fileName.split('.').pop().toLowerCase();
+                        const canPreview = ['pdf', 'jpg', 'jpeg', 'png', 'gif'].includes(ext);
+
+                        // 미리보기 버튼 생성 (PDF 및 이미지 지원)
+                        const previewBtn = canPreview && !isLocked ? `
+                                <button onclick="event.stopPropagation(); openFilePreview('${safeUrl}', '${safeName}')" style="background:#f4a261; border:none; color:#fff; padding:6px 14px; border-radius:6px; font-size:0.85rem; font-weight:bold; cursor:pointer; margin-right:8px; box-shadow:0 2px 4px rgba(244,162,97,0.2);">미리보기</button>
+                            ` : '';
+
                         const btnLabel = isLocked ? '🔒 제한됨' : '다운로드';
                         const btnBg = isLocked ? 'background:#e67e22;' : 'background:#1a3c6e;';
-                        const btnShadow = isLocked ? 'box-shadow: 0 2px 4px rgba(230, 126, 34, 0.2);' : 'box-shadow: 0 2px 4px rgba(26, 60, 110, 0.2);';
 
                         fileHtml += `
                                 <div onclick="attemptDownload('${safeUrl}', '${safeName}')" style="display:flex; justify-content:space-between; align-items:center; background:#f0f7ff; padding:15px; border-radius:10px; border:1px solid #cce5ff; cursor:pointer; transition: background 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
@@ -336,7 +355,10 @@
                                         <span style="font-size:1.6rem;">${fileIcon}</span>
                                         <span style="font-size:1.05rem; color:#1a3c6e; font-weight:bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${fileName}</span>
                                     </div>
-                                    <span style="font-size:0.85rem; color:#fff; padding:6px 14px; border-radius:6px; margin-left:15px; white-space:nowrap; ${btnBg} ${btnShadow}">${btnLabel}</span>
+                                    <div style="display:flex; align-items:center; margin-left:15px;" onclick="event.stopPropagation()">
+                                        ${previewBtn}
+                                        <span onclick="attemptDownload('${safeUrl}', '${safeName}')" style="font-size:0.85rem; color:#fff; padding:6px 14px; border-radius:6px; white-space:nowrap; cursor:pointer; ${btnBg}">${btnLabel}</span>
+                                    </div>
                                 </div>
                             `;
                     });
@@ -355,6 +377,30 @@
 
             loadAdminReplies();
             loadRelatedPosts(postDataCache.title, postDataCache.category, currentPostId);
+        }
+
+        // 파일 미리보기 열기 함수
+        function openFilePreview(url, filename) {
+            const modal = document.getElementById('file-preview-modal');
+            const body = document.getElementById('preview-body');
+            document.getElementById('preview-file-title').innerText = filename;
+
+            const ext = filename.split('.').pop().toLowerCase();
+            if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) {
+                body.innerHTML = `<img src="${url}" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:6px; box-shadow:0 2px 10px rgba(0,0,0,0.1);">`;
+            } else if (ext === 'pdf') {
+                body.innerHTML = `<iframe src="${url}" width="100%" height="100%" style="border:none; border-radius:6px;"></iframe>`;
+            } else {
+                body.innerHTML = `<p style="color:#666;">이 파일 형식은 미리보기를 지원하지 않습니다.</p>`;
+            }
+
+            modal.style.display = 'flex';
+        }
+
+        // 파일 미리보기 닫기 함수
+        function closeFilePreview() {
+            document.getElementById('file-preview-modal').style.display = 'none';
+            document.getElementById('preview-body').innerHTML = '';
         }
 
         async function loadRelatedPosts(title, category, currentId) {

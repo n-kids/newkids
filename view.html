@@ -18,6 +18,19 @@
             padding-bottom: 10px !important;
             margin-bottom: 15px !important;
         }
+
+        /* ★ 모바일 화면에서 상세 보기 내부의 작성자 및 메타 정보 숨기기 ★ */
+        @media screen and (max-width: 768px) {
+            .view-box-custom .view-meta {
+                display: none !important;
+            }
+
+            .view-box-custom .view-header {
+                border-bottom: none !important;
+                padding-bottom: 0 !important;
+                margin-bottom: 10px !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -99,7 +112,7 @@
         </div>
     </div>
 
-    <!-- ★ 파일 미리보기 팝업 모달창 추가 ★ -->
+    <!-- 파일 미리보기 팝업 모달창 -->
     <div id="file-preview-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:9999; justify-content:center; align-items:center;">
         <div style="background:#fff; padding:20px; border-radius:12px; width:90%; max-width:800px; height:80vh; display:flex; flex-direction:column; box-shadow:0 5px 15px rgba(0,0,0,0.3);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;">
@@ -582,61 +595,4 @@
         }
 
         async function openEditPost() {
-            if (postDataCache.category === 'notice') return alert("공지글은 수정할 수 없습니다.");
-            if (isAdminLoggedIn) {
-                location.href = `write.html?edit=${currentPostId}#${postDataCache.category}`;
-                return;
-            }
-            const isSecretPost = (postDataCache.is_secret === true || String(postDataCache.is_secret) === 'true');
-            if (isSecretPost) {
-                location.href = `write.html?edit=${currentPostId}#${postDataCache.category}`;
-            } else {
-                showLockBox("✍️ 글 수정 본인 인증", "본인 확인을 위해 글 작성 시 설정한 비밀번호를 입력해주세요.", "edit");
-            }
-        }
-
-        async function deleteCurrentPost() {
-            if (postDataCache.category === 'notice') return alert("공지글은 삭제할 수 없습니다.");
-            if (isAdminLoggedIn) {
-                if (confirm("정말 이 게시글을 영구 삭제하시겠습니까?")) executeDeletePost();
-                return;
-            }
-            const isSecretPost = (postDataCache.is_secret === true || String(postDataCache.is_secret) === 'true');
-            if (isSecretPost) {
-                if (confirm("정말 이 게시글을 영구 삭제하시겠습니까?")) executeDeletePost();
-            } else {
-                showLockBox("🗑️ 글 삭제 본인 인증", "본인 확인을 위해 글 작성 시 설정한 비밀번호를 입력해주세요.", "delete");
-            }
-        }
-
-        async function executeDeletePost() {
-            const { error } = await window.sb.from('total_posts').delete().eq('id', currentPostId);
-            if (error) {
-                alert("삭제 실패: " + error.message);
-            } else {
-                alert("게시글이 안전하게 삭제되었습니다.");
-                goBackToList();
-            }
-        }
-
-        // iframe 높이 자동 맞춤 수신 리스너
-        window.addEventListener('message', function (event) {
-            if (event.data && event.data.type === 'resizeIframe') {
-                let iframe = document.getElementById('form-iframe-' + event.data.formId);
-                if (!iframe) {
-                    const iframes = document.querySelectorAll('iframe');
-                    for (let f of iframes) {
-                        if (f.src && f.src.includes('id=' + event.data.formId)) {
-                            iframe = f;
-                            break;
-                        }
-                    }
-                }
-                if (iframe) {
-                    iframe.style.height = (event.data.height + 40) + 'px';
-                }
-            }
-        });
-    </script>
-</body>
-</html>
+            if (postDataCache.category === 'notice') return

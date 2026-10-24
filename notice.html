@@ -23,7 +23,7 @@
             cursor: pointer;
             transition: all 0.2s;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            white-space: nowrap; /* 텍스트 줄바꿈 방지 */
+            white-space: nowrap;
         }
 
             .hashtag-btn:hover {
@@ -70,33 +70,37 @@
                 transform: scale(1.2);
             }
 
-        /* ★ 모바일 UI 최적화: 가로 스크롤 및 레이아웃 정리 ★ */
+        /* 모바일 UI 최적화 */
         @media screen and (max-width: 768px) {
-            .filter-wrap {
-                flex-direction: column; /* 세로 배치로 변경 */
-                gap: 15px !important;
+            .hashtag-container {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                padding-bottom: 5px;
+                -webkit-overflow-scrolling: touch;
             }
 
-            .hashtag-container {
-                flex-wrap: nowrap; /* 여러 줄 바꿈 방지 */
-                overflow-x: auto; /* 가로 스크롤 활성화 */
-                padding-bottom: 5px; /* 스크롤 여백 */
-                -webkit-overflow-scrolling: touch; /* 부드러운 스크롤 */
-            }
-                /* 크롬, 사파리 등 모바일에서 스크롤바 숨김 (깔끔하게) */
                 .hashtag-container::-webkit-scrollbar {
                     display: none;
                 }
 
             .hashtag-btn {
-                flex-shrink: 0; /* 버튼이 찌그러지지 않게 보호 */
+                flex-shrink: 0;
+            }
+
+            .top-btn-row {
+                flex-direction: row;
+                align-items: stretch;
             }
 
             #btn-scrap-mode {
-                width: 100%; /* 찜하기 버튼은 터치하기 쉽게 전체 너비로 */
+                padding: 10px 12px;
+                font-size: 0.95rem;
+                flex: 1;
                 text-align: center;
-                padding: 12px;
-                font-size: 1.05rem;
+            }
+
+            #btn-user-write {
+                flex: 1;
             }
         }
     </style>
@@ -114,15 +118,16 @@
 
     <div class="board-container">
 
-        <div style="display: flex; justify-content: flex-end; margin-bottom: 15px;">
-            <button id="btn-user-write" class="btn-action" style="display: none;" onclick="location.href='write.html#' + currentCategory">✏️ 글쓰기</button>
-        </div>
-
-        <!-- ★ 필터 및 해시태그 래퍼 영역 (모바일 최적화 클래스 적용) ★ -->
-        <div class="filter-wrap" style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 25px; flex-wrap:wrap; gap:15px;">
-            <button id="btn-scrap-mode" onclick="toggleScrapMode()" class="hashtag-btn" style="border-color:#f4a261; color:#f4a261;">
+        <!-- ★ 상단 액션 버튼 영역 (찜하기 버튼 / 글쓰기 버튼 같은 줄 양끝 배치) ★ -->
+        <div class="top-btn-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+            <button id="btn-scrap-mode" onclick="toggleScrapMode()" class="hashtag-btn" style="border-color:#f4a261; color:#f4a261; margin:0;">
                 ⭐ 찜한 자료만 보기
             </button>
+            <button id="btn-user-write" class="btn-action" style="display: none; margin:0;" onclick="location.href='write.html#' + currentCategory">✏️ 글쓰기</button>
+        </div>
+
+        <!-- ★ 해시태그 영역 (단독 줄로 깔끔하게 배치) ★ -->
+        <div class="filter-wrap" style="display:flex; margin-bottom: 25px; width: 100%;">
             <div class="hashtag-container" id="hashtag-area" style="flex:1; min-width: 0; width: 100%;">
                 <span style="color:#999; font-size:0.9rem;">태그 분석 중...</span>
             </div>

@@ -313,6 +313,7 @@
             // 투표 폼 아이프레임 생성
             finalContent = finalContent.replace(/\[투표:([^\]]+)\]/g, '<iframe id="form-iframe-$1" src="form.html?id=$1" width="100%" frameborder="0" scrolling="no" style="border:none; margin:0; padding:0; overflow:hidden; min-height:100px; transition:height 0.2s ease;"></iframe>');
 
+            // 유튜브 플레이어 영역 처리
             const playerArea = document.getElementById('youtube-player-area');
             let rawVideoUrl = postDataCache.video_url || '';
             if (rawVideoUrl.startsWith('ORDER_ALL|')) {
@@ -321,10 +322,10 @@
 
             const actualYtId = window.getYoutubeId(rawVideoUrl);
             if (actualYtId) {
-                playerArea.innerHTML = `<iframe src="https://www.youtube.com/embed/${actualYtId}" allowfullscreen></iframe>`;
+                playerArea.innerHTML = `<iframe src="https://www.youtube.com/embed/${actualYtId}" allowfullscreen style="width:100%; aspect-ratio:16/9; border:none; border-radius:8px;"></iframe>`;
                 playerArea.style.display = 'block';
             } else if (rawVideoUrl.startsWith('http')) {
-                playerArea.innerHTML = `<iframe src="${rawVideoUrl}" allowfullscreen></iframe>`;
+                playerArea.innerHTML = `<iframe src="${rawVideoUrl}" allowfullscreen style="width:100%; aspect-ratio:16/9; border:none; border-radius:8px;"></iframe>`;
                 playerArea.style.display = 'block';
             } else {
                 playerArea.style.display = 'none';

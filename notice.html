@@ -6,13 +6,10 @@
     <title>뉴키즈 - 게시판</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* ★ 해시태그 버튼 전용 스타일 ★ */
         .hashtag-container {
             display: flex;
             gap: 10px;
-            justify-content: center;
             flex-wrap: wrap;
-            margin-bottom: 25px;
         }
 
         .hashtag-btn {
@@ -37,6 +34,40 @@
                 color: #fff;
                 box-shadow: 0 3px 8px rgba(26, 60, 110, 0.3);
             }
+
+        .btn-load-more {
+            background: #fff;
+            border: 2px solid #1a3c6e;
+            color: #1a3c6e;
+            padding: 12px 30px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: 0.3s;
+            width: 100%;
+            max-width: 300px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+            .btn-load-more:hover {
+                background: #1a3c6e;
+                color: #fff;
+            }
+
+        .scrap-btn {
+            background: none;
+            border: none;
+            font-size: 1.3rem;
+            cursor: pointer;
+            padding: 0;
+            margin-right: 5px;
+            transition: transform 0.2s;
+        }
+
+            .scrap-btn:active {
+                transform: scale(1.2);
+            }
     </style>
 </head>
 <body>
@@ -52,14 +83,17 @@
 
     <div class="board-container">
 
-        <!-- 글쓰기 버튼 (우측 정렬) -->
         <div style="display: flex; justify-content: flex-end; margin-bottom: 15px;">
             <button id="btn-user-write" class="btn-action" style="display: none;" onclick="location.href='write.html#' + currentCategory">✏️ 글쓰기</button>
         </div>
 
-        <!-- ★ 원클릭 동적 해시태그 필터 영역 (스크립트에서 자동 생성됨) ★ -->
-        <div class="hashtag-container" id="hashtag-area">
-            <span style="color:#999; font-size:0.9rem;">태그 분석 중...</span>
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 25px; flex-wrap:wrap; gap:15px;">
+            <div class="hashtag-container" id="hashtag-area" style="flex:1;">
+                <span style="color:#999; font-size:0.9rem;">태그 분석 중...</span>
+            </div>
+            <button id="btn-scrap-mode" onclick="toggleScrapMode()" class="hashtag-btn" style="border-color:#f4a261; color:#f4a261; white-space:nowrap;">
+                ⭐ 찜한 자료만 보기
+            </button>
         </div>
 
         <div class="board-list-head">
@@ -73,9 +107,11 @@
             <div style="text-align:center; padding:50px; color:#999;">데이터를 불러오는 중입니다...</div>
         </div>
 
-        <div id="pagination-box" class="pagination" style="margin-top:40px;"></div>
+        <div id="load-more-box" style="display:none; justify-content:center; margin-top:40px;">
+            <button onclick="loadMore()" class="btn-load-more">더보기 ＋</button>
+        </div>
 
-        <div style="display: flex; justify-content: center; align-items: center; margin-top: 30px; gap: 5px;">
+        <div style="display: flex; justify-content: center; align-items: center; margin-top: 40px; gap: 5px;">
             <input type="text" id="search-input" class="form-input" style="width: 250px; padding: 8px;" placeholder="제목 검색" onkeypress="if(event.keyCode==13) executeSearch();">
             <button onclick="executeSearch()" class="btn-action" style="padding: 8px 15px;">검색</button>
         </div>
@@ -93,6 +129,7 @@
         let currentCategory = location.hash.replace('#', '');
         let currentSearchKeyword = '';
         let boardCategories = [];
+        let isScrapMode = false;
 
         document.addEventListener("DOMContentLoaded", () => {
             const checkReady = setInterval(() => {
@@ -107,7 +144,6 @@
                         }
 
                         updateBoardHeader();
-                        // ★ 태그를 먼저 분석하여 그린 후, 게시글 목록을 불러옵니다.
                         buildDynamicHashtags().then(() => loadBoardList(1));
                     } else {
                         document.getElementById('board-list-wrapper').innerHTML = "<div style='text-align:center; padding:50px;'>생성된 게시판이 없습니다.</div>";
@@ -144,11 +180,9 @@
             }
         }
 
-        // ★ DB에서 전체 글을 스캔하여 [태그]를 자동 추출하고 버튼을 렌더링하는 함수 ★
         async function buildDynamicHashtags() {
             const hashtagArea = document.getElementById('hashtag-area');
 
-            // 현재 카테고리에 속한 모든 글의 '제목'만 빠르게 가져옵니다.
             const { data, error } = await window.sb.from('total_posts')
                 .select('title')
                 .eq('category', currentCategory)
@@ -163,31 +197,25 @@
 
             data.forEach(item => {
                 if (item.title) {
-                    // 정규식을 이용해 대괄호 [] 안의 문자열 추출
                     const match = item.title.match(/\[(.*?)\]/);
                     if (match && match[1]) {
                         const innerText = match[1];
-                        // 쉼표(,)나 하이픈(-) 기준으로 문자를 쪼갬
                         const parts = innerText.split(/[,-]/);
                         parts.forEach(p => {
                             const tag = p.trim();
-                            // 빈 칸이 아니면 세트(Set)에 추가 (자동으로 중복 제거됨)
                             if (tag) tags.add(tag);
                         });
                     }
                 }
             });
 
-            // Set을 배열로 변환한 뒤 가나다 순으로 정렬
             const sortedTags = Array.from(tags).sort();
 
-            // 태그가 하나도 없으면 전체보기 버튼도 숨김
             if (sortedTags.length === 0) {
                 hashtagArea.innerHTML = '';
                 return;
             }
 
-            // HTML 생성
             let html = `<button class="hashtag-btn ${currentSearchKeyword === '' ? 'active' : ''}" onclick="clickHashtag('', this)">#전체보기</button>`;
 
             sortedTags.forEach(tag => {
@@ -198,7 +226,6 @@
             hashtagArea.innerHTML = html;
         }
 
-        // 해시태그 클릭 시 동작
         window.clickHashtag = function (keyword, btnEl) {
             document.querySelectorAll('.hashtag-btn').forEach(btn => btn.classList.remove('active'));
             if (btnEl) btnEl.classList.add('active');
@@ -208,7 +235,6 @@
             loadBoardList(1);
         };
 
-        // 수동 검색 시 해시태그 버튼 활성화 연동
         function executeSearch() {
             const inputVal = document.getElementById('search-input').value.trim();
             currentSearchKeyword = inputVal;
@@ -227,16 +253,68 @@
             loadBoardList(1);
         }
 
-        async function loadBoardList(page) {
+        window.toggleScrapMode = function () {
+            isScrapMode = !isScrapMode;
+            const btn = document.getElementById('btn-scrap-mode');
+
+            if (isScrapMode) {
+                btn.classList.add('active');
+                btn.style.background = '#f4a261';
+                btn.style.color = '#fff';
+                btn.innerText = '⭐ 찜한 자료 보는 중';
+            } else {
+                btn.classList.remove('active');
+                btn.style.background = '#fff';
+                btn.style.color = '#f4a261';
+                btn.innerText = '⭐ 찜한 자료만 보기';
+            }
+            loadBoardList(1);
+        };
+
+        window.toggleScrap = function (event, postId) {
+            event.stopPropagation();
+
+            let savedScraps = JSON.parse(localStorage.getItem('nk_scraps') || '[]');
+            const btn = event.target;
+
+            if (savedScraps.includes(postId)) {
+                savedScraps = savedScraps.filter(id => id !== postId);
+                btn.innerText = '☆';
+            } else {
+                savedScraps.push(postId);
+                btn.innerText = '⭐';
+            }
+
+            localStorage.setItem('nk_scraps', JSON.stringify(savedScraps));
+        };
+
+        window.loadMore = function () {
+            loadBoardList(currentPage + 1, true);
+        };
+
+        async function loadBoardList(page, append = false) {
             currentPage = page;
             const listDiv = document.getElementById('board-list-wrapper');
+            const loadMoreBox = document.getElementById('load-more-box');
+
+            if (!append) {
+                listDiv.innerHTML = '<div style="text-align:center; padding:50px; color:#999;">로딩 중...</div>';
+            }
+
+            let savedScraps = JSON.parse(localStorage.getItem('nk_scraps') || '[]');
+
+            if (isScrapMode && savedScraps.length === 0) {
+                listDiv.innerHTML = `<div style="text-align:center; padding:50px; border-bottom:1px solid #eee;">찜(⭐)해둔 자료가 없습니다.</div>`;
+                loadMoreBox.style.display = 'none';
+                return;
+            }
+
             const from = (page - 1) * ITEMS_PER_PAGE;
             const to = from + ITEMS_PER_PAGE - 1;
 
-            listDiv.innerHTML = '<div style="text-align:center; padding:50px; color:#999;">로딩 중...</div>';
-
+            // ★ is_notice 데이터 호출 추가
             let query = window.sb.from('total_posts')
-                .select('id, title, category, created_at, link_url, is_secret, download_count', { count: 'exact' })
+                .select('id, title, category, created_at, link_url, is_secret, download_count, is_notice', { count: 'exact' })
                 .eq('category', currentCategory)
                 .neq('is_visible', false);
 
@@ -244,20 +322,28 @@
                 query = query.ilike('title', `%${currentSearchKeyword}%`);
             }
 
+            if (isScrapMode) {
+                query = query.in('id', savedScraps);
+            }
+
+            // ★ 정렬 기준 최우선 순위로 is_notice를 적용
             const { data, count, error } = await query
+                .order('is_notice', { ascending: false, nullsFirst: false })
                 .order('created_at', { ascending: false })
                 .range(from, to);
 
             if (error) {
-                listDiv.innerHTML = `<div style="text-align:center; padding:30px;">에러: ${error.message}</div>`;
+                if (!append) listDiv.innerHTML = `<div style="text-align:center; padding:30px;">에러: ${error.message}</div>`;
                 return;
             }
 
             if (!data || data.length === 0) {
-                listDiv.innerHTML = `<div style="text-align:center; padding:50px; border-bottom:1px solid #eee;">등록되거나 검색된 글이 없습니다.</div>`;
-                document.getElementById('pagination-box').innerHTML = '';
+                if (!append) listDiv.innerHTML = `<div style="text-align:center; padding:50px; border-bottom:1px solid #eee;">등록되거나 검색된 글이 없습니다.</div>`;
+                loadMoreBox.style.display = 'none';
                 return;
             }
+
+            if (!append) listDiv.innerHTML = '';
 
             const postIds = data.map(item => item.id);
             let answeredSet = new Set();
@@ -298,11 +384,23 @@
                     }
                 }
 
+                const isScrapped = savedScraps.includes(item.id);
+                const starIcon = isScrapped ? '⭐' : '☆';
+
+                // ★ 공지글 시각적 처리
+                const isNoticePost = (item.is_notice === true);
+                const rowBg = isNoticePost ? 'background-color: #fffaf0;' : '';
+                const displayNumHtml = isNoticePost ? '<span style="color:#e74c3c; font-weight:bold;">공지</span>' : displayNum;
+                const noticeIcon = isNoticePost ? '📌 ' : '';
+
                 html += `
-                                    <div class="board-list-row" onclick="location.href='view.html?id=${item.id}'">
-                                        <div class="b-num">${displayNum}</div>
+                                    <div class="board-list-row" onclick="location.href='view.html?id=${item.id}'" style="${rowBg}">
+                                        <div class="b-num">${displayNumHtml}</div>
                                         <div class="b-cat"><span class="badge" style="background:#f1f3f5; color:#555;">${authorName}</span></div>
-                                        <div class="b-title" style="text-align:left; display:flex; align-items:center;">${statusBadge}${secretIcon}${item.title}</div>
+                                        <div class="b-title" style="text-align:left; display:flex; align-items:center;">
+                                            <button class="scrap-btn" onclick="toggleScrap(event, ${item.id})">${starIcon}</button>
+                                            ${statusBadge}${secretIcon}${noticeIcon}${item.title}
+                                        </div>
 
                                         <div class="b-date" style="display:flex; flex-direction:column; align-items:center; gap:4px;">
                                             <span>${date}</span>
@@ -310,19 +408,13 @@
                                         </div>
                                     </div>`;
             });
-            listDiv.innerHTML = html;
 
-            renderPagination(count, currentPage);
-        }
+            listDiv.innerHTML += html;
 
-        function renderPagination(totalCount, current) {
-            const wrapper = document.getElementById('pagination-box');
-            wrapper.innerHTML = '';
-            const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
-            if (totalPages <= 1) return;
-
-            for (let i = 1; i <= totalPages; i++) {
-                wrapper.innerHTML += `<button class="page-btn ${i === current ? 'active' : ''}" onclick="loadBoardList(${i})">${i}</button>`;
+            if (count > to + 1) {
+                loadMoreBox.style.display = 'flex';
+            } else {
+                loadMoreBox.style.display = 'none';
             }
         }
     </script>

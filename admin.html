@@ -553,10 +553,18 @@
                             </div>
                             <div id="custom-cat-dropdown" class="custom-select-dropdown" style="display:none;"></div>
                         </div>
-                        <div class="form-group w-col-title" style="margin-bottom:0;"><label class="form-label">제목 (교재명)</label><input type="text" id="post-title" class="form-input" placeholder="제목을 입력하세요"></div>
+                        <div class="form-group w-col-title" style="margin-bottom:0;">
+                            <!-- ★ 상단 고정 체크박스 추가 ★ -->
+                            <label class="form-label" style="display:flex; justify-content:space-between; align-items:center;">
+                                제목 (교재명)
+                                <label style="cursor:pointer; display:flex; align-items:center; font-size:0.85rem; color:#d35400; font-weight:bold;">
+                                    <input type="checkbox" id="chk-is-notice" style="margin-right:5px; width:16px; height:16px;"> 📌 상단 고정
+                                </label>
+                            </label>
+                            <input type="text" id="post-title" class="form-input" placeholder="제목을 입력하세요">
+                        </div>
                     </div>
 
-                    <!-- ★ 비밀번호 입력 영역 분리 ★ -->
                     <div class="form-group" style="margin-top:15px; background:#fff8e1; padding:15px; border-radius:8px; border:1px solid #ffe082;">
                         <label class="form-label" style="color:#b78103;">🔑 게시글 자체 비밀번호 (수정/삭제 인증용)</label>
                         <input type="text" id="post-password" class="form-input" placeholder="게시글 수정/삭제 시 사용할 비밀번호">
@@ -903,9 +911,11 @@
             const finalFileUrls = [...keptFiles, ...newUploadedUrls]; let du = finalFileUrls.length > 0 ? finalFileUrls.join('||') : null;
             let videoVal = document.getElementById('youtube-url').value; if (isOrder && isIntro) videoVal = FLAG_ORDER_ALL + (videoVal ? '|' + videoVal : ''); else if (isOrder && !isIntro) videoVal = FLAG_ORDER_ONLY;
 
-            // ★ 다운로드 전용 비밀번호 값 가져오기
             const passwordVal = document.getElementById('post-password').value.trim();
             const dlPasswordVal = document.getElementById('post-dl-password').value.trim();
+
+            // ★ 상단 고정 여부 값 가져오기
+            const isNoticeVal = document.getElementById('chk-is-notice').checked;
 
             const pd = {
                 title: ti,
@@ -917,7 +927,8 @@
                 thumbnail_url: tu,
                 image_url: du,
                 password: passwordVal,
-                download_password: dlPasswordVal // ★ 데이터베이스에 저장
+                download_password: dlPasswordVal,
+                is_notice: isNoticeVal // ★ 데이터베이스에 저장
             };
             if (!editingId) pd.is_visible = true;
 
@@ -946,7 +957,10 @@
 
                 const postPassword = item.password || item.video_url || '없음';
 
-                list.innerHTML += `<div class="post-manage-card"><img src="${thumb}" class="pm-thumb" alt="thumbnail"><div class="pm-body"><div style="margin-bottom:5px;">${badge} <span class="pm-cat-badge">${catName}</span></div><div class="pm-title" onclick='editPost(${JSON.stringify(item).replace(/'/g, "&#39;")})'>${item.title}</div><div class="pm-info">순서: ${item.order_num}</div><div style="font-size:0.85rem; color:#d9534f; font-weight:bold; margin-top:20px;">🔑 비밀번호: ${postPassword}</div></div><div class="pm-actions">${visBtnStr}<button onclick='editPost(${JSON.stringify(item).replace(/'/g, "&#39;")})' class="pm-btn">수정</button><button onclick='deletePost(${item.id})' class="pm-btn" style="background:#ff6b6b; color:white; border:none;">삭제</button></div></div>`;
+                // ★ 상단 고정 안내 배지 추가
+                const pinBadge = (item.is_notice === true) ? `<span class="badge" style="background:#e74c3c; color:white; margin-right:5px;">📌고정</span> ` : '';
+
+                list.innerHTML += `<div class="post-manage-card"><img src="${thumb}" class="pm-thumb" alt="thumbnail"><div class="pm-body"><div style="margin-bottom:5px;">${badge} <span class="pm-cat-badge">${catName}</span></div><div class="pm-title" onclick='editPost(${JSON.stringify(item).replace(/'/g, "&#39;")})'>${pinBadge}${item.title}</div><div class="pm-info">순서: ${item.order_num}</div><div style="font-size:0.85rem; color:#d9534f; font-weight:bold; margin-top:20px;">🔑 비밀번호: ${postPassword}</div></div><div class="pm-actions">${visBtnStr}<button onclick='editPost(${JSON.stringify(item).replace(/'/g, "&#39;")})' class="pm-btn">수정</button><button onclick='deletePost(${item.id})' class="pm-btn" style="background:#ff6b6b; color:white; border:none;">삭제</button></div></div>`;
             });
             renderPagination(count, currentPage);
         }
@@ -963,9 +977,10 @@
             document.getElementById('custom-cat-text').style.color = '#333';
 
             document.getElementById('post-password').value = i.password || i.video_url || '';
-
-            // ★ 수정 시 다운로드 비밀번호 불러오기
             document.getElementById('post-dl-password').value = i.download_password || '';
+
+            // ★ 수정 시 상단 고정 체크박스 상태 불러오기
+            document.getElementById('chk-is-notice').checked = (i.is_notice === true);
 
             document.getElementById('post-title').value = i.title; quill.root.innerHTML = i.content || ""; document.getElementById('post-link').value = i.link_url || ""; document.getElementById('post-order').value = i.order_num || 0;
             keptFiles = [];
@@ -982,7 +997,8 @@
 
         window.cancelEdit = function () {
             editingId = null; croppedThumbnailBlob = null; document.getElementById('post-title').value = ""; document.getElementById('post-password').value = "";
-            document.getElementById('post-dl-password').value = ""; // ★ 수정 취소 시 초기화
+            document.getElementById('post-dl-password').value = "";
+            document.getElementById('chk-is-notice').checked = false; // ★ 체크박스 초기화
             quill.root.innerHTML = ""; document.querySelectorAll('input[type="file"]').forEach(i => i.value = ""); document.getElementById('chk-intro').checked = true; document.getElementById('chk-order').checked = false; toggleEditorState(); document.getElementById('form-title').innerText = "📝 게시글 작성/수정"; document.getElementById('btn-submit').innerText = "업로드 저장"; document.getElementById('btn-cancel-edit').style.display = "none";
             document.getElementById('post-category').value = '';
             document.getElementById('custom-cat-text').innerText = '카테고리를 선택하세요';

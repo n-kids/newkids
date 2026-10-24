@@ -6,167 +6,8 @@
     <title>뉴키즈 - 글쓰기</title>
 
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <!-- 공통 스타일 시트 로드 -->
     <link rel="stylesheet" href="style.css">
-
-    <style>
-        body {
-            background-color: #f4f7fa !important;
-            margin: 0;
-            padding: 0;
-        }
-
-        /* ★ 글쓰기 폼 가로 폭 강제 확장 및 고정 (view.html과 완벽하게 동일한 900px 기준) ★ */
-        .write-container {
-            width: 100% !important;
-            max-width: 900px !important;
-            margin: 50px auto !important;
-            padding: 0 20px !important;
-            box-sizing: border-box !important;
-            display: block !important;
-        }
-
-        .write-card {
-            width: 100% !important;
-            background: #fff !important;
-            border: 1px solid #eaeaea !important;
-            border-radius: 12px !important;
-            padding: 50px 40px !important;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.03) !important;
-            box-sizing: border-box !important;
-            display: block !important;
-        }
-
-        .write-title-main {
-            text-align: center;
-            color: #1a3c6e;
-            font-size: 2.2rem;
-            font-weight: 800;
-            margin-bottom: 30px;
-        }
-
-        .form-label {
-            display: block;
-            color: #1a3c6e;
-            font-weight: 800;
-            margin-bottom: 8px;
-            font-size: 0.95rem;
-        }
-
-        .form-input {
-            width: 100%;
-            padding: 12px 15px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 1rem;
-            color: #333;
-            box-sizing: border-box;
-            transition: border-color 0.3s;
-        }
-
-            .form-input:focus {
-                outline: none;
-                border-color: #1a3c6e;
-            }
-
-            .form-input::placeholder {
-                color: #aaa;
-            }
-
-        .form-row {
-            display: flex;
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-
-        .form-col {
-            flex: 1;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .secret-wrap {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 10px;
-        }
-
-            .secret-wrap input[type="checkbox"] {
-                width: 16px;
-                height: 16px;
-                accent-color: #1a3c6e;
-                cursor: pointer;
-            }
-
-            .secret-wrap label {
-                font-size: 0.9rem;
-                color: #555;
-                cursor: pointer;
-                font-weight: bold;
-            }
-
-        .btn-wrap {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 40px;
-        }
-
-        .btn-submit {
-            background-color: #1a3c6e;
-            color: #fff;
-            border: none;
-            padding: 12px 40px;
-            font-size: 1.05rem;
-            font-weight: bold;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .btn-cancel {
-            background-color: #999;
-            color: #fff;
-            border: none;
-            padding: 12px 30px;
-            font-size: 1.05rem;
-            font-weight: bold;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .btn-submit:hover {
-            background-color: #132b4f;
-        }
-
-        .btn-cancel:hover {
-            background-color: #777;
-        }
-
-        @media screen and (max-width: 768px) {
-            .write-container {
-                margin: 20px auto !important;
-                padding: 0 15px !important;
-            }
-
-            .write-card {
-                padding: 30px 20px !important;
-            }
-
-            .form-row {
-                flex-direction: column;
-                gap: 20px;
-            }
-
-            .write-title-main {
-                font-size: 1.6rem;
-                margin-bottom: 20px;
-            }
-        }
-    </style>
 </head>
 <body>
     <header></header>
@@ -343,10 +184,10 @@
                     display = rawFilename.includes('___') ? rawFilename.split('___').pop() : rawFilename;
                 }
                 list.innerHTML += `
-                        <div style="display:flex; justify-content:space-between; align-items:center; background:#f0f7ff; padding:8px 12px; border-radius:6px; border:1px solid #cce5ff;">
-                            <span style="font-size:0.9rem; color:#1a3c6e;">📎 ${display}</span>
-                            <button type="button" onclick="removeExistingFile(${idx})" style="background:#ff6b6b; color:white; border:none; border-radius:4px; padding:4px 10px; cursor:pointer; font-size:0.8rem;">삭제</button>
-                        </div>`;
+                            <div style="display:flex; justify-content:space-between; align-items:center; background:#f0f7ff; padding:8px 12px; border-radius:6px; border:1px solid #cce5ff;">
+                                <span style="font-size:0.9rem; color:#1a3c6e;">📎 ${display}</span>
+                                <button type="button" onclick="removeExistingFile(${idx})" style="background:#ff6b6b; color:white; border:none; border-radius:4px; padding:4px 10px; cursor:pointer; font-size:0.8rem;">삭제</button>
+                            </div>`;
             });
         }
         window.removeExistingFile = function (idx) { keptFiles.splice(idx, 1); renderExistingFiles(); };

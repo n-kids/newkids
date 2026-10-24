@@ -4,107 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>뉴키즈 - 상세 보기</title>
+    <!-- 공통 스타일 시트 로드 -->
     <link rel="stylesheet" href="style.css">
     <style>
         body {
             background-color: #f4f7fa !important;
             margin: 0;
             padding: 0;
-        }
-
-        .view-box-wrapper {
-            width: 100% !important;
-            max-width: 900px !important;
-            margin: 100px auto 50px !important;
-            padding: 0 20px !important;
-            box-sizing: border-box !important;
-            display: block !important;
-        }
-
-        .view-box-custom {
-            width: 100% !important;
-            background: #fff !important;
-            padding: 50px 40px !important;
-            border-radius: 12px !important;
-            border: 1px solid #eaeaea !important;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.03) !important;
-            box-sizing: border-box !important;
-            display: block !important;
-        }
-
-        .view-header {
-            border-bottom: 2px solid #1a3c6e;
-            padding-bottom: 20px;
-            margin-bottom: 30px;
-            text-align: center;
-            width: 100%;
-            display: block;
-        }
-
-        .view-title {
-            font-size: 2.2rem;
-            color: #1a3c6e;
-            margin-bottom: 15px;
-            font-weight: 800;
-            word-break: keep-all;
-        }
-
-        .view-meta {
-            color: #666;
-            font-size: 0.95rem;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-
-        .view-content {
-            line-height: 1.8;
-            color: #333;
-            font-size: 1.1rem;
-            min-height: 300px;
-            word-break: break-all;
-            width: 100%;
-            display: block;
-        }
-
-            .view-content img {
-                max-width: 100%;
-                height: auto;
-                border-radius: 8px;
-                margin: 15px 0;
-            }
-
-        .form-input {
-            width: 100%;
-            padding: 12px 15px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 1rem;
-            color: #333;
-            box-sizing: border-box;
-            transition: border-color 0.3s;
-        }
-
-            .form-input:focus {
-                outline: none;
-                border-color: #1a3c6e;
-            }
-
-        @media screen and (max-width: 768px) {
-            .view-box-wrapper {
-                margin: 100px auto 20px !important;
-                padding: 0 15px !important;
-            }
-
-            .view-box-custom {
-                padding: 30px 20px !important;
-            }
-
-            .view-title {
-                font-size: 1.6rem;
-            }
         }
     </style>
 </head>
@@ -132,10 +38,12 @@
                         <span id="v-author">작성자: -</span>
                         <span id="v-date">작성일: -</span>
                         <span id="v-download-count" style="color:#f4a261; font-weight:bold;">📥 0회</span>
-                        <!-- ★ 원클릭 링크 복사(공유) 버튼 추가 ★ -->
                         <button onclick="copyCurrentLink()" style="background:#eef6ff; border:1px solid #cce5ff; color:#1a3c6e; padding:5px 15px; border-radius:20px; font-size:0.85rem; font-weight:bold; cursor:pointer; transition:0.2s;" onmouseover="this.style.background='#d0e4ff'" onmouseout="this.style.background='#eef6ff'">🔗 공유하기</button>
                     </div>
                 </div>
+
+                <!-- ★ 유튜브 영상이 재생될 컨테이너 추가 ★ -->
+                <div id="youtube-player-area" style="display:none; margin-bottom: 30px;"></div>
 
                 <div class="view-content" id="v-content"></div>
 
@@ -148,9 +56,7 @@
                     <h4 style="color: #1a3c6e; margin-bottom: 15px; font-size:1.1rem; display:flex; align-items:center; gap:8px;">
                         <span>💬</span> 관리자 답변
                     </h4>
-
                     <div id="admin-reply-content" style="line-height: 1.6; color: #333; font-size: 0.95rem;"></div>
-
                     <div id="admin-reply-form" style="display:none; margin-top: 20px; border-top: 1px dashed #b8daff; padding-top: 20px;">
                         <textarea id="new-reply-input" class="form-input" style="height:80px; resize:vertical; margin-bottom:10px; width:100%; padding:10px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box;" placeholder="관리자 답변을 입력하세요..."></textarea>
                         <div style="text-align:right;">
@@ -164,7 +70,6 @@
                     <button onclick="deleteCurrentPost()" class="btn-action" style="background:#ff6b6b; padding:10px 25px; font-size:0.95rem;">삭제</button>
                 </div>
 
-                <!-- ★ 연관 추천 자료 영역 추가 ★ -->
                 <div id="related-posts-area" style="display:none; margin-top: 40px; padding-top: 30px; border-top: 1px solid #ddd;"></div>
 
             </div>
@@ -246,7 +151,6 @@
             }
         }
 
-        // ★ 주소 복사 (공유 기능)
         function copyCurrentLink() {
             const url = window.location.href;
             if (navigator.clipboard && window.isSecureContext) {
@@ -256,7 +160,6 @@
                     alert("복사에 실패했습니다. 주소창의 URL을 직접 복사해주세요.");
                 });
             } else {
-                // 호환성 대체 방법
                 let textArea = document.createElement("textarea");
                 textArea.value = url;
                 textArea.style.position = "fixed";
@@ -278,14 +181,13 @@
             const { data, error } = await window.sb.from('total_posts').select('*').eq('id', id).single();
 
             if (error || !data) {
-                document.getElementById('v-content').innerHTML = "<div style='text-align:center; padding:50px;'>게시글을 찾을 수 없습니다.</div>";
+                document.getElementById('v-content').innerHTML = "<div style='text-align:center; padding:50px; data-not-found'>게시글을 찾을 수 없습니다.</div>";
                 document.getElementById('main-content-wrap').style.display = 'block';
                 return;
             }
 
             postDataCache = data;
-
-            postDataCache.actualPassword = data.password || data.video_url || '';
+            postDataCache.actualPassword = data.password || '';
             postDataCache.dlPassword = data.download_password || '';
 
             document.getElementById('v-title').innerText = data.title;
@@ -379,6 +281,24 @@
 
             document.getElementById('v-content').innerHTML = finalContent;
 
+            // ★ 유튜브 영상 처리: video_url에 값이 있거나 통합 포맷(ORDER_ALL|유튜브URL)일 때 상단에 플레이어 표시
+            const playerArea = document.getElementById('youtube-player-area');
+            let rawVideoUrl = postDataCache.video_url || '';
+            if (rawVideoUrl.startsWith('ORDER_ALL|')) {
+                rawVideoUrl = rawVideoUrl.replace('ORDER_ALL|', '');
+            }
+
+            const ytId = window.getYoutubeId(rawVideoUrl);
+            if (ytId) {
+                playerArea.innerHTML = `<iframe src="https://www.youtube.com/embed/${ytId}" allowfullscreen></iframe>`;
+                playerArea.style.display = 'block';
+            } else if (rawVideoUrl.startsWith('http')) {
+                playerArea.innerHTML = `<iframe src="${rawVideoUrl}" allowfullscreen></iframe>`;
+                playerArea.style.display = 'block';
+            } else {
+                playerArea.style.display = 'none';
+            }
+
             if (postDataCache.image_url && postDataCache.image_url.trim() !== '' && postDataCache.image_url !== 'null') {
                 const files = postDataCache.image_url.split('||').map(u => u.trim()).filter(u => u);
                 if (files.length > 0) {
@@ -411,14 +331,14 @@
                         const btnShadow = isLocked ? 'box-shadow: 0 2px 4px rgba(230, 126, 34, 0.2);' : 'box-shadow: 0 2px 4px rgba(26, 60, 110, 0.2);';
 
                         fileHtml += `
-                                    <div onclick="attemptDownload('${safeUrl}', '${safeName}')" style="display:flex; justify-content:space-between; align-items:center; background:#f0f7ff; padding:15px; border-radius:10px; border:1px solid #cce5ff; cursor:pointer; transition: background 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
-                                        <div style="display:flex; align-items:center; gap:12px; flex: 1; min-width: 0;">
-                                            <span style="font-size:1.6rem;">${fileIcon}</span>
-                                            <span style="font-size:1.05rem; color:#1a3c6e; font-weight:bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${fileName}</span>
-                                        </div>
-                                        <span style="font-size:0.85rem; color:#fff; padding:6px 14px; border-radius:6px; margin-left:15px; white-space:nowrap; ${btnBg} ${btnShadow}">${btnLabel}</span>
+                                <div onclick="attemptDownload('${safeUrl}', '${safeName}')" style="display:flex; justify-content:space-between; align-items:center; background:#f0f7ff; padding:15px; border-radius:10px; border:1px solid #cce5ff; cursor:pointer; transition: background 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
+                                    <div style="display:flex; align-items:center; gap:12px; flex: 1; min-width: 0;">
+                                        <span style="font-size:1.6rem;">${fileIcon}</span>
+                                        <span style="font-size:1.05rem; color:#1a3c6e; font-weight:bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${fileName}</span>
                                     </div>
-                                `;
+                                    <span style="font-size:0.85rem; color:#fff; padding:6px 14px; border-radius:6px; margin-left:15px; white-space:nowrap; ${btnBg} ${btnShadow}">${btnLabel}</span>
+                                </div>
+                            `;
                     });
 
                     downloadList.innerHTML = fileHtml;
@@ -434,30 +354,26 @@
             }
 
             loadAdminReplies();
-
-            // ★ 본문 렌더링 완료 후 연관 해시태그 추천 자료 로드
             loadRelatedPosts(postDataCache.title, postDataCache.category, currentPostId);
         }
 
-        // ★ 해시태그 분석 및 연관 추천 자료 로드 ★
         async function loadRelatedPosts(title, category, currentId) {
             const match = title.match(/\[(.*?)\]/);
-            if (!match || !match[1]) return; // 태그가 없으면 중단
+            if (!match || !match[1]) return;
 
             const parts = match[1].split(/[,-]/).map(p => p.trim()).filter(p => p);
             if (parts.length === 0) return;
 
-            // 여러 태그 중 하나라도 포함된 게시글을 찾는 쿼리 생성
             const orQuery = parts.map(tag => `title.ilike.%${tag}%`).join(',');
 
             const { data, error } = await window.sb.from('total_posts')
                 .select('id, title, created_at, is_secret')
                 .eq('category', category)
-                .neq('id', currentId)         // 현재 보고있는 글 제외
+                .neq('id', currentId)
                 .neq('is_visible', false)
                 .or(orQuery)
                 .order('created_at', { ascending: false })
-                .limit(5);                    // 최대 5개까지만 노출
+                .limit(5);
 
             if (error || !data || data.length === 0) return;
 
@@ -561,7 +477,6 @@
                 let html = '';
                 data.forEach((c, idx) => {
                     const dateStr = new Date(c.created_at).toLocaleString();
-
                     let safeContent = c.content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
                     safeContent = safeContent.replace(/\n/g, '<br>');
 
@@ -581,12 +496,7 @@
             } else {
                 replyContent.innerHTML = '';
                 replyContent.style.display = 'none';
-
-                if (isAdminLoggedIn) {
-                    replyArea.style.display = 'block';
-                } else {
-                    replyArea.style.display = 'none';
-                }
+                replyArea.style.display = isAdminLoggedIn ? 'block' : 'none';
             }
         }
 
@@ -621,15 +531,11 @@
         }
 
         async function openEditPost() {
-            if (postDataCache.category === 'notice') {
-                return alert("공지글은 수정할 수 없습니다.");
-            }
-
+            if (postDataCache.category === 'notice') return alert("공지글은 수정할 수 없습니다.");
             if (isAdminLoggedIn) {
                 location.href = `write.html?edit=${currentPostId}#${postDataCache.category}`;
                 return;
             }
-
             const isSecretPost = (postDataCache.is_secret === true || String(postDataCache.is_secret) === 'true');
             if (isSecretPost) {
                 location.href = `write.html?edit=${currentPostId}#${postDataCache.category}`;
@@ -639,20 +545,14 @@
         }
 
         async function deleteCurrentPost() {
-            if (postDataCache.category === 'notice') {
-                return alert("공지글은 삭제할 수 없습니다.");
-            }
-
+            if (postDataCache.category === 'notice') return alert("공지글은 삭제할 수 없습니다.");
             if (isAdminLoggedIn) {
                 if (confirm("정말 이 게시글을 영구 삭제하시겠습니까?")) executeDeletePost();
                 return;
             }
-
             const isSecretPost = (postDataCache.is_secret === true || String(postDataCache.is_secret) === 'true');
             if (isSecretPost) {
-                if (confirm("정말 이 게시글을 영구 삭제하시겠습니까?")) {
-                    executeDeletePost();
-                }
+                if (confirm("정말 이 게시글을 영구 삭제하시겠습니까?")) executeDeletePost();
             } else {
                 showLockBox("🗑️ 글 삭제 본인 인증", "본인 확인을 위해 글 작성 시 설정한 비밀번호를 입력해주세요.", "delete");
             }

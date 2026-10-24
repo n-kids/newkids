@@ -12,7 +12,7 @@
             margin: 0;
             padding: 0;
         }
-        /* ★ 타이틀 헤더와 본문 사이의 여백을 강제로 좁힘 ★ */
+
         .view-header {
             border-bottom: 2px solid #1a3c6e !important;
             padding-bottom: 10px !important;
@@ -96,6 +96,17 @@
                 <button onclick="verifyDownloadPassword()" class="btn-action" style="flex:1;">확인</button>
                 <button onclick="closeDownloadModal()" class="btn-action" style="background:#666; flex:1;">취소</button>
             </div>
+        </div>
+    </div>
+
+    <!-- ★ 파일 미리보기 팝업 모달창 추가 ★ -->
+    <div id="file-preview-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:9999; justify-content:center; align-items:center;">
+        <div style="background:#fff; padding:20px; border-radius:12px; width:90%; max-width:800px; height:80vh; display:flex; flex-direction:column; box-shadow:0 5px 15px rgba(0,0,0,0.3);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;">
+                <h3 id="preview-file-title" style="color:#1a3c6e; font-size:1.2rem; margin:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">파일 미리보기</h3>
+                <button onclick="closeFilePreview()" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:#666;">&times;</button>
+            </div>
+            <div id="preview-body" style="flex:1; display:flex; justify-content:center; align-items:center; overflow:auto; background:#f9f9f9; border-radius:8px; border:1px solid #eee;"></div>
         </div>
     </div>
 
@@ -283,10 +294,10 @@
 
             let finalContent = postDataCache.content || '';
 
-            // ★ Quill 에디터가 남긴 불필요한 빈 문단(<p><br></p> 또는 <p></p>)을 깔끔하게 제거
+            // 빈 문단 태그 제거
             finalContent = finalContent.replace(/<p>(<br\s*\/?>)?<\/p>/g, '');
 
-            // 투표 폼 아이프레임 생성 (상단 마진을 0으로 붙임)
+            // 투표 폼 아이프레임 생성
             finalContent = finalContent.replace(/\[투표:([^\]]+)\]/g, '<iframe id="form-iframe-$1" src="form.html?id=$1" width="100%" frameborder="0" scrolling="no" style="border:none; margin:0; padding:0; overflow:hidden; min-height:100px; transition:height 0.2s ease;"></iframe>');
 
             const playerArea = document.getElementById('youtube-player-area');

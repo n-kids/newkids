@@ -1,10 +1,16 @@
 ﻿@charset "utf-8";
 
 /* =========================================
-   1. 기본 레이아웃 & 사이드바
+   관리자 페이지 전용 스타일 (admin.css)
+   시스템 다크모드 설정과 무관하게 항상 일반(라이트) 모드 유지
    ========================================= */
+:root {
+    color-scheme: light;
+}
+
 body {
-    background-color: #f0f2f5;
+    background-color: #f4f7fa !important;
+    color: #333 !important;
     margin: 0;
     padding: 0;
     font-family: 'Pretendard', sans-serif;
@@ -351,7 +357,7 @@ body {
     }
 
 /* =========================================
-   5. 통합 관리자 UI 커스텀 스타일 (옮겨진 스타일)
+   5. 통합 관리자 UI 커스텀 스타일
    ========================================= */
 .color-picker-group {
     display: flex;
@@ -389,7 +395,7 @@ body {
     background: #fff;
     border: 1px solid #ccc;
     border-radius: 0 0 6px 6px;
-    transition: 0.3s background-color; /* 드래그 오버 전환 효과 */
+    transition: 0.3s background-color;
 }
 
     #editor-container.drag-over {
@@ -546,7 +552,7 @@ body {
 }
 
 /* =========================================
-   7. 이미지 편집 모달 스타일 (통합됨)
+   7. 이미지 편집 모달 스타일
    ========================================= */
 .modal-overlay {
     position: fixed;
@@ -711,7 +717,6 @@ body {
         transform: translate(-50%, -50%) scale(1.05);
     }
 
-/* 팝업 리스트 스타일 (설정 페이지) */
 .popup-list-item {
     display: flex;
     gap: 15px;
@@ -734,4 +739,305 @@ body {
 
 .popup-info {
     flex: 1;
+}
+
+/* =========================================
+   8. 아코디언 및 관리자 커스텀 스타일
+   ========================================= */
+.accordion-group {
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.accordion-header {
+    display: flex;
+    background: #f0f7ff;
+    border-bottom: 1px solid #e0efff;
+}
+
+.drag-group-handle {
+    padding: 18px 15px;
+    cursor: grab;
+    color: #888;
+    border-right: 1px solid #e0efff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+    .drag-group-handle:hover {
+        color: #1a3c6e;
+        background: #e0efff;
+    }
+
+.accordion-title-area {
+    flex: 1;
+    padding: 18px 20px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: bold;
+    color: #1a3c6e;
+    font-size: 1.15rem;
+    transition: background 0.3s;
+}
+
+    .accordion-title-area:hover {
+        background: #e0efff;
+    }
+
+.accordion-body {
+    padding: 15px;
+    display: none;
+    background: #fff;
+    border-top: 1px solid #eee;
+}
+
+    .accordion-body.active {
+        display: block;
+    }
+
+.sortable-group {
+    min-height: 50px;
+}
+
+.custom-select-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background: #fff;
+    border: 1px solid #1a3c6e;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+    z-index: 999;
+    max-height: 350px;
+    overflow-y: auto;
+    margin-top: 5px;
+}
+
+.cs-group-header {
+    padding: 12px 15px;
+    background: #f9fbfd;
+    font-weight: bold;
+    color: #1a3c6e;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid #eee;
+    transition: background 0.2s;
+}
+
+    .cs-group-header:hover {
+        background: #eef6ff;
+    }
+
+.cs-group-body {
+    display: none;
+    background: #fff;
+}
+
+    .cs-group-body.active {
+        display: block;
+    }
+
+.cs-item {
+    padding: 10px 15px 10px 30px;
+    cursor: pointer;
+    border-bottom: 1px solid #f9f9f9;
+    color: #444;
+    font-size: 0.95rem;
+    transition: 0.2s;
+}
+
+    .cs-item:hover {
+        background: #e0efff;
+        color: #1a3c6e;
+        font-weight: bold;
+        padding-left: 35px;
+    }
+
+.cm-mob-label {
+    display: none;
+}
+
+.cm-layout {
+    display: grid;
+    align-items: center;
+    border-bottom: 1px solid #eee;
+    padding: 10px;
+}
+
+.cm-cell-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.cm-cell-input input {
+    width: 100%;
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+@media screen and (min-width: 769px) {
+    .mobile-no-scroll {
+        overflow-x: auto;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .cm-layout.cm-header {
+        display: none !important;
+    }
+
+    .cm-layout {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        min-width: 100% !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        background: #fff;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        padding: 15px !important;
+        gap: 10px 0;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .cm-row > div {
+        display: flex !important;
+        align-items: center;
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .cm-mob-label {
+        display: block !important;
+        width: 70px;
+        font-size: 0.85rem;
+        color: #888;
+        font-weight: bold;
+        flex-shrink: 0;
+    }
+
+    .cm-row > div:nth-child(1) {
+        width: 30%;
+    }
+
+    .cm-row > div:nth-child(2) {
+        width: 70%;
+        font-size: 1.1rem !important;
+        justify-content: flex-end;
+        color: #1a3c6e;
+        font-weight: 800 !important;
+    }
+
+        .cm-row > div:nth-child(2) .cm-mob-label {
+            display: none !important;
+        }
+
+    .cm-row > div:nth-child(3), .cm-row > div:nth-child(4), .cm-row > div:nth-child(10) {
+        width: 100%;
+        margin-top: 5px;
+    }
+
+    .cm-cell-input input {
+        flex: 1;
+        padding: 8px !important;
+        border: 1px solid #ccc !important;
+        border-radius: 4px !important;
+        font-size: 0.95rem;
+    }
+
+    .cm-row > div:nth-child(5), .cm-row > div:nth-child(6), .cm-row > div:nth-child(7), .cm-row > div:nth-child(8), .cm-row > div:nth-child(9) {
+        flex-direction: column !important;
+        width: 20%;
+        justify-content: center !important;
+        align-items: center !important;
+        margin-top: 10px;
+        background: #f4f6f9;
+        padding: 10px 0 !important;
+    }
+
+    .cm-row > div:nth-child(5) {
+        border-top-left-radius: 8px;
+        border-bottom-left-radius: 8px;
+    }
+
+    .cm-row > div:nth-child(9) {
+        border-top-right-radius: 8px;
+        border-bottom-right-radius: 8px;
+    }
+
+        .cm-row > div:nth-child(5) .cm-mob-label, .cm-row > div:nth-child(6) .cm-mob-label, .cm-row > div:nth-child(7) .cm-mob-label, .cm-row > div:nth-child(8) .cm-mob-label, .cm-row > div:nth-child(9) .cm-mob-label {
+            width: auto;
+            text-align: center;
+            margin-bottom: 5px;
+            font-size: 0.7rem;
+            color: #666;
+        }
+
+    .cm-row input[type="color"] {
+        width: 35px !important;
+        height: 35px !important;
+        border: 1px solid #ddd !important;
+        border-radius: 4px;
+        padding: 0 !important;
+    }
+
+    .cm-row input[type="number"] {
+        width: 90% !important;
+        text-align: center;
+        padding: 6px 2px !important;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 0.85rem;
+    }
+
+    .cm-row > div:nth-child(11) {
+        width: 40%;
+        margin-top: 15px;
+        flex-direction: column !important;
+        align-items: center !important;
+    }
+
+        .cm-row > div:nth-child(11) .cm-mob-label {
+            width: auto;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
+    .cm-row > div:nth-child(12) {
+        width: 30%;
+        margin-top: 15px;
+        flex-direction: column !important;
+        align-items: center !important;
+    }
+
+        .cm-row > div:nth-child(12) .cm-mob-label {
+            width: auto;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
+    .cm-row > div:nth-child(13) {
+        width: 30%;
+        margin-top: 15px;
+        flex-direction: column !important;
+        align-items: center !important;
+    }
+
+        .cm-row > div:nth-child(13) .cm-mob-label {
+            width: auto;
+            text-align: center;
+            margin-bottom: 5px;
+        }
 }

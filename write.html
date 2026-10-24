@@ -48,8 +48,9 @@
 
             <div class="form-group" style="padding-top: 15px; border-top: 1px dashed #eee;">
                 <label class="form-label" style="color: #666; font-size: 0.9rem;">📎 첨부파일 (선택사항)</label>
-                <input type="file" id="write-file" class="form-input" accept="*/*" multiple style="padding: 8px; font-size: 0.9rem;">
-                <div id="existing-files-list" style="margin-top:10px; display:flex; flex-direction:column; gap:5px;"></div>
+                <input type="file" id="write-file" class="form-input" accept="*/*" multiple style="padding: 8px; font-size: 0.9rem;" onchange="handleNewFiles(this)">
+                <!-- 기존 파일 및 새로 추가된 파일을 통합 관리하는 UI 영역 -->
+                <div id="existing-files-list" style="margin-top:10px; display:flex; flex-direction:column; gap:8px;"></div>
             </div>
 
             <div class="btn-wrap">
@@ -75,7 +76,7 @@
     <script>
         let quill;
         let editId = null;
-        let keptFiles = [];
+        let fileItems = []; // 통합 파일 배열 (기존 서버 파일 문자열 객체 또는 새로 선택된 File 객체)
 
         document.addEventListener("DOMContentLoaded", async function () {
             if (typeof Quill !== 'undefined') {
@@ -167,30 +168,77 @@
             quill.root.innerHTML = data.content || '';
 
             if (data.image_url && data.image_url !== 'null') {
-                keptFiles = data.image_url.split('||').map(u => u.trim()).filter(u => u);
-                renderExistingFiles();
+                const urls = data.image_url.split('||').map(u => u.trim()).filter(u => u);
+                // 기존 서버 파일들은 객체 형태로 fileItems에 적재
+                fileItems = urls.map(item => ({ type: 'server', value: item }));
+                renderFileList();
             }
         }
 
-        function renderExistingFiles() {
+        // 새 파일 선택 시 기존 목록에 추가
+        function handleNewFiles(input) {
+            if (input.files && input.files.length > 0) {
+                for (let i = 0; i < input.files.length; i++) {
+                    fileItems.push({ type: 'new', value: input.files[i] });
+                }
+                input.value = ''; // 동일 파일 재선택 가능하도록 초기화
+                renderFileList();
+            }
+        }
+
+        // 파일 목록 UI 렌더링 (순서 변경 버튼 포함)
+        function renderFileList() {
             const list = document.getElementById('existing-files-list');
             list.innerHTML = '';
-            keptFiles.forEach((item, idx) => {
-                let display = item;
-                if (item.includes('@@')) { display = item.split('@@')[1]; }
-                else {
-                    let rawFilename = item.split('/').pop().split('?')[0];
-                    try { rawFilename = decodeURIComponent(rawFilename); } catch (e) { }
-                    display = rawFilename.includes('___') ? rawFilename.split('___').pop() : rawFilename;
+
+            if (fileItems.length === 0) {
+                list.innerHTML = '<span style="color:#888; font-size:0.85rem;">첨부된 파일이 없습니다.</span>';
+                return;
+            }
+
+            fileItems.forEach((fileObj, idx) => {
+                let displayName = '';
+                if (fileObj.type === 'server') {
+                    let item = fileObj.value;
+                    if (item.includes('@@')) { displayName = item.split('@@')[1]; }
+                    else {
+                        let rawFilename = item.split('/').pop().split('?')[0];
+                        try { rawFilename = decodeURIComponent(rawFilename); } catch (e) { }
+                        displayName = rawFilename.includes('___') ? rawFilename.split('___').pop() : rawFilename;
+                    }
+                } else {
+                    displayName = fileObj.value.name;
                 }
+
+                const isFirst = idx === 0;
+                const isLast = idx === fileItems.length - 1;
+
                 list.innerHTML += `
-                            <div style="display:flex; justify-content:space-between; align-items:center; background:#f0f7ff; padding:8px 12px; border-radius:6px; border:1px solid #cce5ff;">
-                                <span style="font-size:0.9rem; color:#1a3c6e;">📎 ${display}</span>
-                                <button type="button" onclick="removeExistingFile(${idx})" style="background:#ff6b6b; color:white; border:none; border-radius:4px; padding:4px 10px; cursor:pointer; font-size:0.8rem;">삭제</button>
-                            </div>`;
+                        <div style="display:flex; justify-content:space-between; align-items:center; background:#f0f7ff; padding:8px 12px; border-radius:6px; border:1px solid #cce5ff;">
+                            <span style="font-size:0.9rem; color:#1a3c6e; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; margin-right:10px;">📎 ${displayName}</span>
+                            <div style="display:flex; gap:4px; align-items:center; flex-shrink:0;">
+                                <button type="button" onclick="moveFile(${idx}, -1)" ${isFirst ? 'disabled style="opacity:0.3; cursor:not-allowed;"' : ''} style="background:#1a3c6e; color:white; border:none; border-radius:4px; padding:3px 8px; cursor:pointer; font-size:0.75rem;">▲ 위로</button>
+                                <button type="button" onclick="moveFile(${idx}, 1)" ${isLast ? 'disabled style="opacity:0.3; cursor:not-allowed;"' : ''} style="background:#1a3c6e; color:white; border:none; border-radius:4px; padding:3px 8px; cursor:pointer; font-size:0.75rem;">▼ 아래로</button>
+                                <button type="button" onclick="removeFile(${idx})" style="background:#ff6b6b; color:white; border:none; border-radius:4px; padding:3px 8px; cursor:pointer; font-size:0.75rem; margin-left:4px;">삭제</button>
+                            </div>
+                        </div>`;
             });
         }
-        window.removeExistingFile = function (idx) { keptFiles.splice(idx, 1); renderExistingFiles(); };
+
+        // 순서 변경 함수 (index 위치의 파일을 direction(-1 또는 1)만큼 이동)
+        window.moveFile = function (idx, direction) {
+            const targetIdx = idx + direction;
+            if (targetIdx < 0 || targetIdx >= fileItems.length) return;
+            const temp = fileItems[idx];
+            fileItems[idx] = fileItems[targetIdx];
+            fileItems[targetIdx] = temp;
+            renderFileList();
+        }
+
+        window.removeFile = function (idx) {
+            fileItems.splice(idx, 1);
+            renderFileList();
+        };
 
         function getFirstImageFromContent(html) {
             const d = document.createElement('div');
@@ -211,22 +259,28 @@
 
             showLoading(true);
 
-            const fileInput = document.getElementById('write-file');
-            let newUploadedUrls = [];
-            if (fileInput.files.length > 0) {
-                for (let i = 0; i < fileInput.files.length; i++) {
-                    const df = fileInput.files[i];
+            let finalFileUrls = [];
+
+            // fileItems 배열 순서대로 서버 업로드 및 문자열 구성
+            for (let i = 0; i < fileItems.length; i++) {
+                const item = fileItems[i];
+                if (item.type === 'server') {
+                    finalFileUrls.push(item.value);
+                } else {
+                    const df = item.value;
                     const ext = df.name.split('.').pop();
                     const safeKey = `d_${Date.now()}_${i}.${ext}`;
                     const { data, error } = await window.sb.storage.from('images').upload(safeKey, df);
-                    if (error) { showLoading(false); return alert("첨부파일 업로드 실패: " + error.message); }
+                    if (error) {
+                        showLoading(false);
+                        return alert("첨부파일 업로드 실패: " + error.message);
+                    }
                     const fileUrl = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl;
-                    newUploadedUrls.push(fileUrl + '@@' + df.name);
+                    finalFileUrls.push(fileUrl + '@@' + df.name);
                 }
             }
-            const finalFileUrls = [...keptFiles, ...newUploadedUrls];
-            let du = finalFileUrls.length > 0 ? finalFileUrls.join('||') : null;
 
+            let du = finalFileUrls.length > 0 ? finalFileUrls.join('||') : null;
             const thumbUrl = getFirstImageFromContent(quill.root.innerHTML) || null;
 
             const pd = {

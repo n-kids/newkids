@@ -123,8 +123,8 @@
 
                     <div class="form-group" style="margin-top:20px; background-color: #fcfcfc; padding: 15px; border: 1px dashed #ccc; border-radius: 8px;">
                         <label class="form-label">상세 미디어 또는 첨부파일 (여러 개 파일 동시 선택 가능)</label>
-                        <input type="file" id="post-file" class="form-input" accept="*/*" multiple>
-                        <p style="font-size: 0.8rem; color: #888; margin-top: 5px;">* 기존 파일에 추가로 새 파일이 등록됩니다.</p>
+                        <input type="file" id="post-file" class="form-input" accept="*/*" multiple onchange="handleNewFiles(this)">
+                        <p style="font-size: 0.8rem; color: #888; margin-top: 5px;">* 첨부파일 항목별 <strong>[↕️]</strong> 핸들을 잡고 마우스로 드래그하여 순서를 자유롭게 변경할 수 있습니다.</p>
                         <div id="existing-files-list" style="margin-top:15px; display:flex; flex-direction:column; gap:8px;"></div>
                     </div>
 
@@ -349,7 +349,7 @@
         let croppedThumbnailBlob = null; let croppedMainHeroBlob = null; let croppedNewCatBlob = null; let croppedCatBlobs = {};
         let currentFormIdForExport = null; let currentFormTitleForExport = '';
 
-        let keptFiles = [];
+        let fileItems = []; // 첨부파일 통합 관리 배열 (객체: { type: 'server'|'new', value: ... })
         let popupList = [];
 
         let cropCanvas, cropCtx, cropImage, originalImageSrc = null;
@@ -448,7 +448,6 @@
             checkboxes.forEach(cb => cb.checked = checkAllBtn.checked);
         }
 
-        // 선택한 게시글 비밀번호 일괄 변경 기능
         window.executeBulkPasswordChange = async function (type) {
             const checks = document.querySelectorAll('.post-check:checked');
             if (checks.length === 0) return alert("비밀번호를 변경할 게시글을 먼저 선택해주세요.");
@@ -565,30 +564,30 @@
             } else {
                 sortedByDl.forEach((item, idx) => {
                     top5Html += `<li style="padding:8px 0; border-bottom:1px solid #f0f0f0; font-size:0.95rem; display:flex; justify-content:space-between;">
-                                    <div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-right:10px;">
-                                        <span style="display:inline-block; width:22px; font-weight:bold; color:#f4a261;">${idx + 1}</span>
-                                        <span style="color:#1a3c6e;">${item.title}</span>
-                                    </div>
-                                    <span style="color:#2ecc71; font-weight:bold; flex-shrink:0;">${item.download_count || 0}회</span>
-                                </li>`;
+                                            <div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-right:10px;">
+                                                <span style="display:inline-block; width:22px; font-weight:bold; color:#f4a261;">${idx + 1}</span>
+                                                <span style="color:#1a3c6e;">${item.title}</span>
+                                            </div>
+                                            <span style="color:#2ecc71; font-weight:bold; flex-shrink:0;">${item.download_count || 0}회</span>
+                                        </li>`;
                 });
             }
             top5Html += '</ul>';
 
             statsDiv.innerHTML = `
-                        <div style="flex:1; min-width:200px; background:#fff; padding:25px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.05); border:1px solid #eaeaea; display:flex; flex-direction:column; justify-content:center;">
-                            <div style="color:#888; font-size:0.9rem; font-weight:bold; margin-bottom:10px;">전체 게시글 수</div>
-                            <div style="font-size:2.5rem; color:#1a3c6e; font-weight:900;">${count || 0}<span style="font-size:1rem; color:#666; font-weight:normal; margin-left:5px;">개</span></div>
-                        </div>
-                        <div style="flex:1; min-width:200px; background:#fff; padding:25px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.05); border:1px solid #eaeaea; display:flex; flex-direction:column; justify-content:center;">
-                            <div style="color:#888; font-size:0.9rem; font-weight:bold; margin-bottom:10px;">총 누적 다운로드</div>
-                            <div style="font-size:2.5rem; color:#2ecc71; font-weight:900;">${totalDownloads}<span style="font-size:1rem; color:#666; font-weight:normal; margin-left:5px;">회</span></div>
-                        </div>
-                        <div style="flex:2; min-width:300px; background:#fff; padding:25px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.05); border:1px solid #eaeaea;">
-                            <div style="color:#888; font-size:0.9rem; font-weight:bold; border-bottom:2px solid #f4a261; padding-bottom:10px; display:inline-block;">🔥 인기 다운로드 TOP 5</div>
-                            ${top5Html}
-                        </div>
-                    `;
+                            <div style="flex:1; min-width:200px; background:#fff; padding:25px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.05); border:1px solid #eaeaea; display:flex; flex-direction:column; justify-content:center;">
+                                <div style="color:#888; font-size:0.9rem; font-weight:bold; margin-bottom:10px;">전체 게시글 수</div>
+                                <div style="font-size:2.5rem; color:#1a3c6e; font-weight:900;">${count || 0}<span style="font-size:1rem; color:#666; font-weight:normal; margin-left:5px;">개</span></div>
+                            </div>
+                            <div style="flex:1; min-width:200px; background:#fff; padding:25px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.05); border:1px solid #eaeaea; display:flex; flex-direction:column; justify-content:center;">
+                                <div style="color:#888; font-size:0.9rem; font-weight:bold; margin-bottom:10px;">총 누적 다운로드</div>
+                                <div style="font-size:2.5rem; color:#2ecc71; font-weight:900;">${totalDownloads}<span style="font-size:1rem; color:#666; font-weight:normal; margin-left:5px;">회</span></div>
+                            </div>
+                            <div style="flex:2; min-width:300px; background:#fff; padding:25px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.05); border:1px solid #eaeaea;">
+                                <div style="color:#888; font-size:0.9rem; font-weight:bold; border-bottom:2px solid #f4a261; padding-bottom:10px; display:inline-block;">🔥 인기 다운로드 TOP 5</div>
+                                ${top5Html}
+                            </div>
+                        `;
         }
 
         async function handleDirectUpload(files) { showLoading(true); try { for (let i = 0; i < files.length; i++) { const file = files[i]; if (!file.type.startsWith('image/')) continue; const ext = file.name.split('.').pop(); const safeKey = `editor_${Date.now()}_${i}.${ext}`; const { data, error } = await window.sb.storage.from('images').upload(safeKey, file); if (error) throw error; const publicUrl = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl; const range = quill.getSelection(true); let idx = range ? range.index : quill.getLength(); quill.insertEmbed(idx, 'image', publicUrl); quill.setSelection(idx + 1); } } catch (error) { alert("에디터 이미지 업로드 실패: " + error.message); } finally { showLoading(false); } }
@@ -613,8 +612,73 @@
         function applyEdit() { selectedTextIdx = -1; redrawCanvas(); const tempC = document.createElement('canvas'); const tempX = tempC.getContext('2d'); if (currentMode === 'crop' && cropRectW && cropRectH) { const finalW = Math.abs(cropRectW); const finalH = Math.abs(cropRectH); const finalX = cropRectW > 0 ? cropStartX : cropStartX + cropRectW; const finalY = cropRectH > 0 ? cropStartY : cropStartY + cropRectH; tempC.width = finalW; tempC.height = finalH; tempX.drawImage(cropCanvas, finalX, finalY, finalW, finalH, 0, 0, finalW, finalH); } else { tempC.width = cropCanvas.width; tempC.height = cropCanvas.height; tempX.drawImage(cropCanvas, 0, 0); } tempC.toBlob(async function (blob) { if (!blob) return alert("이미지 처리 오류"); if (currentCropType === 'thumb') { croppedThumbnailBlob = blob; alert("썸네일이 준비되었습니다."); } else if (currentCropType === 'main-hero') { croppedMainHeroBlob = blob; alert("메인 배경이 준비되었습니다."); } else if (currentCropType === 'sub-hero-new') { croppedNewCatBlob = blob; alert("카테고리 이미지가 준비되었습니다."); } else if (currentCropType === 'sub-hero-list') { if (activeCategoryCode) { croppedCatBlobs[activeCategoryCode] = blob; alert("변경사항이 준비되었습니다."); } } else { if (!confirm("적용하시겠습니까?")) return; showLoading(true); try { const fileName = `editor_${Date.now()}.jpg`; const { data, error } = await window.sb.storage.from('images').upload(fileName, blob); if (error) throw error; const publicUrl = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl; if (selectedEditorImage) { selectedEditorImage.src = publicUrl; quill.update(); } else { const range = quill.getSelection(true); let idx = range ? range.index : quill.getLength(); quill.insertEmbed(idx, 'image', publicUrl); quill.setSelection(idx + 1); } } catch (e) { alert("업로드 실패: " + e.message); } finally { showLoading(false); } } closeCropModal(); }, 'image/jpeg', 0.9); }
         function closeCropModal() { document.getElementById('crop-modal').style.display = 'none'; document.querySelectorAll('input[type="file"]').forEach(i => i.value = ''); textObjects = []; selectedTextIdx = -1; activeCategoryCode = null; }
 
-        function renderExistingFiles() { const list = document.getElementById('existing-files-list'); list.innerHTML = ''; keptFiles.forEach((item, idx) => { let display = item; if (item.includes('@@')) { display = item.split('@@')[1]; } else { let rawFilename = item.split('/').pop().split('?')[0]; try { rawFilename = decodeURIComponent(rawFilename); } catch (e) { } display = rawFilename.includes('___') ? rawFilename.split('___').pop() : rawFilename; } list.innerHTML += ` <div style="display:flex; justify-content:space-between; align-items:center; background:#f0f7ff; padding:8px 12px; border-radius:6px; border:1px solid #cce5ff;"> <span style="font-size:0.9rem; color:#1a3c6e; word-break:break-all;">📎 ${display}</span> <button type="button" onclick="removeExistingFile(${idx})" style="background:#ff6b6b; color:white; border:none; border-radius:4px; padding:4px 10px; cursor:pointer; font-size:0.8rem; font-weight:bold;">삭제</button> </div> `; }); }
-        window.removeExistingFile = function (idx) { keptFiles.splice(idx, 1); renderExistingFiles(); };
+        // 첨부파일 관리 및 드래그 순서 변경 관련 함수
+        function handleNewFiles(input) {
+            if (input.files && input.files.length > 0) {
+                for (let i = 0; i < input.files.length; i++) {
+                    fileItems.push({ type: 'new', value: input.files[i] });
+                }
+                input.value = '';
+                renderFileList();
+            }
+        }
+
+        function renderFileList() {
+            const list = document.getElementById('existing-files-list');
+            list.innerHTML = '';
+
+            if (fileItems.length === 0) {
+                list.innerHTML = '<span style="color:#888; font-size:0.85rem;">첨부된 파일이 없습니다.</span>';
+                return;
+            }
+
+            fileItems.forEach((fileObj, idx) => {
+                let displayName = '';
+                if (fileObj.type === 'server') {
+                    let item = fileObj.value;
+                    if (item.includes('@@')) { displayName = item.split('@@')[1]; }
+                    else {
+                        let rawFilename = item.split('/').pop().split('?')[0];
+                        try { rawFilename = decodeURIComponent(rawFilename); } catch (e) { }
+                        displayName = rawFilename.includes('___') ? rawFilename.split('___').pop() : rawFilename;
+                    }
+                } else {
+                    displayName = fileObj.value.name;
+                }
+
+                list.innerHTML += `
+                        <div class="file-item-row" data-index="${idx}" style="display:flex; justify-content:space-between; align-items:center; background:#f0f7ff; padding:10px 12px; border-radius:6px; border:1px solid #cce5ff; cursor:grab;">
+                            <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
+                                <span class="file-drag-handle" style="cursor:grab; font-size:1.1rem;" title="마우스로 드래그하여 순서 변경">↕️</span>
+                                <span style="font-size:0.9rem; color:#1a3c6e; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">📎 ${displayName}</span>
+                            </div>
+                            <button type="button" onclick="removeFile(${idx})" style="background:#ff6b6b; color:white; border:none; border-radius:4px; padding:4px 10px; cursor:pointer; font-size:0.8rem; font-weight:bold; flex-shrink:0; margin-left:10px;">삭제</button>
+                        </div>`;
+            });
+
+            // SortableJS 초기화 (파일 목록 드래그 앤 드롭 순서 변경)
+            const fileListContainer = document.getElementById('existing-files-list');
+            if (typeof Sortable !== 'undefined' && fileListContainer) {
+                if (fileListContainer.sortableInstance) {
+                    fileListContainer.sortableInstance.destroy();
+                }
+                fileListContainer.sortableInstance = new Sortable(fileListContainer, {
+                    handle: '.file-drag-handle',
+                    animation: 150,
+                    onEnd: function (evt) {
+                        const movedItem = fileItems.splice(evt.oldIndex, 1)[0];
+                        fileItems.splice(evt.newIndex, 0, movedItem);
+                        renderFileList();
+                    }
+                });
+            }
+        }
+
+        window.removeFile = function (idx) {
+            fileItems.splice(idx, 1);
+            renderFileList();
+        };
+
         function getYoutubeId(url) { if (!url) return null; const m = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/); return (m && m[2].length === 11) ? m[2] : null; }
         function getFirstImageFromContent(html) { const d = document.createElement('div'); d.innerHTML = html; const i = d.querySelector('img'); return i ? i.src : null; }
 
@@ -629,9 +693,24 @@
             showLoading(true); const cat = document.getElementById('post-category').value;
             let tu = document.getElementById('delete-thumb-check').checked ? null : originalThumbUrl; const rawFile = document.getElementById('post-thumb-file').files[0]; const fileToUpload = croppedThumbnailBlob ? croppedThumbnailBlob : rawFile;
             if (fileToUpload) { const ext = croppedThumbnailBlob ? 'jpg' : (rawFile.name.split('.').pop() || 'jpg'); const fileName = `t_${Date.now()}.${ext}`; const { data, error } = await window.sb.storage.from('images').upload(fileName, fileToUpload); if (error) { showLoading(false); return alert("썸네일 업로드 실패: " + error.message); } tu = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl; } else if (!tu) { const yId = getYoutubeId(document.getElementById('youtube-url').value); if (yId) tu = `https://img.youtube.com/vi/${yId}/hqdefault.jpg`; else { const firstImg = getFirstImageFromContent(quill.root.innerHTML); if (firstImg) tu = firstImg; } }
-            const fileInput = document.getElementById('post-file'); let newUploadedUrls = [];
-            if (fileInput.files.length > 0) { for (let i = 0; i < fileInput.files.length; i++) { const df = fileInput.files[i]; const ext = df.name.split('.').pop(); const safeKey = `d_${Date.now()}_${i}.${ext}`; const { data, error } = await window.sb.storage.from('images').upload(safeKey, df); if (error) { showLoading(false); return alert("첨부파일 업로드 실패: " + error.message); } const fileUrl = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl; newUploadedUrls.push(fileUrl + '@@' + df.name); } }
-            const finalFileUrls = [...keptFiles, ...newUploadedUrls]; let du = finalFileUrls.length > 0 ? finalFileUrls.join('||') : null;
+
+            // fileItems 배열 순서대로 서버 업로드 및 문자열 구성 (드래그로 바뀐 순서 반영)
+            let finalFileUrls = [];
+            for (let i = 0; i < fileItems.length; i++) {
+                const item = fileItems[i];
+                if (item.type === 'server') {
+                    finalFileUrls.push(item.value);
+                } else {
+                    const df = item.value;
+                    const ext = df.name.split('.').pop();
+                    const safeKey = `d_${Date.now()}_${i}.${ext}`;
+                    const { data, error } = await window.sb.storage.from('images').upload(safeKey, df);
+                    if (error) { showLoading(false); return alert("첨부파일 업로드 실패: " + error.message); }
+                    const fileUrl = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl;
+                    finalFileUrls.push(fileUrl + '@@' + df.name);
+                }
+            }
+            let du = finalFileUrls.length > 0 ? finalFileUrls.join('||') : null;
             let videoVal = document.getElementById('youtube-url').value; if (isOrder && isIntro) videoVal = FLAG_ORDER_ALL + (videoVal ? '|' + videoVal : ''); else if (isOrder && !isIntro) videoVal = FLAG_ORDER_ONLY;
 
             const passwordVal = document.getElementById('post-password').value.trim();
@@ -789,13 +868,14 @@
             document.getElementById('post-dl-password').value = i.download_password || '';
             document.getElementById('chk-is-notice').checked = (i.is_notice === true);
             document.getElementById('post-title').value = i.title; quill.root.innerHTML = i.content || ""; document.getElementById('post-link').value = i.link_url || ""; document.getElementById('post-order').value = i.order_num || 0;
-            keptFiles = [];
-            const existingList = document.getElementById('existing-files-list');
-            existingList.innerHTML = '';
+
+            fileItems = [];
             if (originalDetailUrl && originalDetailUrl !== 'null' && originalDetailUrl.trim() !== '') {
-                keptFiles = originalDetailUrl.split('||').map(u => u.trim()).filter(u => u);
-                renderExistingFiles();
+                const urls = originalDetailUrl.split('||').map(u => u.trim()).filter(u => u);
+                fileItems = urls.map(item => ({ type: 'server', value: item }));
             }
+            renderFileList();
+
             let val = i.video_url || ""; const chkIntro = document.getElementById('chk-intro'); const chkOrder = document.getElementById('chk-order'); const youtubeInput = document.getElementById('youtube-url');
             if (val === FLAG_ORDER_ONLY) { chkIntro.checked = false; chkOrder.checked = true; youtubeInput.value = ""; } else if (val.startsWith(FLAG_ORDER_ALL)) { chkIntro.checked = true; chkOrder.checked = true; youtubeInput.value = val.replace(FLAG_ORDER_ALL, '').replace('|', ''); } else { chkIntro.checked = true; chkOrder.checked = false; youtubeInput.value = val; }
             toggleEditorState(); document.getElementById('form-title').innerText = "✏️ 수정 모드"; document.getElementById('btn-submit').innerText = "수정 완료"; document.getElementById('btn-cancel-edit').style.display = "inline-block"; window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -808,7 +888,7 @@
             document.getElementById('post-category').value = '';
             document.getElementById('custom-cat-text').innerText = '카테고리를 선택하세요';
             document.getElementById('custom-cat-text').style.color = '#666';
-            keptFiles = []; document.getElementById('existing-files-list').innerHTML = '';
+            fileItems = []; document.getElementById('existing-files-list').innerHTML = '';
         };
 
         window.deletePost = async function (id) { if (confirm("삭제?")) { await window.sb.from('total_posts').delete().eq('id', id); loadManageList(currentPage); } };
@@ -971,22 +1051,22 @@
                     const iconStr = '▼';
 
                     finalHtml += `
-                                        <div class="accordion-group" data-type="${type}">
-                                            <div class="accordion-header">
-                                                <div class="drag-group-handle" title="큰 카테고리 순서 이동">↕️</div>
-                                                <div class="accordion-title-area" onclick="toggleAccordion(this.parentElement.parentElement)">
-                                                    ${groupNames[type]} <span>${iconStr}</span>
-                                                </div>
-                                            </div>
-                                            <div class="accordion-body ${isActive}">
-                                                <div class="mobile-no-scroll">
-                                                    ${headerHtml}
-                                                    <div id="sortable-list-${type}" class="sortable-group">
-                                                        ${groups[type] || '<div style="padding:30px; text-align:center; color:#999; border:1px dashed #ddd;">이 유형에 등록된 카테고리가 없습니다.</div>'}
+                                            <div class="accordion-group" data-type="${type}">
+                                                <div class="accordion-header">
+                                                    <div class="drag-group-handle" title="큰 카테고리 순서 이동">↕️</div>
+                                                    <div class="accordion-title-area" onclick="toggleAccordion(this.parentElement.parentElement)">
+                                                        ${groupNames[type]} <span>${iconStr}</span>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        </div>`;
+                                                <div class="accordion-body ${isActive}">
+                                                    <div class="mobile-no-scroll">
+                                                        ${headerHtml}
+                                                        <div id="sortable-list-${type}" class="sortable-group">
+                                                            ${groups[type] || '<div style="padding:30px; text-align:center; color:#999; border:1px dashed #ddd;">이 유형에 등록된 카테고리가 없습니다.</div>'}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>`;
                 });
 
                 finalHtml += `</div>`;
@@ -1101,9 +1181,9 @@
             mainOrder.forEach(type => {
                 if (writeGroups[type]) {
                     const groupHtml = `
-                                        <div class="cs-group-header" onclick="toggleCsGroup(this)">
-                                            ${groupNames[type]} <span class="cs-icon">▼</span>
-                                        </div>`;
+                                            <div class="cs-group-header" onclick="toggleCsGroup(this)">
+                                                ${groupNames[type]} <span class="cs-icon">▼</span>
+                                            </div>`;
 
                     writeDropdownHtml += `<div class="cs-group">${groupHtml}<div class="cs-group-body">${writeGroups[type]}</div></div>`;
                     filterDropdownHtml += `<div class="cs-group">${groupHtml}<div class="cs-group-body">${filterGroups[type]}</div></div>`;
@@ -1245,9 +1325,9 @@
             data.forEach(c => {
                 const safeContent = window.escapeHtml(c.content).replace(/\n/g, '<br>');
                 html += `<div style="background:#fff; padding:10px; border:1px solid #eee; margin-bottom:8px; border-radius:6px; display:flex; justify-content:space-between; align-items:flex-start;">
-                                    <div style="font-size:0.95rem; color:#333; line-height:1.5;">${safeContent}</div>
-                                    <button onclick="deleteAdminComment('${c.id}')" class="btn-mini" style="color:red; background:none; border:none; cursor:pointer;" title="답변 삭제">❌</button>
-                                </div>`;
+                                            <div style="font-size:0.95rem; color:#333; line-height:1.5;">${safeContent}</div>
+                                            <button onclick="deleteAdminComment('${c.id}')" class="btn-mini" style="color:red; background:none; border:none; cursor:pointer;" title="답변 삭제">❌</button>
+                                        </div>`;
             });
             listDiv.innerHTML = html;
         }
@@ -1289,26 +1369,26 @@
             const qId = `q_block_${questionCount}`;
 
             const html = `
-                        <div id="${qId}" style="background:#f9fbfd; border:1px solid #ddd; padding:20px; border-radius:8px; margin-bottom:15px; position:relative;">
-                            <button onclick="document.getElementById('${qId}').remove()" style="position:absolute; top:15px; right:15px; background:none; border:none; color:#ff6b6b; font-size:1.2rem; cursor:pointer;">✖</button>
-                            <div class="form-group">
-                                <label class="form-label">질문 ${questionCount}</label>
-                                <input type="text" class="form-input q-title" placeholder="질문 내용을 입력하세요">
+                            <div id="${qId}" style="background:#f9fbfd; border:1px solid #ddd; padding:20px; border-radius:8px; margin-bottom:15px; position:relative;">
+                                <button onclick="document.getElementById('${qId}').remove()" style="position:absolute; top:15px; right:15px; background:none; border:none; color:#ff6b6b; font-size:1.2rem; cursor:pointer;">✖</button>
+                                <div class="form-group">
+                                    <label class="form-label">질문 ${questionCount}</label>
+                                    <input type="text" class="form-input q-title" placeholder="질문 내용을 입력하세요">
+                                </div>
+                                <div class="form-group" style="margin-bottom:0;">
+                                    <label class="form-label">응답 형식</label>
+                                    <select class="form-input q-type" onchange="toggleOptionInput(this, '${qId}')">
+                                        <option value="text">주관식 (단답형)</option>
+                                        <option value="radio">객관식 (단일선택/투표)</option>
+                                        <option value="checkbox">객관식 (다중선택)</option>
+                                    </select>
+                                </div>
+                                <div class="q-options-container" style="display:none; margin-top:15px; padding:15px; background:#fff; border:1px dashed #ccc; border-radius:6px;">
+                                    <label class="form-label" style="font-size:0.9rem;">선택지 항목 (쉼표(,)로 구분하여 입력)</label>
+                                    <input type="text" class="form-input q-options" placeholder="예: 서울대공원, 에버랜드, 롯데월드">
+                                </div>
                             </div>
-                            <div class="form-group" style="margin-bottom:0;">
-                                <label class="form-label">응답 형식</label>
-                                <select class="form-input q-type" onchange="toggleOptionInput(this, '${qId}')">
-                                    <option value="text">주관식 (단답형)</option>
-                                    <option value="radio">객관식 (단일선택/투표)</option>
-                                    <option value="checkbox">객관식 (다중선택)</option>
-                                </select>
-                            </div>
-                            <div class="q-options-container" style="display:none; margin-top:15px; padding:15px; background:#fff; border:1px dashed #ccc; border-radius:6px;">
-                                <label class="form-label" style="font-size:0.9rem;">선택지 항목 (쉼표(,)로 구분하여 입력)</label>
-                                <input type="text" class="form-input q-options" placeholder="예: 서울대공원, 에버랜드, 롯데월드">
-                            </div>
-                        </div>
-                    `;
+                        `;
             container.insertAdjacentHTML('beforeend', html);
         }
 
@@ -1406,23 +1486,23 @@
                 }
 
                 html += `
-                                <div style="background:#fff; border:1px solid #ddd; padding:20px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
-                                    <div>
-                                        <div style="margin-bottom:5px;">
-                                            <span style="font-weight:bold; color:#1a3c6e; margin-right:10px;">No. ${displayNum}</span>
-                                            ${statusBadge} <span style="color:#888; font-size:0.9rem; margin-left:10px;">${dateStr}</span>
+                                    <div style="background:#fff; border:1px solid #ddd; padding:20px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+                                        <div>
+                                            <div style="margin-bottom:5px;">
+                                                <span style="font-weight:bold; color:#1a3c6e; margin-right:10px;">No. ${displayNum}</span>
+                                                ${statusBadge} <span style="color:#888; font-size:0.9rem; margin-left:10px;">${dateStr}</span>
+                                            </div>
+                                            <div style="font-size:1.2rem; font-weight:bold; color:#1a3c6e;">${window.escapeHtml(form.title)}</div>
+                                            <div style="color:#666; font-size:0.9rem; margin-top:5px;">
+                                                사용자 접속 링크: <a href="form.html?id=${form.id}" target="_blank" style="color:#f4a261; text-decoration:underline; font-weight:bold;">form.html?id=${form.id}</a>
+                                            </div>
                                         </div>
-                                        <div style="font-size:1.2rem; font-weight:bold; color:#1a3c6e;">${window.escapeHtml(form.title)}</div>
-                                        <div style="color:#666; font-size:0.9rem; margin-top:5px;">
-                                            사용자 접속 링크: <a href="form.html?id=${form.id}" target="_blank" style="color:#f4a261; text-decoration:underline; font-weight:bold;">form.html?id=${form.id}</a>
+                                        <div style="display:flex; gap:10px;">
+                                            <button onclick="toggleFormStatus('${form.id}', ${!form.is_active})" class="btn-mini" style="background:#f8f9fa;">${form.is_active ? '마감하기' : '다시 열기'}</button>
+                                            <button onclick="viewFormResults('${form.id}')" class="btn-mini" style="background:#1a3c6e; color:white; padding: 5px 15px;">결과 확인</button>
+                                            <button onclick="deleteForm('${form.id}')" class="btn-mini" style="background:#ff6b6b; color:white;">삭제</button>
                                         </div>
-                                    </div>
-                                    <div style="display:flex; gap:10px;">
-                                        <button onclick="toggleFormStatus('${form.id}', ${!form.is_active})" class="btn-mini" style="background:#f8f9fa;">${form.is_active ? '마감하기' : '다시 열기'}</button>
-                                        <button onclick="viewFormResults('${form.id}')" class="btn-mini" style="background:#1a3c6e; color:white; padding: 5px 15px;">결과 확인</button>
-                                        <button onclick="deleteForm('${form.id}')" class="btn-mini" style="background:#ff6b6b; color:white;">삭제</button>
-                                    </div>
-                                </div>`;
+                                    </div>`;
             });
             listDiv.innerHTML = html;
 
@@ -1466,11 +1546,11 @@
                 const respondent = res.respondent_info ? `<span style="color:#f4a261;">[${window.escapeHtml(res.respondent_info)}]</span>` : `[익명]`;
 
                 html += `
-                                <div style="background:#f9fbfd; border:1px solid #eee; padding:15px; border-radius:8px; margin-bottom:15px;">
-                                    <div style="border-bottom:1px dashed #ccc; padding-bottom:10px; margin-bottom:10px; font-size:0.9rem; color:#666;">
-                                        <strong>응답 #${responses.length - idx}</strong> | ${respondent} | ${dateStr}
-                                    </div>
-                                `;
+                                    <div style="background:#f9fbfd; border:1px solid #eee; padding:15px; border-radius:8px; margin-bottom:15px;">
+                                        <div style="border-bottom:1px dashed #ccc; padding-bottom:10px; margin-bottom:10px; font-size:0.9rem; color:#666;">
+                                            <strong>응답 #${responses.length - idx}</strong> | ${respondent} | ${dateStr}
+                                        </div>
+                                    `;
 
                 formData.form_schema.forEach(q => {
                     const ans = res.answers[q.id];
@@ -1485,10 +1565,10 @@
                     }
 
                     html += `
-                                    <div style="margin-bottom:8px;">
-                                        <div style="font-size:0.85rem; color:#888;">Q. ${window.escapeHtml(q.title)}</div>
-                                        <div style="font-weight:bold; color:#333;">A. ${displayAns}</div>
-                                    </div>`;
+                                        <div style="margin-bottom:8px;">
+                                            <div style="font-size:0.85rem; color:#888;">Q. ${window.escapeHtml(q.title)}</div>
+                                            <div style="font-weight:bold; color:#333;">A. ${displayAns}</div>
+                                        </div>`;
                 });
                 html += `</div>`;
             });

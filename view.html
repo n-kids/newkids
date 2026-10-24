@@ -595,4 +595,61 @@
         }
 
         async function openEditPost() {
-            if (postDataCache.category === 'notice') return
+            if (postDataCache.category === 'notice') return alert("공지글은 수정할 수 없습니다.");
+            if (isAdminLoggedIn) {
+                location.href = `write.html?edit=${currentPostId}#${postDataCache.category}`;
+                return;
+            }
+            const isSecretPost = (postDataCache.is_secret === true || String(postDataCache.is_secret) === 'true');
+            if (isSecretPost) {
+                location.href = `write.html?edit=${currentPostId}#${postDataCache.category}`;
+            } else {
+                showLockBox("✍️ 글 수정 본인 인증", "본인 확인을 위해 글 작성 시 설정한 비밀번호를 입력해주세요.", "edit");
+            }
+        }
+
+        async function deleteCurrentPost() {
+            if (postDataCache.category === 'notice') return alert("공지글은 삭제할 수 없습니다.");
+            if (isAdminLoggedIn) {
+                if (confirm("정말 이 게시글을 영구 삭제하시겠습니까?")) executeDeletePost();
+                return;
+            }
+            const isSecretPost = (postDataCache.is_secret === true || String(postDataCache.is_secret) === 'true');
+            if (isSecretPost) {
+                if (confirm("정말 이 게시글을 영구 삭제하시겠습니까?")) executeDeletePost();
+            } else {
+                showLockBox("🗑️ 글 삭제 본인 인증", "본인 확인을 위해 글 작성 시 설정한 비밀번호를 입력해주세요.", "delete");
+            }
+        }
+
+        async function executeDeletePost() {
+            const { error } = await window.sb.from('total_posts').delete().eq('id', currentPostId);
+            if (error) {
+                alert("삭제 실패: " + error.message);
+            } else {
+                alert("게시글이 안전하게 삭제되었습니다.");
+                goBackToList();
+            }
+        }
+
+        // iframe 높이 자동 맞춤 수신 리스너
+        window.addEventListener('message', function (event) {
+            if (event.data && event.data.type === 'resizeIframe') {
+                let iframe = document.getElementById('form-iframe-' + event.data.formId);
+                if (!iframe) {
+                    const iframes = document.querySelectorAll('iframe');
+                    for (let f of iframes) {
+                        if (f.src && f.src.includes('id=' + event.data.formId)) {
+                            iframe = f;
+                            break;
+                        }
+                    }
+                }
+                if (iframe) {
+                    iframe.style.height = (event.data.height + 40) + 'px';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

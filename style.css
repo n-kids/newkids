@@ -1319,12 +1319,17 @@ footer {
 }
 
 /* =========================================
-   모바일 게시판 목록 레이아웃 및 가독성 개선
-   ========================================= */
-/* =========================================
-   모바일 게시판 목록 번호 및 불필요한 메타 정보 완벽 숨김
+   모바일 게시판 목록 박스 넘침 방지 및 줄바꿈 설정
    ========================================= */
 @media (max-width: 768px) {
+    .board-container {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 20px 10px !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+    }
+
     .board-list-head {
         display: none !important;
     }
@@ -1334,18 +1339,22 @@ footer {
         flex-direction: column !important;
         align-items: flex-start !important;
         position: relative !important;
-        padding: 15px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 15px 10px !important;
+        box-sizing: border-box !important;
         gap: 8px !important;
+        overflow: hidden !important;
     }
 
-        /* 번호 영역(.b-num 및 첫 번째 자식 요소인 번호 칸)을 확실하게 강제 숨김 */
+        /* 번호 영역 숨김 */
         .b-num,
         .board-list-row > div:first-child,
         .board-list-row > span:first-child {
             display: none !important;
         }
 
-        /* 작성자 및 날짜/다운로드 영역 숨기기 */
+        /* 작성자 및 날짜/다운로드 영역 숨김 */
         .b-author, .b-writer, .writer, .author,
         .b-date, .date, .b-download,
         .board-list-row > div:nth-child(2),
@@ -1363,18 +1372,19 @@ footer {
         padding: 0 !important;
     }
 
-    /* 제목이 전체 너비를 사용하고 줄바꿈되도록 설정 */
+    /* 제목이 박스 밖으로 나가지 않고 안에서 안전하게 줄바꿈되도록 설정 */
     .b-title {
         width: 100% !important;
+        max-width: 100% !important;
         margin: 0 !important;
         padding: 0 !important;
-        font-size: 1.1rem !important;
+        font-size: 1.05rem !important;
         white-space: normal !important;
-        overflow: visible !important;
-        text-overflow: clip !important;
+        word-break: break-all !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
     }
 }
-
 .board-tab-menu {
     display: flex;
     justify-content: center;

@@ -335,14 +335,6 @@
 
             .cm-layout.cm-header {
                 display: none !important;
-                width: 0 !important;
-                height: 0 !important;
-                padding: 0 !important;
-                margin: 0 !important;
-                border: none !important;
-                overflow: hidden !important;
-                opacity: 0 !important;
-                position: absolute !important;
             }
 
             .cm-layout {
@@ -522,6 +514,10 @@
         <main class="main-content">
             <div id="tab-dashboard" class="admin-section active">
                 <h1 style="color:#333; border-bottom:2px solid #ddd; padding-bottom:15px;">관리자 대시보드</h1>
+
+                <!-- ★ 대시보드 통계 위젯 영역 ★ -->
+                <div id="dashboard-stats" style="display:flex; gap:20px; margin-bottom:30px; flex-wrap:wrap;"></div>
+
                 <div class="dash-grid">
                     <div class="dash-card" onclick="switchTab('posts', document.querySelectorAll('.nav-item')[1])"><span class="dash-icon">📝</span><div class="dash-title">게시글 작성하기</div><p style="font-size:0.9rem; color:#888;">교육 및 행사 프로그램 업로드</p></div>
                     <div class="dash-card" onclick="switchTab('category', document.querySelectorAll('.nav-item')[2])"><span class="dash-icon">🖼️</span><div class="dash-title">서브 페이지 관리</div><p style="font-size:0.9rem; color:#888;">메뉴 추가/삭제, 배경 수정</p></div>
@@ -554,7 +550,6 @@
                             <div id="custom-cat-dropdown" class="custom-select-dropdown" style="display:none;"></div>
                         </div>
                         <div class="form-group w-col-title" style="margin-bottom:0;">
-                            <!-- ★ 상단 고정 체크박스 추가 ★ -->
                             <label class="form-label" style="display:flex; justify-content:space-between; align-items:center;">
                                 제목 (교재명)
                                 <label style="cursor:pointer; display:flex; align-items:center; font-size:0.85rem; color:#d35400; font-weight:bold;">
@@ -590,7 +585,7 @@
                     </div>
 
                     <div class="form-group" id="editor-area">
-                        <div style="margin-bottom:5px;"><label class="form-label" style="margin:0;">내용 (이미지를 바탕화면에서 여기로 끌어다 놓거나, 본문 안의 이미지를 드래그하여 순서를 바꿀 수 있습니다)</label></div>
+                        <div style="margin-bottom:5px;"><label class="form-label" style="margin:0;">내용 (자동 임시저장 적용 중)</label></div>
                         <div id="editor-container"></div>
                     </div>
 
@@ -781,8 +776,12 @@
     <div id="result-modal" class="modal-overlay" style="display:none;">
         <div class="modal-content" style="max-width: 800px; max-height: 85vh; overflow-y:auto;">
             <div class="crop-header" style="width:100%; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #1a3c6e; padding-bottom:10px; margin-bottom:20px;">
-                <span style="font-size:1.2rem; font-weight:bold; color:#1a3c6e;">📊 투표/응답 결과</span>
-                <button onclick="document.getElementById('result-modal').style.display='none'" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:#666;">✖</button>
+                <span style="font-size:1.2rem; font-weight:bold; color:#1a3c6e;" id="form-result-modal-title">📊 투표/응답 결과</span>
+                <div>
+                    <!-- ★ 엑셀 다운로드 버튼 추가 ★ -->
+                    <button id="btn-export-csv" class="btn-action" style="background:#2ecc71; padding:5px 15px; font-size:0.9rem; margin-right:10px; border:none; cursor:pointer;">엑셀 다운로드</button>
+                    <button onclick="document.getElementById('result-modal').style.display='none'" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:#666;">✖</button>
+                </div>
             </div>
             <div id="result-content" style="width:100%;"></div>
         </div>
@@ -798,6 +797,7 @@
         let editingId = null; let originalDetailUrl = null; let originalThumbUrl = null; let originalMainHero = null; let isMainHeroDeleted = false;
         let quill; const ITEMS_PER_PAGE = 12; let currentPage = 1; let categoryList = []; const FLAG_ORDER_ONLY = 'ORDER_ITEM'; const FLAG_ORDER_ALL = 'ORDER_ALL';
         let croppedThumbnailBlob = null; let croppedMainHeroBlob = null; let croppedNewCatBlob = null; let croppedCatBlobs = {};
+        let currentFormIdForExport = null; let currentFormTitleForExport = '';
 
         let keptFiles = [];
         let popupList = [];
@@ -806,6 +806,7 @@
         let isDragging = false; let cropStartX, cropStartY, cropRectW, cropRectH;
         let currentCropType = 'thumb'; let currentMode = 'crop'; let selectedEditorImage = null; let activeCategoryCode = null;
         let textObjects = []; let selectedTextIdx = -1; let isResizingText = false; let currentZoom = 1.0;
+        let draftInterval = null; // ★ 임시저장 인터벌
 
         document.addEventListener("DOMContentLoaded", async function () {
             if (typeof Quill !== 'undefined') {
@@ -866,7 +867,89 @@
                     alert("시스템 연결 지연. 새로고침 해주세요.");
                 }
             }, 500);
+
+            // 엑셀 다운로드 버튼 이벤트 연결
+            document.getElementById('btn-export-csv').addEventListener('click', function () {
+                if (currentFormIdForExport) {
+                    exportFormResultsToCSV(currentFormIdForExport, currentFormTitleForExport);
+                }
+            });
         });
+
+        // ★ 게시글 자동 임시저장 로직
+        function startAutoSave() {
+            if (draftInterval) clearInterval(draftInterval);
+            draftInterval = setInterval(() => {
+                if (editingId) return; // 기존 글 수정 중일 때는 덮어쓰기 방지를 위해 작동 안함
+                const title = document.getElementById('post-title').value;
+                const content = quill ? quill.root.innerHTML : '';
+                if (title || (content !== '<p><br></p>' && content !== '')) {
+                    localStorage.setItem('nk_post_draft', JSON.stringify({ title, content, time: Date.now() }));
+                }
+            }, 10000); // 10초마다 자동 저장
+        }
+        function checkDraft() {
+            const draft = localStorage.getItem('nk_post_draft');
+            if (draft && !editingId) {
+                const parsed = JSON.parse(draft);
+                if (confirm("작성 중이던 임시 저장 글이 있습니다. 불러오시겠습니까?")) {
+                    document.getElementById('post-title').value = parsed.title || '';
+                    if (quill) quill.root.innerHTML = parsed.content || '';
+                } else {
+                    localStorage.removeItem('nk_post_draft');
+                }
+            }
+        }
+        function clearDraft() {
+            localStorage.removeItem('nk_post_draft');
+        }
+
+        // ★ 대시보드 통계 불러오기 로직
+        async function loadDashboardStats() {
+            const statsDiv = document.getElementById('dashboard-stats');
+            statsDiv.innerHTML = '<div style="width:100%; text-align:center; padding:20px; color:#888;">통계 데이터를 불러오는 중입니다...</div>';
+
+            const { data, count, error } = await window.sb.from('total_posts').select('title, download_count', { count: 'exact' });
+            if (error) return statsDiv.innerHTML = '<div style="color:red; padding:20px;">통계 로드 실패</div>';
+
+            let totalDownloads = 0;
+            let sortedByDl = [];
+            if (data) {
+                totalDownloads = data.reduce((sum, item) => sum + (item.download_count || 0), 0);
+                sortedByDl = [...data].sort((a, b) => (b.download_count || 0) - (a.download_count || 0)).slice(0, 5);
+            }
+
+            let top5Html = '<ul style="list-style:none; padding:0; margin:15px 0 0 0;">';
+            if (sortedByDl.length === 0) {
+                top5Html += '<li style="color:#999; text-align:center; margin-top:20px;">다운로드 기록이 없습니다.</li>';
+            } else {
+                sortedByDl.forEach((item, idx) => {
+                    top5Html += `<li style="padding:8px 0; border-bottom:1px solid #f0f0f0; font-size:0.95rem; display:flex; justify-content:space-between;">
+                            <div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-right:10px;">
+                                <span style="display:inline-block; width:22px; font-weight:bold; color:#f4a261;">${idx + 1}</span>
+                                <span style="color:#1a3c6e;">${item.title}</span>
+                            </div>
+                            <span style="color:#2ecc71; font-weight:bold; flex-shrink:0;">${item.download_count || 0}회</span>
+                        </li>`;
+                });
+            }
+            top5Html += '</ul>';
+
+            statsDiv.innerHTML = `
+                    <div style="flex:1; min-width:200px; background:#fff; padding:25px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.05); border:1px solid #eaeaea; display:flex; flex-direction:column; justify-content:center;">
+                        <div style="color:#888; font-size:0.9rem; font-weight:bold; margin-bottom:10px;">전체 게시글 수</div>
+                        <div style="font-size:2.5rem; color:#1a3c6e; font-weight:900;">${count || 0}<span style="font-size:1rem; color:#666; font-weight:normal; margin-left:5px;">개</span></div>
+                    </div>
+                    <div style="flex:1; min-width:200px; background:#fff; padding:25px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.05); border:1px solid #eaeaea; display:flex; flex-direction:column; justify-content:center;">
+                        <div style="color:#888; font-size:0.9rem; font-weight:bold; margin-bottom:10px;">총 누적 다운로드</div>
+                        <div style="font-size:2.5rem; color:#2ecc71; font-weight:900;">${totalDownloads}<span style="font-size:1rem; color:#666; font-weight:normal; margin-left:5px;">회</span></div>
+                    </div>
+                    <div style="flex:2; min-width:300px; background:#fff; padding:25px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.05); border:1px solid #eaeaea;">
+                        <div style="color:#888; font-size:0.9rem; font-weight:bold; border-bottom:2px solid #f4a261; padding-bottom:10px; display:inline-block;">🔥 인기 다운로드 TOP 5</div>
+                        ${top5Html}
+                    </div>
+                `;
+        }
 
         async function handleDirectUpload(files) { showLoading(true); try { for (let i = 0; i < files.length; i++) { const file = files[i]; if (!file.type.startsWith('image/')) continue; const ext = file.name.split('.').pop(); const safeKey = `editor_${Date.now()}_${i}.${ext}`; const { data, error } = await window.sb.storage.from('images').upload(safeKey, file); if (error) throw error; const publicUrl = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl; const range = quill.getSelection(true); let idx = range ? range.index : quill.getLength(); quill.insertEmbed(idx, 'image', publicUrl); quill.setSelection(idx + 1); } } catch (error) { alert("에디터 이미지 업로드 실패: " + error.message); } finally { showLoading(false); } }
 
@@ -913,8 +996,6 @@
 
             const passwordVal = document.getElementById('post-password').value.trim();
             const dlPasswordVal = document.getElementById('post-dl-password').value.trim();
-
-            // ★ 상단 고정 여부 값 가져오기
             const isNoticeVal = document.getElementById('chk-is-notice').checked;
 
             const pd = {
@@ -928,12 +1009,19 @@
                 image_url: du,
                 password: passwordVal,
                 download_password: dlPasswordVal,
-                is_notice: isNoticeVal // ★ 데이터베이스에 저장
+                is_notice: isNoticeVal
             };
             if (!editingId) pd.is_visible = true;
 
             const { error } = editingId ? await window.sb.from('total_posts').update(pd).eq('id', editingId) : await window.sb.from('total_posts').insert([pd]);
-            showLoading(false); if (error) alert(error.message); else { alert("저장되었습니다."); cancelEdit(); loadManageList(currentPage); const navItems = document.querySelectorAll('.nav-item'); if (navItems && navItems.length > 2) { switchTab('posts', navItems[2]); } }
+            showLoading(false);
+            if (error) { alert(error.message); } else {
+                alert("저장되었습니다.");
+                clearDraft(); // ★ 임시저장 내역 초기화
+                cancelEdit();
+                loadManageList(currentPage);
+                const navItems = document.querySelectorAll('.nav-item'); if (navItems && navItems.length > 2) { switchTab('posts', navItems[2]); }
+            }
         }
 
         window.togglePostVisibility = async function (id, status) {
@@ -956,13 +1044,47 @@
                 let visBtnStr = isVis ? `<button onclick="togglePostVisibility(${item.id}, false)" class="pm-btn" style="background:#2ecc71; color:white; border:none;">👁️ 노출 중</button>` : `<button onclick="togglePostVisibility(${item.id}, true)" class="pm-btn" style="background:#95a5a6; color:white; border:none;">🙈 숨김</button>`;
 
                 const postPassword = item.password || item.video_url || '없음';
-
-                // ★ 상단 고정 안내 배지 추가
                 const pinBadge = (item.is_notice === true) ? `<span class="badge" style="background:#e74c3c; color:white; margin-right:5px;">📌고정</span> ` : '';
 
-                list.innerHTML += `<div class="post-manage-card"><img src="${thumb}" class="pm-thumb" alt="thumbnail"><div class="pm-body"><div style="margin-bottom:5px;">${badge} <span class="pm-cat-badge">${catName}</span></div><div class="pm-title" onclick='editPost(${JSON.stringify(item).replace(/'/g, "&#39;")})'>${pinBadge}${item.title}</div><div class="pm-info">순서: ${item.order_num}</div><div style="font-size:0.85rem; color:#d9534f; font-weight:bold; margin-top:20px;">🔑 비밀번호: ${postPassword}</div></div><div class="pm-actions">${visBtnStr}<button onclick='editPost(${JSON.stringify(item).replace(/'/g, "&#39;")})' class="pm-btn">수정</button><button onclick='deletePost(${item.id})' class="pm-btn" style="background:#ff6b6b; color:white; border:none;">삭제</button></div></div>`;
+                // ★ 드래그 앤 드롭을 위한 데이터 속성 및 핸들 추가
+                list.innerHTML += `
+                        <div class="post-manage-card" data-id="${item.id}">
+                            <div class="pm-drag-handle" style="background:#f4f7fa; text-align:center; padding:5px; cursor:grab; color:#888; font-size:0.85rem; font-weight:bold; border-bottom:1px solid #eee;">↕️ 드래그하여 순서 변경</div>
+                            <img src="${thumb}" class="pm-thumb" alt="thumbnail">
+                            <div class="pm-body">
+                                <div style="margin-bottom:5px;">${badge} <span class="pm-cat-badge">${catName}</span></div>
+                                <div class="pm-title" onclick='editPost(${JSON.stringify(item).replace(/'/g, "&#39;")})'>${pinBadge}${item.title}</div>
+                                <div class="pm-info">순서: ${item.order_num}</div>
+                                <div style="font-size:0.85rem; color:#d9534f; font-weight:bold; margin-top:20px;">🔑 비밀번호: ${postPassword}</div>
+                            </div>
+                            <div class="pm-actions">
+                                ${visBtnStr}
+                                <button onclick='editPost(${JSON.stringify(item).replace(/'/g, "&#39;")})' class="pm-btn">수정</button>
+                                <button onclick='deletePost(${item.id})' class="pm-btn" style="background:#ff6b6b; color:white; border:none;">삭제</button>
+                            </div>
+                        </div>`;
             });
             renderPagination(count, currentPage);
+
+            // ★ 드래그 앤 드롭 정렬 (SortableJS) 초기화
+            if (typeof Sortable !== 'undefined') {
+                new Sortable(list, {
+                    handle: '.pm-drag-handle',
+                    animation: 150,
+                    onEnd: async function () {
+                        showLoading(true);
+                        const cards = list.querySelectorAll('.post-manage-card');
+                        const updates = [];
+                        cards.forEach((card, idx) => {
+                            const pid = card.getAttribute('data-id');
+                            const newOrder = from + idx; // 현재 페이지 기반 절대 순서 계산
+                            updates.push(window.sb.from('total_posts').update({ order_num: newOrder }).eq('id', pid));
+                        });
+                        await Promise.all(updates);
+                        showLoading(false);
+                    }
+                });
+            }
         }
 
         function renderPagination(t, c) { const p = document.getElementById('pagination-controls'); p.innerHTML = ""; const tp = Math.ceil(t / ITEMS_PER_PAGE); if (tp <= 1) return; for (let i = 1; i <= tp; i++) p.innerHTML += `<button class="page-btn ${i === c ? 'active' : ''}" onclick="loadManageList(${i})">${i}</button>`; }
@@ -978,10 +1100,7 @@
 
             document.getElementById('post-password').value = i.password || i.video_url || '';
             document.getElementById('post-dl-password').value = i.download_password || '';
-
-            // ★ 수정 시 상단 고정 체크박스 상태 불러오기
             document.getElementById('chk-is-notice').checked = (i.is_notice === true);
-
             document.getElementById('post-title').value = i.title; quill.root.innerHTML = i.content || ""; document.getElementById('post-link').value = i.link_url || ""; document.getElementById('post-order').value = i.order_num || 0;
             keptFiles = [];
             const existingList = document.getElementById('existing-files-list');
@@ -997,8 +1116,7 @@
 
         window.cancelEdit = function () {
             editingId = null; croppedThumbnailBlob = null; document.getElementById('post-title').value = ""; document.getElementById('post-password').value = "";
-            document.getElementById('post-dl-password').value = "";
-            document.getElementById('chk-is-notice').checked = false; // ★ 체크박스 초기화
+            document.getElementById('post-dl-password').value = ""; document.getElementById('chk-is-notice').checked = false;
             quill.root.innerHTML = ""; document.querySelectorAll('input[type="file"]').forEach(i => i.value = ""); document.getElementById('chk-intro').checked = true; document.getElementById('chk-order').checked = false; toggleEditorState(); document.getElementById('form-title').innerText = "📝 게시글 작성/수정"; document.getElementById('btn-submit').innerText = "업로드 저장"; document.getElementById('btn-cancel-edit').style.display = "none";
             document.getElementById('post-category').value = '';
             document.getElementById('custom-cat-text').innerText = '카테고리를 선택하세요';
@@ -1011,7 +1129,14 @@
 
         window.switchTab = function (t, n) { document.querySelectorAll('.nav-item').forEach(e => e.classList.remove('active')); if (n) n.classList.add('active'); document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active')); document.getElementById('tab-' + t).classList.add('active'); if (t === 'posts') loadManageList(1); };
         window.adminLogout = async function () { await window.sb.auth.signOut(); location.reload(); };
-        function showAdminMode() { document.getElementById('login-section').style.display = 'none'; document.getElementById('admin-layout').style.display = 'flex'; loadManageList(1); }
+        function showAdminMode() {
+            document.getElementById('login-section').style.display = 'none';
+            document.getElementById('admin-layout').style.display = 'flex';
+            loadManageList(1);
+            loadDashboardStats(); // ★ 대시보드 통계 호출
+            startAutoSave();      // ★ 임시저장 시작
+            setTimeout(checkDraft, 1000); // ★ 임시저장 확인
+        }
         function showLoading(s) { document.getElementById('loading').style.display = s ? 'flex' : 'none'; }
 
         window.toggleAccordion = function (groupEl) {
@@ -1638,8 +1763,12 @@
             const contentDiv = document.getElementById('result-content');
             contentDiv.innerHTML = "<div style='text-align:center; padding:40px; color:#999;'>응답 결과를 불러오는 중입니다...</div>";
 
-            const { data: formData } = await window.sb.from('custom_forms').select('form_schema').eq('id', formId).single();
+            const { data: formData } = await window.sb.from('custom_forms').select('title, form_schema').eq('id', formId).single();
             const { data: responses, error } = await window.sb.from('form_responses').select('*').eq('form_id', formId).order('created_at', { ascending: false });
+
+            // ★ 엑셀 다운로드를 위해 전역 변수 설정
+            currentFormIdForExport = formId;
+            currentFormTitleForExport = formData ? formData.title : '폼응답';
 
             if (error) return contentDiv.innerHTML = "오류 발생: " + error.message;
             if (!responses || responses.length === 0) return contentDiv.innerHTML = "<div style='text-align:center; padding:40px; color:#999;'>아직 제출된 투표/응답이 없습니다.</div>";
@@ -1678,6 +1807,41 @@
                 html += `</div>`;
             });
             contentDiv.innerHTML = html;
+        }
+
+        // ★ 엑셀(CSV) 다운로드 함수
+        window.exportFormResultsToCSV = async function (formId, formTitle) {
+            const { data: formData } = await window.sb.from('custom_forms').select('form_schema').eq('id', formId).single();
+            const { data: responses, error } = await window.sb.from('form_responses').select('*').eq('form_id', formId).order('created_at', { ascending: false });
+
+            if (error || !responses || responses.length === 0) return alert("추출할 데이터가 없습니다.");
+
+            let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+            const headers = ["응답일시", "응답자"];
+            formData.form_schema.forEach(q => headers.push(q.title));
+            csvContent += headers.join(",") + "\n";
+
+            responses.forEach(res => {
+                const dateStr = new Date(res.created_at).toLocaleString();
+                const respondent = res.respondent_info || "익명";
+                let row = `"${dateStr}","${respondent}"`;
+
+                formData.form_schema.forEach(q => {
+                    let ans = res.answers[q.id] || "";
+                    if (Array.isArray(ans)) ans = ans.join(', ');
+                    ans = String(ans).replace(/"/g, '""');
+                    row += `,"${ans}"`;
+                });
+                csvContent += row + "\n";
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `${formTitle}_응답결과.csv`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
         }
 
         function insertFormToEditor() {

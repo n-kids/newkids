@@ -12,6 +12,12 @@
             margin: 0;
             padding: 0;
         }
+        /* ★ 타이틀 헤더와 본문 사이의 여백을 강제로 좁힘 ★ */
+        .view-header {
+            border-bottom: 2px solid #1a3c6e !important;
+            padding-bottom: 10px !important;
+            margin-bottom: 15px !important;
+        }
     </style>
 </head>
 <body>
@@ -42,16 +48,16 @@
                     </div>
                 </div>
 
-                <div id="youtube-player-area" style="display:none; margin-bottom: 30px;"></div>
+                <div id="youtube-player-area" style="display:none; margin-bottom: 20px;"></div>
 
                 <div class="view-content" id="v-content"></div>
 
-                <div id="download-files-area" style="margin-top: 40px; padding-top: 20px; border-top: 1px dashed #eee; display: none;">
+                <div id="download-files-area" style="margin-top: 30px; padding-top: 15px; border-top: 1px dashed #eee; display: none;">
                     <h4 style="color: #1a3c6e; margin-bottom: 15px;">📎 첨부파일</h4>
                     <div id="download-list-container" style="display: flex; flex-direction: column; gap: 10px;"></div>
                 </div>
 
-                <div id="admin-reply-area" style="display:none; margin-top: 40px; padding: 25px; background: #f0f7ff; border-radius: 12px; border: 1px solid #cce5ff;">
+                <div id="admin-reply-area" style="display:none; margin-top: 30px; padding: 25px; background: #f0f7ff; border-radius: 12px; border: 1px solid #cce5ff;">
                     <h4 style="color: #1a3c6e; margin-bottom: 15px; font-size:1.1rem; display:flex; align-items:center; gap:8px;">
                         <span>💬</span> 관리자 답변
                     </h4>
@@ -64,16 +70,16 @@
                     </div>
                 </div>
 
-                <div id="author-actions-area" style="display:none; margin-top:40px; padding-top:20px; border-top:1px solid #1a3c6e; justify-content:flex-end; gap:10px;">
+                <div id="author-actions-area" style="display:none; margin-top:30px; padding-top:15px; border-top:1px solid #1a3c6e; justify-content:flex-end; gap:10px;">
                     <button onclick="openEditPost()" class="btn-action" style="background:#f4a261; padding:10px 25px; font-size:0.95rem;">수정</button>
                     <button onclick="deleteCurrentPost()" class="btn-action" style="background:#ff6b6b; padding:10px 25px; font-size:0.95rem;">삭제</button>
                 </div>
 
-                <div id="related-posts-area" style="display:none; margin-top: 40px; padding-top: 30px; border-top: 1px solid #ddd;"></div>
+                <div id="related-posts-area" style="display:none; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;"></div>
 
             </div>
 
-            <div class="btn-center-wrap" style="margin-top: 40px; text-align: center;">
+            <div class="btn-center-wrap" style="margin-top: 30px; text-align: center;">
                 <button onclick="goBackToList()" class="btn-action" style="background:#666; width: 150px;">목록으로</button>
             </div>
 
@@ -277,8 +283,12 @@
 
             let finalContent = postDataCache.content || '';
 
-            // ★ 고정 높이 제거 및 초기 최소 높이(200px) 적용으로 자바스크립트 수신 대기
-            finalContent = finalContent.replace(/\[투표:([^\]]+)\]/g, '<iframe id="form-iframe-$1" src="form.html?id=$1" width="100%" frameborder="0" scrolling="no" style="border:1px solid #ddd; border-radius:12px; margin:10px 0; overflow:hidden; min-height:200px; transition:height 0.2s ease;"></iframe>');
+            // ★ Quill 에디터가 남긴 불필요한 빈 문단(<p><br></p> 또는 <p></p>)을 깔끔하게 제거
+            finalContent = finalContent.replace(/<p>(<br\s*\/?>)?<\/p>/g, '');
+
+            // 투표 폼 아이프레임 생성 (상단 마진을 0으로 붙임)
+            finalContent = finalContent.replace(/\[투표:([^\]]+)\]/g, '<iframe id="form-iframe-$1" src="form.html?id=$1" width="100%" frameborder="0" scrolling="no" style="border:none; margin:0; padding:0; overflow:hidden; min-height:100px; transition:height 0.2s ease;"></iframe>');
+
             const playerArea = document.getElementById('youtube-player-area');
             let rawVideoUrl = postDataCache.video_url || '';
             if (rawVideoUrl.startsWith('ORDER_ALL|')) {
@@ -598,7 +608,7 @@
             }
         }
 
-        // ★ iframe 높이 수신 시 고정 크기 제한 없이 실시간 자동 맞춤 적용 (+80px 여유 공간)
+        // iframe 높이 자동 맞춤 수신 리스너
         window.addEventListener('message', function (event) {
             if (event.data && event.data.type === 'resizeIframe') {
                 let iframe = document.getElementById('form-iframe-' + event.data.formId);
@@ -612,7 +622,7 @@
                     }
                 }
                 if (iframe) {
-                    iframe.style.height = (event.data.height + 80) + 'px';
+                    iframe.style.height = (event.data.height + 40) + 'px';
                 }
             }
         });

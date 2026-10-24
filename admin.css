@@ -1097,3 +1097,11 @@ body {
             margin-bottom: 5px;
         }
 }
+/* =========================================
+   모바일 화면 관리자 게시물 목록 썸네일 숨기기
+   ========================================= */
+@media screen and (max-width: 768px) {
+    .post-manage-card .pm-thumb {
+        display: none !important;
+    }
+}

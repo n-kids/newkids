@@ -112,6 +112,7 @@
     <div class="view-box-wrapper">
         <div class="view-box-custom">
 
+            <!-- 수정/삭제/비밀글 열람용 비밀번호 폼 -->
             <div id="secret-lock-box" style="display:none; text-align:center; padding: 50px 20px;">
                 <h3 style="color:#1a3c6e; margin-bottom:15px;" id="lock-box-title">🔒 비밀글입니다</h3>
                 <p style="color:#666; margin-bottom:20px;" id="lock-box-desc">작성 시 설정한 비밀번호를 입력해주세요.</p>
@@ -168,7 +169,7 @@
         </div>
     </div>
 
-    <!-- ★ 다운로드 권한 인증 모달 ★ -->
+    <!-- ★ 다운로드 전용 인증 폼 ★ -->
     <div id="download-auth-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center;">
         <div style="background:#fff; padding:30px; border-radius:12px; width:90%; max-width:400px; text-align:center; box-shadow:0 5px 15px rgba(0,0,0,0.3);">
             <h3 style="color:#1a3c6e; margin-bottom:10px;">🔒 다운로드 권한 인증</h3>
@@ -191,7 +192,9 @@
         let postDataCache = null;
         let pendingAction = null;
         let isAdminLoggedIn = false;
-        let isPasswordVerified = false; // ★ 이미 비밀번호를 인증했는지 확인하는 플래그
+
+        let isPostPasswordVerified = false; // 글 수정/삭제 인증 플래그
+        let isDlPasswordVerified = false;   // 다운로드 인증 플래그
 
         // 다운로드 대기용 전역 변수
         let pendingDownloadUrl = '';
@@ -251,7 +254,10 @@
             }
 
             postDataCache = data;
-            data.actualPassword = data.password || data.video_url || '';
+
+            // ★ 게시글 자체 비밀번호와 다운로드 전용 비밀번호를 명확히 분리하여 캐싱
+            postDataCache.actualPassword = data.password || data.video_url || '';
+            postDataCache.dlPassword = data.download_password || '';
 
             document.getElementById('v-title').innerText = data.title;
             document.title = "뉴키즈 - " + data.title;
@@ -263,6 +269,7 @@
 
             const isSecretPost = (data.is_secret === true || String(data.is_secret) === 'true');
 
+            // 게시글 자체가 비밀글이면 열람을 막음
             if (isSecretPost && !isAdminLoggedIn) {
                 showLockBox("🔒 비밀글입니다", "이 글의 내용을 보려면 작성 시 설정한 비밀번호를 입력해주세요.", "view");
             } else {
@@ -270,6 +277,7 @@
             }
         }
 
+        // 게시글 자체 기능(수정/삭제/비밀글) 인증 모달
         function showLockBox(title, desc, action) {
             pendingAction = action;
             document.getElementById('main-content-wrap').style.display = 'none';
@@ -303,7 +311,7 @@
             if (!inputPw) return alert("비밀번호를 입력해주세요.");
 
             if (inputPw === actualPw) {
-                isPasswordVerified = true; // ★ 인증 통과 기록 저장 (다운로드 시 프리패스용)
+                isPostPasswordVerified = true;
 
                 if (pendingAction === 'view') {
                     document.getElementById('secret-lock-box').style.display = 'none';
@@ -351,8 +359,8 @@
                     const downloadList = document.getElementById('download-list-container');
                     let fileHtml = '';
 
-                    // ★ 관리자가 아니고, 게시글에 비번이 걸려있고, 아직 비번을 입력하지 않았다면 잠금 상태로 간주
-                    const isLocked = !isAdminLoggedIn && postDataCache.actualPassword && !isPasswordVerified;
+                    // ★ 오직 '다운로드 전용 비밀번호(dlPassword)' 여부로만 잠금 상태를 평가합니다.
+                    const isLocked = !isAdminLoggedIn && postDataCache.dlPassword && !isDlPasswordVerified;
 
                     files.forEach(item => {
                         let fileUrl = item;
@@ -372,7 +380,6 @@
                         const safeName = fileName.replace(/'/g, "\\'");
                         const fileIcon = getFileIcon(fileName);
 
-                        // ★ 잠금 상태에 따른 UI 변경
                         const btnLabel = isLocked ? '🔒 제한됨' : '다운로드';
                         const btnBg = isLocked ? 'background:#e67e22;' : 'background:#1a3c6e;';
                         const btnShadow = isLocked ? 'box-shadow: 0 2px 4px rgba(230, 126, 34, 0.2);' : 'box-shadow: 0 2px 4px rgba(26, 60, 110, 0.2);';
@@ -403,13 +410,11 @@
             loadAdminReplies();
         }
 
-        // ★ 다운로드 버튼 클릭 시 권한 검사 함수 ★
+        // ★ 다운로드 시크릿 로직 (다운로드 전용 비밀번호가 있을 때만 작동)
         function attemptDownload(url, filename) {
-            // 관리자이거나, 게시물에 비밀번호가 없거나, 이미 비밀글 인증을 통과했다면 즉시 다운로드 실행
-            if (isAdminLoggedIn || !postDataCache.actualPassword || isPasswordVerified) {
+            if (isAdminLoggedIn || !postDataCache.dlPassword || isDlPasswordVerified) {
                 executeDownload(url, filename);
             } else {
-                // 권한이 없으면 모달 띄우기
                 pendingDownloadUrl = url;
                 pendingDownloadName = filename;
                 document.getElementById('dl-pw-input').value = '';
@@ -426,15 +431,15 @@
 
         function verifyDownloadPassword() {
             const inputPw = document.getElementById('dl-pw-input').value.trim();
-            const actualPw = postDataCache.actualPassword;
+            const actualDlPw = postDataCache.dlPassword;
 
-            if (!inputPw) return alert("비밀번호(학원코드)를 입력해주세요.");
+            if (!inputPw) return alert("다운로드 비밀번호를 입력해주세요.");
 
-            if (inputPw === actualPw) {
-                isPasswordVerified = true; // 이번 방문 동안은 다시 묻지 않음
+            if (inputPw === actualDlPw) {
+                isDlPasswordVerified = true;
                 document.getElementById('download-auth-modal').style.display = 'none';
-                renderContent(); // 다운로드 버튼 색상을 파란색(활성)으로 변경
-                executeDownload(pendingDownloadUrl, pendingDownloadName); // 실제 다운로드 실행
+                renderContent();
+                executeDownload(pendingDownloadUrl, pendingDownloadName);
             } else {
                 alert("비밀번호가 일치하지 않습니다.");
             }

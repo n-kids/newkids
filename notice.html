@@ -305,10 +305,12 @@
                 query = query.in('id', recentList);
             }
 
-            const { data, count, error } = await query
-                .order('is_notice', { ascending: false, nullsFirst: false })
-                .order('created_at', { ascending: false })
-                .range(from, to);
+            // 자료실은 제목 앞 [과목명] 기준 가나다순, 그 외 게시판은 최신순
+            query = query.order('is_notice', { ascending: false, nullsFirst: false });
+            query = (currentCategory === 'reference')
+                ? query.order('title', { ascending: true }).order('created_at', { ascending: false })
+                : query.order('created_at', { ascending: false });
+            const { data, count, error } = await query.range(from, to);
 
             if (error) {
                 if (!append) listDiv.innerHTML = `<div style="text-align:center; padding:30px;">에러: ${error.message}</div>`;

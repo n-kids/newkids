@@ -1349,3 +1349,78 @@ body {
         display: none !important;
     }
 }
+/* =========================================
+   추가 기능 스타일 (검색, 필터, 통계 바, 예약발행)
+   ========================================= */
+
+/* 검색 및 기간 필터 바 */
+.filter-search-bar {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    background: #fff;
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    margin-bottom: 15px;
+}
+
+.filter-search-input {
+    flex: 1;
+    min-width: 180px;
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+
+.filter-date-input {
+    padding: 7px 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 0.85rem;
+}
+
+/* 폼 투표 결과 시각화 막대 */
+.poll-stat-box {
+    background: #fff;
+    border: 1px solid #e1e8ed;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.poll-option-row {
+    margin-top: 10px;
+}
+
+.poll-option-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: #333;
+}
+
+.poll-progress-bg {
+    width: 100%;
+    height: 18px;
+    background: #edf2f7;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.poll-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #1a3c6e, #2ecc71);
+    border-radius: 10px;
+    transition: width 0.5s ease;
+}
+
+/* 예약 발행 뱃지 */
+.badge-scheduled {
+    background-color: #9b59b6 !important;
+    color: #fff !important;
+}

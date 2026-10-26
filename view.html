@@ -19,12 +19,8 @@
             margin-bottom: 15px !important;
         }
 
-        /* ★ 모바일 화면에서 상세 보기 내부의 작성자 및 메타 정보 숨기기 ★ */
+        /* ★ 모바일 화면 레이아웃 ★ */
         @media screen and (max-width: 768px) {
-            .view-box-custom .view-meta {
-                display: none !important;
-            }
-
             .view-box-custom .view-header {
                 border-bottom: none !important;
                 padding-bottom: 0 !important;
@@ -502,7 +498,7 @@
                 const blobUrl = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = blobUrl;
-                a.download = filename;
+                a.download = filename; // 1차: Blob 변환을 통한 강제 이름 지정
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
@@ -518,7 +514,18 @@
                 }
 
             } catch (e) {
-                window.open(url, '_blank');
+                // fetch 실패(CORS 문제 등) 시 대비책
+                // Supabase의 경우 URL 뒤에 ?download=파일명 을 붙이면 해당 이름으로 다운로드를 강제할 수 있습니다.
+                const connector = url.includes('?') ? '&' : '?';
+                const fallbackUrl = url + connector + 'download=' + encodeURIComponent(filename);
+                
+                const a = document.createElement('a');
+                a.href = fallbackUrl;
+                a.download = filename; 
+                a.target = '_blank';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
             }
         }
 

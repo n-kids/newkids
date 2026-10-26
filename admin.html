@@ -9,6 +9,7 @@
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet">
 
+    <!-- 공통 및 관리자 전용 CSS 파일 로드 -->
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="admin.css">
     <link rel="stylesheet" href="admin-custom.css">
@@ -16,14 +17,21 @@
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
+        /* 폰트 드롭다운 한글 표시 설정 */
         .ql-picker.ql-font .ql-picker-label[data-value="nanum-gothic"]::before,
         .ql-picker.ql-font .ql-picker-item[data-value="nanum-gothic"]::before { content: '나눔고딕'; font-family: 'Nanum Gothic', sans-serif; }
+        
         .ql-picker.ql-font .ql-picker-label[data-value="nanum-myeongjo"]::before,
         .ql-picker.ql-font .ql-picker-item[data-value="nanum-myeongjo"]::before { content: '나눔명조'; font-family: 'Nanum Myeongjo', serif; }
+
         .ql-picker.ql-font .ql-picker-label[data-value="sans-serif"]::before,
         .ql-picker.ql-font .ql-picker-item[data-value="sans-serif"]::before { content: '기본 폰트'; font-family: sans-serif; }
+
+        /* 실제 에디터 내 폰트 적용 스타일 */
         .ql-font-nanum-gothic { font-family: 'Nanum Gothic', sans-serif; }
         .ql-font-nanum-myeongjo { font-family: 'Nanum Myeongjo', serif; }
+
+        /* 커스텀 표 삽입 버튼 텍스트 처리 */
         .ql-insertTable:after { content: '표 삽입'; font-weight: bold; font-size: 12px; color: #1a3c6e; width: 40px !important; }
         .ql-toolbar.ql-snow .ql-insertTable { width: 50px; }
     </style>
@@ -103,13 +111,6 @@
                         </div>
                     </div>
 
-                    <!-- 1번 기능: 예약 발행 일시 지정 -->
-                    <div style="background:#f4f0fa; padding:15px; border-radius:8px; border:1px solid #dcd0f0; margin-bottom:15px;">
-                        <label class="form-label" style="color:#6c3483; margin-bottom:5px;">⏰ 예약 발행 설정 (선택)</label>
-                        <input type="datetime-local" id="post-publish-at" class="form-input" style="background:#fff; max-width:320px;">
-                        <span style="font-size:0.8rem; color:#7d6693; margin-left:10px;">* 설정한 시간 이후에만 일반 사용자 화면에 노출됩니다. 미설정 시 즉시 공개됩니다.</span>
-                    </div>
-
                     <div style="display: flex; gap: 20px; margin-top: 15px;" class="flex-row-to-col">
                         <div class="form-group" style="flex: 1; margin-bottom: 0; background:#fff8e1; padding:15px; border-radius:8px; border:1px solid #ffe082;">
                             <label class="form-label" style="color:#b78103;">🔑 자체 비밀번호 (수정/삭제용)</label>
@@ -152,6 +153,16 @@
                         <div class="form-group" id="youtube-area"><label class="form-label">유튜브 URL</label><input type="text" id="youtube-url" class="form-input" placeholder="https://youtu.be/..."></div>
                         <div class="form-group"><label class="form-label">관련 링크 URL</label><input type="text" id="post-link" class="form-input" placeholder="이동할 URL"></div>
                     </div>
+
+                    <!-- 위치 이동: 예약 발행 일시 지정 박스 (업로드 버튼 바로 위) -->
+                    <div style="background:#f4f0fa; padding:15px; border-radius:8px; border:1px solid #dcd0f0; margin-top:10px; margin-bottom:25px;">
+                        <label class="form-label" style="color:#6c3483; margin-bottom:5px;">⏰ 예약 발행 설정 (선택)</label>
+                        <div style="display:flex; align-items:center; gap:15px; flex-wrap:wrap;">
+                            <input type="datetime-local" id="post-publish-at" class="form-input" style="background:#fff; max-width:320px;">
+                            <span style="font-size:0.85rem; color:#7d6693;">* 설정한 시간 이후에만 일반 사용자 화면에 노출됩니다. (비워둘 시 즉시 공개)</span>
+                        </div>
+                    </div>
+
                     <div class="btn-center-wrap">
                         <button id="btn-submit" onclick="uploadPost()" class="btn-action w-100-mob" style="min-width: 200px;">업로드 저장</button>
                         <button id="btn-cancel-edit" onclick="cancelEdit()" class="btn-action w-100-mob" style="display:none; background-color:#666;">취소</button>
@@ -919,7 +930,7 @@
                             <span class="file-drag-handle" style="cursor:grab; font-size:1.1rem;" title="마우스로 드래그하여 순서 변경">↕️</span>
                             <span style="font-size:0.9rem; color:#1a3c6e; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">📎 ${displayName}</span>
                         </div>
-                        <button type="button" onclick="removeFile(${idx})" style="background:#ff6b6b; color:white; border:none; border-radius:4px; padding:4px 10px; cursor:pointer; font-size:0.8rem; font-weight:bold; flex-shrink:0; margin-left:10px;">삭제</button>
+                        <button type="button" onclick="removeFile(${idx})" style="background:#ff6b6b; colorwhite; border:none; border-radius:4px; padding:4px 10px; cursor:pointer; font-size:0.8rem; font-weight:bold; flex-shrink:0; margin-left:10px;">삭제</button>
                     </div>`;
             });
 

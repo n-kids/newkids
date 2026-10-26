@@ -1,4 +1,5 @@
 ﻿@charset "utf-8";
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css");
 
 /* =========================================
    1. 기본 설정 (Reset & Base)
@@ -2179,5 +2180,214 @@ footer {
 
     .panel-box {
         padding: 20px 15px !important;
+    }
+}
+
+/* =========================================
+   [2026.10] 브랜드 리뉴얼: 로고 + 메인 히어로
+   ========================================= */
+:root {
+    --brand-navy: #172451;
+    --brand-cream: #FBF6EE;
+    --brand-coral: #E8956B;
+    --brand-mustard: #F2C14E;
+    --brand-sage: #8DB8A0;
+}
+
+body {
+    font-family: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+}
+
+/* 로고 */
+.header-inner > a.logo-link {
+    gap: 10px;
+    padding: 12px 0;
+}
+
+.logo-img.logo-mark {
+    height: 42px;
+    width: 42px;
+    max-height: 42px;
+    border-radius: 10px;
+    margin: 0;
+}
+
+.logo-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+    white-space: nowrap;
+}
+
+.logo-text strong {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--brand-navy);
+    letter-spacing: -0.02em;
+}
+
+.logo-text small {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: #7a7f8f;
+    letter-spacing: -0.01em;
+}
+
+/* 메인 히어로 */
+.hero.hero-v2,
+.hero.hero-v2:not(.loaded) {
+    height: auto;
+    min-height: 560px;
+    padding: 70px 0;
+    background: var(--brand-cream) !important;
+    color: var(--brand-navy);
+    text-align: left;
+    display: block;
+}
+
+.hero-v2-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 32px;
+    display: grid;
+    grid-template-columns: 1.05fr 1fr;
+    align-items: center;
+    gap: 40px;
+}
+
+.hero-eyebrow {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: #fff;
+    border: 1px solid #ecdfca;
+    color: #9a6b3c;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 22px;
+}
+
+.hero.hero-v2 .hero-content h1 {
+    font-size: 2.9rem;
+    font-weight: 800;
+    line-height: 1.28;
+    letter-spacing: -0.03em;
+    color: var(--brand-navy);
+    text-shadow: none;
+    margin-bottom: 18px;
+    word-break: keep-all;
+}
+
+.hero.hero-v2 .hero-content p {
+    font-size: 1.15rem;
+    line-height: 1.75;
+    color: #545b6e;
+    text-shadow: none;
+    margin-bottom: 32px;
+    word-break: keep-all;
+}
+
+.hero-v2-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 30px;
+}
+
+.hero.hero-v2 .btn {
+    background: var(--brand-navy);
+    color: #fff;
+    padding: 15px 28px;
+    border-radius: 12px;
+    font-size: 1.02rem;
+}
+
+.hero.hero-v2 .btn:hover {
+    background: #22346f;
+}
+
+.btn-ghost {
+    display: inline-block;
+    padding: 14px 26px;
+    border-radius: 12px;
+    border: 1.5px solid var(--brand-navy);
+    color: var(--brand-navy);
+    font-weight: 700;
+    font-size: 1.02rem;
+    background: transparent;
+}
+
+.btn-ghost:hover {
+    background: var(--brand-navy);
+    color: #fff;
+}
+
+.hero-v2-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 18px;
+    color: #6b7183;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.hero-v2-tags li::before {
+    content: "";
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--brand-coral);
+    margin-right: 7px;
+    vertical-align: middle;
+}
+
+.hero-v2-tags li:nth-child(2)::before { background: var(--brand-mustard); }
+.hero-v2-tags li:nth-child(3)::before { background: var(--brand-sage); }
+.hero-v2-tags li:nth-child(4)::before { background: #7FA7D9; }
+
+.hero-v2-art svg {
+    width: 100%;
+    max-width: 520px;
+    height: auto;
+    display: block;
+    margin-left: auto;
+}
+
+@media (max-width: 900px) {
+    .hero.hero-v2,
+    .hero.hero-v2:not(.loaded) {
+        min-height: 0;
+        padding: 44px 0 36px;
+    }
+
+    .hero-v2-inner {
+        grid-template-columns: 1fr;
+        gap: 18px;
+        padding: 0 20px;
+    }
+
+    .hero.hero-v2 .hero-content h1 {
+        font-size: 1.8rem;
+    }
+
+    .hero.hero-v2 .hero-content p {
+        font-size: 1rem;
+    }
+
+    .hero-v2-art svg {
+        max-width: 360px;
+        margin: 0 auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .logo-text small {
+        display: none;
+    }
+
+    .hero-v2-actions a {
+        flex: 1 1 100%;
+        text-align: center;
     }
 }

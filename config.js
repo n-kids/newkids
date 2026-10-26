@@ -13,7 +13,7 @@
     SUPABASE_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImptZHlxZGNrY2xnZnlpbXFwcWNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTA5NzksImV4cCI6MjA4MzUyNjk3OX0.hcYPN3Iz5es4Ksye5QMF83yVQVzRHQUw0cxFCAvMVrw",
 
     // [3] 공통 이미지 경로 (로고)
-    LOGO_URL: "https://n-kids.github.io/newkids/logo.png",
+    LOGO_URL: "https://n-kids.github.io/newkids/logo-n.png",
 
     // [4] 회사 정보 (푸터 등에서 사용)
     COMPANY: {

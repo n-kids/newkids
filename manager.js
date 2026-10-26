@@ -106,7 +106,14 @@ async function loadSiteConfig() {
             if (data.primary_color) root.style.setProperty('--primary-color', data.primary_color);
             if (data.accent_color) root.style.setProperty('--accent-color', data.accent_color);
 
-            if (mainHero) {
+            // 고정 디자인 히어로(data-fixed-design)는 배경/글자색 설정을 덮어쓰지 않고 문구만 반영
+            const fixedHero = mainHero && mainHero.hasAttribute('data-fixed-design');
+            if (mainHero && fixedHero) {
+                const titleEl = mainHero.querySelector('h1');
+                const descEl = mainHero.querySelector('p');
+                if (titleEl && data.main_hero_title) titleEl.innerHTML = data.main_hero_title;
+                if (descEl && data.main_hero_desc) descEl.innerHTML = data.main_hero_desc;
+            } else if (mainHero) {
                 if (data.main_hero_image) {
                     const overlayColor = data.main_hero_overlay_color || '#1a3c6e';
                     const overlayOpacity = data.main_hero_overlay_opacity !== undefined ? data.main_hero_overlay_opacity : 0.4;
@@ -236,7 +243,7 @@ function loadHeader() {
 
     headerEl.innerHTML = `
         <div class="header-inner">
-            <a href="index.html" class="logo-link"><img src="${CONFIG.LOGO_URL}" alt="NEW KIDS" class="logo-img"></a>
+            <a href="index.html" class="logo-link"><img src="${CONFIG.LOGO_URL}" alt="" class="logo-img logo-mark"><span class="logo-text"><strong>뉴키즈</strong><small>어린이집 · 유치원 파트너</small></span></a>
             <button class="mobile-btn" onclick="window.toggleMenu()">☰</button>
             <ul class="nav-menu" id="navMenu">
                 ${navHtml}

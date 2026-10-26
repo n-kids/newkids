@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+
+  <url>
+       <loc>https://n-kids.github.io/newkids/index.html</loc>
+       <lastmod>2026-10-26T11:40:12+00:00</lastmod>
+       <priority>1.0000</priority>
+  </url>
+  <url>
+       <loc>https://n-kids.github.io/newkids/proposal.html</loc>
+       <lastmod>2026-10-26T11:40:12+00:00</lastmod>
+       <priority>0.8000</priority>
+  </url>
+  <url>
+       <loc>https://n-kids.github.io/newkids/child.html</loc>
+       <lastmod>2026-10-26T11:40:12+00:00</lastmod>
+       <priority>0.5120</priority>
+  </url>
+  <url>
+       <loc>https://n-kids.github.io/newkids/season.html</loc>
+       <lastmod>2026-10-26T11:40:12+00:00</lastmod>
+       <priority>0.5120</priority>
+  </url>
+  <url>
+       <loc>https://n-kids.github.io/newkids/culture.html</loc>
+       <lastmod>2026-10-26T11:40:12+00:00</lastmod>
+       <priority>0.5120</priority>
+  </url>
+  <url>
+       <loc>https://n-kids.github.io/newkids/performance.html</loc>
+       <lastmod>2026-10-26T11:40:12+00:00</lastmod>
+       <priority>0.5120</priority>
+  </url>
+  <url>
+       <loc>https://n-kids.github.io/newkids/order.html</loc>
+       <lastmod>2026-10-26T11:40:12+00:00</lastmod>
+       <priority>0.5120</priority>
+  </url>
+  <url>
+       <loc>https://n-kids.github.io/newkids/admin.html</loc>
+       <lastmod>2026-10-26T11:40:12+00:00</lastmod>
+       <priority>0.5120</priority>
+  </url>
+</urlset>

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
@@ -200,11 +200,15 @@
                 let displayName = '';
                 if (fileObj.type === 'server') {
                     let item = fileObj.value;
-                    if (item.includes('@@')) { displayName = item.split('@@')[1]; }
-                    else {
+                    if (item.includes('@@')) { 
+                        displayName = item.split('@@')[1]; 
+                    } else {
                         let rawFilename = item.split('/').pop().split('?')[0];
                         try { rawFilename = decodeURIComponent(rawFilename); } catch (e) { }
                         displayName = rawFilename.includes('___') ? rawFilename.split('___').pop() : rawFilename;
+                        
+                        // 파일명 앞의 타임스탬프 숫자와 밑줄(예: 1701234567_) 제거
+                        displayName = displayName.replace(/^[0-9]+_/, '');
                     }
                 } else {
                     displayName = fileObj.value.name;

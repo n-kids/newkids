@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>뉴키즈 - 상세 보기</title>
+    <!-- 공통 스타일 시트 로드 -->
     <link rel="stylesheet" href="style.css?v=20261026">
     <style>
         body {
@@ -18,7 +19,7 @@
             margin-bottom: 15px !important;
         }
 
-        /* ★ 모바일 화면 레이아웃 ★ */
+        /* ★ 모바일 화면 레이아웃 (작성자/날짜 메타 정보 노출 유지) ★ */
         @media screen and (max-width: 768px) {
             .view-box-custom .view-header {
                 border-bottom: none !important;
@@ -476,6 +477,7 @@
             pendingDownloadName = '';
         }
 
+        // 다운로드 비밀번호 확인 후 자동 다운로드 제거 및 버튼 상태만 변경
         function verifyDownloadPassword() {
             const inputPw = document.getElementById('dl-pw-input').value.trim();
             const actualDlPw = postDataCache.dlPassword;
@@ -485,8 +487,10 @@
             if (inputPw === actualDlPw) {
                 isDlPasswordVerified = true;
                 document.getElementById('download-auth-modal').style.display = 'none';
+                
+                alert("비밀번호가 확인되었습니다. 이제 다운로드 버튼을 눌러 파일을 받을 수 있습니다.");
+                
                 renderContent();
-                executeDownload(pendingDownloadUrl, pendingDownloadName);
             } else {
                 alert("비밀번호가 일치하지 않습니다.");
             }

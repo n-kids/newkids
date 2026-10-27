@@ -95,17 +95,6 @@
 
                 document.getElementById('hidden-image-input').addEventListener('change', async function () {
                     if (this.files && this.files.length > 0) {
-                        const maxSize = 10 * 1024 * 1024; // 10MB 용량 제한
-                        
-                        // 서버 업로드 전 용량 검사
-                        for (let i = 0; i < this.files.length; i++) {
-                            if (this.files[i].size > maxSize) {
-                                alert(`"${this.files[i].name}" 이미지가 10MB를 초과하여 본문에 삽입할 수 없습니다.`);
-                                this.value = '';
-                                return;
-                            }
-                        }
-
                         showLoading(true);
                         try {
                             for (let i = 0; i < this.files.length; i++) {
@@ -186,16 +175,10 @@
             }
         }
 
-        // 새 파일 선택 시 기존 목록에 추가 (10MB 용량 제한 포함)
+        // 새 파일 선택 시 기존 목록에 추가
         function handleNewFiles(input) {
             if (input.files && input.files.length > 0) {
-                const maxSize = 10 * 1024 * 1024; // 10MB
-                
                 for (let i = 0; i < input.files.length; i++) {
-                    if (input.files[i].size > maxSize) {
-                        alert(`"${input.files[i].name}" 파일 용량이 너무 큽니다.\n10MB 이하의 파일만 업로드 가능합니다.`);
-                        continue;
-                    }
                     fileItems.push({ type: 'new', value: input.files[i] });
                 }
                 input.value = ''; // 동일 파일 재선택 가능하도록 초기화

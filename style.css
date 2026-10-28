@@ -2391,3 +2391,383 @@ body {
         text-align: center;
     }
 }
+
+/* =========================================
+   [2026.10] 메인 섹션 개편: 자료실 바로가기 → 행사프로그램 → 교육프로그램
+   ========================================= */
+.container-home {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 32px;
+    box-sizing: border-box;
+}
+
+.home-section {
+    padding: 80px 0;
+    background: #fff;
+}
+
+.home-section.home-cream {
+    background: var(--brand-cream);
+}
+
+.home-section h2 {
+    color: var(--brand-navy);
+    font-size: 2.1rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin-bottom: 12px;
+}
+
+.home-section .section-desc {
+    color: #6b7183;
+    margin-bottom: 44px;
+    word-break: keep-all;
+}
+
+.section-eyebrow {
+    display: block;
+    width: fit-content;
+    margin: 0 auto 12px;
+    padding: 5px 14px;
+    border-radius: 999px;
+    background: #fff;
+    border: 1px solid #ecdfca;
+    color: #9a6b3c;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+}
+
+/* 자료실 바로가기 */
+.home-quick {
+    padding: 36px 0;
+    background: #fff;
+}
+
+.quick-banner {
+    display: flex;
+    align-items: stretch;
+    gap: 14px;
+}
+
+.quick-main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 24px 28px;
+    border-radius: 20px;
+    background: var(--brand-navy);
+    color: #fff;
+    text-decoration: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.quick-main:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 26px rgba(23, 36, 81, 0.22);
+}
+
+.quick-icon {
+    flex: 0 0 64px;
+    width: 64px;
+    height: 64px;
+    border-radius: 18px;
+    background: #FFF6DD;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.quick-icon svg {
+    width: 42px;
+    height: 42px;
+}
+
+.quick-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.quick-text strong {
+    font-size: 1.35rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+.quick-text small {
+    font-size: 0.98rem;
+    color: #c9cfe3;
+    word-break: keep-all;
+}
+
+.quick-go {
+    flex: 0 0 auto;
+    padding: 12px 20px;
+    border-radius: 12px;
+    background: var(--brand-mustard);
+    color: var(--brand-navy);
+    font-weight: 800;
+    font-size: 0.98rem;
+    white-space: nowrap;
+}
+
+.quick-subs {
+    flex: 0 0 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.quick-sub {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    border-radius: 16px;
+    background: var(--brand-cream);
+    border: 1px solid #efe3cf;
+    color: var(--brand-navy);
+    font-weight: 700;
+    font-size: 1rem;
+    text-decoration: none;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.quick-sub:hover {
+    background: #fff;
+    border-color: var(--brand-coral);
+}
+
+.quick-sub-icon svg {
+    width: 30px;
+    height: 30px;
+    display: block;
+}
+
+/* 행사·교육 프로그램 카드 */
+.home-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+}
+
+.home-grid.event-grid {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    max-width: 960px;
+    margin: 0 auto;
+}
+
+.home-card {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 22px 44px 22px 22px;
+    background: #fff;
+    border: 1px solid #efe6d8;
+    border-radius: 20px;
+    color: var(--brand-navy);
+    text-decoration: none;
+    box-shadow: 0 4px 14px rgba(23, 36, 81, 0.04);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.home-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--brand-coral);
+    box-shadow: 0 12px 24px rgba(23, 36, 81, 0.08);
+}
+
+.home-card-icon {
+    flex: 0 0 68px;
+    width: 68px;
+    height: 68px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #FDEDE3;
+}
+
+.home-grid .home-card:nth-child(4n+2) .home-card-icon { background: #FDF4DC; }
+.home-grid .home-card:nth-child(4n+3) .home-card-icon { background: #E8F3EC; }
+.home-grid .home-card:nth-child(4n+4) .home-card-icon { background: #E7EFF9; }
+
+.home-card-icon svg {
+    width: 44px;
+    height: 44px;
+}
+
+.home-card-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.home-card h3 {
+    margin: 0 0 6px;
+    font-size: 1.2rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--brand-navy);
+}
+
+.home-card p {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: #6b7183;
+    word-break: keep-all;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.home-card-arrow {
+    position: absolute;
+    right: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #c3b8a6;
+    font-size: 1.1rem;
+    transition: color 0.2s ease, right 0.2s ease;
+}
+
+.home-card:hover .home-card-arrow {
+    color: var(--brand-coral);
+    right: 14px;
+}
+
+/* 행사 카드는 조금 더 크게 */
+.event-grid .home-card {
+    padding: 28px 48px 28px 26px;
+}
+
+.event-grid .home-card-icon {
+    flex-basis: 80px;
+    width: 80px;
+    height: 80px;
+    border-radius: 24px;
+}
+
+.event-grid .home-card-icon svg {
+    width: 52px;
+    height: 52px;
+}
+
+.event-grid .home-card h3 {
+    font-size: 1.3rem;
+}
+
+@media (max-width: 1024px) {
+    .home-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 900px) {
+    .container-home {
+        padding: 0 20px;
+    }
+
+    .quick-banner {
+        flex-direction: column;
+    }
+
+    .quick-subs {
+        flex: none;
+        flex-direction: row;
+    }
+
+    .quick-sub {
+        justify-content: center;
+        padding: 12px;
+    }
+}
+
+@media (max-width: 600px) {
+    .home-section {
+        padding: 56px 0;
+    }
+
+    .home-section h2 {
+        font-size: 1.6rem;
+    }
+
+    .home-section .section-desc {
+        font-size: 1rem;
+        margin-bottom: 28px;
+    }
+
+    .home-quick {
+        padding: 24px 0;
+    }
+
+    .quick-main {
+        flex-wrap: wrap;
+        gap: 14px 16px;
+        padding: 20px;
+    }
+
+    .quick-icon {
+        flex-basis: 52px;
+        width: 52px;
+        height: 52px;
+        border-radius: 15px;
+    }
+
+    .quick-icon svg {
+        width: 34px;
+        height: 34px;
+    }
+
+    .quick-text strong {
+        font-size: 1.2rem;
+    }
+
+    .quick-text small {
+        font-size: 0.9rem;
+    }
+
+    .quick-go {
+        flex: 1 1 100%;
+        text-align: center;
+    }
+
+    .home-grid,
+    .home-grid.event-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .home-card,
+    .event-grid .home-card {
+        padding: 18px 40px 18px 18px;
+        gap: 14px;
+    }
+
+    .home-card-icon,
+    .event-grid .home-card-icon {
+        flex-basis: 56px;
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+    }
+
+    .home-card-icon svg,
+    .event-grid .home-card-icon svg {
+        width: 38px;
+        height: 38px;
+    }
+
+    .home-card h3,
+    .event-grid .home-card h3 {
+        font-size: 1.1rem;
+    }
+}

@@ -20,7 +20,7 @@
 <meta property="og:url" content="https://n-kids.github.io/newkids/index.html">
     
     <title>뉴키즈 - 김포·고양·파주 어린이집/유치원 파트너</title>
-    <link rel="stylesheet" href="style.css?v=20261026">
+    <link rel="stylesheet" href="style.css?v=20261028">
     <style>
         /* =========================================
            [팝업 슬라이더 스타일]
@@ -248,19 +248,43 @@
         </div>
     </section>
 
-    <section id="curriculum">
-        <div class="container-wide">
-            <h2>뉴키즈 교육 프로그램</h2>
-            <p class="section-desc">영아부터 유아까지, 핵심 영역의 통합 교육 솔루션</p>
-            <div id="edu-grid" class="main-grid program-grid"></div>
+    <!-- 자료실 바로가기 -->
+    <section id="quick-links" class="home-quick">
+        <div class="container-home">
+            <div class="quick-banner">
+                <a href="notice.html#reference" class="quick-main">
+                    <span class="quick-icon" data-icon="reference"></span>
+                    <span class="quick-text">
+                        <strong>자료실 바로가기</strong>
+                        <small>연간계획안 · OT자료 등 수업에 필요한 자료를 내려받으세요</small>
+                    </span>
+                    <span class="quick-go">자료실 열기 <span aria-hidden="true">&rarr;</span></span>
+                </a>
+                <div class="quick-subs">
+                    <a href="notice.html#notice" class="quick-sub"><span class="quick-sub-icon" data-icon="notice"></span>공지사항</a>
+                    <a href="notice.html#qna" class="quick-sub"><span class="quick-sub-icon" data-icon="qna"></span>문의사항</a>
+                </div>
+            </div>
         </div>
     </section>
 
-    <section id="events" class="bg-gray">
-        <div class="container">
-            <h2>특별한 행사 프로그램</h2>
+    <!-- 행사프로그램 -->
+    <section id="events" class="home-section home-cream">
+        <div class="container-home">
+            <span class="section-eyebrow">EVENT</span>
+            <h2>행사프로그램</h2>
             <p class="section-desc">아이들에게 잊지 못할 추억을 선물하세요</p>
-            <div id="event-grid" class="main-grid"></div>
+            <div id="event-grid" class="home-grid event-grid"></div>
+        </div>
+    </section>
+
+    <!-- 교육프로그램 -->
+    <section id="curriculum" class="home-section">
+        <div class="container-home">
+            <span class="section-eyebrow">EDUCATION</span>
+            <h2>교육프로그램</h2>
+            <p class="section-desc">영아부터 유아까지, 핵심 영역의 통합 교육 솔루션</p>
+            <div id="edu-grid" class="home-grid edu-grid"></div>
         </div>
     </section>
 
@@ -413,6 +437,39 @@
             closePopup();
         }
 
+        // =========================================
+        // [메인 아이콘] 유아교육 느낌의 인라인 SVG 아이콘
+        // =========================================
+        const ICON_TEXT = 'stroke="none" fill="#172451" font-family="Pretendard, sans-serif" font-weight="800" text-anchor="middle"';
+        const ICON_DOT = 'stroke="none" fill="#172451"';
+        const HOME_ICONS = {
+            korean: `<rect x="8" y="8" width="32" height="32" rx="9" fill="#FFD9C4"/><text x="24" y="31" font-size="18" ${ICON_TEXT}>가</text>`,
+            reading: `<path d="M24 14c-4-3-10-4-16-3v24c6-1 12 0 16 3 4-3 10-4 16-3V11c-6-1-12 0-16 3z" fill="#FFE9A8"/><path d="M24 14v24"/>`,
+            english: `<path d="M9 10h30a4 4 0 0 1 4 4v15a4 4 0 0 1-4 4H22l-8 7v-7H9a4 4 0 0 1-4-4V14a4 4 0 0 1 4-4z" fill="#CFE2F7"/><text x="24" y="26" font-size="11" ${ICON_TEXT}>ABC</text>`,
+            math: `<rect x="7" y="7" width="15" height="15" rx="4" fill="#FFD9C4"/><rect x="26" y="7" width="15" height="15" rx="4" fill="#FFE9A8"/><rect x="7" y="26" width="15" height="15" rx="4" fill="#D3EBDC"/><rect x="26" y="26" width="15" height="15" rx="4" fill="#CFE2F7"/><path d="M14.5 11.5v6M11.5 14.5h6M30 14.5h7M11.8 30.8l5.4 5.4M17.2 30.8l-5.4 5.4M30 31.5h7M30 35.5h7"/>`,
+            science: `<path d="M21 8v11L10.5 36.5A3 3 0 0 0 13.1 41h21.8a3 3 0 0 0 2.6-4.5L27 19V8" fill="#fff"/><path d="M14.6 30h18.8l3.3 5.6a2.4 2.4 0 0 1-2.1 3.6H13.4a2.4 2.4 0 0 1-2.1-3.6z" fill="#A9D6BA" stroke="none"/><path d="M21 8v11L10.5 36.5A3 3 0 0 0 13.1 41h21.8a3 3 0 0 0 2.6-4.5L27 19V8M18 8h12"/><circle cx="21" cy="35" r="1.6" ${ICON_DOT}/><circle cx="27" cy="33" r="1.3" ${ICON_DOT}/>`,
+            art: `<path d="M24 7C14 7 7 14.5 7 23.5S14 41 23 41c3 0 4-2 3-4.5s0-4.5 3-4.5h4c4.5 0 8-3 8-8C41 14 33.5 7 24 7z" fill="#FFE9A8"/><circle cx="16" cy="21" r="2.8" fill="#E8956B" stroke="none"/><circle cx="23" cy="14.5" r="2.8" fill="#7FA7D9" stroke="none"/><circle cx="31" cy="17.5" r="2.8" fill="#8DB8A0" stroke="none"/><circle cx="16" cy="30" r="2.8" fill="#F29BB0" stroke="none"/>`,
+            environment: `<path d="M24 41V22"/><path d="M24 25c0-8-6-13-15-13 0 9 6 13 15 13z" fill="#D3EBDC"/><path d="M24 21c0-7 5-12 14-12 0 8-5 12-14 12z" fill="#A9D6BA"/><path d="M14 41h20"/>`,
+            nuri: `<path d="M6 36a18 18 0 0 1 36 0" stroke="#E8956B" stroke-width="5"/><path d="M12.5 36a11.5 11.5 0 0 1 23 0" stroke="#F2C14E" stroke-width="5"/><path d="M19 36a5 5 0 0 1 10 0" stroke="#8DB8A0" stroke-width="5"/>`,
+            infant: `<circle cx="13" cy="14" r="5" fill="#F3D2B3"/><circle cx="35" cy="14" r="5" fill="#F3D2B3"/><circle cx="24" cy="26" r="15" fill="#F3D2B3"/><ellipse cx="24" cy="31" rx="6" ry="4.5" fill="#fff"/><circle cx="18.5" cy="23" r="1.7" ${ICON_DOT}/><circle cx="29.5" cy="23" r="1.7" ${ICON_DOT}/><path d="M22.5 29.5h3M24 29.5v2.5"/>`,
+            special: `<path d="M24 6l5.3 11 12 1.6-8.8 8.3 2.2 11.9L24 33l-10.7 5.8 2.2-11.9-8.8-8.3 12-1.6z" fill="#FFE08A"/>`,
+            coding: `<path d="M24 15V10"/><circle cx="24" cy="8" r="2.6" fill="#E8956B"/><rect x="10" y="15" width="28" height="22" rx="7" fill="#CFE2F7"/><circle cx="18" cy="25" r="2.4" ${ICON_DOT}/><circle cx="30" cy="25" r="2.4" ${ICON_DOT}/><path d="M20 31h8M6 23v8M42 23v8"/>`,
+            culture: `<circle cx="24" cy="24" r="16" fill="#CFE2F7"/><path d="M8 24h32M24 8c5 4.5 7 10 7 16s-2 11.5-7 16c-5-4.5-7-10-7-16s2-11.5 7-16z"/>`,
+            season: `<path d="M18 29c0 5 4 6 5 12M31 31c0 4-3 6-6 10"/><path d="M18 8c-5.5 0-9 4.4-9 9.5C9 24 14 28 18 29c4-1 9-5 9-11.5C27 12.4 23.5 8 18 8z" fill="#FFC7B0"/><path d="M31 14c-4.4 0-7.5 3.6-7.5 7.8 0 5.2 4 8.5 7.5 9.2 3.5-.7 7.5-4 7.5-9.2C38.5 17.6 35.4 14 31 14z" fill="#FFE08A"/>`,
+            performance: `<path d="M24 40S7 30 7 18.5A8.5 8.5 0 0 1 24 14a8.5 8.5 0 0 1 17 4.5C41 30 24 40 24 40z" fill="#FFC9D4"/>`,
+            reference: `<path d="M6 15a4 4 0 0 1 4-4h8l4 4h16a4 4 0 0 1 4 4v16a4 4 0 0 1-4 4H10a4 4 0 0 1-4-4z" fill="#FFE08A"/><path d="M6 21h36M24 25v10M19.5 30.5 24 35l4.5-4.5"/>`,
+            notice: `<path d="M9 20v8a2 2 0 0 0 2 2h5l14 8V10L16 18h-5a2 2 0 0 0-2 2z" fill="#FFD9C4"/><path d="M16 30l2 9h4l-2-8.5M36 19a6 6 0 0 1 0 10"/>`,
+            qna: `<path d="M24 8c9.4 0 17 6.3 17 14s-7.6 14-17 14c-2 0-4-.3-5.7-.8L10 40l1.6-7.6C8.7 29.9 7 26.1 7 22 7 14.3 14.6 8 24 8z" fill="#D3EBDC"/><path d="M20 19a4 4 0 1 1 5.5 3.7c-1 .4-1.5 1.2-1.5 2.3v1"/><circle cx="24" cy="30.5" r="1.5" ${ICON_DOT}/>`
+        };
+
+        function homeIcon(code) {
+            const inner = HOME_ICONS[code] || HOME_ICONS.special;
+            return `<svg viewBox="0 0 48 48" fill="none" stroke="#172451" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${inner}</svg>`;
+        }
+
+        // 고정 영역(자료실 바로가기 등) 아이콘 채우기
+        document.querySelectorAll('[data-icon]').forEach(el => { el.innerHTML = homeIcon(el.dataset.icon); });
+
         async function loadMainCategories() {
             try {
                 const { data } = await window.sb.from('program_categories')
@@ -426,23 +483,20 @@
                 const eventGrid = document.getElementById('event-grid');
 
                 const legacyFiles = ['season', 'culture', 'performance'];
-                const iconMap = {
-                    'korean': '🇰🇷', 'reading': '📖', 'english': '🔤', 'math': '🔢',
-                    'science': '🔬', 'art': '🎨', 'coding': '💻', 'environment': '🌱',
-                    'nuri': '🐣', 'infant': '🧸', 'special': '✨',
-                    'season': '🎉', 'culture': '🌍', 'performance': '👨‍👩‍👧‍👦'
-                };
 
                 data.forEach(cat => {
                     let href = cat.type === 'EDU' ? `child.html#${cat.code}` : (legacyFiles.includes(cat.code) ? `${cat.code}.html` : `program.html#${cat.code}`);
-                    let icon = iconMap[cat.code] || '⭐';
+                    // 메뉴용 이름 앞의 이모지(🇰🇷, ⭐ 등)는 SVG 아이콘과 겹치므로 제거
+                    const name = (cat.name || '').replace(/^[^\p{L}\p{N}]+/u, '').trim();
 
                     const html = `
-                            <a href="${href}" class="card">
-                                <div class="card-icon">${icon}</div>
-                                <h3>${cat.name}</h3>
-                                <p>${cat.hero_desc || '뉴키즈의 특별한 프로그램'}</p>
-                                <span class="card-link">자세히 보기 &rarr;</span>
+                            <a href="${href}" class="home-card">
+                                <span class="home-card-icon">${homeIcon(cat.code)}</span>
+                                <span class="home-card-body">
+                                    <h3>${name}</h3>
+                                    <p>${cat.hero_desc || '뉴키즈의 특별한 프로그램'}</p>
+                                </span>
+                                <span class="home-card-arrow" aria-hidden="true">&rarr;</span>
                             </a>`;
 
                     if (cat.type === 'EDU') eduGrid.insertAdjacentHTML('beforeend', html);

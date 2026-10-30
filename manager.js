@@ -1,4 +1,4 @@
-﻿/* =========================================
+/* =========================================
    뉴키즈(New Kids) 프로젝트 코어 관리 파일 (manager.js)
    ========================================= */
 
@@ -293,7 +293,7 @@ function addScrollButtons() {
 window.scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 window.scrollToBottom = () => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
 
-// 7. 페이지 초기화 이벤트
+// 7. 페이지 초기화 및 보안 이벤트
 document.addEventListener("DOMContentLoaded", function () {
     loadHeader();
     loadFooter();
@@ -342,6 +342,31 @@ document.addEventListener("DOMContentLoaded", function () {
     window.addEventListener('hashchange', () => {
         if (location.pathname.includes('child.html') || location.pathname.includes('program.html')) {
             window.applySubPageHero();
+        }
+    });
+
+    // 8. 페이지 복사 및 우클릭 방지 이벤트 등록
+    document.addEventListener('contextmenu', function (e) {
+        e.preventDefault(); // 마우스 우클릭 방지
+    });
+
+    document.addEventListener('selectstart', function (e) {
+        e.preventDefault(); // 텍스트 선택 방지
+    });
+
+    document.addEventListener('dragstart', function (e) {
+        e.preventDefault(); // 이미지 및 텍스트 드래그 방지
+    });
+
+    document.addEventListener('keydown', function (e) {
+        // F12, Ctrl+Shift+I, Ctrl+U, Ctrl+C 방지
+        if (
+            e.keyCode === 123 || 
+            (e.ctrlKey && e.shiftKey && e.keyCode === 73) || 
+            (e.ctrlKey && e.keyCode === 85) || 
+            (e.ctrlKey && e.keyCode === 67)
+        ) {
+            e.preventDefault();
         }
     });
 });

@@ -320,9 +320,6 @@
             if (actualYtId) {
                 playerArea.innerHTML = `<iframe src="https://www.youtube.com/embed/${actualYtId}" allowfullscreen style="width:100%; aspect-ratio:16/9; border:none; border-radius:8px;"></iframe>`;
                 playerArea.style.display = 'block';
-            } else if (rawVideoUrl.startsWith('http')) {
-                playerArea.innerHTML = `<iframe src="${rawVideoUrl}" allowfullscreen style="width:100%; aspect-ratio:16/9; border:none; border-radius:8px;"></iframe>`;
-                playerArea.style.display = 'block';
             } else {
                 playerArea.style.display = 'none';
             }

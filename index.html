@@ -397,7 +397,7 @@
                     document.getElementById('btn-prev').onclick = () => changeSlide(-1);
                     document.getElementById('btn-next').onclick = () => changeSlide(1);
 
-                    // [수정] 자동 슬라이드 속도 2초로 변경
+                    // 자동 재생은 접근성 설정을 고려해 5초 간격으로 실행
                     const box = document.querySelector('.popup-slider-box');
                     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
                         autoSlidePaused = true;
@@ -480,7 +480,7 @@
         }
 
         function closePopupToday() {
-            const today = new Date().toISOString().split('T')[0];
+            const today = getLocalDateKey();
             localStorage.setItem('hide_main_popup_date', today);
             closePopup();
         }

@@ -1,7 +1,7 @@
-(function () {
+(function boot() {
   'use strict';
   const sb = window.sb;
-  if (!sb) return;
+  if (!sb) { window.__nkConvenienceWaits = (window.__nkConvenienceWaits || 0) + 1; if (window.__nkConvenienceWaits < 100) setTimeout(boot, 100); return; }
 
   const esc = (value) => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   const modalBase = 'position:fixed;inset:0;background:rgba(0,0,0,.58);z-index:10050;display:flex;align-items:center;justify-content:center;padding:18px;';
@@ -272,10 +272,8 @@
     return result;
   };
 
-  window.addEventListener('load', () => {
-    installTaskFilters();
-    loadDashboardTasks();
-    sb.auth.onAuthStateChange((_event, session) => { if (session) loadDashboardTasks(); });
-    setInterval(() => { if (document.getElementById('dashboard-tasks')) loadDashboardTasks(); }, 60000);
-  });
+  installTaskFilters();
+  loadDashboardTasks();
+  sb.auth.onAuthStateChange((_event, session) => { if (session) loadDashboardTasks(); });
+  setInterval(() => { if (document.getElementById('dashboard-tasks')) loadDashboardTasks(); }, 60000);
 })();

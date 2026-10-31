@@ -44,8 +44,18 @@ function hexToRgba(hex, opacity) {
 }
 
 window.escapeHtml = function (text) {
-    if (!text) return "";
-    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    if (text === null || text === undefined) return "";
+    return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+};
+window.sanitizeRichText = function (text) {
+    return window.escapeHtml(text).replace(/&lt;br\s*\/?&gt;/gi, "<br>");
+};
+window.safeCategoryCode = function (code) {
+    const value = String(code || "");
+    return /^[a-z0-9_-]+$/i.test(value) ? value : "";
+};
+window.safeColor = function (value) {
+    return /^#[0-9a-f]{3}(?:[0-9a-f]{3})?$/i.test(String(value || "")) ? value : "";
 };
 
 // ★ 유튜브 쇼츠(shorts/) 및 다양한 URL 형식을 완벽하게 지원하도록 개선된 파싱 함수 ★
@@ -111,8 +121,8 @@ async function loadSiteConfig() {
             if (mainHero && fixedHero) {
                 const titleEl = mainHero.querySelector('h1');
                 const descEl = mainHero.querySelector('p');
-                if (titleEl && data.main_hero_title) titleEl.innerHTML = data.main_hero_title;
-                if (descEl && data.main_hero_desc) descEl.innerHTML = data.main_hero_desc;
+                if (titleEl && data.main_hero_title) titleEl.innerHTML = window.sanitizeRichText(data.main_hero_title);
+                if (descEl && data.main_hero_desc) descEl.innerHTML = window.sanitizeRichText(data.main_hero_desc);
             } else if (mainHero) {
                 if (data.main_hero_image) {
                     const overlayColor = data.main_hero_overlay_color || '#1a3c6e';
@@ -130,8 +140,8 @@ async function loadSiteConfig() {
 
                 const titleEl = mainHero.querySelector('h1');
                 const descEl = mainHero.querySelector('p');
-                if (titleEl && data.main_hero_title) titleEl.innerHTML = data.main_hero_title;
-                if (descEl && data.main_hero_desc) descEl.innerHTML = data.main_hero_desc;
+                if (titleEl && data.main_hero_title) titleEl.innerHTML = window.sanitizeRichText(data.main_hero_title);
+                if (descEl && data.main_hero_desc) descEl.innerHTML = window.sanitizeRichText(data.main_hero_desc);
             }
             loadFooter();
         }
@@ -190,8 +200,8 @@ window.applySubPageHero = function () {
 
         const titleEl = hero.querySelector('h1');
         const descEl = hero.querySelector('p');
-        if (titleEl && category.hero_title) titleEl.innerHTML = category.hero_title;
-        if (descEl && category.hero_desc) descEl.innerHTML = category.hero_desc;
+        if (titleEl && category.hero_title) titleEl.innerHTML = window.sanitizeRichText(category.hero_title);
+        if (descEl && category.hero_desc) descEl.innerHTML = window.sanitizeRichText(category.hero_desc);
     }
     hero.classList.add('loaded');
 };
@@ -206,21 +216,30 @@ function loadHeader() {
 
     categories.forEach(c => {
         if (!groupHtml[c.type]) groupHtml[c.type] = '';
-        const colorStyle = c.menu_text_color ? `style="color:${c.menu_text_color}"` : '';
+        const menuColor = window.safeColor(c.menu_text_color);
+        const colorStyle = menuColor ? `style="color:${menuColor}"` : '';
 
         if (c.type === 'EDU') {
-            groupHtml[c.type] += `<li><a href="child.html#${c.code}" ${colorStyle}>${c.name}</a></li>`;
+            const code = window.safeCategoryCode(c.code);
+            if (code) groupHtml[c.type] += `<li><a href="child.html#${code}" ${colorStyle}>${window.escapeHtml(c.name)}</a></li>`;
         } else if (c.type === 'EVENT') {
             const legacyFiles = ['season', 'culture', 'performance'];
-            const href = legacyFiles.includes(c.code) ? `${c.code}.html` : `program.html#${c.code}`;
-            groupHtml[c.type] += `<li><a href="${href}" ${colorStyle}>${c.name}</a></li>`;
+            const code = window.safeCategoryCode(c.code);
+            if (code) {
+                const href = legacyFiles.includes(code) ? `${code}.html` : `program.html#${code}`;
+                groupHtml[c.type] += `<li><a href="${href}" ${colorStyle}>${window.escapeHtml(c.name)}</a></li>`;
+            }
         } else if (c.type === 'BOARD') {
-            groupHtml[c.type] += `<li><a href="notice.html#${c.code}" ${colorStyle}>${c.name}</a></li>`;
+            const code = window.safeCategoryCode(c.code);
+            if (code) groupHtml[c.type] += `<li><a href="notice.html#${code}" ${colorStyle}>${window.escapeHtml(c.name)}</a></li>`;
         } else if (c.type === 'PAGE') {
             const isCta = (c.code === 'proposal') ? 'class="cta-menu"' : '';
             const weight = (c.code === 'order') ? 'style="font-weight:bold;"' : '';
-            const href = (c.code === 'order' || c.code === 'proposal') ? `${c.code}.html` : `page.html?id=${c.code}`;
-            groupHtml[c.type] += `<li><a href="${href}" ${isCta} ${weight}>${c.name}</a></li>`;
+            const code = window.safeCategoryCode(c.code);
+            if (code) {
+                const href = (code === 'order' || code === 'proposal') ? `${code}.html` : `page.html?id=${encodeURIComponent(code)}`;
+                groupHtml[c.type] += `<li><a href="${href}" ${isCta} ${weight}>${window.escapeHtml(c.name)}</a></li>`;
+            }
         }
     });
 
@@ -257,9 +276,9 @@ function loadFooter() {
     if (footerEl) {
         footerEl.innerHTML = `
             <div class="container">
-                <p>${CONFIG.COMPANY.NAME} | 대표: <span>${CONFIG.COMPANY.CEO}</span></p>
-                <p>주소: <span>${CONFIG.COMPANY.ADDRESS}</span></p>
-                <p>문의: <span>${CONFIG.COMPANY.PHONE}</span></p>
+                <p>${window.escapeHtml(CONFIG.COMPANY.NAME)} | 대표: <span>${window.escapeHtml(CONFIG.COMPANY.CEO)}</span></p>
+                <p>주소: <span>${window.escapeHtml(CONFIG.COMPANY.ADDRESS)}</span></p>
+                <p>문의: <span>${window.escapeHtml(CONFIG.COMPANY.PHONE)}</span></p>
                 <br>
                 <p><a href="admin.html" style="color:inherit; text-decoration:none;">&copy; 2026 New Kids. All rights reserved.</a></p>
             </div>`;

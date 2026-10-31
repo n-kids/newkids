@@ -139,7 +139,7 @@ Deno.serve(async (req: Request) => {
     if (!row) return json(origin, { error: "Post not found" }, 404);
 
     if (action === "get_secret_metadata") {
-      if (!row.is_secret || row.is_visible === false) return json(origin, { error: "Post not found" }, 404);
+      if (!row.is_secret || row.is_visible === false || new Date(row.publish_at || 0).getTime() > Date.now()) return json(origin, { error: "Post not found" }, 404);
       return json(origin, { post: safePost(row, false) });
     }
 

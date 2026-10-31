@@ -1,6 +1,6 @@
--- Applied on 2026-11-01. Canonical migration: supabase/migrations/20261031222532_enable_secure_post_and_page_rls.sql
--- The policy is restricted to the selected Auth UID.
--- Public non-member post create/update/delete must go through the public-post-actions Edge Function.
+-- Reverted on 2026-11-01. Historical proposal only; do not apply to the live project.
+-- Database state was restored by supabase/migrations/20261031224108_rollback_all_recent_rls_and_storage_hardening.sql.
+-- Original implementation: supabase/migrations/20261031222532_enable_secure_post_and_page_rls.sql
 
 begin;
 

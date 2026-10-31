@@ -224,7 +224,7 @@
     currentPostId = Number(id);
     document.getElementById('v-title').innerText = postDataCache.title;
     document.title = "뉴키즈 - " + postDataCache.title;
-    const isNotice = postDataCache.category === 'notice';
+    const isNotice = postDataCache.is_notice === true;
     document.getElementById('v-author').innerText = "작성자: " + (isNotice ? "관리자" : (postDataCache.link_url || '익명'));
     document.getElementById('v-date').innerText = "작성일: " + new Date(postDataCache.created_at).toISOString().split('T')[0];
     document.getElementById('v-download-count').innerText = `📥 다운로드 ${postDataCache.download_count || 0}회`;

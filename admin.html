@@ -1134,7 +1134,7 @@
             list.innerHTML = "<p style='text-align:center; padding:50px;'>로딩 중...</p>";
             document.getElementById('check-all').checked = false;
 
-            let query = window.sb.from('total_posts').select('id,created_at,title,content,image_url,category,thumbnail_url,link_url,order_num,video_url,is_visible,is_secret,download_count,is_notice,publish_at,has_download_password').order('order_num', { ascending: true }).order('created_at', { ascending: false });
+            let query = window.sb.from('total_posts').select('id,created_at,title,content,image_url,category,thumbnail_url,link_url,order_num,video_url,is_visible,is_secret,download_count,is_notice,publish_at').order('order_num', { ascending: true }).order('created_at', { ascending: false });
             
             if (cat !== 'all') query = query.eq('category', cat);
             if (keyword) query = query.or(`title.ilike.%${keyword}%,content.ilike.%${keyword}%`);

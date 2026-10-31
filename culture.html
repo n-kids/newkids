@@ -74,7 +74,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js?v=20261026"></script>
-    <script src="manager.js?v=20261101"></script>
+    <script src="manager.js?v=20261101-rls"></script>
 
     <script>
         const CATEGORY_NAME = 'culture'; // 카테고리 설정
@@ -90,7 +90,7 @@
 
         async function loadPosts(sb) {
             const { data } = await sb.from('total_posts')
-                .select('*')
+                .select('id,created_at,title,content,image_url,category,thumbnail_url,link_url,order_num,video_url,is_visible,is_secret,download_count,is_notice,publish_at,has_download_password')
                 .eq('category', CATEGORY_NAME)
                 .eq('is_visible', true)
                 .order('order_num', { ascending: true })

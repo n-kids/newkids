@@ -123,8 +123,10 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js?v=20261026"></script>
-    <script src="manager.js?v=20261101"></script>
+    <script src="manager.js?v=20261101-rls"></script>
     <script>
+        const ADMIN_UID = 'f17f6f28-84d7-426e-9eb1-cdac8ec015d4';
+        const PUBLIC_POST_FIELDS = 'id,created_at,title,content,image_url,category,thumbnail_url,link_url,order_num,video_url,is_visible,is_secret,download_count,is_notice,publish_at,has_download_password';
         let currentPostId = null;
         let postDataCache = null;
         let pendingAction = null;
@@ -150,7 +152,7 @@
                 if (window.sb) {
                     clearInterval(checkReady);
                     const { data: { session } } = await window.sb.auth.getSession();
-                    isAdminLoggedIn = !!session;
+                    isAdminLoggedIn = session?.user?.id === ADMIN_UID;
                     loadPostDetail(currentPostId);
                 }
             }, 100);
@@ -203,36 +205,37 @@
         }
 
         async function loadPostDetail(id) {
-            const { data, error } = await window.sb.from('total_posts').select('*').eq('id', id).single();
-
-            if (error || !data) {
-                document.getElementById('v-content').innerHTML = "<div style='text-align:center; padding:50px;'>게시글을 찾을 수 없습니다.</div>";
-                document.getElementById('main-content-wrap').style.display = 'block';
-                return;
-            }
-
-            postDataCache = data;
-            postDataCache.actualPassword = data.password || '';
-            postDataCache.dlPassword = data.download_password || '';
-
-            document.getElementById('v-title').innerText = data.title;
-            document.title = "뉴키즈 - " + data.title;
-
-            const isNotice = data.category === 'notice';
-            document.getElementById('v-author').innerText = "작성자: " + (isNotice ? "관리자" : (data.link_url || '익명'));
-            document.getElementById('v-date').innerText = "작성일: " + new Date(data.created_at).toISOString().split('T')[0];
-            document.getElementById('v-download-count').innerText = `📥 다운로드 ${data.download_count || 0}회`;
-
-            const isSecretPost = (data.is_secret === true || String(data.is_secret) === 'true');
-
-            if (isSecretPost && !isAdminLoggedIn) {
-                showLockBox("🔒 비밀글입니다", "이 글의 내용을 보려면 작성 시 설정한 비밀번호를 입력해주세요.", "view");
-            } else {
-                renderContent();
-            }
+    const { data, error } = await window.sb.from('total_posts').select(PUBLIC_POST_FIELDS).eq('id', id).maybeSingle();
+    if (!error && data) {
+        postDataCache = data;
+        postDataCache.hasDownloadPassword = data.has_download_password === true;
+    } else {
+        const { data: result, error: metadataError } = await window.sb.functions.invoke('public-post-actions', {
+            body: { action: 'get_secret_metadata', id: Number(id) }
+        });
+        if (metadataError || !result?.post) {
+            document.getElementById('v-content').innerHTML = "<div style='text-align:center; padding:50px;'>게시글을 찾을 수 없습니다.</div>";
+            document.getElementById('main-content-wrap').style.display = 'block';
+            return;
         }
-
-        function showLockBox(title, desc, action) {
+        postDataCache = result.post;
+        postDataCache.hasDownloadPassword = result.post.has_download_password === true;
+    }
+    currentPostId = Number(id);
+    document.getElementById('v-title').innerText = postDataCache.title;
+    document.title = "뉴키즈 - " + postDataCache.title;
+    const isNotice = postDataCache.is_notice === true;
+    document.getElementById('v-author').innerText = "작성자: " + (isNotice ? "관리자" : (postDataCache.link_url || '익명'));
+    document.getElementById('v-date').innerText = "작성일: " + new Date(postDataCache.created_at).toISOString().split('T')[0];
+    document.getElementById('v-download-count').innerText = `📥 다운로드 ${postDataCache.download_count || 0}회`;
+    const isSecretPost = postDataCache.is_secret === true || String(postDataCache.is_secret) === 'true';
+    if (isSecretPost && !isAdminLoggedIn) {
+        showLockBox("🔒 비밀글입니다", "이 글의 내용을 보려면 작성 시 설정한 비밀번호를 입력해주세요.", "view");
+    } else {
+        renderContent();
+    }
+}
+function showLockBox(title, desc, action) {
             pendingAction = action;
             document.getElementById('main-content-wrap').style.display = 'none';
             document.getElementById('lock-box-title').innerText = title;
@@ -258,30 +261,30 @@
             pendingAction = null;
         }
 
-        function verifySecretPassword() {
-            const inputPw = document.getElementById('secret-pw-input').value.trim();
-            const actualPw = postDataCache.actualPassword;
-
-            if (!inputPw) return alert("비밀번호를 입력해주세요.");
-
-            if (inputPw === actualPw) {
-                isPostPasswordVerified = true;
-
-                if (pendingAction === 'view') {
-                    document.getElementById('secret-lock-box').style.display = 'none';
-                    renderContent();
-                } else if (pendingAction === 'edit') {
-                    location.href = `write.html?edit=${currentPostId}#${postDataCache.category}`;
-                } else if (pendingAction === 'delete') {
-                    executeDeletePost();
-                }
-                pendingAction = null;
-            } else {
-                alert("비밀번호가 일치하지 않습니다.");
-            }
-        }
-
-        function getFileIcon(filename) {
+        async function verifySecretPassword() {
+    const password = document.getElementById('secret-pw-input').value.trim();
+    if (!password) return alert("비밀번호를 입력해주세요.");
+    const { data, error } = await window.sb.functions.invoke('public-post-actions', {
+        body: { action: 'verify_post_password', id: Number(currentPostId), password }
+    });
+    if (error || !data?.authorized || !data?.post) return alert("비밀번호가 일치하지 않습니다.");
+    if (pendingAction === 'edit') {
+        sessionStorage.setItem(`post-edit-password:${currentPostId}`, password);
+        location.href = `write.html?edit=${currentPostId}#${postDataCache.category}`;
+        return;
+    }
+    if (pendingAction === 'delete') {
+        await executeDeletePost(password);
+        pendingAction = null;
+        return;
+    }
+    postDataCache = data.post;
+    postDataCache.hasDownloadPassword = data.post.has_download_password === true;
+    isPostPasswordVerified = true;
+    pendingAction = null;
+    renderContent();
+}
+function getFileIcon(filename) {
             const ext = filename.split('.').pop().toLowerCase();
             switch (ext) {
                 case 'pdf': return '📕';
@@ -333,7 +336,7 @@
                     const downloadList = document.getElementById('download-list-container');
                     let fileHtml = '';
 
-                    const isLocked = !isAdminLoggedIn && postDataCache.dlPassword && !isDlPasswordVerified;
+                    const isLocked = !isAdminLoggedIn && postDataCache.hasDownloadPassword && !isDlPasswordVerified;
 
                     files.forEach(item => {
                         let fileUrl = item;
@@ -457,7 +460,7 @@
         }
 
         function attemptDownload(url, filename) {
-            if (isAdminLoggedIn || !postDataCache.dlPassword || isDlPasswordVerified) {
+            if (isAdminLoggedIn || !postDataCache.hasDownloadPassword || isDlPasswordVerified) {
                 executeDownload(url, filename);
             } else {
                 pendingDownloadUrl = url;
@@ -475,22 +478,17 @@
         }
 
         // 다운로드 비밀번호 확인 후 자동 다운로드 제거 및 버튼 상태만 변경
-        function verifyDownloadPassword() {
+        async function verifyDownloadPassword() {
             const inputPw = document.getElementById('dl-pw-input').value.trim();
-            const actualDlPw = postDataCache.dlPassword;
-
             if (!inputPw) return alert("다운로드 비밀번호를 입력해주세요.");
-
-            if (inputPw === actualDlPw) {
-                isDlPasswordVerified = true;
-                document.getElementById('download-auth-modal').style.display = 'none';
-                
-                alert("비밀번호가 확인되었습니다. 이제 다운로드 버튼을 눌러 파일을 받을 수 있습니다.");
-                
-                renderContent();
-            } else {
-                alert("비밀번호가 일치하지 않습니다.");
-            }
+            const { data, error } = await window.sb.functions.invoke('public-post-actions', {
+                body: { action: 'verify_download', id: Number(currentPostId), password: inputPw }
+            });
+            if (error || !data?.authorized) return alert("비밀번호가 일치하지 않습니다.");
+            isDlPasswordVerified = true;
+            document.getElementById('download-auth-modal').style.display = 'none';
+            alert("비밀번호가 확인되었습니다. 이제 다운로드 버튼을 눌러 파일을 받을 수 있습니다.");
+            renderContent();
         }
 
         // 다운로드 카운트가 어떤 통신 환경에서도 무조건 기록되도록 최우선 배치된 수정 코드
@@ -502,7 +500,7 @@
                 postDataCache.download_count = currentCount;
 
                 document.getElementById('v-download-count').innerText = `📥 다운로드 ${currentCount}회`;
-                window.sb.from('total_posts').update({ download_count: currentCount }).eq('id', currentPostId);
+                window.sb.functions.invoke('public-post-actions', { body: { action: 'increment_download', id: Number(currentPostId) } });
             }
 
             // 2. 실제 파일 다운로드 실행
@@ -535,7 +533,7 @@
 
         async function loadAdminReplies() {
             const { data, error } = await window.sb.from('post_comments')
-                .select('*')
+                .select('id,post_id,author,content,created_at')
                 .eq('post_id', currentPostId)
                 .order('created_at', { ascending: true });
 
@@ -634,8 +632,13 @@
             }
         }
 
-        async function executeDeletePost() {
-            const { error } = await window.sb.from('total_posts').delete().eq('id', currentPostId);
+        async function executeDeletePost(password = '') {
+            const result = isAdminLoggedIn
+                ? await window.sb.from('total_posts').delete().eq('id', currentPostId)
+                : await window.sb.functions.invoke('public-post-actions', {
+                    body: { action: 'delete', id: Number(currentPostId), password }
+                });
+            const error = result.error;
             if (error) {
                 alert("삭제 실패: " + error.message);
             } else {

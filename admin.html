@@ -415,9 +415,10 @@
         try { window.ADMIN_PERSIST_SESSION = localStorage.getItem('newkids_admin_auto_login') === 'true'; }
         catch (_) { window.ADMIN_PERSIST_SESSION = false; }
     </script>
-    <script src="manager.js?v=20261101-login-persistence"></script>
+    <script src="manager.js?v=20261101-rls"></script>
 
     <script>
+        const ADMIN_UID = 'f17f6f28-84d7-426e-9eb1-cdac8ec015d4';
         let editingId = null; let originalDetailUrl = null; let originalThumbUrl = null; let originalMainHero = null; let isMainHeroDeleted = false;
         let quill; const ITEMS_PER_PAGE = 12; let currentPage = 1; let categoryList = []; const FLAG_ORDER_ONLY = 'ORDER_ITEM'; const FLAG_ORDER_ALL = 'ORDER_ALL';
         let croppedThumbnailBlob = null; let croppedMainHeroBlob = null; let croppedNewCatBlob = null; let croppedCatBlobs = {};
@@ -588,8 +589,11 @@
                 const loader = document.getElementById('loading');
                 if (window.sb) {
                     const { data: { session } } = await window.sb.auth.getSession();
-                    if (session) { showAdminMode(); loadConfigToForm(); loadAdminCategories(); populateCategorySelects(); loadPopups(); loadAdminForms(); }
-                    else { document.getElementById('login-section').style.display = 'flex'; }
+                    if (session?.user?.id === ADMIN_UID) { showAdminMode(); loadConfigToForm(); loadAdminCategories(); populateCategorySelects(); loadPopups(); loadAdminForms(); }
+                    else {
+                        if (session) await window.sb.auth.signOut();
+                        document.getElementById('login-section').style.display = 'flex';
+                    }
                     if (loader) loader.style.display = 'none';
                 } else {
                     if (loader) loader.style.display = 'none';
@@ -1085,11 +1089,13 @@
                 is_notice: isNoticeVal,
                 publish_at: publishAtVal
             };
+            if (editingId && !passwordVal) delete pd.password;
+            if (editingId && !dlPasswordVal) delete pd.download_password;
             if (!editingId) pd.is_visible = true;
 
             const { data: resultPost, error } = editingId 
-                ? await window.sb.from('total_posts').update(pd).eq('id', editingId).select() 
-                : await window.sb.from('total_posts').insert([pd]).select();
+                ? await window.sb.from('total_posts').update(pd).eq('id', editingId).select('id') 
+                : await window.sb.from('total_posts').insert([pd]).select('id');
             
             showLoading(false);
             if (error) { 
@@ -1128,7 +1134,7 @@
             list.innerHTML = "<p style='text-align:center; padding:50px;'>로딩 중...</p>";
             document.getElementById('check-all').checked = false;
 
-            let query = window.sb.from('total_posts').select('*').order('order_num', { ascending: true }).order('created_at', { ascending: false });
+            let query = window.sb.from('total_posts').select('id,created_at,title,content,image_url,category,thumbnail_url,link_url,order_num,video_url,is_visible,is_secret,download_count,is_notice,publish_at,has_download_password').order('order_num', { ascending: true }).order('created_at', { ascending: false });
             
             if (cat !== 'all') query = query.eq('category', cat);
             if (keyword) query = query.or(`title.ilike.%${keyword}%,content.ilike.%${keyword}%`);
@@ -1244,8 +1250,8 @@
             document.getElementById('custom-cat-text').innerText = catName;
             document.getElementById('custom-cat-text').style.color = '#333';
 
-            document.getElementById('post-password').value = i.password || '';
-            document.getElementById('post-dl-password').value = i.download_password || '';
+            document.getElementById('post-password').value = '';
+            document.getElementById('post-dl-password').value = '';
             document.getElementById('chk-is-notice').checked = (i.is_notice === true);
             document.getElementById('post-title').value = i.title; 
             quill.root.innerHTML = i.content || ""; 
@@ -1342,6 +1348,11 @@
                 });
                 const { data, error } = await window.sb.auth.signInWithPassword({ email, password: pwEl.value });
                 if (error) { alert("로그인 실패: " + error.message); return; }
+                if (data.user?.id !== ADMIN_UID) {
+                    await window.sb.auth.signOut();
+                    alert("이 계정에는 관리자 권한이 없습니다.");
+                    return;
+                }
                 await logAdminActivity('LOGIN', { email });
                 showAdminMode();
                 loadConfigToForm();
@@ -1688,7 +1699,8 @@
         };
 
         async function loadConfigToForm() {
-            const { data } = await window.sb.from('site_config').select('*').eq('id', 1).single();
+            const { data } = await window.sb.from('site_config').select('id,updated_at,company_name,ceo_name,address,phone,primary_color,accent_color,main_hero_image,main_hero_title,main_hero_desc,main_hero_title_color,main_hero_desc_color,main_hero_bg_color,main_hero_overlay_color,main_hero_overlay_opacity,popup_image,popup_link,is_popup_visible').eq('id', 1).single();
+            const { data: sheetData } = await window.sb.functions.invoke('public-post-actions', { body: { action: 'admin_get_sheet_url' } });
             if (data) {
                 document.getElementById('conf-name').value = data.company_name || ""; 
                 document.getElementById('conf-ceo').value = data.ceo_name || ""; 
@@ -1717,8 +1729,8 @@
 
                 const sheetInput = document.getElementById('sheet-url-input');
                 if (sheetInput) {
-                    sheetInput.value = data.sheet_url || "";
-                    if (!data.sheet_url) {
+                    sheetInput.value = sheetData?.sheet_url || "";
+                    if (!sheetData?.sheet_url) {
                         try { const localUrl = localStorage.getItem('mySheetUrl'); if (localUrl && localUrl !== "null") sheetInput.value = localUrl; } catch (e) { }
                     }
                 }
@@ -1789,7 +1801,7 @@
             if (!url.startsWith('http')) url = 'https://' + url;
 
             showLoading(true);
-            const { error } = await window.sb.from('site_config').update({ sheet_url: url }).eq('id', 1);
+            const { error } = await window.sb.functions.invoke('public-post-actions', { body: { action: 'admin_save_sheet_url', url } });
             showLoading(false);
 
             if (error) {

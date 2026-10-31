@@ -145,7 +145,7 @@ async function loadSiteConfig() {
     const mainHero = document.querySelector('.hero');
 
     try {
-        const { data } = await window.sb.from('site_config').select('*').eq('id', 1).single();
+        const { data } = await window.sb.from('site_config').select('id,updated_at,company_name,ceo_name,address,phone,primary_color,accent_color,main_hero_image,main_hero_title,main_hero_desc,main_hero_title_color,main_hero_desc_color,main_hero_bg_color,main_hero_overlay_color,main_hero_overlay_opacity,popup_image,popup_link,is_popup_visible').eq('id', 1).single();
         if (data) {
             if (data.company_name) CONFIG.COMPANY.NAME = data.company_name;
             if (data.ceo_name) CONFIG.COMPANY.CEO = data.ceo_name;

@@ -55,7 +55,7 @@
         async function loadPosts(sb) {
             // 해당 카테고리의 게시글 가져오기 (순서: 지정된 번호순 -> 최신순)
             const { data } = await sb.from('total_posts')
-                .select('*')
+                .select('id,created_at,title,content,image_url,category,thumbnail_url,link_url,order_num,video_url,is_visible,is_secret,download_count,is_notice,publish_at,has_download_password')
                 .eq('category', CATEGORY_NAME)
                 .eq('is_visible', true)
                 .order('order_num', { ascending: true })

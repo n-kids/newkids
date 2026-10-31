@@ -47,9 +47,49 @@ window.escapeHtml = function (text) {
     if (text === null || text === undefined) return "";
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 };
-window.sanitizeRichText = function (text) {
-    return window.escapeHtml(text).replace(/&lt;br\s*\/?&gt;/gi, "<br>");
+window.sanitizeHtml = function (html) {
+    const allowedTags = new Set(["A","B","BLOCKQUOTE","BR","CODE","DIV","EM","H1","H2","H3","H4","H5","H6","HR","I","IMG","LI","OL","P","PRE","S","SPAN","STRONG","SUB","SUP","TABLE","TBODY","TD","TFOOT","TH","THEAD","TR","U","UL"]);
+    const allowedAttrs = new Set(["alt","colspan","height","href","src","title","width","rowspan","class","style"]);
+    const safeUrl = (value, image) => {
+        const v = String(value || "").trim();
+        if (/^\s*(?:javascript|data|vbscript):/i.test(v)) return false;
+        if (/^(?:https?:|mailto:|tel:)/i.test(v)) return !image || /^https?:/i.test(v);
+        return !/^[a-z][a-z0-9+.-]*:/i.test(v) && !v.startsWith("//");
+    };
+    const clean = node => {
+        if (node.nodeType === Node.TEXT_NODE) return document.createTextNode(node.nodeValue);
+        if (node.nodeType !== Node.ELEMENT_NODE) return document.createDocumentFragment();
+        if (!allowedTags.has(node.tagName)) {
+            const fragment = document.createDocumentFragment();
+            Array.from(node.childNodes).forEach(child => fragment.appendChild(clean(child)));
+            return fragment;
+        }
+        const out = document.createElement(node.tagName.toLowerCase());
+        Array.from(node.attributes).forEach(attr => {
+            const name = attr.name.toLowerCase(), value = attr.value;
+            if (!allowedAttrs.has(name) || name.startsWith("on")) return;
+            if ((name === "href" || name === "src") && !safeUrl(value, name === "src")) return;
+            if (name === "style") {
+                const declarations = value.split(";").map(x => x.trim()).filter(Boolean).filter(x =>
+                    /^(?:color|background-color|text-align|font-size|font-weight|font-style|text-decoration|margin(?:-top|-right|-bottom|-left)?|padding(?:-top|-right|-bottom|-left)?|width|max-width|height|border(?:-radius|-[a-z-]+)?|display|list-style-type)\s*:\s*[^;<>]+$/i.test(x) &&
+                    !/(?:url\s*\(|expression\s*\(|javascript:|@import|behavior\s*:)/i.test(x));
+                if (declarations.length) out.setAttribute("style", declarations.join("; "));
+                return;
+            }
+            out.setAttribute(name, value);
+        });
+        Array.from(node.childNodes).forEach(child => out.appendChild(clean(child)));
+        if (out.tagName === "A" && out.getAttribute("target") === "_blank") out.setAttribute("rel", "noopener noreferrer");
+        return out;
+    };
+    const doc = new DOMParser().parseFromString(String(html || ""), "text/html");
+    const fragment = document.createDocumentFragment();
+    Array.from(doc.body.childNodes).forEach(child => fragment.appendChild(clean(child)));
+    const holder = document.createElement("div");
+    holder.appendChild(fragment);
+    return holder.innerHTML;
 };
+window.sanitizeRichText = function (text) { return window.escapeHtml(text).replace(/&lt;br\s*\/?&gt;/gi, "<br>"); };
 window.safeCategoryCode = function (code) {
     const value = String(code || "");
     return /^[a-z0-9_-]+$/i.test(value) ? value : "";
@@ -364,28 +404,4 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // 8. 페이지 복사 및 우클릭 방지 이벤트 등록
-    document.addEventListener('contextmenu', function (e) {
-        e.preventDefault(); // 마우스 우클릭 방지
-    });
-
-    document.addEventListener('selectstart', function (e) {
-        e.preventDefault(); // 텍스트 선택 방지
-    });
-
-    document.addEventListener('dragstart', function (e) {
-        e.preventDefault(); // 이미지 및 텍스트 드래그 방지
-    });
-
-    document.addEventListener('keydown', function (e) {
-        // F12, Ctrl+Shift+I, Ctrl+U, Ctrl+C 방지
-        if (
-            e.keyCode === 123 || 
-            (e.ctrlKey && e.shiftKey && e.keyCode === 73) || 
-            (e.ctrlKey && e.keyCode === 85) || 
-            (e.ctrlKey && e.keyCode === 67)
-        ) {
-            e.preventDefault();
-        }
-    });
 });

@@ -44,8 +44,13 @@
     <div id="login-section">
         <div class="login-box">
             <h2 style="text-align:center; margin-bottom:30px; color:#1a3c6e;">🔒 관리자 로그인</h2>
-            <div class="form-group"><label class="form-label">아이디</label><input type="email" id="admin-email" class="form-input" placeholder="admin@newkids.com"></div>
-            <div class="form-group" style="margin-top:15px;"><label class="form-label">비밀번호</label><input type="password" id="admin-password" class="form-input" placeholder="비밀번호"></div>
+            <div class="form-group"><label class="form-label" for="admin-email">아이디</label><input type="email" id="admin-email" class="form-input" placeholder="admin@newkids.com" autocomplete="username"></div>
+            <div class="form-group" style="margin-top:15px;"><label class="form-label" for="admin-password">비밀번호</label><input type="password" id="admin-password" class="form-input" placeholder="비밀번호" autocomplete="current-password"></div>
+            <div class="login-options" style="display:flex;flex-direction:column;gap:10px;margin:16px 0 20px;">
+                <label for="remember-admin-id" style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.9rem;color:#444;"><input type="checkbox" id="remember-admin-id"> 아이디 자동 저장</label>
+                <label for="auto-login-admin" style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.9rem;color:#444;"><input type="checkbox" id="auto-login-admin"> 자동 로그인</label>
+                <small style="margin-left:25px;color:#777;">선택하면 이 브라우저에서 다음 방문부터 로그인 상태를 유지합니다.</small>
+            </div>
             <div class="btn-center-wrap"><button onclick="adminLogin()" class="btn-action" style="width: 100%;">로그인</button></div>
             <p style="text-align:center; margin-top:20px; font-size:0.9rem;"><a href="index.html" style="color:#666;">← 홈페이지로 돌아가기</a></p>
         </div>
@@ -406,7 +411,11 @@
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
     <script src="https://unpkg.com/quill-blot-formatter@1.0.5/dist/quill-blot-formatter.min.js"></script>
     <script src="config.js?v=20261026"></script>
-    <script src="manager.js?v=20261026"></script>
+    <script>
+        try { window.ADMIN_PERSIST_SESSION = localStorage.getItem('newkids_admin_auto_login') === 'true'; }
+        catch (_) { window.ADMIN_PERSIST_SESSION = false; }
+    </script>
+    <script src="manager.js?v=20261101-login-persistence"></script>
 
     <script>
         let editingId = null; let originalDetailUrl = null; let originalThumbUrl = null; let originalMainHero = null; let isMainHeroDeleted = false;
@@ -492,6 +501,21 @@
         }
 
         document.addEventListener("DOMContentLoaded", async function () {
+            const emailInput = document.getElementById('admin-email');
+            const rememberId = document.getElementById('remember-admin-id');
+            const autoLogin = document.getElementById('auto-login-admin');
+            try {
+                rememberId.checked = localStorage.getItem('newkids_admin_remember_id') === 'true';
+                autoLogin.checked = localStorage.getItem('newkids_admin_auto_login') === 'true';
+                if (rememberId.checked) emailInput.value = localStorage.getItem('newkids_admin_saved_email') || '';
+                rememberId.addEventListener('change', () => {
+                    localStorage.setItem('newkids_admin_remember_id', String(rememberId.checked));
+                    if (!rememberId.checked) localStorage.removeItem('newkids_admin_saved_email');
+                });
+                autoLogin.addEventListener('change', () => {
+                    localStorage.setItem('newkids_admin_auto_login', String(autoLogin.checked));
+                });
+            } catch (e) { console.warn('로그인 환경설정을 저장할 수 없습니다.', e); }
             if (typeof Quill !== 'undefined') {
                 Quill.register('modules/blotFormatter', QuillBlotFormatter.default);
                 quill = new Quill('#editor-container', {
@@ -1289,24 +1313,43 @@
             } 
         };
 
-        window.adminLogin = async function () { 
-            const emailEl = document.getElementById('admin-email'); 
-            const pwEl = document.getElementById('admin-password'); 
-            if (!emailEl || !pwEl) return alert("입력창을 찾을 수 없습니다."); 
-            if (!window.sb) { alert("❌ 시스템 오류: Supabase 연결 실패"); return; } 
-            try { 
-                const { data, error } = await window.sb.auth.signInWithPassword({ email: emailEl.value, password: pwEl.value }); 
-                if (error) { alert("로그인 실패: " + error.message); } 
-                else { 
-                    await logAdminActivity('LOGIN', { email: emailEl.value });
-                    showAdminMode(); 
-                    loadConfigToForm(); 
-                    loadAdminCategories(); 
-                    populateCategorySelects(); 
-                    loadPopups(); 
-                    loadAdminForms(); 
-                } 
-            } catch (e) { alert("오류 발생: " + e.message); console.error(e); } 
+        window.adminLogin = async function () {
+            const emailEl = document.getElementById('admin-email');
+            const pwEl = document.getElementById('admin-password');
+            const rememberId = document.getElementById('remember-admin-id');
+            const autoLogin = document.getElementById('auto-login-admin');
+            if (!emailEl || !pwEl || !rememberId || !autoLogin) return alert("입력창을 찾을 수 없습니다.");
+            if (typeof supabase === 'undefined' || typeof CONFIG === 'undefined') { alert("❌ 시스템 오류: Supabase 연결 실패"); return; }
+            const email = emailEl.value.trim();
+            const keepSignedIn = autoLogin.checked;
+            try {
+                if (rememberId.checked) {
+                    localStorage.setItem('newkids_admin_remember_id', 'true');
+                    localStorage.setItem('newkids_admin_saved_email', email);
+                } else {
+                    localStorage.removeItem('newkids_admin_remember_id');
+                    localStorage.removeItem('newkids_admin_saved_email');
+                }
+                if (keepSignedIn) localStorage.setItem('newkids_admin_auto_login', 'true');
+                else localStorage.removeItem('newkids_admin_auto_login');
+                window.ADMIN_PERSIST_SESSION = keepSignedIn;
+                if (!keepSignedIn) {
+                    const projectRef = new URL(CONFIG.SUPABASE_URL).hostname.split('.')[0];
+                    localStorage.removeItem(`sb-${projectRef}-auth-token`);
+                }
+                window.sb = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY, {
+                    auth: { persistSession: true, storage: keepSignedIn ? window.localStorage : window.sessionStorage }
+                });
+                const { data, error } = await window.sb.auth.signInWithPassword({ email, password: pwEl.value });
+                if (error) { alert("로그인 실패: " + error.message); return; }
+                await logAdminActivity('LOGIN', { email });
+                showAdminMode();
+                loadConfigToForm();
+                loadAdminCategories();
+                populateCategorySelects();
+                loadPopups();
+                loadAdminForms();
+            } catch (e) { alert("오류 발생: " + e.message); console.error(e); }
         };
 
         window.adminLogout = async function () { 

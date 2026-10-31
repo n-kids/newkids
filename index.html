@@ -205,7 +205,7 @@
 
             <div class="popup-footer">
                 <button type="button" class="popup-close-today" onclick="closePopupToday()">오늘 하루 열지 않기</button>
-                <button type="button" class="popup-auto-toggle" id="popup-auto-toggle" aria-pressed="false" onclick="toggleAutoSlide()">자동 넘김 멈춤</button>
+                <button type="button" class="popup-auto-toggle" id="popup-auto-toggle" onclick="toggleAutoSlide()">자동 넘김 멈춤</button>
                 <button type="button" class="popup-close" onclick="closePopup()">닫기</button>
             </div>
         </div>
@@ -451,7 +451,6 @@
             const button = document.getElementById('popup-auto-toggle');
             if (!button) return;
             button.textContent = autoSlidePaused ? '자동 넘김 시작' : '자동 넘김 멈춤';
-            button.setAttribute('aria-pressed', String(autoSlidePaused));
         }
         function toggleAutoSlide() {
             autoSlidePaused = !autoSlidePaused;

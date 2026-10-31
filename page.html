@@ -81,7 +81,7 @@
             if (error || !data) {
                 document.getElementById('page-content').innerHTML = "<div style='text-align:center; padding:50px; color:#999;'>아직 등록된 페이지 내용이 없습니다.</div>";
             } else {
-                let finalContent = data.content || '';
+                let finalContent = window.sanitizeHtml(data.content || '');
                 finalContent = finalContent.replace(/\[투표:(\d+)\]/g, '<iframe id="form-iframe-$1" src="form.html?id=$1" width="100%" frameborder="0" scrolling="no" style="border:1px solid #ddd; border-radius:12px; margin:30px 0; overflow:hidden; transition:height 0.3s ease;"></iframe>');
 
                 document.getElementById('page-content').innerHTML = finalContent;

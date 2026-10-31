@@ -57,7 +57,7 @@
             const { data } = await sb.from('total_posts')
                 .select('*')
                 .eq('category', CATEGORY_NAME)
-                .eq('is_visible', true
+                .eq('is_visible', true)
                 .order('order_num', { ascending: true })
                 .order('created_at', { ascending: false });
 

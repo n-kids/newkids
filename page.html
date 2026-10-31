@@ -76,7 +76,7 @@
                 document.title = "뉴키즈 - " + catData.name;
             }
 
-            const { data, error } = await window.sb.from('total_posts').select('*').eq('category', code).order('created_at', { ascending: true }).limit(1).single();
+            const { data, error } = await window.sb.from('total_posts').select('id,created_at,title,content,image_url,category,thumbnail_url,link_url,order_num,video_url,is_visible,is_secret,download_count,is_notice,publish_at,has_download_password').eq('category', code).order('created_at', { ascending: true }).limit(1).single();
 
             if (error || !data) {
                 document.getElementById('page-content').innerHTML = "<div style='text-align:center; padding:50px; color:#999;'>아직 등록된 페이지 내용이 없습니다.</div>";

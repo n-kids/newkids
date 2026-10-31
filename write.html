@@ -71,20 +71,14 @@
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
     <script src="https://unpkg.com/quill-blot-formatter@1.0.5/dist/quill-blot-formatter.min.js"></script>
     <script src="config.js?v=20261026"></script>
-    <script src="manager.js?v=20261101-rls"></script>
+    <script src="manager.js?v=20261101"></script>
 
     <script>
         let quill;
-        const ADMIN_UID = 'f17f6f28-84d7-426e-9eb1-cdac8ec015d4';
-        const PUBLIC_POST_FIELDS = 'id,created_at,title,content,image_url,category,thumbnail_url,link_url,order_num,video_url,is_visible,is_secret,download_count,is_notice,publish_at,has_download_password';
-        let isAdminEditor = false;
         let editId = null;
         let fileItems = []; // 통합 파일 배열 (기존 서버 파일 문자열 객체 또는 새로 선택된 File 객체)
 
         document.addEventListener("DOMContentLoaded", async function () {
-            while (!window.sb) await new Promise(resolve => setTimeout(resolve, 50));
-            const { data: { session } } = await window.sb.auth.getSession();
-            isAdminEditor = session?.user?.id === ADMIN_UID;
             if (typeof Quill !== 'undefined') {
                 Quill.register('modules/blotFormatter', QuillBlotFormatter.default);
                 quill = new Quill('#editor-container', {
@@ -155,39 +149,33 @@
         }
 
         async function loadEditData(id) {
-    showLoading(true);
-    let data, error, currentEditPassword = '';
-    if (isAdminEditor) {
-        const result = await window.sb.from('total_posts').select(PUBLIC_POST_FIELDS).eq('id', id).single();
-        data = result.data; error = result.error;
-    } else {
-        currentEditPassword = sessionStorage.getItem(`post-edit-password:${id}`) || '';
-        sessionStorage.removeItem(`post-edit-password:${id}`);
-        const result = await window.sb.functions.invoke('public-post-actions', {
-            body: { action: 'load_for_edit', id: Number(id), password: currentEditPassword }
-        });
-        data = result.data?.post; error = result.error || (!data ? new Error('게시글 또는 비밀번호를 확인할 수 없습니다.') : null);
-    }
-    showLoading(false);
-    if (error || !data) {
-        alert("게시글 정보를 불러올 수 없습니다. 비밀번호를 확인해주세요.");
-        history.back();
-        return;
-    }
-    document.getElementById('write-category').value = data.category;
-    document.getElementById('write-title').value = data.title;
-    document.getElementById('write-link').value = data.link_url || '';
-    document.getElementById('write-password').value = isAdminEditor ? '' : currentEditPassword;
-    if (!isAdminEditor) document.getElementById('write-password').placeholder = '수정/삭제 비밀번호';
-    document.getElementById('write-is-secret').checked = data.is_secret === true || String(data.is_secret) === 'true';
-    quill.root.innerHTML = data.content || '';
-    if (data.image_url && data.image_url !== 'null') {
-        const urls = data.image_url.split('||').map(u => u.trim()).filter(Boolean);
-        fileItems = urls.map(item => ({ type: 'server', value: item }));
-        renderFileList();
-    }
-}
-// 새 파일 선택 시 기존 목록에 추가
+            showLoading(true);
+            const { data, error } = await window.sb.from('total_posts').select('*').eq('id', id).single();
+            showLoading(false);
+
+            if (error || !data) {
+                alert("게시글 정보를 불러올 수 없습니다.");
+                history.back();
+                return;
+            }
+
+            document.getElementById('write-category').value = data.category;
+            document.getElementById('write-title').value = data.title;
+            document.getElementById('write-link').value = data.link_url || '';
+            document.getElementById('write-password').value = data.password || data.video_url || '';
+            document.getElementById('write-is-secret').checked = (data.is_secret === true || String(data.is_secret) === 'true');
+
+            quill.root.innerHTML = data.content || '';
+
+            if (data.image_url && data.image_url !== 'null') {
+                const urls = data.image_url.split('||').map(u => u.trim()).filter(u => u);
+                // 기존 서버 파일들은 객체 형태로 fileItems에 적재
+                fileItems = urls.map(item => ({ type: 'server', value: item }));
+                renderFileList();
+            }
+        }
+
+        // 새 파일 선택 시 기존 목록에 추가
         function handleNewFiles(input) {
             if (input.files && input.files.length > 0) {
                 for (let i = 0; i < input.files.length; i++) {
@@ -271,8 +259,7 @@
             const category = document.getElementById('write-category').value || 'notice';
 
             if (!title) return alert("제목을 입력해주세요.");
-            if (!isAdminEditor && !password) return alert("게시글 수정/삭제를 위해 비밀번호를 입력해주세요.");
-            if (!isAdminEditor && isSecret) return alert("비밀글은 관리자만 등록할 수 있습니다.");
+            if (!password) return alert("게시글 수정/삭제를 위해 비밀번호를 반드시 입력해주세요.");
 
             showLoading(true);
 
@@ -305,6 +292,7 @@
                 content: quill.root.innerHTML,
                 category: category,
                 link_url: author,
+                password: password,
                 is_secret: isSecret,
                 image_url: du,
                 thumbnail_url: thumbUrl,
@@ -313,25 +301,11 @@
 
             let resultError;
             if (editId) {
-                if (isAdminEditor) {
-                    if (password) pd.password = password;
-                    const { error } = await window.sb.from('total_posts').update(pd).eq('id', editId);
-                    resultError = error;
-                } else {
-                    const { error } = await window.sb.functions.invoke('public-post-actions', {
-                        body: { action: 'update', id: Number(editId), password, post: pd }
-                    });
-                    resultError = error;
-                }
-            } else if (isAdminEditor) {
-                pd.order_num = 0;
-                if (password) pd.password = password;
-                const { error } = await window.sb.from('total_posts').insert([pd]);
+                const { error } = await window.sb.from('total_posts').update(pd).eq('id', editId);
                 resultError = error;
             } else {
-                const { error } = await window.sb.functions.invoke('public-post-actions', {
-                    body: { action: 'create', password, post: pd }
-                });
+                pd.order_num = 0;
+                const { error } = await window.sb.from('total_posts').insert([pd]);
                 resultError = error;
             }
 

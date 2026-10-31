@@ -130,10 +130,7 @@
                 if (window.sb && window.GLOBAL_CATEGORIES && window.GLOBAL_CATEGORIES.length > 0) {
                     clearInterval(checkReady);
 
-                    while (!window.sb) await new Promise(resolve => setTimeout(resolve, 50));
-            const { data: { session } } = await window.sb.auth.getSession();
-            isAdminEditor = session?.user?.id === ADMIN_UID;
-            const urlParams = new URLSearchParams(window.location.search);
+                    const urlParams = new URLSearchParams(window.location.search);
                     editId = urlParams.get('edit');
                     const hashCat = location.hash.replace('#', '');
 
@@ -167,7 +164,7 @@
         currentEditPassword = sessionStorage.getItem(`post-edit-password:${id}`) || '';
         sessionStorage.removeItem(`post-edit-password:${id}`);
         const result = await window.sb.functions.invoke('public-post-actions', {
-            body: { action: 'load_for_edit', id: Number(id), password }
+            body: { action: 'load_for_edit', id: Number(id), password: currentEditPassword }
         });
         data = result.data?.post; error = result.error || (!data ? new Error('게시글 또는 비밀번호를 확인할 수 없습니다.') : null);
     }

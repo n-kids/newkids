@@ -55,8 +55,9 @@
       if (!row || !confirm('선택한 이력으로 게시글 내용을 복구할까요?')) return;
       const snapshot = {...row.snapshot};
       delete snapshot.created_at;
-      const { data: existing } = await sb.from('total_posts').select('id').eq('id', row.post_id).maybeSingle();
-      const result = existing
+      const { data: current } = await sb.from('total_posts').select('*').eq('id', row.post_id).maybeSingle();
+      if (current && !await window.savePostRevision(current, 'update')) return alert('현재 상태를 이력으로 저장하지 못해 복구를 중단했습니다.');
+      const result = current
         ? await sb.from('total_posts').update(snapshot).eq('id', row.post_id)
         : await sb.from('total_posts').insert(snapshot);
       if (result.error) return alert('복구 실패: ' + result.error.message);

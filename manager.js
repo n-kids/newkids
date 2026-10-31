@@ -91,7 +91,7 @@ window.formatDate = function (dateStr) {
 function startSupabase() {
     try {
         window.sb = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY, {
-            auth: { persistSession: true, storage: window.sessionStorage }
+            auth: { persistSession: true, storage: window.ADMIN_PERSIST_SESSION ? window.localStorage : window.sessionStorage }
         });
         loadSiteConfig();
         loadCategories();

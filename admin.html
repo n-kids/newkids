@@ -1005,7 +1005,7 @@
             const isDeleteThumbChecked = document.getElementById('delete-thumb-check').checked;
             let tu = isDeleteThumbChecked ? null : originalThumbUrl;
             if (isDeleteThumbChecked && originalThumbUrl) {
-                await deleteStorageFileByUrl(originalThumbUrl);
+                // 변경 이력 복구를 위해 기존 파일은 Storage에 보존합니다.
             }
 
             const rawFile = document.getElementById('post-thumb-file').files[0];
@@ -1021,7 +1021,7 @@
                     showLoading(false); 
                     return alert("썸네일 업로드 실패: " + error.message); 
                 }
-                if (originalThumbUrl) await deleteStorageFileByUrl(originalThumbUrl);
+                // 변경 이력 복구를 위해 교체 전 썸네일은 Storage에 보존합니다.
                 tu = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl;
             } else if (!tu) {
                 const yId = getYoutubeId(document.getElementById('youtube-url').value);
@@ -1051,15 +1051,7 @@
                 }
             }
 
-            // 수정 중 제거된 이전 첨부파일 스토리지 정리
-            if (editingId && originalDetailUrl) {
-                const oldUrls = originalDetailUrl.split('||').map(u => u.split('@@')[0].trim());
-                for (const oldU of oldUrls) {
-                    if (!currentServerUrls.includes(oldU)) {
-                        await deleteStorageFileByUrl(oldU);
-                    }
-                }
-            }
+            // 수정 전 첨부파일은 게시글 이력 복구를 위해 Storage에 보존합니다.
 
             let du = finalFileUrls.length > 0 ? finalFileUrls.join('||') : null;
             let videoVal = document.getElementById('youtube-url').value; 

@@ -2837,3 +2837,11 @@ body {
 .ql-font-gowun-batang { font-family: "Gowun Batang", "Batang", serif; }
 .ql-font-noto-sans-kr { font-family: "Noto Sans KR", "Malgun Gothic", sans-serif; }
 .ql-font-noto-serif-kr { font-family: "Noto Serif KR", "Batang", serif; }
+
+/* Google Fonts 추가 선택지 */
+.ql-font-black-han-sans { font-family: "Black Han Sans", sans-serif; }
+.ql-font-do-hyeon { font-family: "Do Hyeon", sans-serif; }
+.ql-font-jua { font-family: "Jua", sans-serif; }
+.ql-font-gugi { font-family: "Gugi", sans-serif; }
+.ql-font-poor-story { font-family: "Poor Story", sans-serif; }
+.ql-font-song-myung { font-family: "Song Myung", sans-serif; }

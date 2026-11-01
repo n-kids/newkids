@@ -48,7 +48,7 @@ window.escapeHtml = function (text) {
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 };
 window.sanitizeHtml = function (html) {
-    const allowedTags = new Set(["A","B","BLOCKQUOTE","BR","CODE","DIV","EM","H1","H2","H3","H4","H5","H6","HR","I","IMG","LI","OL","P","PRE","S","SPAN","STRONG","SUB","SUP","TABLE","TBODY","TD","TFOOT","TH","THEAD","TR","U","UL"]);
+    const allowedTags = new Set(["A","B","BLOCKQUOTE","BR","CODE","DIV","EM","H1","H2","H3","H4","H5","H6","HR","I","IFRAME","IMG","LI","OL","P","PRE","S","SPAN","STRONG","SUB","SUP","TABLE","TBODY","TD","TFOOT","TH","THEAD","TR","U","UL"]);
     const allowedAttrs = new Set(["alt","colspan","height","href","src","title","width","rowspan","class","style"]);
     const safeUrl = (value, image) => {
         const v = String(value || "").trim();
@@ -63,6 +63,19 @@ window.sanitizeHtml = function (html) {
             const fragment = document.createDocumentFragment();
             Array.from(node.childNodes).forEach(child => fragment.appendChild(clean(child)));
             return fragment;
+        }
+        if (node.tagName === "IFRAME") {
+            const src = node.getAttribute("src") || "";
+            const match = src.match(/^https:\/\/www\.youtube(?:-nocookie)?\.com\/embed\/([A-Za-z0-9_-]{11})(?:[?#][A-Za-z0-9_=&%-]*)?$/i);
+            if (!match) return document.createDocumentFragment();
+            const iframe = document.createElement("iframe");
+            iframe.setAttribute("src", "https://www.youtube.com/embed/" + match[1]);
+            iframe.setAttribute("title", "YouTube 동영상");
+            iframe.setAttribute("loading", "lazy");
+            iframe.setAttribute("allowfullscreen", "");
+            iframe.setAttribute("referrerpolicy", "strict-origin-when-cross-origin");
+            iframe.setAttribute("class", "ql-video");
+            return iframe;
         }
         const out = document.createElement(node.tagName.toLowerCase());
         Array.from(node.attributes).forEach(attr => {

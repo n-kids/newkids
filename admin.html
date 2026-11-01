@@ -1179,7 +1179,7 @@
             let filteredData = data;
             if (isDraftFilter) filteredData = filteredData.filter(item => item.is_draft === true);
             if (isScheduledFilter) filteredData = filteredData.filter(item => item.publish_at && new Date(item.publish_at) > new Date() && item.is_draft !== true);
-            if (isUnansweredFilter) filteredData = filteredData.filter(item => !answeredSet.has(item.id));
+            if (isUnansweredFilter) filteredData = filteredData.filter(item => !answeredSet.has(item.id) && !window.nkIsAdminAuthoredPost(item));
 
             const count = filteredData.length;
             if (count === 0) {

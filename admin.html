@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet">
 
     <!-- 공통 및 관리자 전용 CSS 파일 로드 -->
-    <link rel="stylesheet" href="style.css?v=20261026">
+    <link rel="stylesheet" href="style.css?v=20261102-editor">
     <link rel="stylesheet" href="admin.css">
     <link rel="stylesheet" href="admin-custom.css">
 
@@ -24,6 +24,7 @@
         .ql-picker.ql-font .ql-picker-label[data-value="nanum-myeongjo"]::before,
         .ql-picker.ql-font .ql-picker-item[data-value="nanum-myeongjo"]::before { content: '나눔명조'; font-family: 'Nanum Myeongjo', serif; }
 
+        .ql-picker.ql-font .ql-picker-label:not([data-value])::before,
         .ql-picker.ql-font .ql-picker-label[data-value="sans-serif"]::before,
         .ql-picker.ql-font .ql-picker-item[data-value="sans-serif"]::before { content: '기본 폰트'; font-family: sans-serif; }
 
@@ -415,7 +416,7 @@
         try { window.ADMIN_PERSIST_SESSION = localStorage.getItem('newkids_admin_auto_login') === 'true'; }
         catch (_) { window.ADMIN_PERSIST_SESSION = false; }
     </script>
-    <script src="manager.js?v=20261101-login-persistence"></script>
+    <script src="manager.js?v=20261102-editor"></script>
 
     <script>
         let editingId = null; let originalDetailUrl = null; let originalThumbUrl = null; let originalMainHero = null; let isMainHeroDeleted = false;
@@ -520,6 +521,9 @@
                 });
             } catch (e) { console.warn('로그인 환경설정을 저장할 수 없습니다.', e); }
             if (typeof Quill !== 'undefined') {
+                const Font = Quill.import('formats/font');
+                Font.whitelist = ['sans-serif', 'nanum-gothic', 'nanum-myeongjo'];
+                Quill.register(Font, true);
                 Quill.register('modules/blotFormatter', QuillBlotFormatter.default);
                 quill = new Quill('#editor-container', {
                     theme: 'snow',
@@ -527,6 +531,7 @@
                         blotFormatter: {},
                         toolbar: {
                             container: [
+                                [{ 'font': ['sans-serif', 'nanum-gothic', 'nanum-myeongjo'] }],
                                 [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
                                 [{ 'size': ['small', false, 'large', 'huge'] }],
                                 ['bold', 'italic', 'underline', 'strike'],
@@ -538,7 +543,30 @@
                                 ['link', 'image', 'video'],
                                 ['clean']
                             ],
-                            handlers: { image: function () { document.getElementById('hidden-image-input').click(); } }
+                            handlers: {
+                                image: function () { document.getElementById('hidden-image-input').click(); },
+                                video: function () {
+                                    const input = window.prompt('YouTube 동영상 주소를 입력하세요.');
+                                    if (!input) return;
+                                    let videoId = '';
+                                    try {
+                                        const url = new URL(input.trim());
+                                        const host = url.hostname.toLowerCase().replace(/^www\./, '');
+                                        if (host === 'youtu.be') videoId = url.pathname.split('/').filter(Boolean)[0] || '';
+                                        else if (host === 'youtube.com' || host === 'm.youtube.com' || host === 'youtube-nocookie.com') {
+                                            videoId = url.searchParams.get('v') || (url.pathname.match(/^\/(?:embed|shorts)\/([A-Za-z0-9_-]{11})/) || [])[1] || '';
+                                        }
+                                    } catch (error) {}
+                                    if (!/^[A-Za-z0-9_-]{11}$/.test(videoId)) {
+                                        alert('유효한 YouTube 동영상 주소를 입력해 주세요.');
+                                        return;
+                                    }
+                                    const range = quill.getSelection(true);
+                                    const index = range ? range.index : Math.max(0, quill.getLength() - 1);
+                                    quill.insertEmbed(index, 'video', 'https://www.youtube.com/embed/' + videoId, 'user');
+                                    quill.setSelection(index + 1, 'silent');
+                                }
+                            }
                         }
                     }
                 });
@@ -2207,6 +2235,6 @@
             alert("에디터에 투표 코드가 자동으로 삽입되었습니다!");
         }
     </script>
-    <script src="admin-convenience.js?v=20261101-2"></script>
+    <script src="admin-convenience.js?v=20261102-editor"></script>
 </body>
 </html>

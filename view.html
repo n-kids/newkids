@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>뉴키즈 - 상세 보기</title>
     <!-- 공통 스타일 시트 로드 -->
-    <link rel="stylesheet" href="style.css?v=20261026">
+    <link rel="stylesheet" href="style.css?v=20261102">
     <style>
         body {
             background-color: #f4f7fa !important;
@@ -53,7 +53,8 @@
                         <span id="v-author">작성자: -</span>
                         <span id="v-date">작성일: -</span>
                         <span id="v-download-count" style="color:#f4a261; font-weight:bold;">📥 0회</span>
-                        <button onclick="copyCurrentLink()" style="background:#eef6ff; border:1px solid #cce5ff; color:#1a3c6e; padding:5px 15px; border-radius:20px; font-size:0.85rem; font-weight:bold; cursor:pointer; transition:0.2s;" onmouseover="this.style.background='#d0e4ff'" onmouseout="this.style.background='#eef6ff'">🔗 공유하기</button>
+                        <button class="view-tool-button" onclick="shareCurrentPost()">🔗 공유</button>
+                        <button class="view-tool-button" onclick="window.print()">🖨️ 인쇄</button>
                     </div>
                 </div>
 
@@ -63,7 +64,14 @@
 
                 <div id="download-files-area" style="margin-top: 30px; padding-top: 15px; border-top: 1px dashed #eee; display: none;">
                     <h4 style="color: #1a3c6e; margin-bottom: 15px;">📎 첨부파일</h4>
+                    <p class="download-help-note">파일 이름을 눌러 다운로드하세요. 🔒 제한된 자료는 안내된 비밀번호를 입력해야 받을 수 있습니다. <button type="button" class="text-button" onclick="showDownloadGuide()">자세한 방법</button></p>
                     <div id="download-list-container" style="display: flex; flex-direction: column; gap: 10px;"></div>
+                </div>
+
+                <div id="view-mobile-actions" class="mobile-resource-actions" aria-label="게시글 빠른 메뉴">
+                    <button type="button" onclick="document.getElementById('download-files-area').scrollIntoView({behavior:'smooth',block:'start'})">첨부파일</button>
+                    <button type="button" onclick="shareCurrentPost()">공유</button>
+                    <button type="button" onclick="window.print()">인쇄</button>
                 </div>
 
                 <div id="admin-reply-area" style="display:none; margin-top: 30px; padding: 25px; background: #f0f7ff; border-radius: 12px; border: 1px solid #cce5ff;">
@@ -119,11 +127,20 @@
         </div>
     </div>
 
+    <div id="download-guide-modal" class="guide-modal" role="dialog" aria-modal="true" aria-labelledby="download-guide-title" style="display:none;">
+        <div class="guide-modal-card">
+            <button type="button" class="guide-modal-close" aria-label="닫기" onclick="hideDownloadGuide()">×</button>
+            <h2 id="download-guide-title">자료 다운로드 방법</h2>
+            <ol><li>첨부 파일 이름과 형식을 확인합니다.</li><li><strong>다운로드</strong>를 누르면 기기에 저장됩니다.</li><li>🔒 제한된 자료는 게시글에 안내된 비밀번호를 입력합니다.</li><li>파일이 열리지 않으면 <a href="notice.html#qna">문의사항 게시판</a>에서 도움을 요청해 주세요.</li></ol>
+            <button type="button" class="btn-action" onclick="hideDownloadGuide()">확인</button>
+        </div>
+    </div>
+
     <footer></footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js?v=20261026"></script>
-    <script src="manager.js?v=20261101"></script>
+    <script src="manager.js?v=20261102"></script>
     <script>
         let currentPostId = null;
         let postDataCache = null;
@@ -201,6 +218,18 @@
                 textArea.remove();
             }
         }
+
+        async function shareCurrentPost() {
+            const data = { title: document.getElementById('v-title').innerText || document.title, text: '뉴키즈 자료를 확인해 보세요.', url: window.location.href };
+            if (navigator.share) {
+                try { await navigator.share(data); } catch (error) { if (error.name !== 'AbortError') copyCurrentLink(); }
+            } else {
+                copyCurrentLink();
+            }
+        }
+        function showDownloadGuide() { document.getElementById('download-guide-modal').style.display = 'flex'; }
+        function hideDownloadGuide() { document.getElementById('download-guide-modal').style.display = 'none'; }
+        document.addEventListener('keydown', event => { if (event.key === 'Escape') hideDownloadGuide(); });
 
         async function loadPostDetail(id) {
             const { data, error } = await window.sb.from('total_posts').select('*').eq('id', id).single();
@@ -665,3 +694,4 @@
     </script>
 </body>
 </html>
+

@@ -1,4 +1,4 @@
-﻿@charset "utf-8";
+@charset "utf-8";
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css");
 
 /* =========================================
@@ -1903,6 +1903,31 @@ footer {
     transform: scale(1.2);
 }
 
+/* 자료실 이용 안내, 문의 연결, 모바일 빠른 메뉴 */
+.reference-help-panel { margin-top: 18px; align-items: center; gap: 10px; flex-wrap: wrap; padding: 14px 16px; background: #f0f7ff; border: 1px solid #d7e7f8; border-radius: 12px; }
+.reference-help-panel > div { display: grid; gap: 4px; flex: 1 1 260px; color: #445; }
+.reference-help-panel > div strong { color: #1a3c6e; }
+.reference-help-panel > div span { font-size: .9rem; line-height: 1.5; }
+.reference-help-panel .btn-action { margin: 0; text-decoration: none; text-align: center; }
+.reference-inquiry-link { background: #278577 !important; }
+.guide-modal { position: fixed; inset: 0; z-index: 30000; padding: 20px; background: rgba(13, 26, 54, .62); align-items: center; justify-content: center; box-sizing: border-box; }
+.guide-modal-card { position: relative; width: min(100%, 520px); padding: 28px; border-radius: 16px; background: white; box-shadow: 0 16px 50px rgba(0,0,0,.22); color: #344; line-height: 1.7; box-sizing: border-box; }
+.guide-modal-card h2 { margin: 0 32px 16px 0; color: #1a3c6e; font-size: 1.35rem; }
+.guide-modal-card ol { padding-left: 22px; }
+.guide-modal-card li { margin: 8px 0; }
+.guide-modal-card a { color: #1a3c6e; font-weight: 700; }
+.guide-modal-close { position: absolute; top: 12px; right: 14px; width: 40px; height: 40px; border: 0; border-radius: 50%; background: #f2f4f7; color: #334; font-size: 1.6rem; cursor: pointer; }
+.view-tool-button { background: #eef6ff; border: 1px solid #cce5ff; color: #1a3c6e; padding: 7px 13px; border-radius: 20px; font-size: .9rem; font-weight: 700; cursor: pointer; }
+.download-help-note { margin: -5px 0 14px; color: #596579; font-size: .92rem; line-height: 1.5; }
+.text-button { border: 0; background: transparent; color: #1a3c6e; text-decoration: underline; font-weight: 700; cursor: pointer; padding: 4px; }
+.mobile-resource-actions { display: none; }
+
+@media print {
+    header, footer, .scroll-btns, .view-tool-button, .view-mobile-actions, #author-actions-area, #related-posts-area, .btn-center-wrap, .mobile-resource-actions { display: none !important; }
+    body, .view-box-wrapper, .view-box-custom { background: #fff !important; box-shadow: none !important; margin: 0 !important; padding: 0 !important; max-width: none !important; border: 0 !important; }
+    .view-content { color: #000 !important; }
+}
+
 @media screen and (max-width: 768px) {
     .hashtag-container {
         flex-wrap: nowrap;
@@ -1923,6 +1948,21 @@ footer {
         flex-direction: column;
         align-items: stretch;
     }
+    .reference-help-panel { display: flex; flex-direction: column; align-items: stretch; gap: 8px; }
+    .reference-help-panel .btn-action { min-height: 44px; display: flex; align-items: center; justify-content: center; padding: 9px 8px; font-size: .88rem; }
+    .mobile-resource-actions { position: fixed; z-index: 5000; left: 0; right: 0; bottom: 0; display: flex; gap: 8px; padding: 9px 12px calc(9px + env(safe-area-inset-bottom)); background: rgba(255,255,255,.97); border-top: 1px solid #dce3ed; box-shadow: 0 -4px 18px rgba(21,43,80,.1); }
+    .mobile-resource-actions button, .mobile-resource-actions a { flex: 1; min-height: 44px; display: flex; justify-content: center; align-items: center; border: 1px solid #d5dfec; border-radius: 10px; background: #f4f8fd; color: #1a3c6e; font: inherit; font-size: .9rem; font-weight: 700; text-decoration: none; cursor: pointer; }
+    body:not(.is-resource-board) #mobile-resource-actions { display: none !important; }
+    .board-container { margin: 20px auto !important; padding: 18px 14px 90px !important; }
+    .board-list-row { min-height: 54px; }
+    .hashtag-btn, .btn-load-more, .btn-action { min-height: 42px; }
+    .view-box-wrapper { padding-bottom: 80px !important; }
+    .view-box-custom { padding: 24px 16px 90px !important; }
+    .view-header .view-meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .view-tool-button { min-height: 40px; }
+    #download-list-container > div { gap: 8px; padding: 12px !important; }
+    #download-list-container > div > div:last-child { margin-left: 0 !important; }
+    .guide-modal-card { padding: 24px 20px; max-height: 85vh; overflow: auto; }
 }
 
 /* =========================================
@@ -2771,3 +2811,4 @@ body {
         font-size: 1.1rem;
     }
 }
+

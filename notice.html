@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
@@ -7,7 +7,7 @@
     <meta name="description" content="뉴키즈(New Kids)의 주요 공지사항과 교육 자료를 확인하세요. 어린이집과 유치원 원장님들을 위한 유익한 최신 운영 소식을 전해드립니다.">
     <meta name="keywords" content="뉴키즈 공지사항, 김포뉴키즈, 고양뉴키즈, 파주뉴키즈, 유치원 교육자료">
     <!-- 공통 스타일 시트 로드 -->
-    <link rel="stylesheet" href="style.css?v=20261026">
+    <link rel="stylesheet" href="style.css?v=20261102">
 </head>
 <body id="main-body">
 
@@ -17,6 +17,12 @@
         <div class="container">
             <h1 id="board-title" style="font-size: 2.2rem; margin-bottom:10px; color:#1a3c6e;">📢 알림 & 소식</h1>
             <p id="board-desc" style="color:#666;">데이터를 불러오는 중입니다...</p>
+            <div id="reference-help-panel" class="reference-help-panel" style="display:none;">
+                <div><strong>자료 다운로드 안내</strong><span>첨부 파일을 누르면 내려받을 수 있습니다. 🔒 표시가 있으면 게시글에 안내된 비밀번호를 입력해 주세요.</span></div>
+                <button type="button" class="btn-action" onclick="showDownloadGuide()">다운로드 방법</button>
+                <a class="btn-action reference-inquiry-link" href="notice.html#qna">문의하기 · 답변 확인</a>
+                <button type="button" class="btn-action" onclick="shareResourcePage()">자료실 공유</button>
+            </div>
         </div>
     </div>
 
@@ -65,6 +71,26 @@
             <input type="text" id="search-input" class="form-input" style="width: 250px; padding: 8px;" placeholder="제목 검색" onkeypress="if(event.keyCode==13) executeSearch();">
             <button onclick="executeSearch()" class="btn-action" style="padding: 8px 15px;">검색</button>
         </div>
+    </div>
+
+    <div id="download-guide-modal" class="guide-modal" role="dialog" aria-modal="true" aria-labelledby="download-guide-title" style="display:none;">
+        <div class="guide-modal-card">
+            <button type="button" class="guide-modal-close" aria-label="닫기" onclick="hideDownloadGuide()">×</button>
+            <h2 id="download-guide-title">자료 다운로드 방법</h2>
+            <ol>
+                <li>자료 제목을 눌러 상세 화면으로 이동합니다.</li>
+                <li>첨부 파일 이름과 형식을 확인한 뒤 <strong>다운로드</strong>를 누릅니다.</li>
+                <li>🔒 표시가 있으면 게시글에 적힌 다운로드 비밀번호를 입력합니다.</li>
+                <li>열리지 않는 파일은 기기에 맞는 앱으로 열거나 자료별 문의를 남겨 주세요.</li>
+            </ol>
+            <p>파일을 열 때 문제가 있으면 <a href="notice.html#qna">문의사항 게시판</a>에서 문의하고 답변을 확인할 수 있습니다.</p>
+            <button type="button" class="btn-action" onclick="hideDownloadGuide()">확인</button>
+        </div>
+    </div>
+    <div id="mobile-resource-actions" class="mobile-resource-actions" aria-label="자료실 빠른 메뉴" style="display:none;">
+        <button type="button" onclick="showDownloadGuide()">다운로드 안내</button>
+        <a href="notice.html#qna">문의·답변</a>
+        <button type="button" onclick="shareResourcePage()">공유</button>
     </div>
 
     <footer></footer>
@@ -130,7 +156,33 @@
             } else {
                 writeBtn.style.display = 'inline-block';
             }
+            const isResourceBoard = currentCategory === 'reference';
+            document.body.classList.toggle('is-resource-board', isResourceBoard);
+            document.getElementById('reference-help-panel').style.display = isResourceBoard ? 'flex' : 'none';
+            document.getElementById('mobile-resource-actions').style.display = isResourceBoard ? '' : 'none';
         }
+
+        window.showDownloadGuide = function () {
+            document.getElementById('download-guide-modal').style.display = 'flex';
+        };
+        window.hideDownloadGuide = function () {
+            document.getElementById('download-guide-modal').style.display = 'none';
+        };
+        window.shareResourcePage = async function () {
+            const shareData = { title: '뉴키즈 자료실', text: '뉴키즈 자료실에서 교육 자료를 확인해 보세요.', url: location.href };
+            if (navigator.share) {
+                try { await navigator.share(shareData); } catch (error) { if (error.name !== 'AbortError') copyResourceUrl(); }
+            } else {
+                copyResourceUrl();
+            }
+        };
+        function copyResourceUrl() {
+            const url = location.href;
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(url).then(() => alert('자료실 주소를 복사했습니다.')).catch(() => prompt('아래 주소를 복사해 주세요.', url));
+            } else prompt('아래 주소를 복사해 주세요.', url);
+        }
+        document.addEventListener('keydown', event => { if (event.key === 'Escape') hideDownloadGuide(); });
 
         async function buildDynamicHashtags() {
             const hashtagArea = document.getElementById('hashtag-area');
@@ -409,3 +461,4 @@
     </script>
 </body>
 </html>
+

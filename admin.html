@@ -7,10 +7,10 @@
 
     <link rel="shortcut icon" href="#">
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&family=Nanum+Gothic:wght@400;700;800&family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Sans+KR:wght@400;500;700;900&family=Noto+Serif+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Gugi&family=Jua&family=Poor+Story&family=Song+Myung&family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&family=Nanum+Gothic:wght@400;700;800&family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Sans+KR:wght@400;500;700;900&family=Noto+Serif+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
 
     <!-- 공통 및 관리자 전용 CSS 파일 로드 -->
-    <link rel="stylesheet" href="style.css?v=20261102-editor-fonts">
+    <link rel="stylesheet" href="style.css?v=20261102-editor-plus6">
     <link rel="stylesheet" href="admin.css">
     <link rel="stylesheet" href="admin-custom.css">
 
@@ -36,6 +36,19 @@
         .ql-picker.ql-font .ql-picker-item[data-value="noto-sans-kr"]::before { content: '본고딕'; font-family: 'Noto Sans KR', sans-serif; }
         .ql-picker.ql-font .ql-picker-label[data-value="noto-serif-kr"]::before,
         .ql-picker.ql-font .ql-picker-item[data-value="noto-serif-kr"]::before { content: '본명조'; font-family: 'Noto Serif KR', serif; }
+
+        .ql-picker.ql-font .ql-picker-label[data-value="black-han-sans"]::before,
+        .ql-picker.ql-font .ql-picker-item[data-value="black-han-sans"]::before { content: '블랙한산스'; font-family: 'Black Han Sans', sans-serif; }
+        .ql-picker.ql-font .ql-picker-label[data-value="do-hyeon"]::before,
+        .ql-picker.ql-font .ql-picker-item[data-value="do-hyeon"]::before { content: '도현체'; font-family: 'Do Hyeon', sans-serif; }
+        .ql-picker.ql-font .ql-picker-label[data-value="jua"]::before,
+        .ql-picker.ql-font .ql-picker-item[data-value="jua"]::before { content: '주아체'; font-family: 'Jua', sans-serif; }
+        .ql-picker.ql-font .ql-picker-label[data-value="gugi"]::before,
+        .ql-picker.ql-font .ql-picker-item[data-value="gugi"]::before { content: '구기체'; font-family: 'Gugi', sans-serif; }
+        .ql-picker.ql-font .ql-picker-label[data-value="poor-story"]::before,
+        .ql-picker.ql-font .ql-picker-item[data-value="poor-story"]::before { content: '서툰이야기'; font-family: 'Poor Story', sans-serif; }
+        .ql-picker.ql-font .ql-picker-label[data-value="song-myung"]::before,
+        .ql-picker.ql-font .ql-picker-item[data-value="song-myung"]::before { content: '송명조'; font-family: 'Song Myung', sans-serif; }
 
         /* 실제 에디터 내 폰트 적용 스타일 */
         .ql-font-nanum-gothic { font-family: 'Nanum Gothic', sans-serif; }
@@ -531,7 +544,7 @@
             } catch (e) { console.warn('로그인 환경설정을 저장할 수 없습니다.', e); }
             if (typeof Quill !== 'undefined') {
                 const Font = Quill.import('formats/font');
-                Font.whitelist = ['sans-serif', 'nanum-gothic', 'nanum-myeongjo', 'gowun-dodum', 'gowun-batang', 'noto-sans-kr', 'noto-serif-kr'];
+                Font.whitelist = ['sans-serif', 'nanum-gothic', 'nanum-myeongjo', 'gowun-dodum', 'gowun-batang', 'noto-sans-kr', 'noto-serif-kr', 'black-han-sans', 'do-hyeon', 'jua', 'gugi', 'poor-story', 'song-myung'];
                 Quill.register(Font, true);
                 Quill.register('modules/blotFormatter', QuillBlotFormatter.default);
                 quill = new Quill('#editor-container', {
@@ -540,7 +553,7 @@
                         blotFormatter: {},
                         toolbar: {
                             container: [
-                                [{ 'font': ['sans-serif', 'nanum-gothic', 'nanum-myeongjo', 'gowun-dodum', 'gowun-batang', 'noto-sans-kr', 'noto-serif-kr'] }],
+                                [{ 'font': ['sans-serif', 'nanum-gothic', 'nanum-myeongjo', 'gowun-dodum', 'gowun-batang', 'noto-sans-kr', 'noto-serif-kr', 'black-han-sans', 'do-hyeon', 'jua', 'gugi', 'poor-story', 'song-myung'] }],
                                 [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
                                 [{ 'size': ['small', false, 'large', 'huge'] }],
                                 ['bold', 'italic', 'underline', 'strike'],
@@ -2244,6 +2257,6 @@
             alert("에디터에 투표 코드가 자동으로 삽입되었습니다!");
         }
     </script>
-    <script src="admin-convenience.js?v=20261102-fonts-admin-filter"></script>
+    <script src="admin-convenience.js?v=20261102-fonts-plus6"></script>
 </body>
 </html>

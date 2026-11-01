@@ -2812,3 +2812,21 @@ body {
     }
 }
 
+/* 관리자 Quill 편집기에서 저장한 글꼴·크기·들여쓰기와 동영상 표시 */
+.ql-font-sans-serif { font-family: Arial, sans-serif; }
+.ql-font-nanum-gothic { font-family: "Nanum Gothic", "Malgun Gothic", sans-serif; }
+.ql-font-nanum-myeongjo { font-family: "Nanum Myeongjo", "Batang", serif; }
+.ql-size-small { font-size: .75em; }
+.ql-size-large { font-size: 1.5em; }
+.ql-size-huge { font-size: 2.5em; }
+.ql-indent-1:not(.ql-direction-rtl) { padding-left: 3em; }
+.ql-indent-2:not(.ql-direction-rtl) { padding-left: 6em; }
+.ql-indent-3:not(.ql-direction-rtl) { padding-left: 9em; }
+.ql-indent-4:not(.ql-direction-rtl) { padding-left: 12em; }
+.ql-indent-5:not(.ql-direction-rtl) { padding-left: 15em; }
+.ql-indent-6:not(.ql-direction-rtl) { padding-left: 18em; }
+.ql-indent-7:not(.ql-direction-rtl) { padding-left: 21em; }
+.ql-indent-8:not(.ql-direction-rtl) { padding-left: 24em; }
+.view-content blockquote { margin: 1em 0; padding-left: 1em; border-left: 4px solid #ccc; color: #666; }
+.view-content iframe.ql-video { display: block; width: 100%; max-width: 100%; aspect-ratio: 16 / 9; border: 0; margin: 1em auto; }
+

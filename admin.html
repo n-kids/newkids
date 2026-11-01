@@ -7,10 +7,10 @@
 
     <link rel="shortcut icon" href="#">
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&family=Nanum+Gothic:wght@400;700;800&family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Sans+KR:wght@400;500;700;900&family=Noto+Serif+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
 
     <!-- 공통 및 관리자 전용 CSS 파일 로드 -->
-    <link rel="stylesheet" href="style.css?v=20261102-editor">
+    <link rel="stylesheet" href="style.css?v=20261102-editor-fonts">
     <link rel="stylesheet" href="admin.css">
     <link rel="stylesheet" href="admin-custom.css">
 
@@ -27,6 +27,15 @@
         .ql-picker.ql-font .ql-picker-label:not([data-value])::before,
         .ql-picker.ql-font .ql-picker-label[data-value="sans-serif"]::before,
         .ql-picker.ql-font .ql-picker-item[data-value="sans-serif"]::before { content: '기본 폰트'; font-family: sans-serif; }
+
+        .ql-picker.ql-font .ql-picker-label[data-value="gowun-dodum"]::before,
+        .ql-picker.ql-font .ql-picker-item[data-value="gowun-dodum"]::before { content: '고운돋움'; font-family: 'Gowun Dodum', sans-serif; }
+        .ql-picker.ql-font .ql-picker-label[data-value="gowun-batang"]::before,
+        .ql-picker.ql-font .ql-picker-item[data-value="gowun-batang"]::before { content: '고운바탕'; font-family: 'Gowun Batang', serif; }
+        .ql-picker.ql-font .ql-picker-label[data-value="noto-sans-kr"]::before,
+        .ql-picker.ql-font .ql-picker-item[data-value="noto-sans-kr"]::before { content: '본고딕'; font-family: 'Noto Sans KR', sans-serif; }
+        .ql-picker.ql-font .ql-picker-label[data-value="noto-serif-kr"]::before,
+        .ql-picker.ql-font .ql-picker-item[data-value="noto-serif-kr"]::before { content: '본명조'; font-family: 'Noto Serif KR', serif; }
 
         /* 실제 에디터 내 폰트 적용 스타일 */
         .ql-font-nanum-gothic { font-family: 'Nanum Gothic', sans-serif; }
@@ -522,7 +531,7 @@
             } catch (e) { console.warn('로그인 환경설정을 저장할 수 없습니다.', e); }
             if (typeof Quill !== 'undefined') {
                 const Font = Quill.import('formats/font');
-                Font.whitelist = ['sans-serif', 'nanum-gothic', 'nanum-myeongjo'];
+                Font.whitelist = ['sans-serif', 'nanum-gothic', 'nanum-myeongjo', 'gowun-dodum', 'gowun-batang', 'noto-sans-kr', 'noto-serif-kr'];
                 Quill.register(Font, true);
                 Quill.register('modules/blotFormatter', QuillBlotFormatter.default);
                 quill = new Quill('#editor-container', {
@@ -531,7 +540,7 @@
                         blotFormatter: {},
                         toolbar: {
                             container: [
-                                [{ 'font': ['sans-serif', 'nanum-gothic', 'nanum-myeongjo'] }],
+                                [{ 'font': ['sans-serif', 'nanum-gothic', 'nanum-myeongjo', 'gowun-dodum', 'gowun-batang', 'noto-sans-kr', 'noto-serif-kr'] }],
                                 [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
                                 [{ 'size': ['small', false, 'large', 'huge'] }],
                                 ['bold', 'italic', 'underline', 'strike'],
@@ -2235,6 +2244,6 @@
             alert("에디터에 투표 코드가 자동으로 삽입되었습니다!");
         }
     </script>
-    <script src="admin-convenience.js?v=20261102-editor"></script>
+    <script src="admin-convenience.js?v=20261102-fonts-admin-filter"></script>
 </body>
 </html>

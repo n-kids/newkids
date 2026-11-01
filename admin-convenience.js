@@ -4,6 +4,12 @@
   if (!sb) { window.__nkConvenienceWaits = (window.__nkConvenienceWaits || 0) + 1; if (window.__nkConvenienceWaits < 100) setTimeout(boot, 100); return; }
 
   const esc = (value) => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+
+  // 작성자 표시 규칙과 동일하게 관리자 게시글을 판별합니다.
+  window.nkIsAdminAuthoredPost = function (post) {
+    const author = String(post?.link_url || '').trim();
+    return post?.category === 'notice' || !author || author === '관리자' || author === '익명' || /^https?:\/\//i.test(author);
+  };
   const modalBase = 'position:fixed;inset:0;background:rgba(0,0,0,.58);z-index:10050;display:flex;align-items:center;justify-content:center;padding:18px;';
   function makeModal(id, title, body) {
     let modal = document.getElementById(id);
@@ -26,7 +32,7 @@
     const body = '<iframe title="게시글 미리보기" sandbox style="width:100%;height:68vh;border:1px solid #ddd;border-radius:8px;background:white"></iframe>';
     const modal = makeModal('nk-preview-modal', '게시글 미리보기', body);
     const frame = modal.querySelector('iframe');
-    frame.srcdoc = '<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&family=Nanum+Myeongjo:wght@400;700;800&display=swap"><style>body{font:16px/1.75 Arial,sans-serif;max-width:820px;margin:30px auto;padding:0 20px;color:#333}.ql-font-sans-serif{font-family:Arial,sans-serif}.ql-font-nanum-gothic{font-family:"Nanum Gothic","Malgun Gothic",sans-serif}.ql-font-nanum-myeongjo{font-family:"Nanum Myeongjo",serif}.ql-size-small{font-size:.75em}.ql-size-large{font-size:1.5em}.ql-size-huge{font-size:2.5em}.ql-indent-1{padding-left:3em}.ql-indent-2{padding-left:6em}.ql-indent-3{padding-left:9em}.ql-indent-4{padding-left:12em}.ql-indent-5{padding-left:15em}.ql-indent-6{padding-left:18em}.ql-indent-7{padding-left:21em}.ql-indent-8{padding-left:24em}img,video{max-width:100%;height:auto}iframe.ql-video{display:block;width:100%;aspect-ratio:16/9;border:0;margin:1em auto}table{border-collapse:collapse;max-width:100%}td,th{border:1px solid #ddd;padding:6px}</style><h1>' + safeTitle + '</h1><main>' + content + '</main></html>';
+    frame.srcdoc = '<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&family=Nanum+Gothic:wght@400;700;800&family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Sans+KR:wght@400;500;700;900&family=Noto+Serif+KR:wght@400;500;700;900&display=swap"><style>body{font:16px/1.75 Arial,sans-serif;max-width:820px;margin:30px auto;padding:0 20px;color:#333}.ql-font-sans-serif{font-family:Arial,sans-serif}.ql-font-nanum-gothic{font-family:"Nanum Gothic","Malgun Gothic",sans-serif}.ql-font-nanum-myeongjo{font-family:"Nanum Myeongjo",serif}.ql-font-gowun-dodum{font-family:"Gowun Dodum",sans-serif}.ql-font-gowun-batang{font-family:"Gowun Batang",serif}.ql-font-noto-sans-kr{font-family:"Noto Sans KR",sans-serif}.ql-font-noto-serif-kr{font-family:"Noto Serif KR",serif}.ql-size-small{font-size:.75em}.ql-size-large{font-size:1.5em}.ql-size-huge{font-size:2.5em}.ql-indent-1{padding-left:3em}.ql-indent-2{padding-left:6em}.ql-indent-3{padding-left:9em}.ql-indent-4{padding-left:12em}.ql-indent-5{padding-left:15em}.ql-indent-6{padding-left:18em}.ql-indent-7{padding-left:21em}.ql-indent-8{padding-left:24em}img,video{max-width:100%;height:auto}iframe.ql-video{display:block;width:100%;aspect-ratio:16/9;border:0;margin:1em auto}table{border-collapse:collapse;max-width:100%}td,th{border:1px solid #ddd;padding:6px}</style><h1>' + safeTitle + '</h1><main>' + content + '</main></html>';
   };
 
   window.savePostRevision = async function (post, action) {
@@ -127,7 +133,7 @@
     const box = document.getElementById('dashboard-tasks');
     if (!box) return;
     const [postsResult, commentsResult] = await Promise.all([
-      sb.from('total_posts').select('id,title,is_draft,is_visible,publish_at'),
+      sb.from('total_posts').select('id,title,category,link_url,is_draft,is_visible,publish_at'),
       sb.from('post_comments').select('post_id')
     ]);
     if (postsResult.error) { box.innerHTML = '<div style="color:#a33">운영 알림을 불러오지 못했습니다: ' + esc(postsResult.error.message) + '</div>'; return; }
@@ -136,7 +142,7 @@
     const now = Date.now(), week = now + 7 * 86400000;
     const drafts = posts.filter(x => x.is_draft).length;
     const scheduled = posts.filter(x => !x.is_draft && x.publish_at && new Date(x.publish_at).getTime() > now && new Date(x.publish_at).getTime() <= week).length;
-    const unanswered = posts.filter(x => !x.is_draft && !answered.has(x.id)).length;
+    const unanswered = posts.filter(x => !x.is_draft && !answered.has(x.id) && !window.nkIsAdminAuthoredPost(x)).length;
     const cards = [
       ['draft','💾','저장된 초안',drafts,'#8e44ad'],
       ['scheduled','⏰','7일 내 예약 발행',scheduled,'#d68910'],

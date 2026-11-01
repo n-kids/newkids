@@ -17,12 +17,6 @@
         <div class="container">
             <h1 id="board-title" style="font-size: 2.2rem; margin-bottom:10px; color:#1a3c6e;">📢 알림 & 소식</h1>
             <p id="board-desc" style="color:#666;">데이터를 불러오는 중입니다...</p>
-            <div id="reference-help-panel" class="reference-help-panel" style="display:none;">
-                <div><strong>자료 다운로드 안내</strong><span>첨부 파일을 누르면 내려받을 수 있습니다. 🔒 표시가 있으면 게시글에 안내된 비밀번호를 입력해 주세요.</span></div>
-                <button type="button" class="btn-action" onclick="showDownloadGuide()">다운로드 방법</button>
-                <a class="btn-action reference-inquiry-link" href="notice.html#qna">문의하기 · 답변 확인</a>
-                <button type="button" class="btn-action" onclick="shareResourcePage()">자료실 공유</button>
-            </div>
         </div>
     </div>
 
@@ -66,6 +60,13 @@
         <div id="load-more-box" style="display:none; justify-content:center; margin-top:40px;">
             <button onclick="loadMore()" class="btn-load-more">더보기 ＋</button>
         </div>
+
+            <div id="reference-help-panel" class="reference-help-panel" style="display:none;">
+                <div><strong>자료 다운로드 안내</strong><span>첨부 파일을 누르면 내려받을 수 있습니다. 🔒 표시가 있으면 게시글에 안내된 비밀번호를 입력해 주세요.</span></div>
+                <button type="button" class="btn-action" onclick="showDownloadGuide()">다운로드 방법</button>
+                <a class="btn-action reference-inquiry-link" href="notice.html#qna">문의하기 · 답변 확인</a>
+                <button type="button" class="btn-action" onclick="shareResourcePage()">자료실 공유</button>
+            </div>
 
         <div style="display: flex; justify-content: center; align-items: center; margin-top: 40px; gap: 5px;">
             <input type="text" id="search-input" class="form-input" style="width: 250px; padding: 8px;" placeholder="제목 검색" onkeypress="if(event.keyCode==13) executeSearch();">

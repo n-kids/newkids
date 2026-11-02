@@ -162,7 +162,7 @@ let myOrders = [];
 let auth = {mode:'join', kg:'', name:'', phone:'', region:'', pin:'', pin2:'', busy:false};
 let tab = 'home';
 let book = {month:MONTHS[0], tag:'전체', q:'', sel:{}};
-let goods = {sec:null, cat:0, q:'', shown:24, wear:'전체'};
+let goods = {sec:null, cat:'rec', q:'', shown:24, wear:'전체'};
 let cart = {};
 let as = {prog:'', step:'', ho:'', photos:[], text:''};
 let stmtOpen = null;
@@ -296,14 +296,27 @@ function goodsView(){
     if (kpReady!==true) return `${back}<div class="card hint">${kpReady==='fail'?'상품 목록을 불러오지 못했어요. 잠시 뒤 다시 열어주세요.':'국민서관 상품을 불러오는 중이에요…'}</div>`;
     const q = goods.q.trim().toLowerCase();
     const all = KP.items.filter(it=>it[5]==='');
-    const list = all.filter(it => (!goods.cat || it[4]===goods.cat) && (!q || it[1].toLowerCase().includes(q)));
     const counts = {}; all.forEach(it=>counts[it[4]]=(counts[it[4]]||0)+1);
-    return `${back}
+    const card = it => goodCard({type:'equip', id:it[0], name:it[1], list:it[2], sale:it[3], vendor:'국민서관', isNew:it[6]});
+    const chips = `<div class="chips"><button class="chip" data-cat="rec" aria-pressed="${goods.cat==='rec'}">월별 추천 교구</button><button class="chip" data-cat="0" aria-pressed="${goods.cat===0}">전체</button>${KP.cats.filter(([no])=>counts[no] && no!==305).map(([no,n])=>`<button class="chip" data-cat="${no}" aria-pressed="${goods.cat===no}">${esc(n)}</button>`).join('')}</div>`;
+    const head = `${back}
       <div><p class="h2">비품 및 교구</p><p class="sub">국민서관 키드팡 상품 <b class="num">${all.length.toLocaleString()}</b>개 · ${KP.at} 기준 할인가</p></div>
-      <input class="search" id="gSearch" placeholder="상품 이름으로 찾기" value="${esc(goods.q)}">
-      <div class="chips"><button class="chip" data-cat="0" aria-pressed="${!goods.cat}">전체</button>${KP.cats.filter(([no])=>counts[no]).map(([no,n])=>`<button class="chip" data-cat="${no}" aria-pressed="${goods.cat===no}">${esc(n)}</button>`).join('')}</div>
+      <input class="search" id="gSearch" placeholder="상품 이름으로 찾기" value="${esc(goods.q)}">${chips}`;
+    if (goods.cat==='rec' && (KP.rec||[]).length){
+      // 이번 달부터 12달 순서로
+      const now = new Date().getMonth()+1;
+      const months = [...KP.rec].sort((a,b)=>((parseInt(a[0])-now+12)%12)-((parseInt(b[0])-now+12)%12));
+      const byId = KP.byId || (KP.byId = Object.fromEntries(KP.items.map(it=>[it[0], it])));
+      const sections = months.map(([name, ids]) => [name, ids.map(id=>byId[id]).filter(it => it && (!q || it[1].toLowerCase().includes(q)))]).filter(([,its])=>its.length);
+      return `${head}
+        <span class="hint">국민서관이 달마다 고른 추천 교구예요. 이번 달부터 보여드려요.</span>
+        ${sections.map(([name, its], i) => `<p class="flabel" style="margin:6px 0 0;font-size:14px">${esc(name)} ${i===0?'<span class="tag sun">이번 달</span>':''} <span class="hint num">${its.length}</span></p>
+          <div class="grid2">${its.map(card).join('')}</div>`).join('') || '<div class="card hint">찾는 상품이 없어요.</div>'}${bar}`;
+    }
+    const list = all.filter(it => (!goods.cat || it[4]===goods.cat) && (!q || it[1].toLowerCase().includes(q)));
+    return `${head}
       <div class="hint num">${list.length.toLocaleString()}개</div>
-      <div class="grid2">${list.slice(0,goods.shown).map(it=>goodCard({type:'equip', id:it[0], name:it[1], list:it[2], sale:it[3], vendor:'국민서관', isNew:it[6]})).join('')}</div>
+      <div class="grid2">${list.slice(0,goods.shown).map(card).join('')}</div>
       ${list.length>goods.shown?`<button class="btn line small more" id="gMore">더 보기 (${(list.length-goods.shown).toLocaleString()}개 남음)</button>`:''}${bar}`;
   }
   if (goods.sec==='gift'){
@@ -486,8 +499,8 @@ document.addEventListener('click', async e => {
   if (t.id==='bRepeat'){ const last = lastBook(); book.sel = {}; last.lines.forEach(l=>{ if (BOOKS.some(b=>b.n===l.name)) book.sel[l.name]=[...l.q]; }); render(); toast('지난번 주문을 그대로 담았어요. 바뀐 반만 고치세요.'); return; }
   if (t.id==='bCheckout'){ openCheckout('book'); return; }
   // 물품
-  if (d.sec!==undefined){ goods.sec = d.sec||null; goods.q=''; goods.shown=24; goods.cat=0; render(); $('#appScroll').scrollTop=0; return; }
-  if (d.cat!==undefined){ goods.cat = +d.cat; goods.shown=24; render(); return; }
+  if (d.sec!==undefined){ goods.sec = d.sec||null; goods.q=''; goods.shown=24; goods.cat='rec'; render(); $('#appScroll').scrollTop=0; return; }
+  if (d.cat!==undefined){ goods.cat = d.cat==='rec' ? 'rec' : +d.cat; goods.shown=24; render(); return; }
   if (d.wear){ goods.wear = d.wear; render(); return; }
   if (t.id==='gMore'){ goods.shown += 24; keepScroll(render); return; }
   if (d.add){ const c = cart[d.add] || (cart[d.add] = {type:d.type, name:d.name, vendor:d.vendor, price:+d.price, qty:0}); c.qty++; keepScroll(render); return; }

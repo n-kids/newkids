@@ -1821,3 +1821,22 @@ input[type="file"]:focus-visible, input[type="checkbox"]:focus-visible, input[ty
     outline: 2px solid #1a3c6e;
     outline-offset: -2px;
 }
+
+/* --- 하단 액션 버튼 줄: 모바일 넘침 방지 --- */
+.admin-layout .btn-center-wrap {
+    flex-wrap: wrap;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+.admin-layout .btn-center-wrap > button { box-sizing: border-box; max-width: 100%; }
+@media (max-width: 768px) {
+    .admin-layout .btn-center-wrap { gap: 8px; }
+    .admin-layout .btn-center-wrap > button {
+        min-width: 0 !important;
+        width: auto !important;
+        flex: 1 1 calc(50% - 4px);
+        padding: 12px 10px;
+    }
+    /* 주 버튼(업로드 저장·폼 저장 등)은 첫 줄 전체 폭 */
+    .admin-layout .btn-center-wrap > button.btn-action:first-child { flex-basis: 100%; }
+}

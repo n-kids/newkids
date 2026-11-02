@@ -529,12 +529,10 @@
                 const eduGrid = document.getElementById('edu-grid');
                 const eventGrid = document.getElementById('event-grid');
 
-                const legacyFiles = ['season', 'culture', 'performance'];
-
                 data.forEach(cat => {
                     const code = String(cat.code || '');
                     if (!/^[a-z0-9_-]+$/i.test(code)) return;
-                    const href = cat.type === 'EDU' ? `child.html#${code}` : (legacyFiles.includes(code) ? `${code}.html` : `program.html#${code}`);
+                    const href = cat.type === 'EDU' ? `child.html#${code}` : `program.html#${code}`;
                     const name = String(cat.name || '').replace(/^[^\p{L}\p{N}]+/u, '').trim();
                     const card = document.createElement('a');
                     card.href = href;

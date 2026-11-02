@@ -276,11 +276,9 @@ function loadHeader() {
             const code = window.safeCategoryCode(c.code);
             if (code) groupHtml[c.type] += `<li><a href="child.html#${code}" ${colorStyle}>${window.escapeHtml(c.name)}</a></li>`;
         } else if (c.type === 'EVENT') {
-            const legacyFiles = ['season', 'culture', 'performance'];
             const code = window.safeCategoryCode(c.code);
             if (code) {
-                const href = legacyFiles.includes(code) ? `${code}.html` : `program.html#${code}`;
-                groupHtml[c.type] += `<li><a href="${href}" ${colorStyle}>${window.escapeHtml(c.name)}</a></li>`;
+                groupHtml[c.type] += `<li><a href="program.html#${code}" ${colorStyle}>${window.escapeHtml(c.name)}</a></li>`;
             }
         } else if (c.type === 'BOARD') {
             const code = window.safeCategoryCode(c.code);

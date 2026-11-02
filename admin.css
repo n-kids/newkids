@@ -1840,3 +1840,30 @@ input[type="file"]:focus-visible, input[type="checkbox"]:focus-visible, input[ty
     /* 주 버튼(업로드 저장·폼 저장 등)은 첫 줄 전체 폭 */
     .admin-layout .btn-center-wrap > button.btn-action:first-child { flex-basis: 100%; }
 }
+
+/* --- 공용 모달(미디어 라이브러리 등): 화면 안에 맞춤 --- */
+.nk-modal { box-sizing: border-box; }
+.nk-modal .nk-media-item:hover { border-color: #1a3c6e !important; }
+@media (max-width: 640px) {
+    .nk-modal { padding: 12px !important; }
+    .nk-modal-box { padding: 16px !important; border-radius: 12px; }
+    .nk-modal-box [data-modal-title] { font-size: 1.15rem !important; }
+    .nk-media-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 8px !important; }
+    .nk-media-thumb { height: 78px !important; }
+    .nk-media-thumb .ic { width: 28px !important; height: 28px !important; }
+    .nk-media-item { padding: 6px !important; font-size: 0.78rem; }
+}
+
+/* --- 게시글 검색 날짜 입력: 모바일 가로 넘침 방지 --- */
+@media (max-width: 640px) {
+    .filter-search-bar > div { min-width: 0; max-width: 100%; }
+    .filter-date-input { flex: 1 1 0; min-width: 0; width: 100%; }
+}
+
+/* --- 페이지 번호: 모바일에서 줄바꿈 (가로 넘침으로 화면이 축소되던 문제) --- */
+.pagination { flex-wrap: wrap; max-width: 100%; }
+.admin-layout .main-content { min-width: 0; }
+@media (max-width: 640px) {
+    .pagination { gap: 6px; }
+    .page-btn { min-width: 36px; padding-left: 0; padding-right: 0; }
+}

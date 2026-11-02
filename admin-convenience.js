@@ -14,8 +14,8 @@
   function makeModal(id, title, body) {
     let modal = document.getElementById(id);
     if (!modal) {
-      modal = document.createElement('div'); modal.id = id; modal.style.cssText = modalBase;
-      modal.innerHTML = '<div style="background:#fff;border-radius:12px;width:min(980px,96vw);max-height:90vh;overflow:auto;padding:20px;box-shadow:0 12px 40px #0004"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px;border-bottom:1px solid #ddd;padding-bottom:12px"><h2 data-modal-title style="margin:0;color:#1a3c6e"></h2><button type="button" data-modal-close style="border:0;background:#eee;border-radius:6px;padding:8px 12px;cursor:pointer">닫기</button></div><div data-modal-body style="padding-top:16px"></div></div>';
+      modal = document.createElement('div'); modal.id = id; modal.className = 'nk-modal'; modal.style.cssText = modalBase;
+      modal.innerHTML = '<div class="nk-modal-box" style="background:#fff;border-radius:12px;width:100%;max-width:980px;max-height:calc(100vh - 36px);max-height:calc(100dvh - 36px);overflow:auto;padding:20px;box-sizing:border-box;box-shadow:0 12px 40px #0004"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px;border-bottom:1px solid #ddd;padding-bottom:12px"><h2 data-modal-title style="margin:0;color:#1a3c6e;font-size:1.4rem;min-width:0;overflow-wrap:anywhere"></h2><button type="button" data-modal-close style="border:0;background:#eee;border-radius:6px;padding:8px 12px;cursor:pointer;flex-shrink:0">닫기</button></div><div data-modal-body style="padding-top:16px"></div></div>';
       modal.addEventListener('click', e => { if (e.target === modal || e.target.closest('[data-modal-close]')) modal.style.display = 'none'; });
       document.body.appendChild(modal);
     }
@@ -93,10 +93,10 @@
       if (!all.length) { body.innerHTML = '<p>저장된 파일이 없습니다.</p>'; return; }
       const render = (filter='') => {
         const filtered = all.filter(x => x.name.toLowerCase().includes(filter.toLowerCase()));
-        body.innerHTML = '<input id="nk-media-search" class="form-input" placeholder="파일명 검색..." style="margin-bottom:12px"><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;max-height:65vh;overflow:auto">' + filtered.map((item, idx) => {
+        body.innerHTML = '<input id="nk-media-search" class="form-input" placeholder="파일명 검색..." style="margin-bottom:12px"><div class="nk-media-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px">' + filtered.map((item, idx) => {
           const url = sb.storage.from('images').getPublicUrl(item.path).data.publicUrl;
           const image = (item.metadata?.mimetype || '').startsWith('image/') || /\.(png|jpe?g|gif|webp|svg)$/i.test(item.name);
-          return '<button type="button" data-media="' + idx + '" style="text-align:left;border:1px solid #ddd;border-radius:8px;background:white;padding:8px;cursor:pointer;overflow:hidden">' + (image ? '<img src="' + esc(url) + '" alt="" style="width:100%;height:110px;object-fit:cover;border-radius:4px">' : '<div style="height:110px;display:grid;place-items:center;font-size:36px"><svg class="ic" style="width:36px;height:36px;color:#94a3b8"><use href="#i-file-text"/></svg></div>') + '<div style="font-size:.82rem;overflow-wrap:anywhere;margin-top:6px">' + esc(item.name) + '</div><div style="font-size:.76rem;color:#1a3c6e">선택하여 삽입</div></button>';
+          return '<button type="button" class="nk-media-item" data-media="' + idx + '" style="min-width:0;text-align:left;border:1px solid #ddd;border-radius:8px;background:white;padding:8px;cursor:pointer;overflow:hidden">' + (image ? '<img src="' + esc(url) + '" alt="" class="nk-media-thumb" style="width:100%;height:110px;object-fit:cover;border-radius:4px">' : '<div class="nk-media-thumb" style="height:110px;display:grid;place-items:center;font-size:36px"><svg class="ic" style="width:36px;height:36px;color:#94a3b8"><use href="#i-file-text"/></svg></div>') + '<div style="font-size:.82rem;overflow-wrap:anywhere;margin-top:6px">' + esc(item.name) + '</div><div style="font-size:.76rem;color:#1a3c6e">선택하여 삽입</div></button>';
         }).join('') + '</div>';
         body.querySelector('#nk-media-search').value = filter;
         body.querySelector('#nk-media-search').addEventListener('input', e => render(e.target.value));

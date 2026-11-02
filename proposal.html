@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>뉴키즈 - 견적 요청</title>
     <link rel="stylesheet" href="style.css?v=20261026">
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
 </head>
 <body>
     <header></header>
@@ -19,7 +21,7 @@
     <section style="background-color: #f8f9fa;">
         <div class="container">
             <form id="proposalForm" class="proposal-box">
-                <h3 class="form-section-title">👤 신청자 정보</h3>
+                <h2 class="form-section-title">👤 신청자 정보</h2>
                 <div class="form-grid">
                     <div class="form-group">
                         <label class="form-label">원명 (필수)</label>
@@ -50,12 +52,12 @@
                     </div>
                 </div>
 
-                <h3 class="form-section-title" style="margin-top: 40px;">🎓 관심 교육 프로그램 선택</h3>
+                <h2 class="form-section-title" style="margin-top: 40px;">🎓 관심 교육 프로그램 선택</h2>
                 <div id="loading-msg" style="text-align:center; padding:30px; color:#666;">목록 불러오는 중...</div>
 
                 <div id="proposal-grid-area" class="proposal-grid-container"></div>
 
-                <h3 class="form-section-title" style="margin-top: 40px;">🎉 관심 행사 프로그램 선택</h3>
+                <h2 class="form-section-title" style="margin-top: 40px;">🎉 관심 행사 프로그램 선택</h2>
 
                 <div id="event-grid-area" class="proposal-grid-container"></div>
 
@@ -144,7 +146,7 @@
                                                     </label>`;
                             });
                         } else {
-                            html += `<div style="padding:10px; color:#999; font-size:0.9rem;">등록된 프로그램이 없습니다.</div>`;
+                            html += `<div style="padding:10px; color:#767676; font-size:0.9rem;">등록된 프로그램이 없습니다.</div>`;
                         }
 
                         html += `</div></div>`;

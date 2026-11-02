@@ -279,7 +279,7 @@ body {
     }
 
     .pm-btn:last-child {
-        color: #ff6b6b;
+        color: #d33b3b;
     }
 
     .pm-btn:hover {
@@ -906,7 +906,7 @@ body {
     }
 
         .nav-item.active {
-            background: #f4a261 !important;
+            background: #b85a17 !important;
             color: #fff !important;
             font-weight: bold !important;
         }

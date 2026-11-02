@@ -8,6 +8,8 @@
     <meta name="keywords" content="뉴키즈 공지사항, 김포뉴키즈, 고양뉴키즈, 파주뉴키즈, 유치원 교육자료">
     <!-- 공통 스타일 시트 로드 -->
     <link rel="stylesheet" href="style.css?v=20261102">
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
 </head>
 <body id="main-body">
 
@@ -26,11 +28,11 @@
         <div class="top-btn-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
             <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
                 <!-- 찜한 자료 버튼 -->
-                <button id="btn-scrap-mode" onclick="toggleScrapMode()" class="hashtag-btn" style="border-color:#f4a261; color:#f4a261;">
+                <button id="btn-scrap-mode" onclick="toggleScrapMode()" class="hashtag-btn" style="border-color:#9c4a10; color:#9c4a10;">
                     ⭐ 찜한 자료
                 </button>
                 <!-- 최근 본 자료 버튼 -->
-                <button id="btn-recent-mode" onclick="toggleRecentMode()" class="hashtag-btn" style="border-color:#2a9d8f; color:#2a9d8f;">
+                <button id="btn-recent-mode" onclick="toggleRecentMode()" class="hashtag-btn" style="border-color:#17766b; color:#17766b;">
                     🕒 최근 본 자료
                 </button>
             </div>
@@ -257,16 +259,16 @@
             isScrapMode = !isScrapMode;
             isRecentMode = false;
             document.getElementById('btn-recent-mode').style.background = '#fff';
-            document.getElementById('btn-recent-mode').style.color = '#2a9d8f';
+            document.getElementById('btn-recent-mode').style.color = '#17766b';
 
             const btn = document.getElementById('btn-scrap-mode');
             if (isScrapMode) {
-                btn.style.background = '#f4a261';
+                btn.style.background = '#9c4a10';
                 btn.style.color = '#fff';
                 btn.innerText = '⭐ 찜한 자료 보는 중';
             } else {
                 btn.style.background = '#fff';
-                btn.style.color = '#f4a261';
+                btn.style.color = '#9c4a10';
                 btn.innerText = '⭐ 찜한 자료';
             }
             loadBoardList(1);
@@ -276,16 +278,16 @@
             isRecentMode = !isRecentMode;
             isScrapMode = false;
             document.getElementById('btn-scrap-mode').style.background = '#fff';
-            document.getElementById('btn-scrap-mode').style.color = '#f4a261';
+            document.getElementById('btn-scrap-mode').style.color = '#9c4a10';
 
             const btn = document.getElementById('btn-recent-mode');
             if (isRecentMode) {
-                btn.style.background = '#2a9d8f';
+                btn.style.background = '#17766b';
                 btn.style.color = '#fff';
                 btn.innerText = '🕒 최근 본 자료 보는 중';
             } else {
                 btn.style.background = '#fff';
-                btn.style.color = '#2a9d8f';
+                btn.style.color = '#17766b';
                 btn.innerText = '🕒 최근 본 자료';
             }
             loadBoardList(1);

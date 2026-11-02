@@ -6,12 +6,12 @@
    ========================================= */
 :root {
     --primary-color: #1a3c6e; /* 메인 남색 */
-    --accent-color: #f4a261; /* 포인트 주황색 */
+    --accent-color: #b85a17; /* 포인트 주황색 */
     --bg-light: #f8f9fa; /* 연한 회색 배경 */
     --text-color: #333; /* 기본 텍스트 */
     --text-sub: #666; /* 보조 텍스트 */
     --border-color: #e0e0e0; /* 테두리 색상 */
-    --danger-color: #ff6b6b; /* 경고/삭제 빨간색 */
+    --danger-color: #d33b3b; /* 경고/삭제 빨간색 */
 }
 
 * {
@@ -122,7 +122,7 @@ h2 {
 }
 
 .btn:hover, .btn-action:hover, .btn-submit:hover {
-    background-color: #e76f51;
+    background-color: #9c4a10;
 }
 
 .btn-white {
@@ -222,7 +222,7 @@ header {
 }
 
 .cta-menu {
-    color: #e76f51 !important;
+    color: #9c4a10 !important;
     font-weight: 700 !important;
 }
 
@@ -845,8 +845,8 @@ header {
     align-items: center !important;
     justify-content: center !important;
     background: #fff !important;
-    border: 1px solid #ff6b6b !important;
-    color: #ff6b6b !important;
+    border: 1px solid #d33b3b !important;
+    color: #d33b3b !important;
     border-radius: 6px !important;
     cursor: pointer !important;
     font-size: 1.2rem !important;
@@ -854,7 +854,7 @@ header {
 }
 
 .btn-remove-row:hover {
-    background: #ff6b6b !important;
+    background: #d33b3b !important;
     color: white !important;
 }
 
@@ -1705,7 +1705,7 @@ footer {
     background: #f0f7ff;
     border-radius: 8px;
     margin-bottom: 15px;
-    border-left: 4px solid #f4a261;
+    border-left: 4px solid #b85a17;
 }
 
 .comment-meta {
@@ -1909,7 +1909,7 @@ footer {
 .reference-help-panel > div strong { color: #1a3c6e; }
 .reference-help-panel > div span { font-size: .9rem; line-height: 1.5; }
 .reference-help-panel .btn-action { margin: 0; text-decoration: none; text-align: center; }
-.reference-inquiry-link { background: #278577 !important; }
+.reference-inquiry-link { background: #17766b !important; }
 .guide-modal { position: fixed; inset: 0; z-index: 30000; padding: 20px; background: rgba(13, 26, 54, .62); align-items: center; justify-content: center; box-sizing: border-box; }
 .guide-modal-card { position: relative; width: min(100%, 520px); padding: 28px; border-radius: 16px; background: white; box-shadow: 0 16px 50px rgba(0,0,0,.22); color: #344; line-height: 1.7; box-sizing: border-box; }
 .guide-modal-card h2 { margin: 0 32px 16px 0; color: #1a3c6e; font-size: 1.35rem; }
@@ -2021,7 +2021,7 @@ footer {
 }
 
 .write-card .form-input::placeholder {
-    color: #aaa;
+    color: #767676;
 }
 
 .form-row {
@@ -2079,7 +2079,7 @@ footer {
 }
 
 .btn-cancel {
-    background-color: #999;
+    background-color: #6f6f6f;
     color: #fff;
     border: none;
     padding: 12px 30px;
@@ -2095,7 +2095,7 @@ footer {
 }
 
 .btn-cancel:hover {
-    background-color: #777;
+    background-color: #5a5a5a;
 }
 
 @media screen and (max-width: 768px) {
@@ -2180,7 +2180,7 @@ footer {
     }
 
         .nav-item.active {
-            background: #f4a261 !important;
+            background: #b85a17 !important;
             color: #fff !important;
             font-weight: bold !important;
         }

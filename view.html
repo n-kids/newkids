@@ -29,6 +29,8 @@
             }
         }
     </style>
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
 </head>
 <body>
     <header></header>
@@ -53,7 +55,7 @@
                     <div class="view-meta">
                         <span id="v-author">작성자: -</span>
                         <span id="v-date">작성일: -</span>
-                        <span id="v-download-count" style="color:#f4a261; font-weight:bold;">📥 0회</span>
+                        <span id="v-download-count" style="color:#b85a17; font-weight:bold;">📥 0회</span>
                         <button class="view-tool-button" onclick="shareCurrentPost()">🔗 공유</button>
                         <button class="view-tool-button" onclick="window.print()">🖨️ 인쇄</button>
                     </div>
@@ -64,7 +66,7 @@
                 <div class="view-content" id="v-content"></div>
 
                 <div id="download-files-area" style="margin-top: 30px; padding-top: 15px; border-top: 1px dashed #eee; display: none;">
-                    <h4 style="color: #1a3c6e; margin-bottom: 15px;">📎 첨부파일</h4>
+                    <h3 style="color: #1a3c6e; margin-bottom: 15px;">📎 첨부파일</h3>
                     <p class="download-help-note">파일 이름을 눌러 다운로드하세요. 🔒 제한된 자료는 안내된 비밀번호를 입력해야 받을 수 있습니다. <button type="button" class="text-button" onclick="showDownloadGuide()">자세한 방법</button></p>
                     <div id="download-list-container" style="display: flex; flex-direction: column; gap: 10px;"></div>
                 </div>
@@ -76,7 +78,7 @@
                 </div>
 
                 <div id="admin-reply-area" style="display:none; margin-top: 30px; padding: 25px; background: #f0f7ff; border-radius: 12px; border: 1px solid #cce5ff;">
-                    <h4 style="color: #1a3c6e; margin-bottom: 15px; font-size:1.1rem; display:flex; align-items:center; gap:8px;">
+                    <h3 style="color: #1a3c6e; margin-bottom: 15px; font-size:1.1rem; display:flex; align-items:center; gap:8px;">
                         <span>💬</span> 관리자 답변
                     </h4>
                     <div id="admin-reply-content" style="line-height: 1.6; color: #333; font-size: 0.95rem;"></div>
@@ -89,8 +91,8 @@
                 </div>
 
                 <div id="author-actions-area" style="display:none; margin-top:30px; padding-top:15px; border-top:1px solid #1a3c6e; justify-content:flex-end; gap:10px;">
-                    <button onclick="openEditPost()" class="btn-action" style="background:#f4a261; padding:10px 25px; font-size:0.95rem;">수정</button>
-                    <button onclick="deleteCurrentPost()" class="btn-action" style="background:#ff6b6b; padding:10px 25px; font-size:0.95rem;">삭제</button>
+                    <button onclick="openEditPost()" class="btn-action" style="background:#b85a17; padding:10px 25px; font-size:0.95rem;">수정</button>
+                    <button onclick="deleteCurrentPost()" class="btn-action" style="background:#d33b3b; padding:10px 25px; font-size:0.95rem;">삭제</button>
                 </div>
 
                 <div id="related-posts-area" style="display:none; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;"></div>
@@ -387,7 +389,7 @@
                         const canPreview = ['pdf', 'jpg', 'jpeg', 'png', 'gif'].includes(ext);
 
                         const previewBtn = canPreview && !isLocked ? `
-                                <button onclick="event.stopPropagation(); openFilePreview('${safeUrl}', '${safeName}')" style="background:#f4a261; border:none; color:#fff; padding:6px 14px; border-radius:6px; font-size:0.85rem; font-weight:bold; cursor:pointer; margin-right:8px; box-shadow:0 2px 4px rgba(244,162,97,0.2);">미리보기</button>
+                                <button onclick="event.stopPropagation(); openFilePreview('${safeUrl}', '${safeName}')" style="background:#b85a17; border:none; color:#fff; padding:6px 14px; border-radius:6px; font-size:0.85rem; font-weight:bold; cursor:pointer; margin-right:8px; box-shadow:0 2px 4px rgba(244,162,97,0.2);">미리보기</button>
                             ` : '';
 
                         const btnLabel = isLocked ? '🔒 제한됨' : '다운로드';
@@ -468,7 +470,7 @@
             if (error || !data || data.length === 0) return;
 
             const relatedArea = document.getElementById('related-posts-area');
-            let html = `<h4 style="color:#1a3c6e; margin-bottom:15px; font-size:1.1rem;">💡 이 자료와 비슷한 추천 자료</h4>
+            let html = `<h3 style="color:#1a3c6e; margin-bottom:15px; font-size:1.1rem;">💡 이 자료와 비슷한 추천 자료</h3>
                             <div style="display:flex; flex-direction:column; gap:8px;">`;
 
             data.forEach(item => {
@@ -476,7 +478,7 @@
                 html += `
                         <div onclick="location.href='view.html?id=${item.id}'" style="display:flex; justify-content:space-between; align-items:center; padding:12px 15px; background:#f9f9f9; border:1px solid #eee; border-radius:8px; cursor:pointer; transition:0.2s;" onmouseover="this.style.background='#f0f7ff'" onmouseout="this.style.background='#f9f9f9'">
                             <span style="color:#333; font-weight:bold; font-size:0.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${secretIcon}${item.title}</span>
-                            <span style="color:#999; font-size:0.8rem; margin-left:10px;">${new Date(item.created_at).toISOString().split('T')[0]}</span>
+                            <span style="color:#767676; font-size:0.8rem; margin-left:10px;">${new Date(item.created_at).toISOString().split('T')[0]}</span>
                         </div>
                     `;
             });
@@ -587,7 +589,7 @@
                     safeContent = safeContent.replace(/\n/g, '<br>');
 
                     const borderStyle = idx !== data.length - 1 ? 'border-bottom: 1px dashed #b8daff; margin-bottom: 15px; padding-bottom: 15px;' : '';
-                    const deleteBtn = isAdminLoggedIn ? `<button onclick="deleteReply(${c.id})" style="background:none; border:none; color:#ff6b6b; cursor:pointer; font-size:0.8rem; font-weight:bold; float:right;">❌ 삭제</button>` : '';
+                    const deleteBtn = isAdminLoggedIn ? `<button onclick="deleteReply(${c.id})" style="background:none; border:none; color:#d33b3b; cursor:pointer; font-size:0.8rem; font-weight:bold; float:right;">❌ 삭제</button>` : '';
 
                     html += `
                             <div style="${borderStyle}; padding-bottom: 10px;">

@@ -194,7 +194,7 @@
                 // 직전 페이지가 같은 목록 페이지면 히스토리를 되돌려 이동
                 // (새 히스토리 항목이 쌓여 뒤로가기가 꼬이는 것 방지)
                 try {
-                    const targetPath = new URL(listUrl, location.origin).pathname;
+                    const targetPath = new URL(listUrl, location.href).pathname;
                     const refUrl = new URL(document.referrer);
                     if (refUrl.origin === location.origin && refUrl.pathname === targetPath) {
                         history.back();

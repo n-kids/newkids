@@ -9,6 +9,24 @@ if ('scrollRestoration' in history) {
 window.scrollTo(0, 0);
 window.addEventListener('beforeunload', () => window.scrollTo(0, 0));
 
+// 1-2. 같은 페이지 내 카테고리(해시) 전환은 히스토리에 새 항목을 만들지 않고 현재 항목을 교체
+//      (게시판을 여러 번 바꿔도 뒤로가기 시 직전 페이지로 바로 돌아가도록 하기 위함)
+document.addEventListener('click', function (e) {
+    const a = e.target.closest && e.target.closest('a[href]');
+    if (!a) return;
+    const href = a.getAttribute('href') || '';
+    // 대상: notice/program/child 페이지 + 해시 조합 링크(카테고리 전환)
+    if (!/^(notice|program|child)\.html#.+/.test(href)) return;
+    try {
+        const target = new URL(href, location.href);
+        if (target.pathname !== location.pathname) return; // 다른 페이지로의 이동은 정상 처리
+        if (target.hash === location.hash) return;
+        e.preventDefault();
+        history.replaceState(null, '', target.href);
+        window.dispatchEvent(new HashChangeEvent('hashchange'));
+    } catch (err) { /* URL 파싱 실패 시 기본 동작 유지 */ }
+});
+
 // 2. 전역 변수 및 기본 카테고리 정의
 window.GLOBAL_CATEGORIES = [];
 window.NO_IMAGE_URL = "https://placehold.co/400x300/e0e0e0/666666?text=No+Image";

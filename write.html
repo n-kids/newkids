@@ -317,7 +317,7 @@
                 alert("저장 중 오류 발생: " + resultError.message);
             } else {
                 alert("게시글이 성공적으로 저장되었습니다.");
-                location.href = `notice.html#${category}`;
+                location.replace(`notice.html#${category}`);
             }
         }
     </script>

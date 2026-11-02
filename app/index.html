@@ -220,7 +220,7 @@ function authView(){
       <div class="field"><label for="aPin">비밀번호 (숫자 4~8자리)</label><input id="aPin" type="password" inputmode="numeric" autocomplete="new-password" maxlength="8" value="${esc(a.pin)}">
         <span class="hint">다른 휴대폰에서 로그인할 때 써요.</span></div>
       <div class="field"><label for="aPin2">비밀번호 확인</label><input id="aPin2" type="password" inputmode="numeric" autocomplete="new-password" maxlength="8" value="${esc(a.pin2)}">
-        ${a.pin2 && a.pin!==a.pin2?'<span class="hint req">비밀번호가 서로 달라요.</span>':''}</div>
+        <span class="hint req" id="pinHint" ${a.pin2 && a.pin!==a.pin2?'':'hidden'}>비밀번호가 서로 달라요.</span></div>
       <button class="btn block" id="aJoin" ${joinOk&&!a.busy?'':'disabled'}>${a.busy?'가입하는 중…':'가입 신청하기'}</button>
       <span class="hint" style="text-align:center">가입 신청 후 뉴키즈에서 확인하면 주문할 수 있어요.</span>`
     :`
@@ -516,18 +516,32 @@ document.addEventListener('click', async e => {
     return;
   }
 });
-document.addEventListener('input', e => {
+// 글자 입력 중에는 화면을 다시 그리지 않는다(한글 조합이 끊김). 버튼 상태만 바꾸고, 검색은 조합이 끝난 뒤 잠깐 쉬었다가 목록만 다시 그림
+const authMap = {aKg:'kg', aName:'name', aPhone:'phone', aPin:'pin', aPin2:'pin2'};
+let searchTimer = null;
+function onTyping(e){
   const id = e.target.id;
-  const authMap = {aKg:'kg', aName:'name', aPhone:'phone', aPin:'pin', aPin2:'pin2'};
-  if (authMap[id]){ auth[authMap[id]] = e.target.value; refocus(id, render); }
-  if (id==='bSearch'){ book.q = e.target.value; refocus(id, render); }
-  if (id==='gSearch'){ goods.q = e.target.value; goods.shown=24; refocus(id, render); }
-  if (id==='qEmail'){ checkout.email = e.target.value; refocus(id, renderSheet); }
+  if (authMap[id]){ auth[authMap[id]] = e.target.value; updateAuthButtons(); }
+  if (id==='qEmail'){ checkout.email = e.target.value; const b = $('#coGo'); if (b) b.disabled = busy || (checkout.quote==='yes' && !/.+@.+\..+/.test(checkout.email)); }
   if (id==='asText'){ as.text = e.target.value; }
-});
+  if (id==='bSearch' || id==='gSearch'){
+    if (e.isComposing) return;
+    if (id==='bSearch') book.q = e.target.value; else { goods.q = e.target.value; goods.shown = 24; }
+    clearTimeout(searchTimer); searchTimer = setTimeout(() => refocus(id, render), 250);
+  }
+}
+document.addEventListener('input', onTyping);
+document.addEventListener('compositionend', onTyping);
+function updateAuthButtons(){
+  const a = auth;
+  const join = $('#aJoin'), login = $('#aLogin');
+  if (join) join.disabled = a.busy || !(a.kg.trim() && a.name.trim() && /^\d{10,11}$/.test(digits(a.phone)) && a.region && /^\d{4,8}$/.test(a.pin) && a.pin===a.pin2);
+  if (login) login.disabled = a.busy || !(/^\d{10,11}$/.test(digits(a.phone)) && /^\d{4,8}$/.test(a.pin));
+  const hint = $('#pinHint'); if (hint) hint.hidden = !(a.pin2 && a.pin!==a.pin2);
+}
 document.addEventListener('change', e => {
   const el = e.target;
-  if (el.name==='region'){ auth.region = el.value; render(); }
+  if (el.name==='region'){ auth.region = el.value; updateAuthButtons(); }
   if (el.id==='bMonth'){ book.month = el.value; render(); }
   if (el.dataset.ageinput){ const [n,j] = el.dataset.ageinput.split('|'); book.sel[n][+j] = Math.max(0, parseInt(el.value)||0); keepScroll(render); }
   if (el.name==='quote'){ checkout.quote = el.value; renderSheet(); }

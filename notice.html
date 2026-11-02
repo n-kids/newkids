@@ -137,6 +137,11 @@
             currentCategory = location.hash.replace('#', '');
             if (!currentCategory && boardCategories.length > 0) currentCategory = boardCategories[0].code;
 
+            // 게시판 전환 시 찜/최근본 필터 모드 초기화 (다른 게시판 기록으로 빈 목록이 되는 문제 방지)
+            isScrapMode = false;
+            isRecentMode = false;
+            resetModeButtonStyles();
+
             currentSearchKeyword = '';
             const searchInput = document.getElementById('search-input');
             if (searchInput) searchInput.value = '';
@@ -255,11 +260,27 @@
             loadBoardList(1);
         }
 
+        function resetModeButtonStyles() {
+            const scrapBtn = document.getElementById('btn-scrap-mode');
+            const recentBtn = document.getElementById('btn-recent-mode');
+            if (scrapBtn) {
+                scrapBtn.style.background = '#fff';
+                scrapBtn.style.color = '#9c4a10';
+                scrapBtn.innerText = '⭐ 찜한 자료';
+            }
+            if (recentBtn) {
+                recentBtn.style.background = '#fff';
+                recentBtn.style.color = '#17766b';
+                recentBtn.innerText = '🕒 최근 본 자료';
+            }
+        }
+
         window.toggleScrapMode = function () {
             isScrapMode = !isScrapMode;
             isRecentMode = false;
             document.getElementById('btn-recent-mode').style.background = '#fff';
             document.getElementById('btn-recent-mode').style.color = '#17766b';
+            document.getElementById('btn-recent-mode').innerText = '🕒 최근 본 자료';
 
             const btn = document.getElementById('btn-scrap-mode');
             if (isScrapMode) {
@@ -279,6 +300,7 @@
             isScrapMode = false;
             document.getElementById('btn-scrap-mode').style.background = '#fff';
             document.getElementById('btn-scrap-mode').style.color = '#9c4a10';
+            document.getElementById('btn-scrap-mode').innerText = '⭐ 찜한 자료';
 
             const btn = document.getElementById('btn-recent-mode');
             if (isRecentMode) {
@@ -349,8 +371,14 @@
 
             let query = window.sb.from('total_posts')
                 .select('id, title, category, created_at, link_url, is_secret, download_count, is_notice, image_url', { count: 'exact' })
-                .eq('category', currentCategory)
                 .neq('is_visible', false);
+
+            if (isRecentMode) {
+                // 최근 본 자료 모드: 게시판(카테고리) 구분 없이 전체 열람 기록을 표시
+                query = query.in('id', recentList);
+            } else {
+                query = query.eq('category', currentCategory);
+            }
 
             if (currentSearchKeyword !== '') {
                 query = query.ilike('title', `%${currentSearchKeyword}%`);
@@ -358,8 +386,6 @@
 
             if (isScrapMode) {
                 query = query.in('id', savedScraps);
-            } else if (isRecentMode) {
-                query = query.in('id', recentList);
             }
 
             // 자료실은 제목 앞 [과목명] 기준 가나다순, 그 외 게시판은 최신순
@@ -375,6 +401,10 @@
             }
 
             let processedData = data || [];
+            if (isRecentMode && processedData.length > 1) {
+                // 가장 최근에 본 글이 위에 오도록 정렬
+                processedData.sort((a, b) => recentList.indexOf(a.id) - recentList.indexOf(b.id));
+            }
             if (currentFormatFilter !== 'ALL' && processedData.length > 0) {
                 processedData = processedData.filter(item => {
                     if (!item.image_url) return false;
@@ -435,7 +465,11 @@
 
                 const isNoticePost = (item.is_notice === true);
                 const rowBg = isNoticePost ? 'background-color: rgba(244, 162, 97, 0.08);' : '';
-                const displayNumHtml = isNoticePost ? '<span style="color:#e74c3c; font-weight:bold;">공지</span>' : displayNum;
+                let displayNumHtml = isNoticePost ? '<span style="color:#e74c3c; font-weight:bold;">공지</span>' : displayNum;
+                if (isRecentMode) {
+                    const catInfo = boardCategories.find(c => c.code === item.category);
+                    displayNumHtml = `<span class="badge" style="background:#eef6ff; color:#1a3c6e; font-size:0.75rem; padding:3px 8px; border-radius:4px;">${catInfo ? catInfo.name : item.category}</span>`;
+                }
                 const noticeIcon = isNoticePost ? '📌 ' : '';
 
                 html += `

@@ -243,6 +243,18 @@
                 return;
             }
 
+            // 최근 본 자료 기록 (어떤 경로로 열람해도 view.html 도착 시 기록)
+            try {
+                const numericId = parseInt(id, 10);
+                if (!isNaN(numericId)) {
+                    let recentList = JSON.parse(localStorage.getItem('nk_recent') || '[]');
+                    recentList = recentList.filter(rid => rid !== numericId);
+                    recentList.unshift(numericId);
+                    if (recentList.length > 20) recentList.pop();
+                    localStorage.setItem('nk_recent', JSON.stringify(recentList));
+                }
+            } catch (e) { /* localStorage 사용 불가 환경은 무시 */ }
+
             postDataCache = data;
             postDataCache.actualPassword = data.password || '';
             postDataCache.dlPassword = data.download_password || '';

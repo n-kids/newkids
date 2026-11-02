@@ -48,7 +48,9 @@ async function rpc(name, args){
 
 function toast(msg){ const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => t.hidden = true, 3000); }
 
-const ageSummary = q => (q || []).map((n, i) => n ? `${AGES[i].replace('만','')} ${n}` : '').filter(Boolean).join(' · ');
+// 검색: 띄어쓰기·대소문자 무시
+const matchQ = (name, q) => { const k = String(q || '').replace(/\s+/g, '').toLowerCase(); return !k || String(name).replace(/\s+/g, '').toLowerCase().includes(k); };
+const ageSummary =q => (q || []).map((n, i) => n ? `${AGES[i].replace('만','')} ${n}` : '').filter(Boolean).join(' · ');
 const orderTitle = o => o.kind === 'book' ? `교재 ${o.month || ''} 주문` : o.kind === 'goods' ? '물품 주문' : 'A/S 신청';
 function orderSummary(o){
   if (o.kind === 'book') return (o.lines || []).map(l => l.name).join(', ') + ` · ${(o.lines || []).reduce((a, l) => a + l.q.reduce((x, y) => x + y, 0), 0)}권`;

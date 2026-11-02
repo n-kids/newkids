@@ -257,7 +257,7 @@ function lastBook(){ return myOrders.find(o=>o.kind==='book'); }
 function bookView(){
   const last = lastBook();
   const selCount = Object.keys(book.sel).length;
-  const total = Object.values(book.sel).reduce((a,q)=>a+q.reduce((x,y)=>x+y,0),0);
+  const total = Object.values(book.sel).reduce((a,s)=>a+lineTotal(s),0);
   const q = book.q.trim().toLowerCase();
   const list = BOOKS.filter(b => (book.tag==='전체' || b.t.includes(book.tag)) && matchQ(b.n, q));
   return `
@@ -266,23 +266,29 @@ function bookView(){
       <select id="bMonth" class="search" style="width:auto;padding:6px 10px">${MONTHS.map(m=>`<option ${book.month===m?'selected':''}>${m}</option>`).join('')}</select></div>
     ${MONTHS.length===1?`<span class="hint">${new Date().getMonth()%12+2>12?1:new Date().getMonth()+2}월호는 ${new Date().getMonth()+1}월 15일부터 주문할 수 있어요.</span>`:''}
     ${last?`<div class="past"><div class="row"><b>지난번에는 이걸 주문하셨어요</b><span class="tag">${esc(last.month||'')}</span></div>
-      <ul>${last.lines.map(l=>`<li><span>${esc(l.name)}</span><span class="num">${ageSummary(l.q)}</span></li>`).join('')}</ul>
+      <ul>${last.lines.map(l=>`<li><span>${esc(l.name)}</span><span class="num">${esc(lineSummary(l))}</span></li>`).join('')}</ul>
       <button class="btn small" id="bRepeat">지난번과 똑같이 담기</button></div>`:''}
     <input class="search" id="bSearch" maxlength="20" autocomplete="off" placeholder="교재 이름으로 찾기" value="${esc(book.q)}">
     <div class="chips">${['전체',...HASHTAGS].map(t=>`<button class="chip" data-tag="${t}" aria-pressed="${book.tag===t}">${t==='전체'?'전체':'#'+t}</button>`).join('')}</div>
     <div class="plist">${list.map(bookCard).join('') || '<div class="card hint">찾는 교재가 없어요.</div>'}</div>
     ${selCount?`<div class="sticky"><div class="cartbar"><span><b class="num">${selCount}</b>개 교재 · <b class="num">${total}</b>권</span><button class="btn small" id="bCheckout">${book.month} 주문하기</button></div></div>`:''}`;
 }
+const emptySel = () => ({q:[0,0,0,0,0,0], st:{}});
 function bookCard(b){
-  const on = !!book.sel[b.n]; const q = book.sel[b.n];
+  const on = !!book.sel[b.n]; const s = book.sel[b.n];
+  const n = esc(b.n);
+  const box = (id, label, val, key, input) => `<div class="age"><label for="${id}">${label}</label>
+      <div class="step"><button data-${key}="${n}|${input}|-1" aria-label="${n} ${label} 빼기">−</button>
+      <input id="${id}" class="num" inputmode="numeric" value="${val}" data-${key}input="${n}|${input}">
+      <button data-${key}="${n}|${input}|1" aria-label="${n} ${label} 더하기">+</button></div></div>`;
+  const boxes = !on ? '' : BOOK_STEPS[b.n]
+    ? BOOK_STEPS[b.n].map((st,i)=>box(`s-${n}-${i}`, stepLabel(st), s.st[st]||0, 'stp', st)).join('')
+    : AGES.map((a,j)=>agesOf(b.n).includes(j) ? box(`a-${n}-${j}`, a, s.q[j], 'age', j) : '').join('');
   return `<div class="prog ${on?'on':''}">
-    <button class="prog-h" data-prog="${esc(b.n)}" aria-expanded="${on}"><span class="ck">${on?'✓':''}</span>
-      <span style="min-width:0"><b>${esc(b.n)}</b><span class="tags">${b.t.map(t=>'#'+t).join(' ')}</span></span>
-      ${on?`<span class="q num">${q.reduce((a,c)=>a+c,0)}권</span>`:''}</button>
-    ${on?`<div class="ages">${AGES.map((a,j)=>agesOf(b.n).includes(j)?`<div class="age"><label for="a-${esc(b.n)}-${j}">${a}</label>
-      <div class="step"><button data-age="${esc(b.n)}|${j}|-1" aria-label="${esc(b.n)} ${a} 빼기">−</button>
-      <input id="a-${esc(b.n)}-${j}" class="num" inputmode="numeric" value="${q[j]}" data-ageinput="${esc(b.n)}|${j}">
-      <button data-age="${esc(b.n)}|${j}|1" aria-label="${esc(b.n)} ${a} 더하기">+</button></div></div>`:'').join('')}</div>`:''}
+    <button class="prog-h" data-prog="${n}" aria-expanded="${on}"><span class="ck">${on?'✓':''}</span>
+      <span style="min-width:0"><b>${n}</b><span class="tags">${b.t.map(t=>'#'+t).join(' ')}</span></span>
+      ${on?`<span class="q num">${lineTotal(s)}${b.n==='쿡쿡'?'개':'권'}</span>`:''}</button>
+    ${on?`<div class="ages">${boxes}</div>${BOOK_NOTES[b.n]?`<p class="hint" style="margin:0 12px 10px">${esc(BOOK_NOTES[b.n])}</p>`:''}`:''}
   </div>`;
 }
 
@@ -427,7 +433,7 @@ function renderSheet(){
   const c = checkout;
   let lines = '', sum = 0, hasUnpriced = false;
   if (c.kind==='book'){
-    lines = Object.entries(book.sel).map(([n,q])=>`<div class="li"><span>${esc(n)}</span><span class="num">${q.reduce((a,b)=>a+b,0)}권</span></div>`).join('');
+    lines = Object.entries(book.sel).map(([n,s])=>`<div class="li"><span>${esc(n)} <span class="hint">${esc(lineSummary(s))}</span></span><span class="num">${lineTotal(s)}${n==='쿡쿡'?'개':'권'}</span></div>`).join('');
   } else {
     const items = Object.values(cart);
     hasUnpriced = items.some(i=>!i.price);
@@ -451,6 +457,8 @@ function renderSheet(){
     ${c.kind==='goods'?`<span class="flabel">결제</span><div class="opts col">${payOpts.map(([k,t,s])=>`<label class="opt"><input type="radio" name="pay" value="${k}" ${c.pay===k?'checked':''}><span><b>${t}</b><small>${s}</small></span></label>`).join('')}</div>
       ${hasUnpriced?'<span class="hint">가격 문의 품목이 있어서 담당자가 금액을 확인한 뒤 안내드려요.</span>':''}`
       :`<span class="hint">교재 대금은 지금처럼 월별 거래명세서로 청구됩니다.</span>`}
+    <div class="field"><label for="coMemo">주문 메모 <span class="hint">(선택)</span></label>
+      <textarea id="coMemo" maxlength="500" placeholder="${c.kind==='book' && book.sel['쿡쿡'] ? '쿡쿡: 원하는 음식을 적어주세요. 그 밖에 요청할 점도 함께 남겨주세요.' : '배송 요청, 반별 나눔, 원하는 날짜 등 요청할 점을 남겨주세요.'}">${esc(c.memo||'')}</textarea></div>
     <button class="btn block sun" id="coGo" ${emailOk&&!busy?'':'disabled'}>${busy?'보내는 중…':'주문 넣기'}</button>
     <button class="btn block line" id="coClose">닫기</button>
   </div></div>`;
@@ -458,8 +466,12 @@ function renderSheet(){
 
 async function placeOrder(){
   const c = checkout;
-  const order = {kind:c.kind, quote_want:c.quote==='yes', quote_email:c.quote==='yes'?c.email.trim():''};
-  if (c.kind==='book'){ order.month = book.month; order.lines = Object.entries(book.sel).map(([n,q])=>({name:n, vendor:BOOKS.find(b=>b.n===n).v, q:[...q]})); }
+  const order = {kind:c.kind, quote_want:c.quote==='yes', quote_email:c.quote==='yes'?c.email.trim():'', memo:(c.memo||'').trim()};
+  if (c.kind==='book'){
+    order.month = book.month;
+    order.lines = Object.entries(book.sel).filter(([,s])=>lineTotal(s)>0).map(([n,s])=>{ const l = {name:n, vendor:BOOKS.find(b=>b.n===n).v, q:[...s.q]}; if (Object.keys(s.st).length) l.st = {...s.st}; return l; });
+    if (!order.lines.length){ toast('수량을 넣어주세요.'); return; }
+  }
   else { order.lines = Object.values(cart).map(i=>({...i})); order.pay = c.pay; }
   busy = true; renderSheet();
   try {
@@ -503,9 +515,10 @@ document.addEventListener('click', async e => {
   if (t.id==='reload'){ await refresh(); keepScroll(render); toast('최신 상태로 바꿨어요.'); return; }
   // 교재
   if (d.tag){ book.tag = d.tag; render(); return; }
-  if (d.prog){ if (book.sel[d.prog]) delete book.sel[d.prog]; else book.sel[d.prog] = [0,0,0,0,0,0]; keepScroll(render); return; }
-  if (d.age){ const [n,j,dl] = d.age.split('|'); const q = book.sel[n]; q[+j] = Math.max(0, q[+j] + +dl); keepScroll(render); return; }
-  if (t.id==='bRepeat'){ const last = lastBook(); book.sel = {}; last.lines.forEach(l=>{ if (BOOKS.some(b=>b.n===l.name)) book.sel[l.name]=[...l.q]; }); render(); toast('지난번 주문을 그대로 담았어요. 바뀐 반만 고치세요.'); return; }
+  if (d.prog){ if (book.sel[d.prog]) delete book.sel[d.prog]; else book.sel[d.prog] = emptySel(); keepScroll(render); return; }
+  if (d.age){ const [n,j,dl] = d.age.split('|'); const q = book.sel[n].q; q[+j] = Math.max(0, q[+j] + +dl); keepScroll(render); return; }
+  if (d.stp!==undefined){ const [n,st,dl] = d.stp.split('|'); const m = book.sel[n].st; m[st] = Math.max(0, (m[st]||0) + +dl); if (!m[st]) delete m[st]; keepScroll(render); return; }
+  if (t.id==='bRepeat'){ const last = lastBook(); book.sel = {}; last.lines.forEach(l=>{ if (BOOKS.some(b=>b.n===l.name)) book.sel[l.name] = {q:[...(l.q||[0,0,0,0,0,0])], st:{...(l.st||{})}}; }); render(); toast('지난번 주문을 그대로 담았어요. 바뀐 반만 고치세요.'); return; }
   if (t.id==='bCheckout'){ openCheckout('book'); return; }
   // 물품
   if (d.sec!==undefined){ goods.sec = d.sec||null; goods.q=''; goods.shown=24; goods.cat='rec'; render(); $('#appScroll').scrollTop=0; return; }
@@ -546,6 +559,7 @@ function onTyping(e){
   if (authMap[id]){ auth[authMap[id]] = e.target.value; updateAuthButtons(); }
   if (id==='qEmail'){ checkout.email = e.target.value; const b = $('#coGo'); if (b) b.disabled = busy || (checkout.quote==='yes' && !/.+@.+\..+/.test(checkout.email)); }
   if (id==='asText'){ as.text = e.target.value; }
+  if (id==='coMemo' && checkout){ checkout.memo = e.target.value; }
   if (id==='bSearch' || id==='gSearch'){
     if (id==='bSearch') book.q = e.target.value; else { goods.q = e.target.value; goods.shown = 24; }
     clearTimeout(searchTimer); searchTimer = setTimeout(() => refreshBelow(id), 200);
@@ -575,7 +589,8 @@ document.addEventListener('change', e => {
   const el = e.target;
   if (el.name==='region'){ auth.region = el.value; updateAuthButtons(); }
   if (el.id==='bMonth'){ book.month = el.value; render(); }
-  if (el.dataset.ageinput){ const [n,j] = el.dataset.ageinput.split('|'); book.sel[n][+j] = Math.max(0, parseInt(el.value)||0); keepScroll(render); }
+  if (el.dataset.ageinput){ const [n,j] = el.dataset.ageinput.split('|'); book.sel[n].q[+j] = Math.max(0, parseInt(el.value)||0); keepScroll(render); }
+  if (el.dataset.stpinput!==undefined){ const [n,st] = el.dataset.stpinput.split('|'); const v = Math.max(0, parseInt(el.value)||0); if (v) book.sel[n].st[st] = v; else delete book.sel[n].st[st]; keepScroll(render); }
   if (el.name==='quote'){ checkout.quote = el.value; renderSheet(); }
   if (el.name==='pay'){ checkout.pay = el.value; renderSheet(); }
   if (el.id==='asProg'){ as.prog = el.value; as.step=''; as.ho=''; keepScroll(render); }

@@ -178,12 +178,13 @@ function todoView(need, quotes, stmts, asOpen, ship, sheet, sheetNotes){
 function detail(o){
   const m = memberOf(o);
   let h = `<span class="hint">${esc(m.kg)} · ${esc(m.name)} · ${esc(fmtPhone(m.phone))} · ${esc(m.region)}${m.email?' · '+esc(m.email):''}</span>`;
-  if (o.kind === 'book') h += `<div class="tbl-wrap"><table><thead><tr><th>교재</th><th>업체</th>${AGES.map(a => `<th class="r">${a.replace('만','')}</th>`).join('')}<th class="r">합계</th></tr></thead><tbody>
-    ${o.lines.map(l => `<tr><td>${esc(l.name)}</td><td>${esc(l.vendor)}</td>${l.q.map(x => `<td class="r num">${x||'·'}</td>`).join('')}<td class="r num"><b>${l.q.reduce((a,b)=>a+b,0)}</b></td></tr>`).join('')}</tbody></table></div>`;
+  if (o.kind === 'book') h += `<div class="tbl-wrap"><table><thead><tr><th>교재</th><th>업체</th>${AGES.map(a => `<th class="r">${a.replace('만','')}</th>`).join('')}<th>단계</th><th class="r">합계</th></tr></thead><tbody>
+    ${o.lines.map(l => `<tr><td>${esc(l.name)}</td><td>${esc(l.vendor)}</td>${(l.q||[0,0,0,0,0,0]).map(x => `<td class="r num">${x||'·'}</td>`).join('')}<td>${esc(lineSummary({st:l.st})) || '·'}</td><td class="r num"><b>${lineTotal(l)}</b></td></tr>`).join('')}</tbody></table></div>`;
   else if (o.kind === 'goods') h += `<div class="tbl-wrap"><table><thead><tr><th>품목</th><th>업체</th><th class="r">수량</th><th class="r">금액</th></tr></thead><tbody>
     ${o.lines.map(l => `<tr><td>${esc(l.name)}</td><td>${esc(l.vendor)}</td><td class="r num">${l.qty}</td><td class="r num">${l.price?won(l.price*l.qty):'확인 필요'}</td></tr>`).join('')}</tbody></table></div>
     <span class="hint">결제: ${PAY_NAME[o.pay]||'-'}</span>`;
-  else h += `<span>${esc(o.memo||'(내용 없음)')}</span><div class="as-ph">${(photoCache[o.id]||[]).map((s,i) => `<a href="${s}" target="_blank" rel="noopener"><img src="${s}" alt="A/S 사진 ${i+1}"></a>`).join('') || '<span class="hint">사진 불러오는 중…</span>'}</div>`;
+  if (o.kind !== 'as' && o.memo) h += `<div class="reco"><b>주문 메모</b> · ${esc(o.memo)}</div>`;
+  if (o.kind === 'as') h += `<span>${esc(o.memo||'(내용 없음)')}</span><div class="as-ph">${(photoCache[o.id]||[]).map((s,i) => `<a href="${s}" target="_blank" rel="noopener"><img src="${s}" alt="A/S 사진 ${i+1}"></a>`).join('') || '<span class="hint">사진 불러오는 중…</span>'}</div>`;
   if (o.kind === 'book') h += `<span class="hint">납품시트: ${o.sheet_synced_at ? '반영됨 ' + fmtDate(o.sheet_synced_at) : o.state >= 1 ? '반영 대기' : '확인을 누르면 반영돼요'}${o.sheet_note ? ' · ' + esc(o.sheet_note) : ''}</span>`;
   h += `<ul class="log">${(o.log||[]).map(l => `<li class="num">${fmtDate(l.at)} ${esc(l.t)}</li>`).join('')}</ul>`;
   return h;
@@ -193,7 +194,7 @@ function vendorQueue(){
   orders.filter(o => o.kind !== 'as' && o.state === 1).forEach(o => (o.lines || []).forEach(l => {
     if ((o.done || {})[l.vendor]) return;
     const v = m[l.vendor] || (m[l.vendor] = {vendor:l.vendor, rows:[], ids:new Set()});
-    v.ids.add(o.id); v.rows.push({kg:memberOf(o).kg, region:memberOf(o).region, name:l.name, n:l.q ? l.q.reduce((a,b)=>a+b,0) : l.qty, q:l.q, month:o.month});
+    v.ids.add(o.id); v.rows.push({kg:memberOf(o).kg, region:memberOf(o).region, name:l.name, n:l.q||l.st ? lineTotal(l) : l.qty, sum:l.q||l.st ? lineSummary(l) : '', memo:o.memo||'', month:o.month});
   }));
   return Object.values(m).sort((a,b) => a.vendor.localeCompare(b.vendor, 'ko'));
 }
@@ -201,7 +202,7 @@ function vendorView(vq){
   return `<div class="reco"><b>업체별 발주</b> · 확인한 주문을 업체끼리 묶었어요. "목록 복사"로 내용을 붙여 넣거나 Claude에게 "OO 발주해줘"라고 한 뒤, 끝나면 "발주 완료"를 누르세요.</div>
     <div class="box"><h3>발주 대기<small>${vq.length}개 업체</small></h3>
     ${vq.map(v => `<div class="vend"><div><b>${esc(v.vendor)}</b> <span class="hint num">${v.ids.size}건</span>
-      <ul>${v.rows.map(r => `<li>${esc(r.kg)}(${esc(r.region)}) · ${esc(r.name)}${r.month?' '+esc(r.month):''} · <span class="num">${r.q?ageSummary(r.q):r.n+'개'}</span></li>`).join('')}</ul></div>
+      <ul>${v.rows.map(r => `<li>${esc(r.kg)}(${esc(r.region)}) · ${esc(r.name)}${r.month?' '+esc(r.month):''} · <span class="num">${esc(r.sum||r.n+'개')}</span>${r.memo?` <span class="tag info">메모: ${esc(r.memo)}</span>`:''}</li>`).join('')}</ul></div>
       <span class="a" style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button class="btn small line" data-copy="${esc(v.vendor)}">목록 복사</button><button class="btn small sun" data-act="vendor" data-v="${esc(v.vendor)}">발주 완료</button></span></div>`).join('') || '<div class="empty">발주할 주문이 없어요. 할 일에서 새 주문을 확인하면 여기로 옵니다.</div>'}</div>`;
 }
 function kgView(){
@@ -269,7 +270,7 @@ document.addEventListener('click', async e => {
     }
     if (d.copy){
       const v = vendorQueue().find(x => x.vendor === d.copy);
-      const text = `[${v.vendor} 발주]\n` + v.rows.map(r => `${r.kg}(${r.region}) ${r.name}${r.month?' '+r.month:''} ${r.q?ageSummary(r.q):r.n+'개'}`).join('\n');
+      const text = `[${v.vendor} 발주]\n` + v.rows.map(r => `${r.kg}(${r.region}) ${r.name}${r.month?' '+r.month:''} ${r.sum||r.n+'개'}${r.memo?' (메모: '+r.memo+')':''}`).join('\n');
       try { await navigator.clipboard.writeText(text); toast('복사했어요.'); } catch(_) { prompt('아래 내용을 복사하세요', text); }
       return;
     }
@@ -296,11 +297,11 @@ document.addEventListener('click', async e => {
 document.addEventListener('keydown', e => { if (e.key === 'Enter' && (e.target.id === 'lPw' || e.target.id === 'lEmail')) $('#login')?.click(); });
 
 function downloadCsv(){
-  const rows = [['주문번호','접수','원','지역','담당','연락처','구분','호수','업체','품목','만0','만1','만2','만3','만4','만5','수량','금액','결제','견적서','상태']];
+  const rows = [['주문번호','접수','원','지역','담당','연락처','구분','호수','업체','품목','만0','만1','만2','만3','만4','만5','단계','수량','금액','결제','견적서','상태','메모']];
   orders.forEach(o => { const m = memberOf(o);
     const base = [o.id, fmtDate(o.created_at), m.kg, m.region, m.name||'', fmtPhone(m.phone||''), KIND_NAME[o.kind], o.month||''];
-    if (o.kind === 'as'){ const a = o.as_info||{}; rows.push([...base, a.vendor||'', `${a.prog} ${a.step} ${a.ho}`, '','','','','','', '', '', '', '', STATES.as[o.state]]); return; }
-    (o.lines||[]).forEach(l => rows.push([...base, l.vendor, l.name, ...(l.q||['','','','','','']), l.q?l.q.reduce((a,b)=>a+b,0):l.qty, l.price?l.price*l.qty:'', PAY_NAME[o.pay]||'', o.quote_want?'요청':'', STATES[o.kind][o.state]]));
+    if (o.kind === 'as'){ const a = o.as_info||{}; rows.push([...base, a.vendor||'', `${a.prog} ${a.step} ${a.ho}`, '','','','','','', '', '', '', '', '', STATES.as[o.state], o.memo||'']); return; }
+    (o.lines||[]).forEach(l => rows.push([...base, l.vendor, l.name, ...(l.q||['','','','','','']), lineSummary({st:l.st}), l.q||l.st?lineTotal(l):l.qty, l.price?l.price*l.qty:'', PAY_NAME[o.pay]||'', o.quote_want?'요청':'', STATES[o.kind][o.state], o.memo||'']));
   });
   const csv = '﻿' + rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\r\n');
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));

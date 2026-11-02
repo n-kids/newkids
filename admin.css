@@ -1758,3 +1758,66 @@ button.c-soft, .btn-mini.c-soft { background: #fff; color: #475569; border: 1px 
 
 /* 플레이스홀더 가독성 */
 .form-inputp::placeholder, .filter-search-input::placeholder, .filter-date-input::placeholder { color: #64748b; }
+
+/* =========================================
+   포커스 디자인 전체 확장 (v20261103-admin4)
+   입력창 포커스 스타일(네이비 보더 + 소프트 링)을 모든 요소에 적용
+   ========================================= */
+
+/* --- 텍스트 입력 계열: 클래스 미적용 요소 포함 통일 --- */
+.cat-cell-input input, .cm-cell-input input, .tool-input {
+    font-family: inherit;
+    color: #2b3440;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.cat-cell-input input:hover, .cm-cell-input input:hover, .tool-input:hover { border-color: #94a3b8; }
+.cat-cell-input input:focus, .cm-cell-input input:focus, .tool-input:focus {
+    border-color: #1a3c6e;
+    box-shadow: 0 0 0 3px rgba(26, 60, 110, 0.12);
+    outline: none;
+}
+
+/* 모든 표준 입력 요소 (인라인 속성으로 클래스 없는 것 포함) */
+input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus,
+input[type="number"]:focus, input[type="url"]:focus, input[type="search"]:focus,
+input[type="tel"]:focus, input[type="date"]:focus, input[type="time"]:focus,
+select:focus, textarea:focus {
+    border-color: #1a3c6e;
+    box-shadow: 0 0 0 3px rgba(26, 60, 110, 0.12);
+    outline: none;
+}
+input[type="text"]:hover, input[type="email"]:hover, input[type="password"]:hover,
+input[type="number"]:hover, input[type="url"]:hover, input[type="search"]:hover,
+input[type="tel"]:hover, input[type="date"]:hover, input[type="time"]:hover,
+select:hover, textarea:hover { border-color: #94a3b8; }
+
+/* --- 체크박스·라디오: 브랜드 컬러 --- */
+input[type="checkbox"], input[type="radio"] { accent-color: #1a3c6e; }
+
+/* --- 본문 에디터(Quill): 포커스 시 컨테이너 강조 --- */
+.ql-container:focus-within {
+    border-color: #1a3c6e !important;
+    box-shadow: 0 0 0 3px rgba(26, 60, 110, 0.12);
+}
+.ql-editor:focus { outline: none; }
+
+/* --- 버튼·네비게이션: 키보드 포커스 링 --- */
+.adm-btn:focus-visible, .btn-action:focus-visible, .btn-mini:focus-visible,
+.pm-btn:focus-visible, .btn-tool:focus-visible, .page-btn:focus-visible,
+.sidebar-toggle-btn:focus-visible, .btn-cancel:focus-visible, .btn-confirm:focus-visible,
+input[type="file"]:focus-visible, input[type="checkbox"]:focus-visible, input[type="radio"]:focus-visible {
+    outline: 2px solid #1a3c6e;
+    outline-offset: 2px;
+}
+
+/* --- 사이드바 메뉴: 키보드 포커스 --- */
+.nav-item:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: -2px;
+}
+
+/* --- 커스텀 드롭다운 항목 --- */
+.cs-item:focus-visible {
+    outline: 2px solid #1a3c6e;
+    outline-offset: -2px;
+}

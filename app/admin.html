@@ -91,8 +91,8 @@ async function boot(){
 }
 async function load(){
   const [m, o] = await Promise.all([
-    sb.from('nk_members').select('id,kg,name,phone,region,status,email,created_at,approved_at').order('created_at', {ascending:false}),
-    sb.from('nk_orders').select('id,member_id,kind,month,lines,quote_want,quote_email,quote_sent,pay,stmt_want,stmt_email,stmt_at,stmt_sent,state,done,as_info,memo,log,created_at').order('created_at', {ascending:false}).limit(500),
+    sb.from('nk_members').select('id,kg,name,phone,region,status,email,sheet_name,created_at,approved_at').order('created_at', {ascending:false}),
+    sb.from('nk_orders').select('id,member_id,kind,month,lines,quote_want,quote_email,quote_sent,pay,stmt_want,stmt_email,stmt_at,stmt_sent,state,done,as_info,memo,log,sheet_synced_at,sheet_note,created_at').order('created_at', {ascending:false}).limit(500),
   ]);
   if (m.error || o.error){ toast((m.error || o.error).message); return; }
   members = m.data; orders = o.data;
@@ -113,6 +113,8 @@ function render(){
   const stmts = orders.filter(o => o.stmt_want && !o.stmt_sent);
   const asOpen = orders.filter(o => o.kind === 'as' && o.state > 0 && o.state < 3);
   const ship = orders.filter(o => o.kind !== 'as' && o.state === 2);
+  const sheet = orders.filter(o => o.kind === 'book' && o.state >= 1 && !o.sheet_synced_at);
+  const sheetNotes = orders.filter(o => o.kind === 'book' && o.sheet_synced_at && o.sheet_note && o.state < 3);
   const vq = vendorQueue();
   const pending = members.filter(m => m.status === 'pending');
   const todo = need.length + quotes.length + stmts.length + asOpen.length + ship.length;
@@ -130,7 +132,7 @@ function render(){
     </div>
     <nav class="nav">${[['todo','할 일',todo],['vendor','업체별 발주',vq.length],['kg','원별 보기',0],['members','가입한 원',pending.length]].map(([k,l,n]) =>
       `<button data-tab="${k}" ${tab===k?'aria-current="page"':''}>${l}${n?`<span class="n num">${n}</span>`:''}</button>`).join('')}</nav>
-    ${({todo:() => todoView(need, quotes, stmts, asOpen, ship), vendor:() => vendorView(vq), kg:kgView, members:membersView})[tab]()}`;
+    ${({todo:() => todoView(need, quotes, stmts, asOpen, ship, sheet, sheetNotes), vendor:() => vendorView(vq), kg:kgView, members:membersView})[tab]()}`;
 }
 
 function loginView(){
@@ -146,12 +148,17 @@ function itemHead(o){
   return `<button class="t" data-open="${o.id}"><b>${esc(m.kg)} · ${orderTitle(o)} ${fresh.has(o.id)?'<span class="tag warn">NEW</span>':''}</b>
     <small class="num">#${o.id} · ${fmtDate(o.created_at)} · ${esc(m.region)} · ${esc(orderSummary(o))}</small></button>`;
 }
-function todoView(need, quotes, stmts, asOpen, ship){
+function todoView(need, quotes, stmts, asOpen, ship, sheet, sheetNotes){
   const box = (t, sub, items) => `<div class="box"><h3>${t}<small>${sub}</small></h3>${items || '<div class="empty">없음</div>'}</div>`;
   return `
-    ${box('새로 들어온 주문·A/S', '확인을 누르면 업체별 발주로 넘어가요. 교재는 납품시트에 옮겨 적어 주세요', need.map(o => `
+    ${box('새로 들어온 주문·A/S', '확인을 누르면 업체별 발주로 넘어가고, 교재는 메인 컴퓨터가 납품시트에 넣어요', need.map(o => `
       <div class="item">${kindTag(o)}${itemHead(o)}
         <span class="a">${o.quote_want?'<span class="tag info">견적서</span>':''}${o.pay?`<span class="tag">${PAY_NAME[o.pay]||o.pay}</span>`:''}<button class="btn small brand" data-act="confirm" data-id="${o.id}">확인</button></span>
+        ${openId===o.id?`<div class="detail">${detail(o)}</div>`:''}</div>`).join(''))}
+    ${box('납품시트 반영', '메인 컴퓨터가 15분마다 넣어요. 문제가 있으면 여기에 남아요', [...sheet, ...sheetNotes].map(o => `
+      <div class="item">${kindTag(o)}${itemHead(o)}
+        <span class="a">${o.sheet_synced_at?'<span class="tag ok">반영됨 · 확인할 점</span>':o.sheet_note?'<span class="tag warn">확인 필요</span>':'<span class="tag">반영 대기</span>'}</span>
+        ${o.sheet_note?`<div class="detail" style="grid-column:1/-1"><span>${esc(o.sheet_note)}</span>${/시트 원 이름/.test(o.sheet_note)?'<span class="hint">"가입한 원" 탭에서 이 원의 시트 원 이름을 적으면 다음 반영 때 들어가요.</span>':''}</div>`:''}
         ${openId===o.id?`<div class="detail">${detail(o)}</div>`:''}</div>`).join(''))}
     ${box('견적서 요청', '견적서를 만들어 메일로 보낸 뒤 눌러주세요', quotes.map(o => `
       <div class="item"><span class="kind doc">견적서</span><span class="t"><b>${esc(memberOf(o).kg)} · ${orderTitle(o)}</b><small>${esc(o.quote_email)}</small></span>
@@ -177,6 +184,7 @@ function detail(o){
     ${o.lines.map(l => `<tr><td>${esc(l.name)}</td><td>${esc(l.vendor)}</td><td class="r num">${l.qty}</td><td class="r num">${l.price?won(l.price*l.qty):'확인 필요'}</td></tr>`).join('')}</tbody></table></div>
     <span class="hint">결제: ${PAY_NAME[o.pay]||'-'}</span>`;
   else h += `<span>${esc(o.memo||'(내용 없음)')}</span><div class="as-ph">${(photoCache[o.id]||[]).map((s,i) => `<a href="${s}" target="_blank" rel="noopener"><img src="${s}" alt="A/S 사진 ${i+1}"></a>`).join('') || '<span class="hint">사진 불러오는 중…</span>'}</div>`;
+  if (o.kind === 'book') h += `<span class="hint">납품시트: ${o.sheet_synced_at ? '반영됨 ' + fmtDate(o.sheet_synced_at) : o.state >= 1 ? '반영 대기' : '확인을 누르면 반영돼요'}${o.sheet_note ? ' · ' + esc(o.sheet_note) : ''}</span>`;
   h += `<ul class="log">${(o.log||[]).map(l => `<li class="num">${fmtDate(l.at)} ${esc(l.t)}</li>`).join('')}</ul>`;
   return h;
 }
@@ -212,7 +220,8 @@ function membersView(){
     <div class="box"><h3>가입한 원<small>${members.length}곳</small></h3>
     ${list.map(m => `<div class="item"><span class="kind ${m.status==='approved'?'book':m.status==='pending'?'doc':'goods'}">${({approved:'승인',pending:'대기',rejected:'거절'})[m.status]}</span>
       <span class="t"><b>${esc(m.kg)} <span class="hint">${esc(m.region)}</span></b><small class="num">${esc(m.name)} · ${esc(fmtPhone(m.phone))} · 가입 ${fmtDate(m.created_at)}</small></span>
-      <span class="a">${m.status!=='approved'?`<button class="btn small brand" data-member="${m.id}" data-status="approved">승인</button>`:''}${m.status==='pending'?`<button class="btn small line" data-member="${m.id}" data-status="rejected">거절</button>`:''}</span></div>`).join('') || '<div class="empty">아직 가입한 원이 없어요</div>'}</div>`;
+      <span class="a"><input class="search" style="width:190px;padding:6px 10px" id="sn-${m.id}" placeholder="납품시트 원 이름 (다를 때)" value="${esc(m.sheet_name||'')}" aria-label="${esc(m.kg)} 납품시트 원 이름"><button class="btn small line" data-sheetname="${m.id}">저장</button>
+      ${m.status!=='approved'?`<button class="btn small brand" data-member="${m.id}" data-status="approved">승인</button>`:''}${m.status==='pending'?`<button class="btn small line" data-member="${m.id}" data-status="rejected">거절</button>`:''}</span></div>`).join('') || '<div class="empty">아직 가입한 원이 없어요</div>'}</div>`;
 }
 
 async function updateOrder(o, patch, logText){
@@ -249,6 +258,14 @@ document.addEventListener('click', async e => {
       const { error } = await sb.from('nk_members').update({status:d.status, approved_at:d.status==='approved'?new Date().toISOString():null}).eq('id', d.member);
       if (error) throw error;
       members.find(m => m.id === d.member).status = d.status; render(); toast(d.status === 'approved' ? '승인했어요. 이제 주문할 수 있어요.' : '거절했어요.'); return;
+    }
+    if (d.sheetname){
+      const v = $(`#sn-${d.sheetname}`).value.trim() || null;
+      const { error } = await sb.from('nk_members').update({sheet_name:v}).eq('id', d.sheetname);
+      if (error) throw error;
+      members.find(m => m.id === d.sheetname).sheet_name = v;
+      // 이 원의 막혀 있던 주문은 다음 반영 때 다시 시도
+      toast(v ? `납품시트 원 이름을 '${v}'(으)로 저장했어요.` : '시트 원 이름을 지웠어요.'); return;
     }
     if (d.copy){
       const v = vendorQueue().find(x => x.vendor === d.copy);

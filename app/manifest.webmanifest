@@ -1,0 +1,15 @@
+{
+  "name": "뉴키즈 주문",
+  "short_name": "뉴키즈 주문",
+  "description": "어린이집·유치원 교재 · 물품 주문과 A/S",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#FFF6EE",
+  "theme_color": "#1B2A4A",
+  "lang": "ko",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

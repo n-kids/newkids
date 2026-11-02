@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>뉴키즈 주문</title>
+<meta name="theme-color" content="#1B2A4A">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="logo-n.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="뉴키즈 주문">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="app.css">
+<style>
+/* 레이아웃: 휴대폰 한 화면. 위 앱바 + 가운데 스크롤 + 아래 탭바. 넓은 화면에서는 가운데 560px */
+html,body{height:100%}
+body{display:flex;justify-content:center;background:#F3E6DA}
+.app{width:100%;max-width:560px;height:100%;background:var(--bg);display:flex;flex-direction:column;position:relative;overflow:hidden;
+  padding-top:env(safe-area-inset-top,0px)}
+.appbar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px))}
+.brandmark{display:flex;align-items:center;gap:8px}
+.brandmark img{width:32px;height:32px;border-radius:8px}
+.brandmark b{font-family:var(--display);font-weight:400;font-size:20px;line-height:1}
+.brandmark small{display:block;font-size:10px;color:var(--muted)}
+.who{font-size:11.5px;color:var(--muted);text-align:right;line-height:1.3;border:0;background:none;padding:0}
+.who b{color:var(--ink);font-size:12.5px}
+.scroll{flex:1;overflow-y:auto;padding:4px max(16px,env(safe-area-inset-right,0px)) 18px max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:12px}
+.scroll>*{flex-shrink:0}
+.tabbar{display:grid;grid-template-columns:repeat(5,1fr);background:var(--surface);border-top:1px solid var(--line);padding:6px 4px calc(10px + env(safe-area-inset-bottom,0px))}
+.tabbar button{border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;color:var(--muted);padding:4px 0;position:relative}
+.tabbar svg{width:22px;height:22px}
+.tabbar button[aria-current="page"]{color:var(--accent);font-weight:700}
+.dot{position:absolute;top:0;right:22%;min-width:16px;height:16px;border-radius:8px;background:var(--warn);color:#fff;font-size:10px;line-height:16px;padding:0 4px}
+.pending{background:var(--sun);color:var(--sun-ink);border-radius:var(--r-sm);padding:10px 12px;font-size:12.5px}
+
+.join{flex:1;overflow-y:auto;padding:10px 20px 28px;display:flex;flex-direction:column;gap:14px}
+.join>*{flex-shrink:0}
+.join .hero{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;padding:22px 0 4px}
+.join .hero img{width:72px;height:72px;border-radius:18px}
+.rainbow{display:flex;gap:4px;justify-content:center}
+.rainbow i{width:22px;height:6px;border-radius:3px}
+.seg2{display:grid;grid-template-columns:1fr 1fr;background:var(--sunk);border-radius:999px;padding:4px}
+.seg2 button{border:0;background:none;border-radius:999px;padding:8px;color:var(--muted);font-weight:500}
+.seg2 button[aria-pressed="true"]{background:var(--surface);color:var(--ink);font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.06)}
+.regions{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.regions label{border:1.5px solid var(--line);border-radius:12px;padding:9px 0;text-align:center;background:var(--surface);cursor:pointer;font-weight:500}
+.regions label:has(input:checked){border-color:var(--accent);background:var(--soft);font-weight:700}
+.regions input{position:absolute;opacity:0;pointer-events:none}
+
+.banner{background:var(--brand);color:#fff;border-radius:var(--r);padding:18px;display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;box-shadow:var(--shadow)}
+.banner b{font-family:var(--display);font-weight:400;font-size:20px;display:block;line-height:1.3}
+.banner small{opacity:.8;font-size:12px}
+.quick{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.quick button{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px 4px;display:flex;flex-direction:column;align-items:center;gap:5px;font-size:12px;font-weight:500;box-shadow:var(--shadow)}
+.quick svg{width:24px;height:24px;color:var(--accent)}
+.notice{display:flex;flex-direction:column;gap:9px;margin:10px 0 0;padding:0;list-style:none}
+.notice li{display:flex;gap:8px;font-size:13px;align-items:baseline}
+
+.past{background:var(--soft);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:8px;border:1px solid var(--line)}
+.past ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px;font-size:12.5px}
+.past li{display:flex;justify-content:space-between;gap:8px}
+.past li span:last-child{color:var(--muted);white-space:nowrap}
+.plist{display:flex;flex-direction:column;gap:8px}
+.prog{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden}
+.prog.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.prog-h{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;padding:10px 12px;text-align:left}
+.prog-h .ck{width:22px;height:22px;border-radius:7px;border:2px solid var(--line);flex:none;display:grid;place-items:center;color:#fff;font-size:13px}
+.prog.on .ck{background:var(--accent);border-color:var(--accent)}
+.prog-h b{display:block;font-size:14px}
+.prog-h .tags{font-size:11.5px;color:var(--accent)}
+.prog-h .q{margin-left:auto;font-size:12px;color:var(--muted);white-space:nowrap}
+.ages{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:0 12px 12px}
+.age{background:var(--sunk);border-radius:10px;padding:5px;text-align:center}
+.age label{font-size:11px;color:var(--muted);display:block}
+.step{display:flex;align-items:center;justify-content:center;gap:2px}
+.step button{width:26px;height:26px;border-radius:50%;border:1px solid var(--line);background:var(--surface);line-height:1;padding:0}
+.step input{width:34px;text-align:center;border:0;background:none;font-weight:700;padding:0}
+.sticky{position:sticky;bottom:0;z-index:2}
+.cartbar{background:var(--brand);color:#fff;border-radius:var(--r-sm);padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;box-shadow:0 8px 20px -8px rgba(0,0,0,.35)}
+.cartbar .btn{background:var(--sun);color:var(--sun-ink)}
+
+.sections{display:grid;gap:10px}
+.section{display:grid;grid-template-columns:56px 1fr auto;gap:12px;align-items:center;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;box-shadow:var(--shadow)}
+.section .ic{width:56px;height:56px;border-radius:16px;display:grid;place-items:center}
+.section .ic svg{width:30px;height:30px}
+.section b{display:block;font-size:15px}
+.section small{color:var(--muted);font-size:12px}
+.back{border:0;background:none;padding:0;color:var(--muted);font-size:12.5px;align-self:flex-start}
+.grid2{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.good{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.good .pic{aspect-ratio:1;max-width:100%;background:var(--sunk);display:grid;place-items:center;overflow:hidden}
+.good .pic img{width:100%;height:100%;object-fit:contain;background:#fff}
+.good .pic.page{background:#fff}
+.good .pic.page img{padding:4px}
+.good .pic .ph{font-family:var(--display);font-size:26px;color:var(--muted);opacity:.55;text-align:center;padding:6px;line-height:1.1}
+.good .meta{padding:8px 9px 9px;display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
+.good .meta b{font-size:12.5px;line-height:1.3;font-weight:500;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.good .meta small{color:var(--muted);font-size:10.5px}
+.price{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px}
+.price s{color:var(--muted);font-size:11px}
+.price em{font-style:normal;color:var(--warn);font-weight:700;font-size:12px}
+.price strong{font-size:13.5px}
+.good .btn{margin-top:auto}
+.more{align-self:center}
+.pages{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;flex-shrink:0}
+.pages button{flex:none;border:1px solid var(--line);border-radius:8px;padding:0;background:var(--surface);overflow:hidden;width:64px}
+.pages img{display:block;width:64px;height:auto}
+.catalog{border-radius:var(--r);border:2px dashed var(--line);padding:14px;display:flex;gap:12px;align-items:center;background:var(--surface)}
+.catalog .book{width:54px;height:70px;border-radius:6px;background:linear-gradient(135deg,var(--sun),var(--accent));flex:none;display:grid;place-items:center;color:#fff;font-weight:900;font-size:11px;text-align:center;line-height:1.2}
+
+.sheet{position:absolute;inset:0;background:rgba(10,15,30,.45);display:flex;align-items:flex-end;z-index:20}
+.sheet .panel{background:var(--bg);width:100%;border-radius:26px 26px 0 0;padding:14px 16px calc(22px + env(safe-area-inset-bottom,0px));max-height:92%;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+.grab{width:40px;height:4px;border-radius:2px;background:var(--line);margin:0 auto}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.opts.col{grid-template-columns:1fr}
+.opt{display:flex;gap:9px;align-items:flex-start;border:1.5px solid var(--line);border-radius:var(--r-sm);padding:10px 11px;cursor:pointer;background:var(--surface)}
+.opt:has(input:checked){border-color:var(--accent);background:var(--soft)}
+.opt input{margin-top:3px;accent-color:var(--accent)}
+.opt b{display:block;font-size:13.5px}
+.opt small{display:block;color:var(--muted);font-size:11.5px;line-height:1.35}
+.li{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:3px 0}
+.li span:first-child{min-width:0}
+.total{display:flex;justify-content:space-between;font-weight:700;border-top:1px solid var(--line);padding-top:8px;margin-top:4px}
+
+.photos{display:flex;gap:8px;flex-wrap:wrap}
+.photos img{width:70px;height:70px;object-fit:cover;border-radius:10px;border:1px solid var(--line)}
+.upload{width:70px;height:70px;border-radius:10px;border:1.5px dashed var(--accent);display:grid;place-items:center;color:var(--accent);font-size:11px;text-align:center;cursor:pointer;line-height:1.3;background:var(--surface)}
+
+.trk{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px;display:flex;flex-direction:column;gap:8px}
+.trk-top{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.trk-top b{font-size:13.5px}
+.trk-top small{color:var(--muted);font-size:11.5px;white-space:nowrap}
+.trk p{margin:0;font-size:12.5px;color:var(--muted)}
+.bars{display:grid;gap:3px}
+.bars i{height:5px;border-radius:3px;background:var(--line)}
+.bars i.on{background:var(--accent)}
+.names{display:grid;font-size:10.5px;color:var(--muted)}
+.names .on{color:var(--accent);font-weight:700}
+.trk .acts{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.inline{display:flex;gap:6px}
+.inline input{flex:1;min-width:0;border:1px solid var(--line);border-radius:10px;padding:7px 10px;background:var(--surface)}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div id="root" style="display:flex;flex-direction:column;flex:1;min-height:0"><div class="spinner">불러오는 중…</div></div>
+  <div id="sheetHost"></div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="../config.js"></script>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script>
+/* ---------- 상태 ---------- */
+const TOKEN_KEY = 'nk-order-token';
+let me = null;                 // {token,kg,name,phone,region,status,email}
+let myOrders = [];
+let auth = {mode:'join', kg:'', name:'', phone:'', region:'', pin:'', pin2:'', busy:false};
+let tab = 'home';
+let book = {month:MONTHS[0], tag:'전체', q:'', sel:{}};
+let goods = {sec:null, cat:0, q:'', shown:24, wear:'전체'};
+let cart = {};
+let as = {prog:'', step:'', ho:'', photos:[], text:''};
+let stmtOpen = null;
+let checkout = null;
+let busy = false;
+
+const token = () => { try { return localStorage.getItem(TOKEN_KEY); } catch(_) { return null; } };
+const saveToken = t => { try { t ? localStorage.setItem(TOKEN_KEY, t) : localStorage.removeItem(TOKEN_KEY); } catch(_) {} };
+
+async function boot(){
+  const t = token();
+  if (t){
+    try { me = await rpc('nk_me', {p_token:t}); await loadOrders(); }
+    catch(e){ me = null; saveToken(null); }
+  }
+  render();
+}
+async function loadOrders(){ if (me) myOrders = await rpc('nk_my_orders', {p_token:me.token}) || []; }
+
+/* ---------- 화면 ---------- */
+function render(){
+  const root = $('#root');
+  if (!me){ root.innerHTML = authView(); return; }
+  const active = myOrders.filter(o=>o.state < 3).length;
+  root.innerHTML = `
+    <div class="appbar">
+      <span class="brandmark"><img src="logo-n.png" alt=""><span><b>뉴키즈</b><small>어린이집 · 유치원 파트너</small></span></span>
+      <button class="who" id="whoBtn" aria-label="내 정보"><b>${esc(me.kg)}</b><br>${esc(me.name)}님 · ${esc(me.region)}</button>
+    </div>
+    <div class="scroll" id="appScroll">
+      ${me.status!=='approved'?`<div class="pending"><b>가입 승인 대기 중이에요.</b> 뉴키즈에서 확인하면 바로 주문할 수 있어요. 그동안 상품은 둘러보실 수 있습니다.</div>`:''}
+      ${({home:homeView,book:bookView,goods:goodsView,as:asView,track:trackView})[tab]()}
+    </div>
+    <nav class="tabbar">${[['home','홈','home'],['book','교재 주문','book'],['goods','물품 주문','box'],['as','A/S','tool'],['track','내 주문','list']].map(([k,l,i])=>
+      `<button data-tab="${k}" ${tab===k?'aria-current="page"':''}>${ICON[i]}${l}${k==='track'&&active?`<span class="dot num">${active}</span>`:''}</button>`).join('')}</nav>`;
+}
+
+function authView(){
+  const a = auth;
+  const joinOk = a.kg.trim() && a.name.trim() && /^\d{10,11}$/.test(digits(a.phone)) && a.region && /^\d{4,8}$/.test(a.pin) && a.pin===a.pin2;
+  const loginOk = /^\d{10,11}$/.test(digits(a.phone)) && /^\d{4,8}$/.test(a.pin);
+  return `<div class="join">
+    <div class="hero"><img src="logo-n.png" alt="뉴키즈 로고">
+      <div class="rainbow" aria-hidden="true"><i style="background:#E9875B"></i><i style="background:#F2C14E"></i><i style="background:#8DBF9A"></i><i style="background:#7FA7D8"></i></div>
+      <p class="h2">뉴키즈 주문</p><p class="sub">교재 · 물품 주문과 A/S를 한 곳에서</p></div>
+    <div class="seg2" role="group" aria-label="가입 또는 로그인">
+      <button data-auth="join" aria-pressed="${a.mode==='join'}">처음이에요 (가입)</button>
+      <button data-auth="login" aria-pressed="${a.mode==='login'}">가입했어요 (로그인)</button>
+    </div>
+    ${a.mode==='join'?`
+      <div class="field"><label for="aKg">원 이름</label><input id="aKg" autocomplete="organization" placeholder="예) 햇살유치원" value="${esc(a.kg)}"></div>
+      <div class="field"><label for="aName">성함</label><input id="aName" autocomplete="name" placeholder="예) 김민지 원장" value="${esc(a.name)}"></div>
+      <div class="field"><label for="aPhone">휴대폰 번호</label><input id="aPhone" inputmode="tel" autocomplete="tel" placeholder="010-0000-0000" value="${esc(a.phone)}"></div>
+      <div class="field"><span class="flabel">지역</span><div class="regions">${REGIONS.map(r=>`<label><input type="radio" name="region" value="${r}" ${a.region===r?'checked':''}>${r}</label>`).join('')}</div></div>
+      <div class="field"><label for="aPin">비밀번호 (숫자 4~8자리)</label><input id="aPin" type="password" inputmode="numeric" autocomplete="new-password" maxlength="8" value="${esc(a.pin)}">
+        <span class="hint">다른 휴대폰에서 로그인할 때 써요.</span></div>
+      <div class="field"><label for="aPin2">비밀번호 확인</label><input id="aPin2" type="password" inputmode="numeric" autocomplete="new-password" maxlength="8" value="${esc(a.pin2)}">
+        ${a.pin2 && a.pin!==a.pin2?'<span class="hint req">비밀번호가 서로 달라요.</span>':''}</div>
+      <button class="btn block" id="aJoin" ${joinOk&&!a.busy?'':'disabled'}>${a.busy?'가입하는 중…':'가입 신청하기'}</button>
+      <span class="hint" style="text-align:center">가입 신청 후 뉴키즈에서 확인하면 주문할 수 있어요.</span>`
+    :`
+      <div class="field"><label for="aPhone">휴대폰 번호</label><input id="aPhone" inputmode="tel" autocomplete="tel" placeholder="010-0000-0000" value="${esc(a.phone)}"></div>
+      <div class="field"><label for="aPin">비밀번호</label><input id="aPin" type="password" inputmode="numeric" autocomplete="current-password" maxlength="8" value="${esc(a.pin)}"></div>
+      <button class="btn block" id="aLogin" ${loginOk&&!a.busy?'':'disabled'}>${a.busy?'확인하는 중…':'로그인'}</button>
+      <span class="hint" style="text-align:center">비밀번호를 잊으셨으면 010-2333-2563으로 연락 주세요.</span>`}
+  </div>`;
+}
+
+function homeView(){
+  return `
+    <div class="banner"><div><small>뉴키즈 추천</small><b>${esc(NOTICES.find(n=>n.tag==='추천')?.text || '우리 원에 필요한 모든 즐거움')}</b><small>교재 · 교구 · 원복까지 한 번에 주문하세요</small></div>
+      <img src="logo-n.png" alt="" style="width:58px;height:58px;border-radius:14px"></div>
+    <div class="quick">
+      <button data-go="book">${ICON.book}교재 주문</button>
+      <button data-go="goods">${ICON.box}물품 주문</button>
+      <button data-go="as">${ICON.tool}A/S 신청</button>
+      <button data-go="track">${ICON.doc}거래명세서</button>
+    </div>
+    <div class="card"><p class="h2" style="font-size:17px">공지</p>
+      <ul class="notice">${NOTICES.map(n=>`<li><span class="tag ${n.tag==='추천'?'sun':'info'}">${esc(n.tag)}</span><span>${esc(n.text)}</span></li>`).join('')}</ul></div>
+    <div class="card"><b>궁금한 점은 전화 주세요</b><p class="sub num">010-2333-2563 · 010-5522-8109</p></div>`;
+}
+
+/* 교재 주문 */
+function lastBook(){ return myOrders.find(o=>o.kind==='book'); }
+function bookView(){
+  const last = lastBook();
+  const selCount = Object.keys(book.sel).length;
+  const total = Object.values(book.sel).reduce((a,q)=>a+q.reduce((x,y)=>x+y,0),0);
+  const q = book.q.trim().toLowerCase();
+  const list = BOOKS.filter(b => (book.tag==='전체' || b.t.includes(book.tag)) && (!q || b.n.toLowerCase().includes(q)));
+  return `
+    <div><p class="h2">교재 주문</p><p class="sub">과목을 고르고, 필요한 교재를 눌러 연령별 수량을 넣어주세요.</p></div>
+    <div class="row card" style="padding:10px 12px"><b>주문 호수</b>
+      <select id="bMonth" class="search" style="width:auto;padding:6px 10px">${MONTHS.map(m=>`<option ${book.month===m?'selected':''}>${m}</option>`).join('')}</select></div>
+    ${last?`<div class="past"><div class="row"><b>지난번에는 이걸 주문하셨어요</b><span class="tag">${esc(last.month||'')}</span></div>
+      <ul>${last.lines.map(l=>`<li><span>${esc(l.name)}</span><span class="num">${ageSummary(l.q)}</span></li>`).join('')}</ul>
+      <button class="btn small" id="bRepeat">지난번과 똑같이 담기</button></div>`:''}
+    <input class="search" id="bSearch" placeholder="교재 이름으로 찾기" value="${esc(book.q)}">
+    <div class="chips">${['전체',...HASHTAGS].map(t=>`<button class="chip" data-tag="${t}" aria-pressed="${book.tag===t}">${t==='전체'?'전체':'#'+t}</button>`).join('')}</div>
+    <div class="plist">${list.map(bookCard).join('') || '<div class="card hint">찾는 교재가 없어요.</div>'}</div>
+    ${selCount?`<div class="sticky"><div class="cartbar"><span><b class="num">${selCount}</b>개 교재 · <b class="num">${total}</b>권</span><button class="btn small" id="bCheckout">${book.month} 주문하기</button></div></div>`:''}`;
+}
+function bookCard(b){
+  const on = !!book.sel[b.n]; const q = book.sel[b.n];
+  return `<div class="prog ${on?'on':''}">
+    <button class="prog-h" data-prog="${esc(b.n)}" aria-expanded="${on}"><span class="ck">${on?'✓':''}</span>
+      <span style="min-width:0"><b>${esc(b.n)}</b><span class="tags">${b.t.map(t=>'#'+t).join(' ')}</span></span>
+      ${on?`<span class="q num">${q.reduce((a,c)=>a+c,0)}권</span>`:''}</button>
+    ${on?`<div class="ages">${AGES.map((a,j)=>`<div class="age"><label for="a-${esc(b.n)}-${j}">${a}</label>
+      <div class="step"><button data-age="${esc(b.n)}|${j}|-1" aria-label="${esc(b.n)} ${a} 빼기">−</button>
+      <input id="a-${esc(b.n)}-${j}" class="num" inputmode="numeric" value="${q[j]}" data-ageinput="${esc(b.n)}|${j}">
+      <button data-age="${esc(b.n)}|${j}|1" aria-label="${esc(b.n)} ${a} 더하기">+</button></div></div>`).join('')}</div>`:''}
+  </div>`;
+}
+
+/* 물품 주문 */
+function goodsView(){
+  const cnt = Object.values(cart).reduce((a,c)=>a+c.qty,0);
+  const bar = cnt?`<div class="sticky"><div class="cartbar"><span>장바구니 <b class="num">${cnt}</b>개</span><button class="btn small" id="gCheckout">주문하기</button></div></div>`:'';
+  if (!goods.sec) return `
+    <div><p class="h2">물품 주문</p><p class="sub">어떤 물품이 필요하세요?</p></div>
+    <div class="sections">
+      ${[['equip','비품 및 교구','국민서관 키드팡 전 상품 · 할인가',ICON.blocks,'var(--soft)'],
+         ['gift','선물용품','나비북스 2027 특별판',ICON.gift,'var(--sun)'],
+         ['wear','원복 및 가방','리틀스마트 · 국민서관 · 라온가방',ICON.shirt,'var(--info-soft)']].map(([k,t,s,i,bg])=>
+        `<button class="section" data-sec="${k}"><span class="ic" style="background:${bg}">${i}</span><span><b>${t}</b><small>${s}</small></span><span aria-hidden="true">›</span></button>`).join('')}
+    </div>${bar}`;
+  const back = `<button class="back" data-sec="">‹ 물품 주문</button>`;
+  if (goods.sec==='equip'){
+    if (kpReady!==true) return `${back}<div class="card hint">${kpReady==='fail'?'상품 목록을 불러오지 못했어요. 잠시 뒤 다시 열어주세요.':'국민서관 상품을 불러오는 중이에요…'}</div>`;
+    const q = goods.q.trim().toLowerCase();
+    const all = KP.items.filter(it=>it[5]==='');
+    const list = all.filter(it => (!goods.cat || it[4]===goods.cat) && (!q || it[1].toLowerCase().includes(q)));
+    const counts = {}; all.forEach(it=>counts[it[4]]=(counts[it[4]]||0)+1);
+    return `${back}
+      <div><p class="h2">비품 및 교구</p><p class="sub">국민서관 키드팡 상품 <b class="num">${all.length.toLocaleString()}</b>개 · ${KP.at} 기준 할인가</p></div>
+      <input class="search" id="gSearch" placeholder="상품 이름으로 찾기" value="${esc(goods.q)}">
+      <div class="chips"><button class="chip" data-cat="0" aria-pressed="${!goods.cat}">전체</button>${KP.cats.filter(([no])=>counts[no]).map(([no,n])=>`<button class="chip" data-cat="${no}" aria-pressed="${goods.cat===no}">${esc(n)}</button>`).join('')}</div>
+      <div class="hint num">${list.length.toLocaleString()}개</div>
+      <div class="grid2">${list.slice(0,goods.shown).map(it=>goodCard({type:'equip', id:it[0], name:it[1], list:it[2], sale:it[3], vendor:'국민서관', isNew:it[6]})).join('')}</div>
+      ${list.length>goods.shown?`<button class="btn line small more" id="gMore">더 보기 (${(list.length-goods.shown).toLocaleString()}개 남음)</button>`:''}${bar}`;
+  }
+  if (goods.sec==='gift'){
+    const q = goods.q.trim();
+    const list = GIFTS.filter(n=>!q || n.includes(q));
+    return `${back}
+      <div><p class="h2">선물용품</p><p class="sub">나비북스 2027 특별판. 가격은 견적으로 안내드려요.</p></div>
+      <div class="catalog"><span class="book">NABI<br>2027</span><span><b>나비북스 최신 카탈로그</b><br><span class="hint">카탈로그가 준비되면 이 자리에서 넘겨보며 고를 수 있어요.</span></span></div>
+      <input class="search" id="gSearch" placeholder="선물 이름으로 찾기" value="${esc(goods.q)}">
+      <div class="grid2">${list.map(n=>goodCard({type:'gift', id:'g:'+n, name:n, vendor:'나비북스'})).join('')}</div>${bar}`;
+  }
+  const KPW = kpReady===true ? KP.items.filter(it=>it[5]) : [];
+  const groups = [
+    ['리틀스마트', LITTLESMART.map(([grp,items])=>[grp, items.map(([code,set,pg])=>({type:'wear', id:'ls:'+code, name:code, vendor:'리틀스마트', sub:grp, note:`${set} · 카탈로그 ${pg}쪽`, img:`lsi/${LS_FILE[code]||code}.jpg`, cat:'ls', page:pg}))])],
+    ['국민서관', [['', KPW.map(it=>({type:'wear', id:it[0], name:it[1], vendor:'국민서관', sub:it[5]==='bag'?'가방':'원복'}))]]],
+    ['라온가방', ['원아가방','보조가방','도서가방','파우치'].map(grp=>[grp, RAON.map((r,i)=>[...r,i]).filter(r=>r[1]===grp).map(([n,,list,,i])=>({type:'wear', id:'raon:'+n, name:n, vendor:'라온가방', sub:grp, note:`색상은 카탈로그 ${list}쪽`, img:`rki/r${String(i+1).padStart(2,'0')}.jpg`, cat:'rk', page:list, isNew:RAON_NEW.includes(n)}))])],
+  ];
+  const show = groups.filter(([v])=>goods.wear==='전체'||goods.wear===v);
+  const count = subs => subs.reduce((a,[,items])=>a+items.length,0);
+  const strip = k => `<div class="pages" aria-label="${CATALOGS[k].name}">${Array.from({length:CATALOGS[k].pages},(_,i)=>`<button data-cat-page="${k}|${i+1}" aria-label="카탈로그 ${i+1}쪽"><img src="${catImg(k,i+1)}" alt="" loading="lazy"></button>`).join('')}</div>
+    <span class="hint">카탈로그를 눌러 크게 보고, 마음에 드는 제품을 아래에서 담으세요.</span>`;
+  return `${back}
+    <div><p class="h2">원복 및 가방</p><p class="sub">원 로고 인쇄·자수가 들어가는 품목은 담당자가 시안과 가격을 따로 안내드려요.</p></div>
+    <div class="chips">${['전체','리틀스마트','국민서관','라온가방'].map(v=>`<button class="chip" data-wear="${v}" aria-pressed="${goods.wear===v}">${v}</button>`).join('')}</div>
+    ${show.map(([v,subs])=>`<p class="flabel" style="margin:6px 0 0;font-size:14px">${v} <span class="hint num">${count(subs)}</span></p>
+      ${v==='리틀스마트'?strip('ls'):v==='라온가방'?strip('rk'):''}
+      ${subs.map(([grp,items])=>`${grp?`<p class="hint" style="margin:2px 0 -2px;font-weight:700">${grp}</p>`:''}<div class="grid2">${items.map(goodCard).join('')}</div>`).join('')}`).join('')}${bar}`;
+}
+function goodCard(g){
+  const th = g.img || THUMBS[g.id];
+  const inCart = cart[g.id]?.qty;
+  const priced = g.type==='equip';
+  const pct = priced && g.list && g.sale && g.sale<g.list ? Math.round((1-g.sale/g.list)*100) : 0;
+  return `<div class="good">
+    <div class="pic ${g.page?'page':''}">${g.page?`<button data-cat-page="${g.cat}|${g.page}" aria-label="카탈로그 ${g.page}쪽 크게 보기" style="border:0;padding:0;background:none;width:100%;height:100%">`:''}${th?`<img src="${th}" alt="" loading="lazy">`:`<span class="ph">${esc(g.name.replace(/^\[[^\]]*\]/,'').slice(0,4))}</span>`}${g.page?'</button>':''}</div>
+    <div class="meta">${g.isNew?'<span class="tag sun" style="align-self:flex-start">NEW</span>':''}
+      <b>${esc(g.name)}</b><small>${esc(g.vendor)}${g.sub?' · '+g.sub:''}</small>${g.note?`<small>${esc(g.note)}</small>`:''}
+      ${priced?`<span class="price">${pct?`<s class="num">${won(g.list)}</s><em class="num">${pct}%</em>`:''}<strong class="num">${won(g.sale||g.list)}</strong></span>`:'<small>가격 문의</small>'}
+      <button class="btn small ${inCart?'':'ghost'}" data-add="${esc(g.id)}" data-type="${g.type}" data-name="${esc(g.name)}" data-vendor="${esc(g.vendor)}" data-price="${priced?(g.sale||g.list):0}">${inCart?`담김 ${inCart} · 더 담기`:'담기'}</button>
+    </div></div>`;
+}
+function openCatalog(k, n){
+  const c = CATALOGS[k]; n = Math.min(c.pages, Math.max(1, n));
+  $('#sheetHost').innerHTML = `<div class="sheet"><div class="panel">
+    <div class="grab"></div>
+    <div class="row"><b>${c.name}</b><span class="hint num">${n} / ${c.pages}쪽</span></div>
+    <img src="${catImg(k,n)}" alt="${c.name} ${n}쪽" style="width:100%;border-radius:12px;border:1px solid var(--line)">
+    <div class="opts"><button class="btn line" data-cat-page="${k}|${n-1}" ${n<=1?'disabled':''}>‹ 이전 쪽</button><button class="btn line" data-cat-page="${k}|${n+1}" ${n>=c.pages?'disabled':''}>다음 쪽 ›</button></div>
+    <button class="btn block" id="coClose">닫기</button></div></div>`;
+}
+
+/* A/S */
+function asView(){
+  const b = BOOKS.find(x=>x.n===as.prog);
+  const steps = b ? (b.s.length ? b.s : ['단계 없음']) : [];
+  const ready = as.prog && as.step && as.ho && as.photos.length && !busy;
+  return `
+    <div><p class="h2">A/S 신청</p><p class="sub">교재 → 단계 → 호수 순서로 고르고, 사진을 꼭 올려주세요.</p></div>
+    <div class="card" style="display:flex;flex-direction:column;gap:12px">
+      <div class="field"><label for="asProg">1. 교재</label>
+        <select id="asProg"><option value="">교재를 고르세요</option>${BOOKS.map(x=>`<option ${as.prog===x.n?'selected':''}>${esc(x.n)}</option>`).join('')}</select></div>
+      <div class="field"><label for="asStep">2. 단계</label>
+        <select id="asStep" ${b?'':'disabled'}><option value="">단계를 고르세요</option>${steps.map(s=>`<option ${as.step===s?'selected':''}>${esc(s)}</option>`).join('')}</select></div>
+      <div class="field"><label for="asHo">3. 호수</label>
+        <select id="asHo" ${as.step?'':'disabled'}><option value="">호수를 고르세요</option>${HO.map(h=>`<option ${as.ho===h?'selected':''}>${h}</option>`).join('')}</select></div>
+      <div class="field"><span class="flabel">4. 사진 <span class="req">(필수)</span></span>
+        <div class="photos">${as.photos.map(s=>`<img src="${s}" alt="첨부 사진">`).join('')}
+          ${as.photos.length<4?`<label class="upload" for="asFile">+ 사진<br>추가</label>`:''}<input id="asFile" type="file" accept="image/*" multiple hidden></div>
+        ${as.photos.length?'':'<span class="hint">파손·불량 부분이 보이게 찍어주세요. 사진이 있어야 신청할 수 있어요.</span>'}</div>
+      <div class="field"><label for="asText">5. 내용</label><textarea id="asText" placeholder="예) 7호 교재 중 3권이 찢어져서 왔어요.">${esc(as.text)}</textarea></div>
+    </div>
+    <button class="btn block" id="asSubmit" ${ready?'':'disabled'}>${busy?'보내는 중…':'A/S 신청하기'}</button>`;
+}
+
+/* 내 주문 */
+function trackView(){
+  return `<div class="row"><div><p class="h2">내 주문</p><p class="sub">처리 상태를 보고, 필요하면 거래명세서를 요청하세요.</p></div>
+      <button class="btn line small" id="reload">새로 고침</button></div>
+    ${myOrders.length? myOrders.map(o=>{
+      const st = STATES[o.kind];
+      const docs = [];
+      if (o.quote_want) docs.push(`<span class="tag ${o.quote_sent?'ok':'info'}">견적서 ${o.quote_sent?'발송 완료':'요청함'}</span>`);
+      if (o.stmt_want) docs.push(`<span class="tag ${o.stmt_sent?'ok':'info'}">거래명세서 ${o.stmt_sent?'발송 완료':'요청함'}</span>`);
+      const canStmt = o.kind!=='as' && !o.stmt_want;
+      return `<div class="trk">
+        <div class="trk-top"><b>${orderTitle(o)}</b><small class="num">${fmtDate(o.created_at)}</small></div>
+        <p>${esc(orderSummary(o))}</p>
+        <div><div class="bars" style="grid-template-columns:repeat(${st.length},1fr)">${st.map((_,i)=>`<i class="${i<=o.state?'on':''}"></i>`).join('')}</div>
+          <div class="names" style="grid-template-columns:repeat(${st.length},1fr)">${st.map((n,i)=>`<span class="${i===o.state?'on':''}">${n}</span>`).join('')}</div></div>
+        ${docs.length||canStmt?`<div class="acts">${docs.join('')}${canStmt&&stmtOpen!==o.id?`<button class="btn small line" data-stmt="${o.id}">거래명세서 요청</button>`:''}</div>`:''}
+        ${stmtOpen===o.id?`<div class="inline"><input id="stmtEmail" type="email" autocomplete="email" placeholder="받을 메일 주소" value="${esc(me.email||'')}"><button class="btn small" data-stmtgo="${o.id}">요청</button></div>`:''}
+      </div>`;
+    }).join('') : `<div class="card hint">아직 주문이 없어요.</div>`}`;
+}
+
+/* 주문 확인 */
+function openCheckout(kind){ checkout = {kind, quote:'no', email:me.email||'', pay:''}; renderSheet(); }
+function renderSheet(){
+  if (!checkout){ $('#sheetHost').innerHTML=''; return; }
+  const c = checkout;
+  let lines = '', sum = 0, hasUnpriced = false;
+  if (c.kind==='book'){
+    lines = Object.entries(book.sel).map(([n,q])=>`<div class="li"><span>${esc(n)}</span><span class="num">${q.reduce((a,b)=>a+b,0)}권</span></div>`).join('');
+  } else {
+    const items = Object.values(cart);
+    hasUnpriced = items.some(i=>!i.price);
+    sum = items.reduce((a,i)=>a+i.price*i.qty,0);
+    lines = items.map(i=>`<div class="li"><span>${esc(i.name)} × <span class="num">${i.qty}</span></span><span class="num">${i.price?won(i.price*i.qty):'가격 문의'}</span></div>`).join('')
+      + (sum?`<div class="total"><span>${hasUnpriced?'가격 있는 품목 합계':'합계'}</span><span class="num">${won(sum)}</span></div>`:'');
+  }
+  const payOpts = [['bank','계좌이체', hasUnpriced?'가격 확인 후 계좌 안내':'주문 후 계좌 안내'],['invoice','월말 청구','거래명세서로 청구']];
+  if (c.kind==='goods' && !payOpts.some(p=>p[0]===c.pay)) c.pay = 'bank';
+  const emailOk = c.quote==='no' || /.+@.+\..+/.test(c.email);
+  $('#sheetHost').innerHTML = `<div class="sheet"><div class="panel" role="dialog" aria-label="주문 확인">
+    <div class="grab"></div>
+    <div class="row"><p class="h2">주문 확인</p>${c.kind==='book'?`<span class="tag">${book.month}</span>`:''}</div>
+    <div class="card" style="padding:10px 12px">${lines}</div>
+    <span class="flabel">견적서</span>
+    <div class="opts">
+      <label class="opt"><input type="radio" name="quote" value="yes" ${c.quote==='yes'?'checked':''}><span><b>견적서 요청</b><small>견적서를 메일로 받고 주문</small></span></label>
+      <label class="opt"><input type="radio" name="quote" value="no" ${c.quote==='no'?'checked':''}><span><b>견적서 없이 주문</b><small>바로 주문 접수</small></span></label>
+    </div>
+    ${c.quote==='yes'?`<div class="field"><label for="qEmail">견적서 받을 메일 <span class="req">(필수)</span></label><input id="qEmail" type="email" autocomplete="email" placeholder="example@daum.net" value="${esc(c.email)}"></div>`:''}
+    ${c.kind==='goods'?`<span class="flabel">결제</span><div class="opts col">${payOpts.map(([k,t,s])=>`<label class="opt"><input type="radio" name="pay" value="${k}" ${c.pay===k?'checked':''}><span><b>${t}</b><small>${s}</small></span></label>`).join('')}</div>
+      ${hasUnpriced?'<span class="hint">가격 문의 품목이 있어서 담당자가 금액을 확인한 뒤 안내드려요.</span>':''}`
+      :`<span class="hint">교재 대금은 지금처럼 월별 거래명세서로 청구됩니다.</span>`}
+    <button class="btn block sun" id="coGo" ${emailOk&&!busy?'':'disabled'}>${busy?'보내는 중…':'주문 넣기'}</button>
+    <button class="btn block line" id="coClose">닫기</button>
+  </div></div>`;
+}
+
+async function placeOrder(){
+  const c = checkout;
+  const order = {kind:c.kind, quote_want:c.quote==='yes', quote_email:c.quote==='yes'?c.email.trim():''};
+  if (c.kind==='book'){ order.month = book.month; order.lines = Object.entries(book.sel).map(([n,q])=>({name:n, vendor:BOOKS.find(b=>b.n===n).v, q:[...q]})); }
+  else { order.lines = Object.values(cart).map(i=>({...i})); order.pay = c.pay; }
+  busy = true; renderSheet();
+  try {
+    await rpc('nk_place_order', {p_token:me.token, p_order:order});
+    if (order.quote_email) me.email = order.quote_email;
+    if (c.kind==='book') book.sel = {}; else cart = {};
+    checkout = null; renderSheet(); await loadOrders(); tab='track'; render();
+    toast(order.quote_want ? '주문이 접수됐어요. 견적서는 메일로 보내드려요.' : '주문이 접수됐어요.');
+  } catch(e){ toast(e.message); }
+  finally { busy = false; if (checkout) renderSheet(); }
+}
+
+/* ---------- 이벤트 ---------- */
+document.addEventListener('click', async e => {
+  const t = e.target.closest('button'); if (!t || t.disabled) return;
+  const d = t.dataset;
+  if (d.auth){ auth.mode = d.auth; render(); return; }
+  if (t.id==='aJoin' || t.id==='aLogin'){
+    auth.busy = true; render();
+    try {
+      me = t.id==='aJoin'
+        ? await rpc('nk_signup', {p_kg:auth.kg, p_name:auth.name, p_phone:auth.phone, p_region:auth.region, p_pin:auth.pin})
+        : await rpc('nk_login', {p_phone:auth.phone, p_pin:auth.pin});
+      saveToken(me.token); auth = {mode:'login', kg:'', name:'', phone:'', region:'', pin:'', pin2:'', busy:false};
+      await loadOrders(); tab='home'; render();
+      toast(me.status==='approved' ? '로그인했어요.' : '가입 신청이 접수됐어요. 승인되면 주문할 수 있어요.');
+    } catch(err){ auth.busy = false; render(); toast(err.message); }
+    return;
+  }
+  if (t.id==='whoBtn'){
+    $('#sheetHost').innerHTML = `<div class="sheet"><div class="panel"><div class="grab"></div>
+      <p class="h2">${esc(me.kg)}</p><p class="sub">${esc(me.name)}님 · ${esc(me.region)} · ${esc(fmtPhone(me.phone))}</p>
+      <span class="tag ${me.status==='approved'?'ok':'warn'}" style="align-self:flex-start">${me.status==='approved'?'승인됨':'승인 대기'}</span>
+      <button class="btn block line" id="logout">로그아웃</button><button class="btn block" id="coClose">닫기</button></div></div>`;
+    return;
+  }
+  if (t.id==='logout'){ saveToken(null); me = null; myOrders = []; $('#sheetHost').innerHTML=''; render(); return; }
+  if (d.tab){ tab = d.tab; checkout=null; renderSheet(); if (tab==='track') { await refresh(); } render(); $('#appScroll') && ($('#appScroll').scrollTop = 0); return; }
+  if (d.go){ tab = d.go; if (tab==='track') await refresh(); render(); return; }
+  if (t.id==='reload'){ await refresh(); keepScroll(render); toast('최신 상태로 바꿨어요.'); return; }
+  // 교재
+  if (d.tag){ book.tag = d.tag; render(); return; }
+  if (d.prog){ if (book.sel[d.prog]) delete book.sel[d.prog]; else book.sel[d.prog] = [0,0,0,0,0,0]; keepScroll(render); return; }
+  if (d.age){ const [n,j,dl] = d.age.split('|'); const q = book.sel[n]; q[+j] = Math.max(0, q[+j] + +dl); keepScroll(render); return; }
+  if (t.id==='bRepeat'){ const last = lastBook(); book.sel = {}; last.lines.forEach(l=>{ if (BOOKS.some(b=>b.n===l.name)) book.sel[l.name]=[...l.q]; }); render(); toast('지난번 주문을 그대로 담았어요. 바뀐 반만 고치세요.'); return; }
+  if (t.id==='bCheckout'){ openCheckout('book'); return; }
+  // 물품
+  if (d.sec!==undefined){ goods.sec = d.sec||null; goods.q=''; goods.shown=24; goods.cat=0; render(); $('#appScroll').scrollTop=0; return; }
+  if (d.cat!==undefined){ goods.cat = +d.cat; goods.shown=24; render(); return; }
+  if (d.wear){ goods.wear = d.wear; render(); return; }
+  if (t.id==='gMore'){ goods.shown += 24; keepScroll(render); return; }
+  if (d.add){ const c = cart[d.add] || (cart[d.add] = {type:d.type, name:d.name, vendor:d.vendor, price:+d.price, qty:0}); c.qty++; keepScroll(render); return; }
+  if (t.id==='gCheckout'){ openCheckout('goods'); return; }
+  if (d.catPage){ const [k,n] = d.catPage.split('|'); openCatalog(k, +n); return; }
+  // 시트
+  if (t.id==='coClose'){ checkout=null; renderSheet(); return; }
+  if (t.id==='coGo'){ placeOrder(); return; }
+  // A/S
+  if (t.id==='asSubmit'){
+    const b = BOOKS.find(x=>x.n===as.prog);
+    busy = true; keepScroll(render);
+    try {
+      await rpc('nk_place_order', {p_token:me.token, p_order:{kind:'as', as_info:{prog:as.prog, step:as.step, ho:as.ho, vendor:b.v}, photos:as.photos, memo:as.text.trim()}});
+      as = {prog:'', step:'', ho:'', photos:[], text:''}; await loadOrders(); tab='track'; busy=false; render(); toast('A/S 신청이 접수됐어요.');
+    } catch(err){ busy=false; keepScroll(render); toast(err.message); }
+    return;
+  }
+  // 거래명세서
+  if (d.stmt){ stmtOpen = +d.stmt; keepScroll(render); setTimeout(()=>$('#stmtEmail')?.focus(),0); return; }
+  if (d.stmtgo){
+    const email = $('#stmtEmail').value.trim();
+    if (!/.+@.+\..+/.test(email)){ toast('메일 주소를 확인해 주세요.'); return; }
+    try { await rpc('nk_request_stmt', {p_token:me.token, p_order_id:+d.stmtgo, p_email:email}); me.email = email; stmtOpen = null; await loadOrders(); keepScroll(render); toast('거래명세서를 요청했어요.'); }
+    catch(err){ toast(err.message); }
+    return;
+  }
+});
+document.addEventListener('input', e => {
+  const id = e.target.id;
+  const authMap = {aKg:'kg', aName:'name', aPhone:'phone', aPin:'pin', aPin2:'pin2'};
+  if (authMap[id]){ auth[authMap[id]] = e.target.value; refocus(id, render); }
+  if (id==='bSearch'){ book.q = e.target.value; refocus(id, render); }
+  if (id==='gSearch'){ goods.q = e.target.value; goods.shown=24; refocus(id, render); }
+  if (id==='qEmail'){ checkout.email = e.target.value; refocus(id, renderSheet); }
+  if (id==='asText'){ as.text = e.target.value; }
+});
+document.addEventListener('change', e => {
+  const el = e.target;
+  if (el.name==='region'){ auth.region = el.value; render(); }
+  if (el.id==='bMonth'){ book.month = el.value; render(); }
+  if (el.dataset.ageinput){ const [n,j] = el.dataset.ageinput.split('|'); book.sel[n][+j] = Math.max(0, parseInt(el.value)||0); keepScroll(render); }
+  if (el.name==='quote'){ checkout.quote = el.value; renderSheet(); }
+  if (el.name==='pay'){ checkout.pay = el.value; renderSheet(); }
+  if (el.id==='asProg'){ as.prog = el.value; as.step=''; as.ho=''; keepScroll(render); }
+  if (el.id==='asStep'){ as.step = el.value; keepScroll(render); }
+  if (el.id==='asHo'){ as.ho = el.value; keepScroll(render); }
+  if (el.id==='asFile'){
+    const files = [...el.files].slice(0, 4-as.photos.length);
+    Promise.all(files.map(f=>shrinkPhoto(f, 1280, .72))).then(list=>{ as.photos.push(...list.filter(Boolean)); keepScroll(render); });
+  }
+});
+async function refresh(){ try { me = await rpc('nk_me', {p_token:me.token}); await loadOrders(); } catch(e){ toast(e.message); } }
+function keepScroll(fn){ const s = $('#appScroll'); const y = s?s.scrollTop:0; fn(); const n = $('#appScroll'); if (n) n.scrollTop = y; }
+function refocus(id, fn){ const el = document.getElementById(id); const pos = el.selectionStart; keepScroll(fn); const n = document.getElementById(id); if (n){ n.focus(); try{ n.setSelectionRange(pos,pos); }catch(_){} } }
+
+loadCatalogData(() => { if (me && tab==='goods') keepScroll(render); });
+boot();
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>

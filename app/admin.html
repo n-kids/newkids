@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>뉴키즈 주문관리</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="logo-n.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="app.css">
+<style>
+/* 레이아웃: 메인 컴퓨터용. 위 요약 숫자 → 탭(할 일 / 업체별 발주 / 원별 / 가입한 원) → 목록 */
+body{padding:20px max(16px,env(safe-area-inset-right,0px)) 48px max(16px,env(safe-area-inset-left,0px))}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+.top .brandmark{display:flex;align-items:center;gap:10px}
+.top img{width:38px;height:38px;border-radius:10px}
+.top h1{font-family:var(--display);font-weight:400;font-size:24px;margin:0}
+.top .right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.login{max-width:380px;margin:60px auto;display:flex;flex-direction:column;gap:12px}
+.stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.stat{border:1px solid var(--line);border-radius:14px;padding:10px 12px;background:var(--surface)}
+.stat small{color:var(--muted);font-size:12px}
+.stat b{display:block;font-size:24px}
+.stat.hot{border-color:var(--warn);background:var(--warn-soft)}
+.stat.hot b{color:var(--warn)}
+.nav{display:flex;flex-wrap:wrap;gap:6px;border-bottom:1px solid var(--line);padding-bottom:10px}
+.nav button{border:0;background:none;padding:8px 14px;border-radius:10px;color:var(--muted);font-weight:500;display:flex;gap:6px;align-items:center}
+.nav button[aria-current="page"]{background:var(--brand);color:#fff}
+.nav .n{min-width:18px;height:18px;border-radius:9px;background:var(--warn);color:#fff;font-size:11px;line-height:18px;padding:0 5px;text-align:center}
+.box{border:1px solid var(--line);border-radius:16px;background:var(--surface);overflow:hidden}
+.box h3{margin:0;padding:11px 14px;font-size:14px;display:flex;justify-content:space-between;gap:8px;align-items:center;border-bottom:1px solid var(--line);background:var(--sunk)}
+.box h3 small{font-weight:400;color:var(--muted);font-size:12px}
+.item{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 14px;border-top:1px solid var(--line)}
+.item:first-of-type{border-top:0}
+.item .t{border:0;background:none;text-align:left;padding:0;min-width:0}
+.item .t b{display:block;font-size:14px}
+.item .t small{color:var(--muted);font-size:12px;display:block}
+.item .a{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;align-items:center}
+.kind{font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:8px;white-space:nowrap}
+.kind.book{background:var(--ok-soft);color:var(--ok)}
+.kind.goods{background:var(--soft);color:var(--ink)}
+.kind.as{background:var(--info-soft);color:var(--info)}
+.kind.doc{background:var(--warn-soft);color:var(--warn)}
+.detail{grid-column:1/-1;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.tbl-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:12px;color:var(--muted);font-weight:500}
+td.r,th.r{text-align:right}
+.vend{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:start;padding:12px 14px;border-top:1px solid var(--line)}
+.vend:first-of-type{border-top:0}
+.vend b{font-size:15px}
+.vend ul{margin:6px 0 0;padding:0 0 0 16px;font-size:12.5px;color:var(--muted)}
+.reco{font-size:12.5px;color:var(--muted);background:var(--sunk);border-radius:12px;padding:10px 12px}
+.reco b{color:var(--ink)}
+.as-ph{display:flex;gap:8px;flex-wrap:wrap}
+.as-ph img{width:140px;height:105px;object-fit:cover;border-radius:10px;border:1px solid var(--line);cursor:zoom-in}
+.log{font-size:12px;color:var(--muted);margin:0;padding:0 0 0 16px}
+.filters{display:flex;gap:6px;flex-wrap:wrap}
+.toast{bottom:24px}
+@media (max-width:760px){
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .item{grid-template-columns:minmax(0,1fr)}
+  .item .a{justify-content:flex-start}
+}
+</style>
+</head>
+<body>
+<div class="wrap" id="root"><div class="spinner">불러오는 중…</div></div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="../config.js"></script>
+<script src="data.js"></script>
+<script src="common.js"></script>
+<script>
+let session = null, isAdmin = false;
+let members = [], orders = [];
+let tab = 'todo', openId = null, kgFilter = '전체';
+let photoCache = {};
+let seen = new Set(); let firstLoad = true; let fresh = new Set();
+const memberOf = o => members.find(m => m.id === o.member_id) || {kg:'(알 수 없음)', region:''};
+const vendorsOf = o => [...new Set((o.lines || []).map(l => l.vendor))];
+
+async function boot(){
+  const { data } = await sb.auth.getSession(); session = data.session;
+  if (session){ isAdmin = await rpc('nk_is_admin', {}).catch(() => false); if (isAdmin) await load(); }
+  render();
+}
+async function load(){
+  const [m, o] = await Promise.all([
+    sb.from('nk_members').select('id,kg,name,phone,region,status,email,created_at,approved_at').order('created_at', {ascending:false}),
+    sb.from('nk_orders').select('id,member_id,kind,month,lines,quote_want,quote_email,quote_sent,pay,stmt_want,stmt_email,stmt_at,stmt_sent,state,done,as_info,memo,log,created_at').order('created_at', {ascending:false}).limit(500),
+  ]);
+  if (m.error || o.error){ toast((m.error || o.error).message); return; }
+  members = m.data; orders = o.data;
+  orders.forEach(x => { if (!seen.has(x.id)){ if (!firstLoad) fresh.add(x.id); seen.add(x.id); } });
+  firstLoad = false;
+  const n = orders.filter(x => x.state === 0).length + members.filter(x => x.status === 'pending').length;
+  document.title = (n ? `(${n}) ` : '') + '뉴키즈 주문관리';
+}
+
+function render(){
+  const root = $('#root');
+  if (!session) { root.innerHTML = loginView(); return; }
+  if (!isAdmin) { root.innerHTML = `<div class="login card"><p class="h2">관리자 등록이 필요해요</p>
+    <p class="sub">${esc(session.user.email)} 계정은 아직 주문관리 관리자로 등록되지 않았어요. Supabase의 nk_admins 표에 이 이메일을 넣어주세요.</p>
+    <button class="btn line" id="logout">로그아웃</button></div>`; return; }
+  const need = orders.filter(o => o.state === 0);
+  const quotes = orders.filter(o => o.quote_want && !o.quote_sent);
+  const stmts = orders.filter(o => o.stmt_want && !o.stmt_sent);
+  const asOpen = orders.filter(o => o.kind === 'as' && o.state > 0 && o.state < 3);
+  const ship = orders.filter(o => o.kind !== 'as' && o.state === 2);
+  const vq = vendorQueue();
+  const pending = members.filter(m => m.status === 'pending');
+  const todo = need.length + quotes.length + stmts.length + asOpen.length + ship.length;
+  root.innerHTML = `
+    <div class="top">
+      <span class="brandmark"><img src="logo-n.png" alt=""><h1>뉴키즈 주문관리</h1></span>
+      <span class="right"><span class="hint">${esc(session.user.email)}</span><button class="btn line small" id="reload">새로 고침</button><button class="btn line small" id="csv">주문 내려받기</button><button class="btn line small" id="logout">로그아웃</button></span>
+    </div>
+    <div class="stats">
+      <div class="stat ${need.length?'hot':''}"><small>새 주문·A/S</small><b class="num">${need.length}</b></div>
+      <div class="stat"><small>업체 발주 대기</small><b class="num">${vq.length}</b></div>
+      <div class="stat"><small>견적서 요청</small><b class="num">${quotes.length}</b></div>
+      <div class="stat"><small>거래명세서 요청</small><b class="num">${stmts.length}</b></div>
+      <div class="stat ${pending.length?'hot':''}"><small>가입 승인 대기</small><b class="num">${pending.length}</b></div>
+    </div>
+    <nav class="nav">${[['todo','할 일',todo],['vendor','업체별 발주',vq.length],['kg','원별 보기',0],['members','가입한 원',pending.length]].map(([k,l,n]) =>
+      `<button data-tab="${k}" ${tab===k?'aria-current="page"':''}>${l}${n?`<span class="n num">${n}</span>`:''}</button>`).join('')}</nav>
+    ${({todo:() => todoView(need, quotes, stmts, asOpen, ship), vendor:() => vendorView(vq), kg:kgView, members:membersView})[tab]()}`;
+}
+
+function loginView(){
+  return `<div class="login card"><p class="h2">뉴키즈 주문관리</p><p class="sub">홈페이지 관리자 계정으로 로그인하세요.</p>
+    <div class="field"><label for="lEmail">이메일</label><input id="lEmail" type="email" autocomplete="username"></div>
+    <div class="field"><label for="lPw">비밀번호</label><input id="lPw" type="password" autocomplete="current-password"></div>
+    <button class="btn block" id="login">로그인</button></div>`;
+}
+
+const kindTag = o => `<span class="kind ${o.kind}">${KIND_NAME[o.kind]}</span>`;
+function itemHead(o){
+  const m = memberOf(o);
+  return `<button class="t" data-open="${o.id}"><b>${esc(m.kg)} · ${orderTitle(o)} ${fresh.has(o.id)?'<span class="tag warn">NEW</span>':''}</b>
+    <small class="num">#${o.id} · ${fmtDate(o.created_at)} · ${esc(m.region)} · ${esc(orderSummary(o))}</small></button>`;
+}
+function todoView(need, quotes, stmts, asOpen, ship){
+  const box = (t, sub, items) => `<div class="box"><h3>${t}<small>${sub}</small></h3>${items || '<div class="empty">없음</div>'}</div>`;
+  return `
+    ${box('새로 들어온 주문·A/S', '확인을 누르면 업체별 발주로 넘어가요. 교재는 납품시트에 옮겨 적어 주세요', need.map(o => `
+      <div class="item">${kindTag(o)}${itemHead(o)}
+        <span class="a">${o.quote_want?'<span class="tag info">견적서</span>':''}${o.pay?`<span class="tag">${PAY_NAME[o.pay]||o.pay}</span>`:''}<button class="btn small brand" data-act="confirm" data-id="${o.id}">확인</button></span>
+        ${openId===o.id?`<div class="detail">${detail(o)}</div>`:''}</div>`).join(''))}
+    ${box('견적서 요청', '견적서를 만들어 메일로 보낸 뒤 눌러주세요', quotes.map(o => `
+      <div class="item"><span class="kind doc">견적서</span><span class="t"><b>${esc(memberOf(o).kg)} · ${orderTitle(o)}</b><small>${esc(o.quote_email)}</small></span>
+        <span class="a"><button class="btn small sun" data-act="quote" data-id="${o.id}">보냈어요</button></span></div>`).join(''))}
+    ${box('거래명세서 요청', '거래명세서를 메일로 보낸 뒤 눌러주세요', stmts.map(o => `
+      <div class="item"><span class="kind doc">명세서</span><span class="t"><b>${esc(memberOf(o).kg)} · ${orderTitle(o)}</b><small>${esc(o.stmt_email)} · 요청 ${o.stmt_at?fmtDate(o.stmt_at):''}</small></span>
+        <span class="a"><button class="btn small sun" data-act="stmt" data-id="${o.id}">보냈어요</button></span></div>`).join(''))}
+    ${box('A/S 진행 중', '업체별 방식(사이트·카톡·전화)으로 접수', asOpen.map(o => `
+      <div class="item">${kindTag(o)}${itemHead(o)}
+        <span class="a">${o.state===1?`<button class="btn small sun" data-act="asVendor" data-id="${o.id}">${esc(o.as_info?.vendor||'업체')} 접수했어요</button>`:`<button class="btn small" data-act="asDone" data-id="${o.id}">처리 완료</button>`}</span>
+        ${openId===o.id?`<div class="detail">${detail(o)}</div>`:''}</div>`).join(''))}
+    ${box('배송 알림 보낼 주문', '업체 발주가 모두 끝난 주문', ship.map(o => `
+      <div class="item">${kindTag(o)}${itemHead(o)}
+        <span class="a"><button class="btn small" data-act="ship" data-id="${o.id}">배송 출발</button></span>
+        ${openId===o.id?`<div class="detail">${detail(o)}</div>`:''}</div>`).join(''))}`;
+}
+function detail(o){
+  const m = memberOf(o);
+  let h = `<span class="hint">${esc(m.kg)} · ${esc(m.name)} · ${esc(fmtPhone(m.phone))} · ${esc(m.region)}${m.email?' · '+esc(m.email):''}</span>`;
+  if (o.kind === 'book') h += `<div class="tbl-wrap"><table><thead><tr><th>교재</th><th>업체</th>${AGES.map(a => `<th class="r">${a.replace('만','')}</th>`).join('')}<th class="r">합계</th></tr></thead><tbody>
+    ${o.lines.map(l => `<tr><td>${esc(l.name)}</td><td>${esc(l.vendor)}</td>${l.q.map(x => `<td class="r num">${x||'·'}</td>`).join('')}<td class="r num"><b>${l.q.reduce((a,b)=>a+b,0)}</b></td></tr>`).join('')}</tbody></table></div>`;
+  else if (o.kind === 'goods') h += `<div class="tbl-wrap"><table><thead><tr><th>품목</th><th>업체</th><th class="r">수량</th><th class="r">금액</th></tr></thead><tbody>
+    ${o.lines.map(l => `<tr><td>${esc(l.name)}</td><td>${esc(l.vendor)}</td><td class="r num">${l.qty}</td><td class="r num">${l.price?won(l.price*l.qty):'확인 필요'}</td></tr>`).join('')}</tbody></table></div>
+    <span class="hint">결제: ${PAY_NAME[o.pay]||'-'}</span>`;
+  else h += `<span>${esc(o.memo||'(내용 없음)')}</span><div class="as-ph">${(photoCache[o.id]||[]).map((s,i) => `<a href="${s}" target="_blank" rel="noopener"><img src="${s}" alt="A/S 사진 ${i+1}"></a>`).join('') || '<span class="hint">사진 불러오는 중…</span>'}</div>`;
+  h += `<ul class="log">${(o.log||[]).map(l => `<li class="num">${fmtDate(l.at)} ${esc(l.t)}</li>`).join('')}</ul>`;
+  return h;
+}
+function vendorQueue(){
+  const m = {};
+  orders.filter(o => o.kind !== 'as' && o.state === 1).forEach(o => (o.lines || []).forEach(l => {
+    if ((o.done || {})[l.vendor]) return;
+    const v = m[l.vendor] || (m[l.vendor] = {vendor:l.vendor, rows:[], ids:new Set()});
+    v.ids.add(o.id); v.rows.push({kg:memberOf(o).kg, region:memberOf(o).region, name:l.name, n:l.q ? l.q.reduce((a,b)=>a+b,0) : l.qty, q:l.q, month:o.month});
+  }));
+  return Object.values(m).sort((a,b) => a.vendor.localeCompare(b.vendor, 'ko'));
+}
+function vendorView(vq){
+  return `<div class="reco"><b>업체별 발주</b> · 확인한 주문을 업체끼리 묶었어요. "목록 복사"로 내용을 붙여 넣거나 Claude에게 "OO 발주해줘"라고 한 뒤, 끝나면 "발주 완료"를 누르세요.</div>
+    <div class="box"><h3>발주 대기<small>${vq.length}개 업체</small></h3>
+    ${vq.map(v => `<div class="vend"><div><b>${esc(v.vendor)}</b> <span class="hint num">${v.ids.size}건</span>
+      <ul>${v.rows.map(r => `<li>${esc(r.kg)}(${esc(r.region)}) · ${esc(r.name)}${r.month?' '+esc(r.month):''} · <span class="num">${r.q?ageSummary(r.q):r.n+'개'}</span></li>`).join('')}</ul></div>
+      <span class="a" style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button class="btn small line" data-copy="${esc(v.vendor)}">목록 복사</button><button class="btn small sun" data-act="vendor" data-v="${esc(v.vendor)}">발주 완료</button></span></div>`).join('') || '<div class="empty">발주할 주문이 없어요. 할 일에서 새 주문을 확인하면 여기로 옵니다.</div>'}</div>`;
+}
+function kgView(){
+  const list = members.filter(m => m.status === 'approved' && (kgFilter === '전체' || m.region === kgFilter));
+  return `<div class="filters">${['전체', ...REGIONS].map(r => `<button class="chip" data-region="${r}" aria-pressed="${kgFilter===r}">${r}</button>`).join('')}</div>
+    <div class="box"><h3>원별 보기<small>${list.length}곳</small></h3>
+    <div class="tbl-wrap"><table><thead><tr><th>원</th><th>지역</th><th>담당</th><th>연락처</th><th class="r">주문</th><th class="r">진행 중</th><th>최근 주문</th></tr></thead><tbody>
+    ${list.map(m => { const os = orders.filter(o => o.member_id === m.id); const last = os[0];
+      return `<tr><td><b>${esc(m.kg)}</b></td><td>${esc(m.region)}</td><td>${esc(m.name)}</td><td class="num">${esc(fmtPhone(m.phone))}</td><td class="r num">${os.length}</td><td class="r num">${os.filter(o=>o.state<3).length}</td><td>${last?esc(orderTitle(last))+' · '+fmtDate(last.created_at):'-'}</td></tr>`; }).join('') || '<tr><td colspan="7" class="empty">아직 없어요</td></tr>'}
+    </tbody></table></div></div>`;
+}
+function membersView(){
+  const order = {pending:0, approved:1, rejected:2};
+  const list = [...members].sort((a,b) => order[a.status]-order[b.status] || b.created_at.localeCompare(a.created_at));
+  return `<div class="reco"><b>가입 승인</b> · 원 이름과 연락처를 확인하고 승인하면 그 원에서 바로 주문할 수 있어요.</div>
+    <div class="box"><h3>가입한 원<small>${members.length}곳</small></h3>
+    ${list.map(m => `<div class="item"><span class="kind ${m.status==='approved'?'book':m.status==='pending'?'doc':'goods'}">${({approved:'승인',pending:'대기',rejected:'거절'})[m.status]}</span>
+      <span class="t"><b>${esc(m.kg)} <span class="hint">${esc(m.region)}</span></b><small class="num">${esc(m.name)} · ${esc(fmtPhone(m.phone))} · 가입 ${fmtDate(m.created_at)}</small></span>
+      <span class="a">${m.status!=='approved'?`<button class="btn small brand" data-member="${m.id}" data-status="approved">승인</button>`:''}${m.status==='pending'?`<button class="btn small line" data-member="${m.id}" data-status="rejected">거절</button>`:''}</span></div>`).join('') || '<div class="empty">아직 가입한 원이 없어요</div>'}</div>`;
+}
+
+async function updateOrder(o, patch, logText){
+  const log = [...(o.log || []), {at:new Date().toISOString(), t:logText}];
+  const { error } = await sb.from('nk_orders').update({...patch, log, updated_at:new Date().toISOString()}).eq('id', o.id);
+  if (error) throw error;
+  Object.assign(o, patch, {log});
+}
+
+document.addEventListener('click', async e => {
+  const t = e.target.closest('button'); if (!t || t.disabled) return;
+  const d = t.dataset;
+  try {
+    if (t.id === 'login'){
+      const { data, error } = await sb.auth.signInWithPassword({ email:$('#lEmail').value.trim(), password:$('#lPw').value });
+      if (error) { toast('이메일이나 비밀번호가 맞지 않아요.'); return; }
+      session = data.session; isAdmin = await rpc('nk_is_admin', {}).catch(() => false); if (isAdmin) await load(); render(); return;
+    }
+    if (t.id === 'logout'){ await sb.auth.signOut(); session = null; isAdmin = false; render(); return; }
+    if (t.id === 'reload'){ await load(); render(); toast('최신 상태로 바꿨어요.'); return; }
+    if (t.id === 'csv'){ downloadCsv(); return; }
+    if (d.tab){ tab = d.tab; render(); return; }
+    if (d.region){ kgFilter = d.region; render(); return; }
+    if (d.open){
+      const id = +d.open; openId = openId === id ? null : id; fresh.delete(id); render();
+      const o = orders.find(x => x.id === id);
+      if (openId && o.kind === 'as' && !photoCache[id]){
+        const { data } = await sb.from('nk_orders').select('photos').eq('id', id).single();
+        photoCache[id] = (data && data.photos) || []; render();
+      }
+      return;
+    }
+    if (d.member){
+      const { error } = await sb.from('nk_members').update({status:d.status, approved_at:d.status==='approved'?new Date().toISOString():null}).eq('id', d.member);
+      if (error) throw error;
+      members.find(m => m.id === d.member).status = d.status; render(); toast(d.status === 'approved' ? '승인했어요. 이제 주문할 수 있어요.' : '거절했어요.'); return;
+    }
+    if (d.copy){
+      const v = vendorQueue().find(x => x.vendor === d.copy);
+      const text = `[${v.vendor} 발주]\n` + v.rows.map(r => `${r.kg}(${r.region}) ${r.name}${r.month?' '+r.month:''} ${r.q?ageSummary(r.q):r.n+'개'}`).join('\n');
+      try { await navigator.clipboard.writeText(text); toast('복사했어요.'); } catch(_) { prompt('아래 내용을 복사하세요', text); }
+      return;
+    }
+    if (d.act){
+      const o = d.id ? orders.find(x => x.id === +d.id) : null; if (o) fresh.delete(o.id);
+      if (d.act === 'confirm') await updateOrder(o, {state:1}, '확인');
+      if (d.act === 'quote') await updateOrder(o, {quote_sent:true}, '견적서 발송');
+      if (d.act === 'stmt') await updateOrder(o, {stmt_sent:true}, '거래명세서 발송');
+      if (d.act === 'asVendor') await updateOrder(o, {state:2}, `${o.as_info?.vendor||'업체'} A/S 접수`);
+      if (d.act === 'asDone') await updateOrder(o, {state:3}, '처리 완료');
+      if (d.act === 'ship') await updateOrder(o, {state:3}, '배송 출발');
+      if (d.act === 'vendor'){
+        for (const x of orders.filter(x => x.kind !== 'as' && x.state === 1 && vendorsOf(x).includes(d.v) && !(x.done||{})[d.v])){
+          const done = {...(x.done||{}), [d.v]:true};
+          const all = vendorsOf(x).every(v => done[v]);
+          await updateOrder(x, all ? {done, state:2} : {done}, `${d.v} 발주`);
+        }
+        toast(`${d.v} 발주 완료로 표시했어요.`);
+      }
+      render(); return;
+    }
+  } catch(err){ toast(err.message || '저장하지 못했어요. 다시 시도해 주세요.'); }
+});
+document.addEventListener('keydown', e => { if (e.key === 'Enter' && (e.target.id === 'lPw' || e.target.id === 'lEmail')) $('#login')?.click(); });
+
+function downloadCsv(){
+  const rows = [['주문번호','접수','원','지역','담당','연락처','구분','호수','업체','품목','만0','만1','만2','만3','만4','만5','수량','금액','결제','견적서','상태']];
+  orders.forEach(o => { const m = memberOf(o);
+    const base = [o.id, fmtDate(o.created_at), m.kg, m.region, m.name||'', fmtPhone(m.phone||''), KIND_NAME[o.kind], o.month||''];
+    if (o.kind === 'as'){ const a = o.as_info||{}; rows.push([...base, a.vendor||'', `${a.prog} ${a.step} ${a.ho}`, '','','','','','', '', '', '', '', STATES.as[o.state]]); return; }
+    (o.lines||[]).forEach(l => rows.push([...base, l.vendor, l.name, ...(l.q||['','','','','','']), l.q?l.q.reduce((a,b)=>a+b,0):l.qty, l.price?l.price*l.qty:'', PAY_NAME[o.pay]||'', o.quote_want?'요청':'', STATES[o.kind][o.state]]));
+  });
+  const csv = '﻿' + rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\r\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
+  const d = new Date(); a.download = `뉴키즈주문_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}.csv`; a.click();
+}
+
+// 1분마다 새 주문 확인
+setInterval(async () => { if (isAdmin && !openId){ await load(); render(); } }, 60000);
+boot();
+</script>
+</body>
+</html>

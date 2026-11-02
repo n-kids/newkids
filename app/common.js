@@ -10,8 +10,8 @@ const fmtDate = iso => { const d = new Date(iso); return `${d.getMonth()+1}/${d.
 
 const REGIONS = ['김포','고양','파주','강화'];
 const AGES = ['만0세','만1세','만2세','만3세','만4세','만5세'];
-// 주문 호수: 다음 달부터 4개월
-const MONTHS = Array.from({length:4}, (_, i) => `${(new Date().getMonth() + 1 + i) % 12 + 1}월호`);
+// 주문 호수: 이번 달 호만. 15일부터는 다음 달 호도 열림 (예: 11/2 → 11월호, 11/15 → 11월호·12월호)
+const MONTHS = (() => { const d = new Date(), m = d.getMonth() + 1; return d.getDate() >= 15 ? [`${m}월호`, `${m % 12 + 1}월호`] : [`${m}월호`]; })();
 const HO = ['1호(3월)','2호(4월)','3호(5월)','4호(6월)','5호(7월)','6호(8월)','7호(9월)','8호(10월)','9호(11월)','10호(12월)','11호(1월)','12호(2월)'];
 const STATES = { book:['접수','확인','발주완료','배송중'], goods:['접수','확인','발주완료','배송중'], as:['접수','확인','업체 접수','처리완료'] };
 const KIND_NAME = { book:'교재', goods:'물품', as:'A/S' };

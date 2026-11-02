@@ -161,7 +161,7 @@ let me = null;                 // {token,kg,name,phone,region,status,email}
 let myOrders = [];
 let auth = {mode:'join', kg:'', name:'', phone:'', region:'', pin:'', pin2:'', busy:false};
 let tab = 'home';
-let book = {month:MONTHS[0], tag:'전체', q:'', sel:{}};
+let book = {month:MONTHS[MONTHS.length-1], tag:'전체', q:'', sel:{}};
 let goods = {sec:null, cat:'rec', q:'', shown:24, wear:'전체'};
 let cart = {};
 let as = {prog:'', step:'', ho:'', photos:[], text:''};
@@ -258,6 +258,7 @@ function bookView(){
     <div><p class="h2">교재 주문</p><p class="sub">과목을 고르고, 필요한 교재를 눌러 연령별 수량을 넣어주세요.</p></div>
     <div class="row card" style="padding:10px 12px"><b>주문 호수</b>
       <select id="bMonth" class="search" style="width:auto;padding:6px 10px">${MONTHS.map(m=>`<option ${book.month===m?'selected':''}>${m}</option>`).join('')}</select></div>
+    ${MONTHS.length===1?`<span class="hint">${new Date().getMonth()%12+2>12?1:new Date().getMonth()+2}월호는 ${new Date().getMonth()+1}월 15일부터 주문할 수 있어요.</span>`:''}
     ${last?`<div class="past"><div class="row"><b>지난번에는 이걸 주문하셨어요</b><span class="tag">${esc(last.month||'')}</span></div>
       <ul>${last.lines.map(l=>`<li><span>${esc(l.name)}</span><span class="num">${ageSummary(l.q)}</span></li>`).join('')}</ul>
       <button class="btn small" id="bRepeat">지난번과 똑같이 담기</button></div>`:''}
@@ -320,13 +321,15 @@ function goodsView(){
       ${list.length>goods.shown?`<button class="btn line small more" id="gMore">더 보기 (${(list.length-goods.shown).toLocaleString()}개 남음)</button>`:''}${bar}`;
   }
   if (goods.sec==='gift'){
-    const q = goods.q.trim();
-    const list = GIFTS.filter(n=>!q || n.includes(q));
+    const q = goods.q.trim().replace(/\s+/g,'');
+    const items = GIFTS.map(([n,grp],i)=>({type:'gift', id:'g:'+n, name:n, vendor:'나비북스', sub:grp, img:`nbi/nb${String(i+1).padStart(2,'0')}.jpg`}))
+      .filter(g=>!q || g.name.replace(/\s+/g,'').includes(q));
+    const sections = GIFT_GROUPS.map(grp=>[grp, items.filter(g=>g.sub===grp)]).filter(([,its])=>its.length);
     return `${back}
-      <div><p class="h2">선물용품</p><p class="sub">나비북스 2027 특별판. 가격은 견적으로 안내드려요.</p></div>
-      <div class="catalog"><span class="book">NABI<br>2027</span><span><b>나비북스 최신 카탈로그</b><br><span class="hint">카탈로그가 준비되면 이 자리에서 넘겨보며 고를 수 있어요.</span></span></div>
+      <div><p class="h2">선물용품</p><p class="sub">나비북스 2027 특별판 · 졸업·수료·생일 선물. 가격은 견적으로 안내드려요.</p></div>
       <input class="search" id="gSearch" placeholder="선물 이름으로 찾기" value="${esc(goods.q)}">
-      <div class="grid2">${list.map(n=>goodCard({type:'gift', id:'g:'+n, name:n, vendor:'나비북스'})).join('')}</div>${bar}`;
+      ${sections.map(([grp, its])=>`<p class="flabel" style="margin:6px 0 0;font-size:14px">${grp} <span class="hint num">${its.length}</span></p>
+        <div class="grid2">${its.map(goodCard).join('')}</div>`).join('') || '<div class="card hint">찾는 선물이 없어요.</div>'}${bar}`;
   }
   const KPW = kpReady===true ? KP.items.filter(it=>it[5]) : [];
   const groups = [

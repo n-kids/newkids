@@ -310,15 +310,14 @@ function goodsView(){
       <div><p class="h2">비품 및 교구</p><p class="sub">국민서관 키드팡 상품 <b class="num">${all.length.toLocaleString()}</b>개 · ${KP.at} 기준 할인가</p></div>
       <input class="search" id="gSearch" maxlength="20" autocomplete="off" placeholder="상품 이름으로 찾기" value="${esc(goods.q)}">${chips}`;
     if (goods.cat==='rec' && (KP.rec||[]).length){
-      // 이번 달부터 12달 순서로
-      const now = new Date().getMonth()+1;
-      const months = [...KP.rec].sort((a,b)=>((parseInt(a[0])-now+12)%12)-((parseInt(b[0])-now+12)%12));
+      // 이번 달 추천만 (달이 바뀌면 저절로 그달 것으로)
+      const r = recNow();
       const byId = KP.byId || (KP.byId = Object.fromEntries(KP.items.map(it=>[it[0], it])));
-      const sections = months.map(([name, ids]) => [name, ids.map(id=>byId[id]).filter(it => it && matchQ(it[1], q))]).filter(([,its])=>its.length);
+      const its = r ? r[1].map(id=>byId[id]).filter(it => it && matchQ(it[1], q)) : [];
       return `${head}
-        <span class="hint">국민서관이 달마다 고른 추천 교구예요. 이번 달부터 보여드려요.</span>
-        ${sections.map(([name, its], i) => `<p class="flabel" style="margin:6px 0 0;font-size:14px">${esc(name)} ${i===0?'<span class="tag sun">이번 달</span>':''} <span class="hint num">${its.length}</span></p>
-          <div class="grid2">${its.map(card).join('')}</div>`).join('') || '<div class="card hint">찾는 상품이 없어요.</div>'}${bar}`;
+        <span class="hint">국민서관이 고른 이번 달 추천 교구예요. 달이 바뀌면 그달 추천으로 바뀝니다.</span>
+        ${r ? `<p class="flabel" style="margin:6px 0 0;font-size:14px">${esc(r[0])} <span class="tag sun">이번 달</span> <span class="hint num">${its.length}</span></p>` : ''}
+        ${its.length ? `<div class="grid2">${its.map(card).join('')}</div>` : '<div class="card hint">찾는 상품이 없어요.</div>'}${bar}`;
     }
     const list = all.filter(it => (!goods.cat || it[4]===goods.cat) && matchQ(it[1], q));
     return `${head}

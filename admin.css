@@ -1647,3 +1647,35 @@ body {
 .form-label .ic { margin-right: 4px; vertical-align: -0.18em; }
 .adm-btn .ic, .btn-action .ic, .btn-mini .ic, .pm-btn .ic, .btn-tool .ic { width: 1em; height: 1em; }
 h1 .ic, h2 .ic, h3 .ic, h4 .ic { color: #1a3c6e; }
+
+
+/* adm-btn 추가 배리언트 */
+.adm-btn-success { background: #15803d; color: #fff; }
+.adm-btn-success:hover { background: #116632; }
+.adm-btn-danger-solid { background: #b3261e; color: #fff; }
+.adm-btn-danger-solid:hover { background: #8f1d18; }
+.adm-btn-warn { background: #b45309; color: #fff; }
+.adm-btn-warn:hover { background: #93440a; }
+.adm-btn-neutral { background: #64748b; color: #fff; }
+.adm-btn-neutral:hover { background: #4f5b6b; }
+.adm-btn-draft { background: #7d3c98; color: #fff; }
+.adm-btn-draft:hover { background: #6c3483; }
+.adm-btn-warn-outline { background: #fff; color: #b45309; border-color: #e67e22; }
+.adm-btn-warn-outline:hover { background: #fdf3e7; border-color: #b45309; color: #93440a; }
+
+/* 기존 버튼 클래스 토큰 정합화 */
+.btn-action { border-radius: 8px; font-weight: 700; transition: background-color 0.15s ease; }
+.btn-mini { border-radius: 6px; font-weight: 600; border-color: #cbd5e1; color: #475569; transition: background-color 0.15s ease, border-color 0.15s ease; }
+.btn-mini:hover { background: #f1f5f9; border-color: #94a3b8; }
+.pm-btn { font-weight: 600; border-radius: 8px; }
+.btn-cancel, .btn-confirm { border-radius: 8px; }
+
+/* --- 버튼 색상 배리언트 (기존 클래스에 조합, 우선순위 최상) --- */
+button.c-solid-primary, .btn-action.c-solid-primary, .btn-mini.c-solid-primary { background: var(--adm-primary); color: #fff; border: 1px solid transparent; }
+button.c-solid-success, .btn-action.c-solid-success, .btn-mini.c-solid-success, .pm-btn.c-solid-success { background: #15803d; color: #fff; border: 1px solid transparent; }
+button.c-solid-danger, .btn-action.c-solid-danger, .btn-mini.c-solid-danger, .pm-btn.c-solid-danger { background: #b3261e; color: #fff; border: 1px solid transparent; }
+button.c-solid-warn, .btn-action.c-solid-warn, .btn-mini.c-solid-warn, .pm-btn.c-solid-warn { background: #b45309; color: #fff; border: 1px solid transparent; }
+button.c-solid-neutral, .btn-action.c-solid-neutral, .btn-mini.c-solid-neutral, .pm-btn.c-solid-neutral { background: #64748b; color: #fff; border: 1px solid transparent; }
+button.c-solid-info, .btn-mini.c-solid-info { background: #026da8; color: #fff; border: 1px solid transparent; }
+button.c-solid-draft, .btn-mini.c-solid-draft { background: #7d3c98; color: #fff; border: 1px solid transparent; }
+button.c-soft, .btn-mini.c-soft { background: #fff; color: #475569; border: 1px solid #cbd5e1; }

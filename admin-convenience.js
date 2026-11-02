@@ -240,13 +240,13 @@
     const area = document.getElementById('btn-unanswered')?.parentElement;
     if (!area || document.getElementById('nk-draft-filter')) return;
     const button = (id,text,kind,color) => {
-      const b = document.createElement('button'); b.id=id; b.type='button'; b.className='btn-action'; b.textContent=text;
+      const b = document.createElement('button'); b.id=id; b.type='button'; b.className='btn-action'; b.innerHTML=text;
       b.style.cssText='background:#fff;color:'+color+';border:1px solid '+color+';padding:8px 12px;border-radius:6px;font-size:.9rem';
       b.onclick=()=>window.nkFilterTasks(kind);
       area.insertBefore(b,area.firstChild); return b;
     };
-    button('nk-draft-filter','<svg class="ic"><use href="#i-save"/></svg> 초안','draft','#8e44ad');
-    button('nk-schedule-filter','<svg class="ic"><use href="#i-clock"/></svg> 예약 발행','scheduled','#d68910');
+    button('nk-draft-filter','<svg class="ic"><use href="#i-save"/></svg> 초안','draft','#7d3c98');
+    button('nk-schedule-filter','<svg class="ic"><use href="#i-clock"/></svg> 예약 발행','scheduled','#8a5a00');
     const reset=document.createElement('button'); reset.type='button'; reset.textContent='전체 목록';
     reset.className='btn-action'; reset.style.cssText='background:#eee;color:#444;padding:8px 12px;border-radius:6px;font-size:.9rem';
     reset.onclick=()=>{isDraftFilter=false;isScheduledFilter=false;isUnansweredFilter=false;window.loadManageList?.(1);};

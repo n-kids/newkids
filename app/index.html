@@ -279,10 +279,10 @@ function bookCard(b){
     <button class="prog-h" data-prog="${esc(b.n)}" aria-expanded="${on}"><span class="ck">${on?'✓':''}</span>
       <span style="min-width:0"><b>${esc(b.n)}</b><span class="tags">${b.t.map(t=>'#'+t).join(' ')}</span></span>
       ${on?`<span class="q num">${q.reduce((a,c)=>a+c,0)}권</span>`:''}</button>
-    ${on?`<div class="ages">${AGES.map((a,j)=>`<div class="age"><label for="a-${esc(b.n)}-${j}">${a}</label>
+    ${on?`<div class="ages">${AGES.map((a,j)=>agesOf(b.n).includes(j)?`<div class="age"><label for="a-${esc(b.n)}-${j}">${a}</label>
       <div class="step"><button data-age="${esc(b.n)}|${j}|-1" aria-label="${esc(b.n)} ${a} 빼기">−</button>
       <input id="a-${esc(b.n)}-${j}" class="num" inputmode="numeric" value="${q[j]}" data-ageinput="${esc(b.n)}|${j}">
-      <button data-age="${esc(b.n)}|${j}|1" aria-label="${esc(b.n)} ${a} 더하기">+</button></div></div>`).join('')}</div>`:''}
+      <button data-age="${esc(b.n)}|${j}|1" aria-label="${esc(b.n)} ${a} 더하기">+</button></div></div>`:'').join('')}</div>`:''}
   </div>`;
 }
 

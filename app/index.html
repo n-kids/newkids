@@ -546,9 +546,16 @@ document.addEventListener('click', async e => {
   if (t.id==='aJoin' || t.id==='aLogin'){
     auth.busy = true; render();
     try {
-      me = t.id==='aJoin'
-        ? await rpc('nk_signup', {p_kg:auth.kg, p_name:auth.name, p_phone:auth.phone, p_region:auth.region, p_pin:auth.pin})
-        : await rpc('nk_login', {p_phone:auth.phone, p_pin:auth.pin});
+      const h = await pinHash(auth.phone, auth.pin);
+      if (t.id==='aJoin') me = await rpc('nk_signup', {p_kg:auth.kg, p_name:auth.name, p_phone:auth.phone, p_region:auth.region, p_pin:h});
+      else {
+        try { me = await rpc('nk_login', {p_phone:auth.phone, p_pin:h}); }
+        catch(err){
+          // 예전 방식으로 가입한 원: 한 번만 예전 비밀번호로 확인하고 새 방식(2중 해시)으로 바꿈
+          if (err.message !== 'NK_UPGRADE') throw err;
+          me = await rpc('nk_login_upgrade', {p_phone:auth.phone, p_pin_old:auth.pin, p_pin:h});
+        }
+      }
       saveToken(me.token); auth = {mode:'login', kg:'', name:'', phone:'', region:'', pin:'', pin2:'', busy:false};
       await loadOrders(); tab='home'; render();
       toast(me.status==='approved' ? '로그인했어요.' : '가입 신청이 접수됐어요. 승인되면 주문할 수 있어요.');

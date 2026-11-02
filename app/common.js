@@ -33,6 +33,13 @@ const ICON = {
   doc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 12h7M9 16h7"/></svg>',
 };
 
+// 비밀번호는 기기에서 먼저 SHA-256 으로 해시해서 보냄 (서버가 bcrypt 로 한 번 더 해시 = 2중 해시). 원래 비밀번호는 기기 밖으로 안 나감
+async function pinHash(phone, pin){
+  const data = new TextEncoder().encode(`nk-order|${digits(phone)}|${pin}`);
+  const buf = await crypto.subtle.digest('SHA-256', data);
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 // Supabase 함수 호출. 실패하면 사람이 읽을 수 있는 문구로 바꿔서 던진다
 async function rpc(name, args){
   let res;

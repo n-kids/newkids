@@ -91,7 +91,7 @@ async function boot(){
 }
 async function load(){
   const [m, o] = await Promise.all([
-    sb.from('nk_members').select('id,kg,name,phone,region,status,email,sheet_name,created_at,approved_at').order('created_at', {ascending:false}),
+    sb.rpc('nk_admin_members'),   // 전화번호는 암호화돼 있어 관리자 전용 함수로 풀어서 받음
     sb.from('nk_orders').select('id,member_id,kind,month,lines,quote_want,quote_email,quote_sent,pay,stmt_want,stmt_email,stmt_at,stmt_sent,state,done,as_info,memo,log,sheet_synced_at,sheet_note,created_at').order('created_at', {ascending:false}).limit(500),
   ]);
   if (m.error || o.error){ toast((m.error || o.error).message); return; }

@@ -122,27 +122,43 @@ body {
 
 .form-input {
     width: 100%;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    font-size: 1rem;
+    padding: 11px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    color: #2b3440;
+    background: #fff;
     box-sizing: border-box;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
+    .form-input:hover { border-color: #94a3b8; }
+    .form-input:focus {
+        border-color: #1a3c6e;
+        box-shadow: 0 0 0 3px rgba(26, 60, 110, 0.12);
+        outline: none;
+    }
+    .form-input::placeholder { color: #64748b; }
 
 .form-inputp {
     width: 100%;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    font-size: 1rem;
+    padding: 11px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    color: #2b3440;
+    background: #fff;
     box-sizing: border-box;
     min-height: 120px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
-
-.form-input:focus {
-    border-color: #1a3c6e;
-    outline: none;
-}
+    .form-inputp:hover { border-color: #94a3b8; }
+    .form-inputp:focus {
+        border-color: #1a3c6e;
+        box-shadow: 0 0 0 3px rgba(26, 60, 110, 0.12);
+        outline: none;
+    }
 
 .btn-action {
     background-color: #1a3c6e;
@@ -1369,18 +1385,28 @@ body {
 .filter-search-input {
     flex: 1;
     min-width: 180px;
-    padding: 8px 12px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
+    padding: 9px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
     font-size: 0.9rem;
+    font-family: inherit;
+    color: #2b3440;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
+    .filter-search-input:hover { border-color: #94a3b8; }
+    .filter-search-input:focus { border-color: #1a3c6e; box-shadow: 0 0 0 3px rgba(26, 60, 110, 0.12); outline: none; }
 
 .filter-date-input {
-    padding: 7px 10px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
+    padding: 8px 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
     font-size: 0.85rem;
+    font-family: inherit;
+    color: #2b3440;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
+    .filter-date-input:hover { border-color: #94a3b8; }
+    .filter-date-input:focus { border-color: #1a3c6e; box-shadow: 0 0 0 3px rgba(26, 60, 110, 0.12); outline: none; }
 
 /* 폼 투표 결과 시각화 막대 */
 .poll-stat-box {
@@ -1679,3 +1705,56 @@ button.c-solid-neutral, .btn-action.c-solid-neutral, .btn-mini.c-solid-neutral, 
 button.c-solid-info, .btn-mini.c-solid-info { background: #026da8; color: #fff; border: 1px solid transparent; }
 button.c-solid-draft, .btn-mini.c-solid-draft { background: #7d3c98; color: #fff; border: 1px solid transparent; }
 button.c-soft, .btn-mini.c-soft { background: #fff; color: #475569; border: 1px solid #cbd5e1; }
+
+/* --- 게시글 카드 헤더: 체크박스와 드래그 핸들 분리 --- */
+.pm-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    background: #f4f7fa;
+    padding: 4px 15px;
+    border-bottom: 1px solid #e6ecf3;
+}
+.pm-check-label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    cursor: pointer;
+    color: #1a3c6e;
+    font-size: 0.85rem;
+    font-weight: 700;
+    padding: 8px 0;
+    margin: 0;
+}
+.pm-check-label input {
+    width: 20px;
+    height: 20px;
+    accent-color: #1a3c6e;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+.pm-grip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 4px;
+    color: #5c6b7a;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: grab;
+    touch-action: none;
+}
+.pm-grip:active { cursor: grabbing; }
+.pm-grip .ic { width: 1.3em; height: 1.3em; }
+@media (max-width: 640px) { .pm-grip-text { display: none; } }
+
+/* --- 목록 카드 버튼 정리 --- */
+.pm-actions .pm-btn { white-space: nowrap; font-size: 0.82rem; }
+.pm-actions .pm-btn .ic { width: 0.95em; height: 0.95em; }
+@media (max-width: 640px) {
+    .pm-actions .pm-btn { font-size: 0.75rem; padding: 8px 2px; }
+}
+
+/* 플레이스홀더 가독성 */
+.form-inputp::placeholder, .filter-search-input::placeholder, .filter-date-input::placeholder { color: #64748b; }

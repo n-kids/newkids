@@ -11,7 +11,7 @@
 
     <!-- 공통 및 관리자 전용 CSS 파일 로드 -->
     <link rel="stylesheet" href="style.css?v=20261102-editor-plus6">
-    <link rel="stylesheet" href="admin.css?v=20261103-admin2">
+    <link rel="stylesheet" href="admin.css?v=20261103-admin3">
 
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -1287,10 +1287,9 @@
 
                 list.innerHTML += `
                     <div class="post-manage-card" data-id="${item.id}" style="position:relative;">
-                        <div class="pm-drag-handle" style="background:#f4f7fa; text-align:center; padding:10px 15px; cursor:grab; color:#5c6b7a; font-size:0.85rem; font-weight:bold; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
-                            <label style="cursor:pointer; display:flex; align-items:center; color:#1a3c6e; margin:0;"><input type="checkbox" class="post-check" value="${item.id}" style="width:16px; height:16px; margin-right:5px;"> 선택</label>
-                            <span><svg class="ic"><use href="#i-grip"/></svg> 드래그하여 순서 변경</span>
-                            <span style="width:40px;"></span>
+                        <div class="pm-card-head">
+                            <label class="pm-check-label"><input type="checkbox" class="post-check" value="${item.id}"> 선택</label>
+                            <span class="pm-grip" title="드래그하여 순서 변경"><svg class="ic"><use href="#i-grip"/></svg><span class="pm-grip-text">드래그하여 순서 변경</span></span>
                         </div>
                         <img src="${thumb}" class="pm-thumb" alt="thumbnail">
                         <div class="pm-body">
@@ -1313,7 +1312,7 @@
 
             if (typeof Sortable !== 'undefined') {
                 new Sortable(list, {
-                    handle: '.pm-drag-handle',
+                    handle: '.pm-grip',
                     animation: 150,
                     onEnd: async function () {
                         showLoading(true);

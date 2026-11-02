@@ -253,7 +253,7 @@ body {
 
 .pm-info {
     font-size: 0.85rem;
-    color: #888;
+    color: #5c6b7a;
 }
 
 .pm-actions {
@@ -645,7 +645,7 @@ body {
 
 .btn-cancel {
     padding: 10px 25px;
-    background: #888;
+    background: #64748b;
     color: white;
     border: none;
     border-radius: 6px;
@@ -732,7 +732,7 @@ body {
 .drag-group-handle {
     padding: 18px 15px;
     cursor: grab;
-    color: #888;
+    color: #5c6b7a;
     border-right: 1px solid #e0efff;
     display: flex;
     align-items: center;
@@ -979,7 +979,7 @@ body {
         display: block !important;
         width: 70px;
         font-size: 0.85rem;
-        color: #888;
+        color: #5c6b7a;
         font-weight: bold;
         flex-shrink: 0;
     }
@@ -1424,3 +1424,226 @@ body {
     background-color: #9b59b6 !important;
     color: #fff !important;
 }
+
+/* =========================================
+   v20261103 정돈(Refine): 디자인 토큰 + 공통 컴포넌트
+   - SVG 아이콘 체계(.ic) / 버튼(.adm-btn) / 섹션 제목 / 토스트 / 표
+   ========================================= */
+:root {
+    --adm-primary: #1a3c6e;
+    --adm-primary-hover: #2c5282;
+    --adm-primary-soft: #eaf0f7;
+    --adm-success: #1e6f5c;
+    --adm-success-soft: #e7f4ef;
+    --adm-danger: #b3261e;
+    --adm-danger-soft: #fdecea;
+    --adm-warning: #9c4a10;
+    --adm-warning-soft: #fdf3e7;
+    --adm-info: #1a5c8f;
+    --adm-info-soft: #e8f2f9;
+    --adm-text: #2b3440;
+    --adm-text-muted: #64748b;
+    --adm-text-faint: #94a3b8;
+    --adm-border: #dde4ee;
+    --adm-surface: #ffffff;
+    --adm-radius: 12px;
+    --adm-radius-sm: 8px;
+    --adm-shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+    --adm-shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
+/* --- SVG 아이콘 --- */
+.ic {
+    width: 1.15em;
+    height: 1.15em;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vertical-align: -0.22em;
+    flex-shrink: 0;
+}
+
+/* --- 공용 버튼 --- */
+.adm-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 9px 16px;
+    border: 1px solid transparent;
+    border-radius: var(--adm-radius-sm);
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1.3;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    white-space: nowrap;
+}
+.adm-btn:active { transform: translateY(1px); }
+.adm-btn-primary { background-color: var(--adm-primary); color: #fff; }
+.adm-btn-primary:hover { background-color: var(--adm-primary-hover); }
+.adm-btn-secondary { background-color: #fff; color: var(--adm-primary); border-color: var(--adm-border); }
+.adm-btn-secondary:hover { background-color: var(--adm-primary-soft); border-color: #b9c8dd; }
+.adm-btn-danger { background-color: #fff; color: var(--adm-danger); border-color: #e7c4c1; }
+.adm-btn-danger:hover { background-color: var(--adm-danger-soft); border-color: var(--adm-danger); }
+.adm-btn-ghost { background-color: transparent; color: var(--adm-text-muted); }
+.adm-btn-ghost:hover { background-color: rgba(100, 116, 139, 0.08); color: var(--adm-text); }
+.adm-btn-sm { padding: 5px 10px; font-size: 0.8rem; }
+
+/* --- 섹션 제목 통일 --- */
+.adm-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--adm-text);
+    font-size: 1.45rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    border-bottom: 1px solid var(--adm-border);
+    padding-bottom: 14px;
+    margin: 0 0 22px;
+}
+.adm-title .ic { width: 1.25em; height: 1.25em; color: var(--adm-primary); }
+.adm-subtitle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--adm-primary);
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0 0 16px;
+}
+.adm-subtitle .ic { width: 1.2em; height: 1.2em; }
+
+/* --- 대시보드 통계 카드 --- */
+.stat-card {
+    flex: 1;
+    min-width: 200px;
+    background: var(--adm-surface);
+    padding: 22px 24px;
+    border-radius: var(--adm-radius);
+    box-shadow: var(--adm-shadow);
+    border: 1px solid var(--adm-border);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+.stat-card .stat-label {
+    color: var(--adm-text-muted);
+    font-size: 0.88rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+.stat-card .stat-label .ic { color: var(--adm-primary); }
+.stat-card .stat-value {
+    font-size: 2.4rem;
+    color: var(--adm-primary);
+    font-weight: 900;
+    line-height: 1.1;
+}
+.stat-card .stat-unit {
+    font-size: 1rem;
+    color: var(--adm-text-muted);
+    font-weight: 500;
+    margin-left: 5px;
+}
+.stat-card .stat-value.is-positive { color: var(--adm-success); }
+.stat-list { list-style: none; padding: 0; margin: 14px 0 0; }
+.stat-list li {
+    padding: 8px 0;
+    border-bottom: 1px solid #f1f4f8;
+    font-size: 0.92rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+.stat-list li:last-child { border-bottom: none; }
+.stat-list .rank {
+    display: inline-block;
+    width: 22px;
+    font-weight: 800;
+    color: var(--adm-warning);
+    flex-shrink: 0;
+}
+.stat-list .t { color: var(--adm-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.stat-list .v { color: var(--adm-success); font-weight: 700; flex-shrink: 0; }
+
+/* --- 토스트 알림 --- */
+.toast-wrap {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 100000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+}
+.toast {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    min-width: 280px;
+    max-width: 400px;
+    padding: 13px 16px;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 6px 20px rgba(15, 23, 42, 0.14);
+    border: 1px solid var(--adm-border);
+    font-size: 0.9rem;
+    color: var(--adm-text);
+    line-height: 1.45;
+    pointer-events: auto;
+    animation: toast-in 0.22s ease;
+}
+.toast.out { animation: toast-out 0.25s ease forwards; }
+.toast .ic { margin-top: 2px; }
+.toast-success { border-left: 4px solid var(--adm-success); }
+.toast-success .ic { color: var(--adm-success); }
+.toast-error { border-left: 4px solid var(--adm-danger); }
+.toast-error .ic { color: var(--adm-danger); }
+.toast-warning { border-left: 4px solid var(--adm-warning); }
+.toast-warning .ic { color: var(--adm-warning); }
+.toast-info { border-left: 4px solid var(--adm-info); }
+.toast-info .ic { color: var(--adm-info); }
+@keyframes toast-in {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes toast-out {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(-8px); }
+}
+
+/* --- 게시글 목록 표 --- */
+.adm-table-wrap { background: var(--adm-surface); border: 1px solid var(--adm-border); border-radius: var(--adm-radius); box-shadow: var(--adm-shadow); overflow: auto; margin-top: 14px; }
+.adm-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.adm-table th {
+    text-align: left;
+    padding: 12px 14px;
+    background: #f4f7fb;
+    color: var(--adm-text-muted);
+    font-weight: 700;
+    font-size: 0.8rem;
+    border-bottom: 1px solid var(--adm-border);
+    white-space: nowrap;
+}
+.adm-table td { padding: 12px 14px; border-bottom: 1px solid #f1f4f8; color: var(--adm-text); vertical-align: middle; }
+.adm-table tbody tr:hover { background: #f8fafc; }
+.adm-table .num { font-variant-numeric: tabular-nums; }
+
+/* --- 아이콘 문맥별 정렬 --- */
+.nav-item .ic { width: 1.3em; height: 1.3em; margin-right: 10px; }
+.sidebar-logo .ic { margin-right: 8px; }
+.badge .ic { width: 0.95em; height: 0.95em; margin-right: 3px; vertical-align: -0.15em; }
+.dash-icon .ic { width: 1.15em; height: 1.15em; }
+.form-label .ic { margin-right: 4px; vertical-align: -0.18em; }
+.adm-btn .ic, .btn-action .ic, .btn-mini .ic, .pm-btn .ic, .btn-tool .ic { width: 1em; height: 1em; }
+h1 .ic, h2 .ic, h3 .ic, h4 .ic { color: #1a3c6e; }

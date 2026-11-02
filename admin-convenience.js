@@ -15,7 +15,7 @@
     let modal = document.getElementById(id);
     if (!modal) {
       modal = document.createElement('div'); modal.id = id; modal.style.cssText = modalBase;
-      modal.innerHTML = '<div style="background:#fff;border-radius:12px;width:min(980px,96vw);max-height:90vh;overflow:auto;padding:20px;box-shadow:0 12px 40px #0004"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px;border-bottom:1px solid #ddd;padding-bottom:12px"><h2 data-modal-title style="margin:0;color:#1a3c6e"></h2><button type="button" data-modal-close style="border:0;background:#eee;border-radius:6px;padding:8px 12px;cursor:pointer">닫기 ✕</button></div><div data-modal-body style="padding-top:16px"></div></div>';
+      modal.innerHTML = '<div style="background:#fff;border-radius:12px;width:min(980px,96vw);max-height:90vh;overflow:auto;padding:20px;box-shadow:0 12px 40px #0004"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px;border-bottom:1px solid #ddd;padding-bottom:12px"><h2 data-modal-title style="margin:0;color:#1a3c6e"></h2><button type="button" data-modal-close style="border:0;background:#eee;border-radius:6px;padding:8px 12px;cursor:pointer">닫기</button></div><div data-modal-body style="padding-top:16px"></div></div>';
       modal.addEventListener('click', e => { if (e.target === modal || e.target.closest('[data-modal-close]')) modal.style.display = 'none'; });
       document.body.appendChild(modal);
     }
@@ -96,7 +96,7 @@
         body.innerHTML = '<input id="nk-media-search" class="form-input" placeholder="파일명 검색..." style="margin-bottom:12px"><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;max-height:65vh;overflow:auto">' + filtered.map((item, idx) => {
           const url = sb.storage.from('images').getPublicUrl(item.path).data.publicUrl;
           const image = (item.metadata?.mimetype || '').startsWith('image/') || /\.(png|jpe?g|gif|webp|svg)$/i.test(item.name);
-          return '<button type="button" data-media="' + idx + '" style="text-align:left;border:1px solid #ddd;border-radius:8px;background:white;padding:8px;cursor:pointer;overflow:hidden">' + (image ? '<img src="' + esc(url) + '" alt="" style="width:100%;height:110px;object-fit:cover;border-radius:4px">' : '<div style="height:110px;display:grid;place-items:center;font-size:36px">📄</div>') + '<div style="font-size:.82rem;overflow-wrap:anywhere;margin-top:6px">' + esc(item.name) + '</div><div style="font-size:.76rem;color:#1a3c6e">선택하여 삽입</div></button>';
+          return '<button type="button" data-media="' + idx + '" style="text-align:left;border:1px solid #ddd;border-radius:8px;background:white;padding:8px;cursor:pointer;overflow:hidden">' + (image ? '<img src="' + esc(url) + '" alt="" style="width:100%;height:110px;object-fit:cover;border-radius:4px">' : '<div style="height:110px;display:grid;place-items:center;font-size:36px"><svg class="ic" style="width:36px;height:36px;color:#94a3b8"><use href="#i-file-text"/></svg></div>') + '<div style="font-size:.82rem;overflow-wrap:anywhere;margin-top:6px">' + esc(item.name) + '</div><div style="font-size:.76rem;color:#1a3c6e">선택하여 삽입</div></button>';
         }).join('') + '</div>';
         body.querySelector('#nk-media-search').value = filter;
         body.querySelector('#nk-media-search').addEventListener('input', e => render(e.target.value));
@@ -144,9 +144,9 @@
     const scheduled = posts.filter(x => !x.is_draft && x.publish_at && new Date(x.publish_at).getTime() > now && new Date(x.publish_at).getTime() <= week).length;
     const unanswered = posts.filter(x => !x.is_draft && !answered.has(x.id) && !window.nkIsAdminAuthoredPost(x)).length;
     const cards = [
-      ['draft','💾','저장된 초안',drafts,'#8e44ad'],
-      ['scheduled','⏰','7일 내 예약 발행',scheduled,'#d68910'],
-      ['unanswered','💬','답변 대기 게시글',unanswered,'#1a3c6e']
+      ['draft','<svg class="ic"><use href="#i-save"/></svg>','저장된 초안',drafts,'#8e44ad'],
+      ['scheduled','<svg class="ic"><use href="#i-clock"/></svg>','7일 내 예약 발행',scheduled,'#d68910'],
+      ['unanswered','<svg class="ic"><use href="#i-message"/></svg>','답변 대기 게시글',unanswered,'#1a3c6e']
     ];
     box.innerHTML = cards.map(([key,icon,label,count,color]) => '<button type="button" onclick="nkFilterTasks(\'' + key + '\')" style="text-align:left;background:#fff;border:1px solid #e4e8ef;border-left:5px solid ' + color + ';border-radius:9px;padding:15px;cursor:pointer;box-shadow:0 2px 8px #0000000a"><div style="font-weight:700;color:#667">' + icon + ' ' + label + '</div><strong style="display:block;font-size:1.7rem;color:' + color + ';margin-top:4px">' + count + '</strong><small style="color:#888">눌러서 목록 보기</small></button>').join('');
   }
@@ -245,8 +245,8 @@
       b.onclick=()=>window.nkFilterTasks(kind);
       area.insertBefore(b,area.firstChild); return b;
     };
-    button('nk-draft-filter','💾 초안','draft','#8e44ad');
-    button('nk-schedule-filter','⏰ 예약 발행','scheduled','#d68910');
+    button('nk-draft-filter','<svg class="ic"><use href="#i-save"/></svg> 초안','draft','#8e44ad');
+    button('nk-schedule-filter','<svg class="ic"><use href="#i-clock"/></svg> 예약 발행','scheduled','#d68910');
     const reset=document.createElement('button'); reset.type='button'; reset.textContent='전체 목록';
     reset.className='btn-action'; reset.style.cssText='background:#eee;color:#444;padding:8px 12px;border-radius:6px;font-size:.9rem';
     reset.onclick=()=>{isDraftFilter=false;isScheduledFilter=false;isUnansweredFilter=false;window.loadManageList?.(1);};
@@ -266,7 +266,7 @@
       const isDraft = serialized.includes('"is_draft":true');
       const body = card.querySelector('.pm-body > div');
       if (isDraft && body && !body.querySelector('[data-draft-label]')) {
-        const tag=document.createElement('span');tag.dataset.draftLabel='1';tag.className='badge';tag.textContent='💾 초안';
+        const tag=document.createElement('span');tag.dataset.draftLabel='1';tag.className='badge';tag.innerHTML='<svg class="ic"><use href="#i-save"/></svg> 초안';
         tag.style.cssText='background:#8e44ad;color:white;margin-right:5px';body.insertBefore(tag,body.firstChild);
       }
       const actions=card.querySelector('.pm-actions');

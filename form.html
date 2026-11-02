@@ -57,7 +57,7 @@
                     <div id="form-status" style="text-align:center; padding:50px; color:#666;">데이터를 불러오는 중입니다...</div>
 
                     <form id="customForm" style="display:none;">
-                        <h3 class="form-section-title">👤 응답자 정보</h3>
+                        <h2 class="form-section-title">👤 응답자 정보</h2>
                         <div class="form-grid">
                             <div class="form-group">
                                 <label class="form-label">이름 (필수)</label>
@@ -73,7 +73,7 @@
                             <input type="tel" id="res-contact" class="form-input" placeholder="숫자만 입력하세요" oninput="this.value = autoHyphenPhone(this.value)" maxlength="13">
                         </div>
 
-                        <h3 class="form-section-title" style="margin-top:40px;">📝 응답 항목</h3>
+                        <h2 class="form-section-title" style="margin-top:40px;">📝 응답 항목</h2>
                         <div id="questions-area"></div>
 
                         <div class="btn-center-wrap" style="margin-top: 40px; padding-top:20px; border-top: 1px solid #eee;">
@@ -163,7 +163,7 @@
             document.title = "뉴키즈 - " + data.title;
 
             if (!data.is_active) {
-                statusDiv.innerHTML = "<div><h3 style='color:#d33b3b; margin-bottom:10px;'>마감된 폼입니다.</h3><p style='color:#666;'>현재 응답을 받고 있지 않습니다.</p></div>";
+                statusDiv.innerHTML = "<div><h2 style='color:#d33b3b; margin-bottom:10px;'>마감된 폼입니다.</h3><p style='color:#666;'>현재 응답을 받고 있지 않습니다.</p></div>";
                 sendHeightToParent();
                 return;
             }

@@ -389,7 +389,7 @@
                         const canPreview = ['pdf', 'jpg', 'jpeg', 'png', 'gif'].includes(ext);
 
                         const previewBtn = canPreview && !isLocked ? `
-                                <button onclick="event.stopPropagation(); openFilePreview('${safeUrl}', '${safeName}')" style="background:#b85a17; border:none; color:#fff; padding:6px 14px; border-radius:6px; font-size:0.85rem; font-weight:bold; cursor:pointer; margin-right:8px; box-shadow:0 2px 4px rgba(244,162,97,0.2);">미리보기</button>
+                                <button onclick="event.stopPropagation(); openFilePreview('${safeUrl}', '${safeName}')" style="background:#b85a17; border:none; color:#fff; padding:6px 14px; border-radius:6px; font-size:0.85rem; font-weight:bold; cursor:pointer; margin-right:8px; box-shadow:0 2px 4px rgba(0, 0, 0, 0.15);">미리보기</button>
                             ` : '';
 
                         const btnLabel = isLocked ? '🔒 제한됨' : '다운로드';

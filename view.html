@@ -375,6 +375,10 @@
             if (actualYtId) {
                 playerArea.innerHTML = `<iframe src="https://www.youtube.com/embed/${actualYtId}" allowfullscreen style="width:100%; aspect-ratio:16/9; border:none; border-radius:8px;"></iframe>`;
                 playerArea.style.display = 'block';
+            } else if (/^https:\/\/[a-z0-9]+\.supabase\.co\/storage\/v1\/object\/public\/[^"'<>\s]+$/i.test(rawVideoUrl)) {
+                // 우리 스토리지에 올린 영상 파일(mp4)은 기본 플레이어로 재생
+                playerArea.innerHTML = `<video src="${rawVideoUrl}" controls playsinline preload="metadata" style="width:100%; aspect-ratio:16/9; border-radius:8px; background:#000;"></video>`;
+                playerArea.style.display = 'block';
             } else {
                 playerArea.style.display = 'none';
             }

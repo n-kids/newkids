@@ -377,6 +377,8 @@ function bookView(){
     <div class="plist">${list.map(bookCard).join('') || '<div class="card hint">찾는 교재가 없어요.</div>'}</div>
     ${selCount?`<div class="sticky"><div class="cartbar"><span><b class="num">${selCount}</b>개 교재 · <b class="num">${total}</b>권</span><button class="btn small" id="bCheckout">${book.month} 주문하기</button></div></div>`:''}`;
 }
+// 교재 고르는 칸(A/S·반품)은 가나다 순
+const BOOKS_ABC = [...BOOKS].sort((a,b)=>a.n.localeCompare(b.n,'ko'));
 const emptySel = () => ({q:[0,0,0,0,0,0], st:{}});
 // 연령별(또는 단계별) 수량 칸. 교재 목록과 주문 확인 창에서 같이 씀 (pre = id 앞머리, 두 곳의 id가 겹치지 않게)
 function qtyBoxes(b, s, pre){
@@ -506,7 +508,7 @@ function asView(){
     <div><p class="h2">A/S 신청</p><p class="sub">교재 → 단계 → 호수 순서로 고르고, 사진을 꼭 올려주세요.</p></div>
     <div class="card" style="display:flex;flex-direction:column;gap:12px">
       <div class="field"><label for="asProg">1. 교재</label>
-        <select id="asProg"><option value="">교재를 고르세요</option>${BOOKS.map(x=>`<option ${as.prog===x.n?'selected':''}>${esc(x.n)}</option>`).join('')}</select></div>
+        <select id="asProg"><option value="">교재를 고르세요</option>${BOOKS_ABC.map(x=>`<option ${as.prog===x.n?'selected':''}>${esc(x.n)}</option>`).join('')}</select></div>
       <div class="field"><label for="asStep">2. 단계</label>
         <select id="asStep" ${b?'':'disabled'}><option value="">단계를 고르세요</option>${steps.map(s=>`<option ${as.step===s?'selected':''}>${esc(s)}</option>`).join('')}</select></div>
       <div class="field"><label for="asHo">3. 호수</label>
@@ -546,7 +548,7 @@ function reqView(){
       <span class="hint">확인해서 이 번호로 연락드려요.</span></div>
     ${text('원하는 시간, 아이 수, 궁금한 점을 적어주세요.')}`;
   else body = `
-    <div class="field"><label for="rqBook">1. 교재</label><select id="rqBook"><option value="">교재를 고르세요</option>${BOOKS.map(x=>`<option ${r.item===x.n?'selected':''}>${esc(x.n)}</option>`).join('')}</select></div>
+    <div class="field"><label for="rqBook">1. 교재</label><select id="rqBook"><option value="">교재를 고르세요</option>${BOOKS_ABC.map(x=>`<option ${r.item===x.n?'selected':''}>${esc(x.n)}</option>`).join('')}</select></div>
     <div class="field"><label for="rqHo">2. 호수</label><select id="rqHo"><option value="">호수를 고르세요</option>${HO.map(h=>`<option ${r.ho===h?'selected':''}>${h}</option>`).join('')}</select></div>
     <div class="field"><label for="rqQty">수량 <span class="hint">(선택)</span></label><input id="rqQty" inputmode="numeric" maxlength="4" placeholder="예) 3" value="${esc(r.qty)}"></div>
     <div class="field"><label for="rqReason">반품 사유</label><select id="rqReason"><option value="">사유를 고르세요</option>${RETURN_REASONS.map(x=>`<option ${r.reason===x?'selected':''}>${x}</option>`).join('')}</select></div>

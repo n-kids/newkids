@@ -552,12 +552,18 @@
         async function executeDownload(url, filename) {
             // 1. 다운로드 카운트 즉시 1 증가 및 DB 업데이트 (공통 적용)
             if (postDataCache) {
-                let currentCount = postDataCache.download_count || 0;
-                currentCount += 1;
-                postDataCache.download_count = currentCount;
-
-                document.getElementById('v-download-count').innerText = `📥 다운로드 ${currentCount}회`;
-                window.sb.from('total_posts').update({ download_count: currentCount }).eq('id', currentPostId);
+                const optimistic = (postDataCache.download_count || 0) + 1;
+                postDataCache.download_count = optimistic;
+                document.getElementById('v-download-count').innerText = `📥 다운로드 ${optimistic}회`;
+                // DB에서 원자적으로 +1 (동시 다운로드에도 누락 없음). 다운로드는 기다리지 않고 진행
+                window.sb.rpc('increment_download_count', { p_post_id: Number(currentPostId) })
+                    .then(({ data, error }) => {
+                        if (error) { console.error('다운로드 카운트 기록 실패:', error); return; }
+                        if (typeof data === 'number') {
+                            postDataCache.download_count = data;
+                            document.getElementById('v-download-count').innerText = `📥 다운로드 ${data}회`;
+                        }
+                    });
             }
 
             // 2. 실제 파일 다운로드 실행

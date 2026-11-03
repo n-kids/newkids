@@ -337,13 +337,15 @@ function homeView(){
   return `
     <button class="banner" id="goRec"><span><small>${new Date().getMonth()+1}월 추천 교구</small><b>${esc(recThisMonth() || '이달의 추천 교구')}</b><small>국민서관이 고른 이번 달 교구 보러 가기 ›</small></span>
       ${recThumb()?`<img src="${recThumb()}" alt="" style="width:64px;height:64px;background:#fff;object-fit:contain">`:`<img src="logo-n.png" alt="" style="width:56px;height:56px">`}</button>
-    <div class="quick">
+    <div class="quick three">
       <button data-go="book">${ICON.book}교재 주문</button>
       <button data-go="goods">${ICON.box}물품 주문</button>
       <button data-go="as">${ICON.tool}A/S 신청</button>
-      <button data-go="track">${ICON.doc}거래명세서</button>
     </div>
-    <div class="quick three">${Object.entries(REQ).map(([k,r])=>`<button data-req="${k}">${ICON[r.icon]}${r.title}</button>`).join('')}</div>
+    <div class="quick">
+      <button data-go="track">${ICON.doc}거래명세서</button>
+      ${['event','return','ask'].map(k=>`<button data-req="${k}">${ICON[REQ[k].icon]}${REQ[k].title}</button>`).join('')}
+    </div>
     <a class="card homelink" href="https://n-kids.github.io/newkids/" target="_blank" rel="noopener">
       <img src="logo-n.png" alt=""><span><b>뉴키즈 홈페이지</b><small class="hint">프로그램 소개와 소식 보러 가기</small></span>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></a>

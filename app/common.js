@@ -13,8 +13,15 @@ const AGES = ['만0세','만1세','만2세','만3세','만4세','만5세'];
 // 주문 호수: 이번 달 호만. 15일부터는 다음 달 호도 열림 (예: 11/2 → 11월호, 11/15 → 11월호·12월호)
 const MONTHS = (() => { const d = new Date(), m = d.getMonth() + 1; return d.getDate() >= 15 ? [`${m}월호`, `${m % 12 + 1}월호`] : [`${m}월호`]; })();
 const HO = ['1호(3월)','2호(4월)','3호(5월)','4호(6월)','5호(7월)','6호(8월)','7호(9월)','8호(10월)','9호(11월)','10호(12월)','11호(1월)','12호(2월)'];
-const STATES = { book:['접수','확인','발주완료','배송중'], goods:['접수','확인','발주완료','배송중'], as:['접수','확인','업체 접수','처리완료'] };
-const KIND_NAME = { book:'교재', goods:'물품', as:'A/S' };
+const STATES = { book:['접수','확인','발주완료','배송중'], goods:['접수','확인','발주완료','배송중'], as:['접수','확인','업체 접수','처리완료'],
+  ask:['접수','확인','답변 완료'], event:['접수','확인','안내 완료'], return:['접수','확인','업체 접수','처리완료'] };
+const KIND_NAME = { book:'교재', goods:'물품', as:'A/S', ask:'문의', event:'행사', return:'반품' };
+// 문의·요청 (주문이 아닌 것). 내용은 as_info·memo·photos 에 담음
+const REQ = { ask:{title:'단순 문의', icon:'chat'}, event:{title:'행사 문의', icon:'party'}, return:{title:'반품 요청', icon:'undo'} };
+const ASK_TOPICS = ['교재','물품','배송','결제·서류','기타'];
+const RETURN_REASONS = ['파손·불량','다른 물건이 왔어요','수량이 더 왔어요','주문 실수','기타'];
+const isOrder = o => o.kind === 'book' || o.kind === 'goods';
+const isDone = o => o.state >= STATES[o.kind].length - 1;
 const PAY_NAME = { bank:'계좌이체', invoice:'월말 청구' };
 const CATALOGS = { ls:{name:'리틀스마트 카탈로그', pages:LS_PAGES}, rk:{name:'2027 라온키즈 카탈로그', pages:RK_PAGES} };
 const catImg = (k, n) => `${k}/p${String(n).padStart(2,'0')}.jpg`;
@@ -30,6 +37,9 @@ const ICON = {
   blocks:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="12" width="8" height="8" rx="1.5"/><rect x="13" y="12" width="8" height="8" rx="1.5"/><rect x="8" y="3" width="8" height="8" rx="1.5"/></svg>',
   gift:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="9" width="18" height="12" rx="1.5"/><path d="M3 13h18M12 9v12M12 9c-2-4-6-4-6-1.5S10 9 12 9zm0 0c2-4 6-4 6-1.5S14 9 12 9z"/></svg>',
   shirt:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M8 3l-5 3 2 5 3-1v11h8V10l3 1 2-5-5-3c0 2-2 3-4 3S8 5 8 3z"/></svg>',
+  chat:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/></svg>',
+  party:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l5-14 9 9z"/><path d="M14 4v2M18 6l-1.5 1.5M20 10h-2"/></svg>',
+  undo:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-4"/></svg>',
   doc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 12h7M9 16h7"/></svg>',
 };
 
@@ -62,11 +72,14 @@ const ageSummary = q => (q || []).map((n, i) => n ? `${AGES[i].replace('만','')
 // 교재 한 줄: q = 연령별(만0~만5) 수량, st = 단계별 수량 {단계: 수량} ('' = 단계 없이 수량)
 const lineTotal = l => (l.q || []).reduce((a, b) => a + (+b || 0), 0) + Object.values(l.st || {}).reduce((a, b) => a + (+b || 0), 0);
 const lineSummary = l => [ageSummary(l.q), ...Object.entries(l.st || {}).filter(([, v]) => v).map(([k, v]) => `${k === '' ? '수량' : /^\d+$/.test(k) ? k + '단계' : k} ${v}`)].filter(Boolean).join(' · ');
-const orderTitle = o => o.kind === 'book' ? `교재 ${o.month || ''} 주문` : o.kind === 'goods' ? '물품 주문' : 'A/S 신청';
+const orderTitle = o => o.kind === 'book' ? `교재 ${o.month || ''} 주문` : o.kind === 'goods' ? '물품 주문' : o.kind === 'as' ? 'A/S 신청' : REQ[o.kind].title;
 function orderSummary(o){
   if (o.kind === 'book') return (o.lines || []).map(l => l.name).join(', ') + ` · ${(o.lines || []).reduce((a, l) => a + lineTotal(l), 0)}권`;
   if (o.kind === 'goods') return (o.lines || []).map(l => `${l.name} ${l.qty}개`).join(', ');
   const a = o.as_info || {};
+  if (o.kind === 'ask') return `${a.topic ? '[' + a.topic + '] ' : ''}${o.memo || ''}`;
+  if (o.kind === 'event') return [a.name, a.date].filter(Boolean).join(' · ') || o.memo || '';
+  if (o.kind === 'return') return [`${a.item || ''}${a.ho ? ' ' + a.ho : ''}`, a.qty ? `${a.qty}개` : '', a.reason].filter(Boolean).join(' · ');
   return `${a.prog || ''} ${a.step && a.step !== '단계 없음' ? a.step + '단계 ' : ''}${a.ho || ''}`;
 }
 

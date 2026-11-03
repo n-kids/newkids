@@ -78,6 +78,17 @@ button.banner img{border-radius:var(--r-xs)!important}
 .homelink img{width:40px;height:40px;flex:none}
 .homelink span{flex:1;display:flex;flex-direction:column;gap:2px}
 .homelink svg{width:20px;height:20px;flex:none;color:var(--muted)}
+.quick.three{grid-template-columns:repeat(3,1fr)}
+.eline{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:8px 12px;display:flex;flex-direction:column;gap:8px}
+.eline-h{display:flex;align-items:center;gap:8px}
+.eline-h b{flex:1;min-width:0;font-size:14px;line-height:20px;font-weight:600}
+.eline-q{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.eline-q .step{background:var(--sunk);border-radius:var(--r-xs);padding:4px}
+.eline .ages{padding:0}
+.xbtn{border:0;background:none;color:var(--muted);font-size:12px;line-height:16px;font-weight:600;padding:4px 8px;border-radius:var(--r-2xs);min-height:28px;transition:background-color .3s var(--ease)}
+.xbtn:hover{background:var(--sunk);color:var(--ink)}
+.morebtn{border:1px dashed var(--accent);background:var(--surface);color:var(--accent-text);border-radius:var(--r-sm);padding:8px 12px;min-height:40px;font-size:14px;line-height:20px;font-weight:600;transition:background-color .3s var(--ease)}
+.morebtn:hover{background:var(--soft)}
 .notice{display:flex;flex-direction:column;gap:8px;margin:8px 0 0;padding:0;list-style:none}
 .notice li{display:flex;gap:8px;font-size:14px;line-height:20px;align-items:baseline;text-wrap:pretty}
 
@@ -150,7 +161,8 @@ button.banner img{border-radius:var(--r-xs)!important}
   animation:sheet-up .5s var(--ease)}
 @keyframes sheet-bg{from{opacity:0}to{opacity:1}}
 @keyframes sheet-up{from{transform:translateY(32px);opacity:0}to{transform:none;opacity:1}}
-.grab{width:40px;height:4px;border-radius:2px;background:var(--line);margin:0 auto}
+.grab{width:40px;height:4px;border-radius:2px;background:var(--line);margin:-8px auto 0;padding:8px 40px;box-sizing:content-box;background-clip:content-box;flex:none;touch-action:none}
+.sheet .panel{overscroll-behavior:contain}
 .opts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .opts.col{grid-template-columns:1fr}
 .opt{display:flex;gap:8px;align-items:flex-start;border:1px solid var(--line);border-radius:var(--r-sm);padding:12px;cursor:pointer;background:var(--surface);transition:background-color .3s var(--ease),border-color .3s var(--ease)}
@@ -207,6 +219,8 @@ let book = {month:MONTHS[MONTHS.length-1], tag:'전체', q:'', sel:{}};
 let goods = {sec:null, cat:'rec', q:'', shown:24, wear:'전체'};
 let cart = {};
 let as = {prog:'', step:'', ho:'', photos:[], text:''};
+const blankReq = kind => ({kind, topic:'', text:'', name:'', date:'', phone:me?fmtPhone(me.phone||''):'', item:'', ho:'', qty:'', reason:'', photos:[]});
+let req = blankReq('ask');   // 단순 문의 · 행사 문의 · 반품 요청
 let stmtOpen = null;
 let checkout = null;
 let busy = false;
@@ -220,6 +234,32 @@ function pushView(){
 }
 function sheetOpened(){ try { if (!history.state?.sheet) history.pushState({sheet:1}, ''); } catch(_){} }
 function closeSheet(){ checkout = null; $('#sheetHost').innerHTML = ''; }
+function dismissSheet(){ if (history.state?.sheet) history.back(); else closeSheet(); }
+// 아래에서 올라온 창: 아래로 쓸어 내리거나 바깥 어두운 곳을 누르면 닫힘 (창 안을 내려 본 상태면 맨 위 손잡이에서만)
+let drag = null;
+document.addEventListener('touchstart', e => {
+  const p = e.target.closest('.sheet .panel'); if (!p) return;
+  if (p.scrollTop > 0 && !e.target.closest('.grab')) return;
+  drag = {p, y0:e.touches[0].clientY, t0:Date.now(), dy:0};
+}, {passive:true});
+document.addEventListener('touchmove', e => {
+  if (!drag) return;
+  const dy = e.touches[0].clientY - drag.y0;
+  if (dy <= 0 && !drag.dy){ drag = null; return; }   // 위로 밀면 그냥 창 안 스크롤
+  drag.dy = Math.max(0, dy);
+  drag.p.style.transition = 'none'; drag.p.style.transform = `translateY(${drag.dy}px)`;
+  if (e.cancelable) e.preventDefault();
+}, {passive:false});
+document.addEventListener('touchend', () => {
+  if (!drag) return;
+  const {p, dy, t0} = drag; drag = null;
+  if (dy > Math.min(120, p.offsetHeight * .25) || (dy > 40 && dy / (Date.now() - t0) > .5)){
+    p.style.transition = 'transform .25s var(--ease)'; p.style.transform = 'translateY(100%)'; setTimeout(dismissSheet, 200);
+  } else if (dy){ p.style.transition = 'transform .3s var(--ease)'; p.style.transform = ''; }
+});
+document.addEventListener('click', e => { if (e.target.classList?.contains('sheet')) dismissSheet(); });
+// 수량을 바꾸면 목록과 주문 확인 창을 같이 다시 그림
+function redraw(){ keepScroll(render); if (checkout) renderSheet(); }
 window.addEventListener('popstate', () => {
   if ($('#sheetHost .sheet')){ closeSheet(); return; }
   const v = navStack.pop(); if (!v || !me) return;
@@ -244,7 +284,7 @@ async function loadOrders(){ if (me) myOrders = await rpc('nk_my_orders', {p_tok
 function render(){
   const root = $('#root');
   if (!me){ root.innerHTML = authView(); return; }
-  const active = myOrders.filter(o=>o.state < 3).length;
+  const active = myOrders.filter(o=>!isDone(o)).length;
   root.innerHTML = `
     <div class="appbar">
       <span class="brandmark"><img src="logo-n.png" alt=""><span><b>뉴키즈</b><small>어린이집 · 유치원 파트너</small></span></span>
@@ -252,7 +292,7 @@ function render(){
     </div>
     <div class="scroll" id="appScroll">
       ${me.status!=='approved'?`<div class="pending"><b>가입 승인 대기 중이에요.</b> 뉴키즈에서 확인하면 바로 주문할 수 있어요. 그동안 상품은 둘러보실 수 있습니다.</div>`:''}
-      ${({home:homeView,book:bookView,goods:goodsView,as:asView,track:trackView})[tab]()}
+      ${({home:homeView,book:bookView,goods:goodsView,as:asView,req:reqView,track:trackView})[tab]()}
     </div>
     <nav class="tabbar">${[['home','홈','home'],['book','교재 주문','book'],['goods','물품 주문','box'],['as','A/S','tool'],['track','내 주문','list']].map(([k,l,i])=>
       `<button data-tab="${k}" ${tab===k?'aria-current="page"':''}>${ICON[i]}${l}${k==='track'&&active?`<span class="dot num">${active}</span>`:''}</button>`).join('')}</nav>`;
@@ -303,6 +343,7 @@ function homeView(){
       <button data-go="as">${ICON.tool}A/S 신청</button>
       <button data-go="track">${ICON.doc}거래명세서</button>
     </div>
+    <div class="quick three">${Object.entries(REQ).map(([k,r])=>`<button data-req="${k}">${ICON[r.icon]}${r.title}</button>`).join('')}</div>
     <a class="card homelink" href="https://n-kids.github.io/newkids/" target="_blank" rel="noopener">
       <img src="logo-n.png" alt=""><span><b>뉴키즈 홈페이지</b><small class="hint">프로그램 소개와 소식 보러 가기</small></span>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></a>
@@ -333,16 +374,21 @@ function bookView(){
     ${selCount?`<div class="sticky"><div class="cartbar"><span><b class="num">${selCount}</b>개 교재 · <b class="num">${total}</b>권</span><button class="btn small" id="bCheckout">${book.month} 주문하기</button></div></div>`:''}`;
 }
 const emptySel = () => ({q:[0,0,0,0,0,0], st:{}});
-function bookCard(b){
-  const on = !!book.sel[b.n]; const s = book.sel[b.n];
+// 연령별(또는 단계별) 수량 칸. 교재 목록과 주문 확인 창에서 같이 씀 (pre = id 앞머리, 두 곳의 id가 겹치지 않게)
+function qtyBoxes(b, s, pre){
   const n = esc(b.n);
   const box = (id, label, val, key, input) => `<div class="age"><label for="${id}">${label}</label>
       <div class="step"><button data-${key}="${n}|${input}|-1" aria-label="${n} ${label} 빼기">−</button>
       <input id="${id}" class="num" inputmode="numeric" value="${val}" data-${key}input="${n}|${input}">
       <button data-${key}="${n}|${input}|1" aria-label="${n} ${label} 더하기">+</button></div></div>`;
-  const boxes = !on ? '' : BOOK_STEPS[b.n]
-    ? BOOK_STEPS[b.n].map((st,i)=>box(`s-${n}-${i}`, stepLabel(st), s.st[st]||0, 'stp', st)).join('')
-    : AGES.map((a,j)=>agesOf(b.n).includes(j) ? box(`a-${n}-${j}`, a, s.q[j], 'age', j) : '').join('');
+  return BOOK_STEPS[b.n]
+    ? BOOK_STEPS[b.n].map((st,i)=>box(`${pre}s-${n}-${i}`, stepLabel(st), s.st[st]||0, 'stp', st)).join('')
+    : AGES.map((a,j)=>agesOf(b.n).includes(j) ? box(`${pre}a-${n}-${j}`, a, s.q[j], 'age', j) : '').join('');
+}
+function bookCard(b){
+  const on = !!book.sel[b.n]; const s = book.sel[b.n];
+  const n = esc(b.n);
+  const boxes = on ? qtyBoxes(b, s, '') : '';
   return `<div class="prog ${on?'on':''}">
     <button class="prog-h" data-prog="${n}" aria-expanded="${on}"><span class="ck">${on?'✓':''}</span>
       <span style="min-width:0"><b>${n}</b><span class="tags">${b.t.map(t=>'#'+t).join(' ')}</span></span>
@@ -465,9 +511,51 @@ function asView(){
     <button class="btn block" id="asSubmit" ${ready?'':'disabled'}>${busy?'보내는 중…':'A/S 신청하기'}</button>`;
 }
 
+/* 단순 문의 · 행사 문의 · 반품 요청 */
+function reqReady(){
+  const r = req;
+  if (busy) return false;
+  if (r.kind==='ask') return !!r.text.trim();
+  if (r.kind==='event') return !!(r.name && r.date && /^\d{9,11}$/.test(digits(r.phone)));
+  return !!(r.item && r.ho && r.reason);
+}
+function reqView(){
+  const r = req, k = r.kind;
+  const text = (ph, label='내용', need=false) => `<div class="field"><label for="rqText">${label} ${need?'<span class="req">(필수)</span>':'<span class="hint">(선택)</span>'}</label>
+    <textarea id="rqText" maxlength="1000" placeholder="${ph}">${esc(r.text)}</textarea></div>`;
+  let body = '';
+  if (k==='ask') body = `
+    <div class="field"><span class="flabel">무엇이 궁금하세요? <span class="hint">(선택)</span></span>
+      <div class="chips" style="flex-wrap:wrap">${ASK_TOPICS.map(t=>`<button class="chip" data-rqtopic="${t}" aria-pressed="${r.topic===t}">${t}</button>`).join('')}</div></div>
+    ${text('예) 다음 달 교재 배송일이 언제인가요?', '문의 내용', true)}`;
+  else if (k==='event') body = `
+    <div class="field"><span class="flabel">1. 행사 고르기</span>
+      ${EVENT_GROUPS.map(([g, names])=>`<p class="hint" style="margin:4px 0 0;font-weight:700">${g}</p>
+        <div class="chips" style="flex-wrap:wrap">${names.map(n=>`<button class="chip" data-rqevent="${esc(n)}" aria-pressed="${r.name===n}">${esc(n)}</button>`).join('')}</div>`).join('')}</div>
+    <div class="field"><label for="rqDate">2. 희망 날짜</label><input id="rqDate" type="date" value="${esc(r.date)}"></div>
+    <div class="field"><label for="rqPhone">3. 연락받을 번호</label><input id="rqPhone" inputmode="tel" autocomplete="tel" maxlength="13" placeholder="010-0000-0000" value="${esc(r.phone)}">
+      <span class="hint">확인해서 이 번호로 연락드려요.</span></div>
+    ${text('원하는 시간, 아이 수, 궁금한 점을 적어주세요.')}`;
+  else body = `
+    <div class="field"><label for="rqBook">1. 교재</label><select id="rqBook"><option value="">교재를 고르세요</option>${BOOKS.map(x=>`<option ${r.item===x.n?'selected':''}>${esc(x.n)}</option>`).join('')}</select></div>
+    <div class="field"><label for="rqHo">2. 호수</label><select id="rqHo"><option value="">호수를 고르세요</option>${HO.map(h=>`<option ${r.ho===h?'selected':''}>${h}</option>`).join('')}</select></div>
+    <div class="field"><label for="rqQty">수량 <span class="hint">(선택)</span></label><input id="rqQty" inputmode="numeric" maxlength="4" placeholder="예) 3" value="${esc(r.qty)}"></div>
+    <div class="field"><label for="rqReason">반품 사유</label><select id="rqReason"><option value="">사유를 고르세요</option>${RETURN_REASONS.map(x=>`<option ${r.reason===x?'selected':''}>${x}</option>`).join('')}</select></div>
+    <div class="field"><span class="flabel">사진 <span class="hint">(선택)</span></span>
+      <div class="photos">${r.photos.map(s=>`<img src="${s}" alt="첨부 사진">`).join('')}
+        ${r.photos.length<4?`<label class="upload" for="rqFile">+ 사진<br>추가</label>`:''}<input id="rqFile" type="file" accept="image/*" multiple hidden></div></div>
+    ${text('예) 7호가 2권 더 왔어요. 가져가 주세요.')}`;
+  return `
+    <button class="backbtn" data-tab="home">${ICON.back}홈으로</button>
+    <div><p class="h2">${REQ[k].title}</p><p class="sub">${({ask:'궁금한 점을 남겨주시면 확인해서 연락드려요.', event:'원하는 행사와 날짜를 고르시면 확인해서 연락드려요.', return:'반품할 교재와 호수를 알려주시면 회수 방법을 안내드려요.'})[k]}</p></div>
+    <div class="chips">${Object.entries(REQ).map(([key,x])=>`<button class="chip" data-reqkind="${key}" aria-pressed="${k===key}">${x.title}</button>`).join('')}</div>
+    <div class="card" style="display:flex;flex-direction:column;gap:12px">${body}</div>
+    <button class="btn block" id="rqSubmit" ${reqReady()?'':'disabled'}>${busy?'보내는 중…':({ask:'문의 보내기', event:'행사 문의 보내기', return:'반품 요청하기'})[k]}</button>`;
+}
+
 /* 내 주문 */
 function trackView(){
-  const backLabel = backTo ? ({book:'교재 주문', goods:'물품 주문', as:'A/S 신청'})[backTo.tab] : '';
+  const backLabel = backTo ? ({book:'교재 주문', goods:'물품 주문', as:'A/S 신청', req:REQ[backTo.kind]?.title})[backTo.tab] : '';
   return `${backTo?`<div class="backrow"><button class="backbtn" id="backToShop">${ICON.back}${backLabel} 계속하기</button><button class="backbtn" data-tab="home">홈으로</button></div>`:''}
     <div class="row"><div><p class="h2">내 주문</p><p class="sub">처리 상태를 보고, 필요하면 거래명세서를 요청하세요.</p></div>
       <button class="btn line small" id="reload">새로 고침</button></div>
@@ -476,7 +564,7 @@ function trackView(){
       const docs = [];
       if (o.quote_want) docs.push(`<span class="tag ${o.quote_sent?'ok':'info'}">견적서 ${o.quote_sent?'발송 완료':'요청함'}</span>`);
       if (o.stmt_want) docs.push(`<span class="tag ${o.stmt_sent?'ok':'info'}">거래명세서 ${o.stmt_sent?'발송 완료':'요청함'}</span>`);
-      const canStmt = o.kind!=='as' && !o.stmt_want;
+      const canStmt = isOrder(o) && !o.stmt_want;
       return `<div class="trk">
         <div class="trk-top"><b>${orderTitle(o)}</b><small class="num">${fmtDate(o.created_at)}</small></div>
         <p>${esc(orderSummary(o))}</p>
@@ -493,23 +581,37 @@ function openCheckout(kind){ checkout = {kind, quote:'no', email:me.email||'', p
 function renderSheet(){
   if (!checkout){ $('#sheetHost').innerHTML=''; return; }
   const c = checkout;
-  let lines = '', sum = 0, hasUnpriced = false;
+  // 품목마다 바로 수량을 바꾸거나 뺄 수 있게 (교재는 연령·단계 칸, 물품은 수량 칸)
+  let lines = '', sum = 0, hasUnpriced = false, count = '';
   if (c.kind==='book'){
-    lines = Object.entries(book.sel).map(([n,s])=>`<div class="li"><span>${esc(n)} <span class="hint">${esc(lineSummary(s))}</span></span><span class="num">${lineTotal(s)}${n==='쿡쿡'?'개':'권'}</span></div>`).join('');
+    const sel = Object.entries(book.sel);
+    count = `${sel.length}개 교재 · ${sel.reduce((a,[,s])=>a+lineTotal(s),0)}권`;
+    lines = sel.map(([n,s])=>{ const b = BOOKS.find(x=>x.n===n);
+      return `<div class="eline"><div class="eline-h"><b>${esc(n)}</b><span class="num">${lineTotal(s)}${n==='쿡쿡'?'개':'권'}</span>
+        <button class="xbtn" data-unsel="${esc(n)}" aria-label="${esc(n)} 빼기">빼기</button></div>
+        ${b?`<div class="ages">${qtyBoxes(b, s, 'c')}</div>`:''}</div>`; }).join('');
   } else {
-    const items = Object.values(cart);
-    hasUnpriced = items.some(i=>!i.price);
-    sum = items.reduce((a,i)=>a+i.price*i.qty,0);
-    lines = items.map(i=>`<div class="li"><span>${esc(i.name)} × <span class="num">${i.qty}</span></span><span class="num">${i.price?won(i.price*i.qty):'가격 문의'}</span></div>`).join('')
+    const items = Object.entries(cart);
+    hasUnpriced = items.some(([,i])=>!i.price);
+    sum = items.reduce((a,[,i])=>a+i.price*i.qty,0);
+    count = `${items.length}개 품목 · ${items.reduce((a,[,i])=>a+i.qty,0)}개`;
+    lines = items.map(([id,i])=>`<div class="eline"><div class="eline-h"><b>${esc(i.name)}</b><span class="num">${i.price?won(i.price*i.qty):'가격 문의'}</span></div>
+        <div class="eline-q"><div class="step"><button data-gq="${esc(id)}|-1" aria-label="${esc(i.name)} 하나 빼기" ${i.qty<=1?'disabled':''}>−</button>
+          <input class="num" inputmode="numeric" aria-label="${esc(i.name)} 수량" value="${i.qty}" data-gqinput="${esc(id)}">
+          <button data-gq="${esc(id)}|1" aria-label="${esc(i.name)} 하나 더">+</button></div>
+          <button class="xbtn" data-gdel="${esc(id)}" aria-label="${esc(i.name)} 빼기">빼기</button></div></div>`).join('')
       + (sum?`<div class="total"><span>${hasUnpriced?'가격 있는 품목 합계':'합계'}</span><span class="num">${won(sum)}</span></div>`:'');
   }
   const payOpts = [['bank','계좌이체', hasUnpriced?'가격 확인 후 계좌 안내':'주문 후 계좌 안내'],['invoice','월말 청구','거래명세서로 청구']];
   if (c.kind==='goods' && !payOpts.some(p=>p[0]===c.pay)) c.pay = 'bank';
   const emailOk = c.quote==='no' || /.+@.+\..+/.test(c.email);
+  const y = $('#sheetHost .panel')?.scrollTop || 0;
   $('#sheetHost').innerHTML = `<div class="sheet ${$('#sheetHost .sheet')?'still':''}"><div class="panel" role="dialog" aria-label="주문 확인">
     <div class="grab"></div>
     <div class="row"><p class="h2">주문 확인</p>${c.kind==='book'?`<span class="tag">${book.month}</span>`:''}</div>
-    <div class="card" style="padding:10px 12px">${lines}</div>
+    <span class="hint">${count} · 여기서 바로 수량을 바꾸거나 뺄 수 있어요.</span>
+    ${lines}
+    <button class="morebtn" id="coMore">+ ${c.kind==='book'?'교재':'물품'} 더 담기</button>
     <span class="flabel">견적서</span>
     <div class="opts">
       <label class="opt"><input type="radio" name="quote" value="yes" ${c.quote==='yes'?'checked':''}><span><b>견적서 요청</b><small>견적서를 메일로 받고 주문</small></span></label>
@@ -524,6 +626,7 @@ function renderSheet(){
     <button class="btn block sun" id="coGo" ${emailOk&&!busy?'':'disabled'}>${busy?'보내는 중…':'주문 넣기'}</button>
     <button class="btn block line" id="coClose">닫기</button>
   </div></div>`;
+  $('#sheetHost .panel').scrollTop = y;
 }
 
 async function placeOrder(){
@@ -586,12 +689,12 @@ document.addEventListener('click', async e => {
   // 교재
   if (d.tag){ book.tag = d.tag; render(); return; }
   if (d.prog){ if (book.sel[d.prog]) delete book.sel[d.prog]; else book.sel[d.prog] = emptySel(); keepScroll(render); return; }
-  if (d.age){ const [n,j,dl] = d.age.split('|'); const q = book.sel[n].q; q[+j] = Math.max(0, q[+j] + +dl); keepScroll(render); return; }
-  if (d.stp!==undefined){ const [n,st,dl] = d.stp.split('|'); const m = book.sel[n].st; m[st] = Math.max(0, (m[st]||0) + +dl); if (!m[st]) delete m[st]; keepScroll(render); return; }
+  if (d.age){ const [n,j,dl] = d.age.split('|'); const q = book.sel[n].q; q[+j] = Math.max(0, q[+j] + +dl); redraw(); return; }
+  if (d.stp!==undefined){ const [n,st,dl] = d.stp.split('|'); const m = book.sel[n].st; m[st] = Math.max(0, (m[st]||0) + +dl); if (!m[st]) delete m[st]; redraw(); return; }
   if (t.id==='bRepeat'){ const last = lastBook(); book.sel = {}; last.lines.forEach(l=>{ if (BOOKS.some(b=>b.n===l.name)) book.sel[l.name] = {q:[...(l.q||[0,0,0,0,0,0])], st:{...(l.st||{})}}; }); render(); toast('지난번 주문을 그대로 담았어요. 바뀐 반만 고치세요.'); return; }
   if (t.id==='bCheckout'){ openCheckout('book'); return; }
   // 물품
-  if (t.id==='backToShop'){ const b = backTo; backTo = null; pushView(); tab = b.tab; if (b.tab==='goods'){ goods.sec = b.sec; goods.cat = b.cat; goods.wear = b.wear; } render(); $('#appScroll').scrollTop=0; return; }
+  if (t.id==='backToShop'){ const b = backTo; backTo = null; pushView(); tab = b.tab; if (b.tab==='req') req = blankReq(b.kind); if (b.tab==='goods'){ goods.sec = b.sec; goods.cat = b.cat; goods.wear = b.wear; } render(); $('#appScroll').scrollTop=0; return; }
   if (d.sec!==undefined){ pushView(); goods.sec = d.sec||null; goods.q=''; goods.shown=24; goods.cat='rec'; render(); $('#appScroll').scrollTop=0; return; }
   if (d.cat!==undefined){ goods.cat = d.cat==='rec' ? 'rec' : +d.cat; goods.shown=24; render(); return; }
   if (d.wear){ goods.wear = d.wear; render(); return; }
@@ -600,8 +703,31 @@ document.addEventListener('click', async e => {
   if (t.id==='gCheckout'){ openCheckout('goods'); return; }
   if (d.catPage){ const [k,n] = d.catPage.split('|'); openCatalog(k, +n); return; }
   // 시트
-  if (t.id==='coClose'){ if (history.state?.sheet) history.back(); else closeSheet(); return; }
+  if (t.id==='coClose' || t.id==='coMore'){ dismissSheet(); return; }
   if (t.id==='coGo'){ placeOrder(); return; }
+  if (d.unsel!==undefined){ delete book.sel[d.unsel]; if (!Object.keys(book.sel).length) dismissSheet(); redraw(); return; }
+  if (d.gq){ const [id,dl] = d.gq.split('|'); if (cart[id]) cart[id].qty = Math.max(1, cart[id].qty + +dl); redraw(); return; }
+  if (d.gdel!==undefined){ delete cart[d.gdel]; if (!Object.keys(cart).length) dismissSheet(); redraw(); return; }
+  // 단순 문의 · 행사 문의 · 반품 요청
+  if (d.req){ pushView(); req = blankReq(d.req); tab = 'req'; render(); $('#appScroll').scrollTop = 0; return; }
+  if (d.reqkind){ req = blankReq(d.reqkind); keepScroll(render); return; }
+  if (d.rqtopic){ req.topic = req.topic===d.rqtopic ? '' : d.rqtopic; keepScroll(render); return; }
+  if (d.rqevent){ req.name = req.name===d.rqevent ? '' : d.rqevent; keepScroll(render); return; }
+  if (t.id==='rqSubmit'){
+    const r = req, k = r.kind;
+    const info = k==='ask' ? {topic:r.topic}
+      : k==='event' ? {group:(EVENT_GROUPS.find(([,ns])=>ns.includes(r.name))||[''])[0], name:r.name, date:r.date, phone:digits(r.phone)}
+      : {cat:'교재', item:r.item, ho:r.ho, qty:digits(r.qty), reason:r.reason, vendor:BOOKS.find(b=>b.n===r.item)?.v||''};
+    const order = {kind:k, as_info:info, memo:r.text.trim()};
+    if (k==='return' && r.photos.length) order.photos = r.photos;
+    busy = true; keepScroll(render);
+    try {
+      await rpc('nk_place_order', {p_token:me.token, p_order:order});
+      req = blankReq(k); await loadOrders(); backTo = {tab:'req', kind:k}; pushView(); tab='track'; busy=false; render();
+      toast(({ask:'문의가 접수됐어요. 확인해서 연락드릴게요.', event:'행사 문의가 접수됐어요. 담당자가 연락드릴게요.', return:'반품 요청이 접수됐어요.'})[k]);
+    } catch(err){ busy=false; keepScroll(render); toast(err.message); }
+    return;
+  }
   // A/S
   if (t.id==='asSubmit'){
     const b = BOOKS.find(x=>x.n===as.prog);
@@ -631,6 +757,8 @@ function onTyping(e){
   if (id==='qEmail'){ checkout.email = e.target.value; const b = $('#coGo'); if (b) b.disabled = busy || (checkout.quote==='yes' && !/.+@.+\..+/.test(checkout.email)); }
   if (id==='asText'){ as.text = e.target.value; }
   if (id==='coMemo' && checkout){ checkout.memo = e.target.value; }
+  const rq = {rqText:'text', rqPhone:'phone', rqQty:'qty', rqDate:'date'}[id];
+  if (rq){ req[rq] = e.target.value; const b = $('#rqSubmit'); if (b) b.disabled = !reqReady(); }
   if (id==='bSearch' || id==='gSearch'){
     if (id==='bSearch') book.q = e.target.value; else { goods.q = e.target.value; goods.shown = 24; }
     clearTimeout(searchTimer); searchTimer = setTimeout(() => refreshBelow(id), 200);
@@ -660,8 +788,16 @@ document.addEventListener('change', e => {
   const el = e.target;
   if (el.name==='region'){ auth.region = el.value; updateAuthButtons(); }
   if (el.id==='bMonth'){ book.month = el.value; render(); }
-  if (el.dataset.ageinput){ const [n,j] = el.dataset.ageinput.split('|'); book.sel[n].q[+j] = Math.max(0, parseInt(el.value)||0); keepScroll(render); }
-  if (el.dataset.stpinput!==undefined){ const [n,st] = el.dataset.stpinput.split('|'); const v = Math.max(0, parseInt(el.value)||0); if (v) book.sel[n].st[st] = v; else delete book.sel[n].st[st]; keepScroll(render); }
+  if (el.dataset.ageinput){ const [n,j] = el.dataset.ageinput.split('|'); book.sel[n].q[+j] = Math.max(0, parseInt(el.value)||0); redraw(); }
+  if (el.dataset.stpinput!==undefined){ const [n,st] = el.dataset.stpinput.split('|'); const v = Math.max(0, parseInt(el.value)||0); if (v) book.sel[n].st[st] = v; else delete book.sel[n].st[st]; redraw(); }
+  if (el.dataset.gqinput!==undefined){ const c = cart[el.dataset.gqinput]; if (c) c.qty = Math.max(1, parseInt(el.value)||1); redraw(); }
+  if (el.id==='rqBook'){ req.item = el.value; keepScroll(render); }
+  if (el.id==='rqHo'){ req.ho = el.value; const b = $('#rqSubmit'); if (b) b.disabled = !reqReady(); }
+  if (el.id==='rqReason'){ req.reason = el.value; const b = $('#rqSubmit'); if (b) b.disabled = !reqReady(); }
+  if (el.id==='rqFile'){
+    const files = [...el.files].slice(0, 4-req.photos.length);
+    Promise.all(files.map(f=>shrinkPhoto(f, 1280, .72))).then(list=>{ req.photos.push(...list.filter(Boolean)); keepScroll(render); });
+  }
   if (el.name==='quote'){ checkout.quote = el.value; renderSheet(); }
   if (el.name==='pay'){ checkout.pay = el.value; renderSheet(); }
   if (el.id==='asProg'){ as.prog = el.value; as.step=''; as.ho=''; keepScroll(render); }

@@ -41,7 +41,8 @@ body{padding:20px max(16px,env(safe-area-inset-right,0px)) 48px max(16px,env(saf
 .kind{font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:8px;white-space:nowrap}
 .kind.book{background:var(--ok-soft);color:var(--ok)}
 .kind.goods{background:var(--soft);color:var(--ink)}
-.kind.as{background:var(--info-soft);color:var(--info)}
+.kind.as,.kind.return{background:var(--info-soft);color:var(--info)}
+.kind.ask,.kind.event{background:var(--warn-soft);color:var(--warn)}
 .kind.doc{background:var(--warn-soft);color:var(--warn)}
 .detail{grid-column:1/-1;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
 .tbl-wrap{overflow-x:auto}
@@ -111,20 +112,21 @@ function render(){
   const need = orders.filter(o => o.state === 0);
   const quotes = orders.filter(o => o.quote_want && !o.quote_sent);
   const stmts = orders.filter(o => o.stmt_want && !o.stmt_sent);
-  const asOpen = orders.filter(o => o.kind === 'as' && o.state > 0 && o.state < 3);
-  const ship = orders.filter(o => o.kind !== 'as' && o.state === 2);
+  const asOpen = orders.filter(o => (o.kind === 'as' || o.kind === 'return') && o.state > 0 && !isDone(o));
+  const asks = orders.filter(o => (o.kind === 'ask' || o.kind === 'event') && o.state === 1);
+  const ship = orders.filter(o => isOrder(o) && o.state === 2);
   const sheet = orders.filter(o => o.kind === 'book' && o.state >= 1 && !o.sheet_synced_at);
   const sheetNotes = orders.filter(o => o.kind === 'book' && o.sheet_synced_at && o.sheet_note && o.state < 3);
   const vq = vendorQueue();
   const pending = members.filter(m => m.status === 'pending');
-  const todo = need.length + quotes.length + stmts.length + asOpen.length + ship.length;
+  const todo = need.length + asks.length + quotes.length + stmts.length + asOpen.length + ship.length;
   root.innerHTML = `
     <div class="top">
       <span class="brandmark"><img src="logo-n.png" alt=""><h1>뉴키즈 주문관리</h1></span>
       <span class="right"><span class="hint">${esc(session.user.email)}</span><button class="btn line small" id="reload">새로 고침</button><button class="btn line small" id="csv">주문 내려받기</button><button class="btn line small" id="logout">로그아웃</button></span>
     </div>
     <div class="stats">
-      <div class="stat ${need.length?'hot':''}"><small>새 주문·A/S</small><b class="num">${need.length}</b></div>
+      <div class="stat ${need.length?'hot':''}"><small>새 주문·요청</small><b class="num">${need.length}</b></div>
       <div class="stat"><small>업체 발주 대기</small><b class="num">${vq.length}</b></div>
       <div class="stat"><small>견적서 요청</small><b class="num">${quotes.length}</b></div>
       <div class="stat"><small>거래명세서 요청</small><b class="num">${stmts.length}</b></div>
@@ -132,7 +134,7 @@ function render(){
     </div>
     <nav class="nav">${[['todo','할 일',todo],['vendor','업체별 발주',vq.length],['kg','원별 보기',0],['members','가입한 원',pending.length]].map(([k,l,n]) =>
       `<button data-tab="${k}" ${tab===k?'aria-current="page"':''}>${l}${n?`<span class="n num">${n}</span>`:''}</button>`).join('')}</nav>
-    ${({todo:() => todoView(need, quotes, stmts, asOpen, ship, sheet, sheetNotes), vendor:() => vendorView(vq), kg:kgView, members:membersView})[tab]()}`;
+    ${({todo:() => todoView(need, quotes, stmts, asOpen, asks, ship, sheet, sheetNotes), vendor:() => vendorView(vq), kg:kgView, members:membersView})[tab]()}`;
 }
 
 function loginView(){
@@ -145,15 +147,15 @@ function loginView(){
 const kindTag = o => `<span class="kind ${o.kind}">${KIND_NAME[o.kind]}</span>`;
 function itemHead(o){
   const m = memberOf(o);
-  return `<button class="t" data-open="${o.id}"><b>${esc(m.kg)} · ${orderTitle(o)} ${fresh.has(o.id)?'<span class="tag warn">NEW</span>':''}</b>
+  return `<button class="t" data-open="${o.id}"><b>${esc(m.kg)} · ${esc(orderTitle(o))} ${fresh.has(o.id)?'<span class="tag warn">NEW</span>':''}</b>
     <small class="num">#${o.id} · ${fmtDate(o.created_at)} · ${esc(m.region)} · ${esc(orderSummary(o))}</small></button>`;
 }
-function todoView(need, quotes, stmts, asOpen, ship, sheet, sheetNotes){
+function todoView(need, quotes, stmts, asOpen, asks, ship, sheet, sheetNotes){
   const box = (t, sub, items) => `<div class="box"><h3>${t}<small>${sub}</small></h3>${items || '<div class="empty">없음</div>'}</div>`;
   return `
-    ${box('새로 들어온 주문·A/S', '확인을 누르면 업체별 발주로 넘어가고, 교재는 메인 컴퓨터가 납품시트에 넣어요', need.map(o => `
+    ${box('새로 들어온 주문·요청', '확인을 누르면 업체별 발주로 넘어가고, 교재는 메인 컴퓨터가 납품시트에 넣어요. 문의·반품은 확인 후 아래에서 이어서 처리', need.map(o => `
       <div class="item">${kindTag(o)}${itemHead(o)}
-        <span class="a">${o.quote_want?'<span class="tag info">견적서</span>':''}${o.pay?`<span class="tag">${PAY_NAME[o.pay]||o.pay}</span>`:''}<button class="btn small brand" data-act="confirm" data-id="${o.id}">확인</button></span>
+        <span class="a">${o.quote_want?'<span class="tag info">견적서</span>':''}${o.pay?`<span class="tag">${esc(PAY_NAME[o.pay]||o.pay)}</span>`:''}<button class="btn small brand" data-act="confirm" data-id="${o.id}">확인</button></span>
         ${openId===o.id?`<div class="detail">${detail(o)}</div>`:''}</div>`).join(''))}
     ${box('납품시트 반영', '메인 컴퓨터가 15분마다 넣어요. 문제가 있으면 여기에 남아요', [...sheet, ...sheetNotes].map(o => `
       <div class="item">${kindTag(o)}${itemHead(o)}
@@ -161,12 +163,16 @@ function todoView(need, quotes, stmts, asOpen, ship, sheet, sheetNotes){
         ${o.sheet_note?`<div class="detail" style="grid-column:1/-1"><span>${esc(o.sheet_note)}</span>${/시트 원 이름/.test(o.sheet_note)?'<span class="hint">"가입한 원" 탭에서 이 원의 시트 원 이름을 적으면 다음 반영 때 들어가요.</span>':''}</div>`:''}
         ${openId===o.id?`<div class="detail">${detail(o)}</div>`:''}</div>`).join(''))}
     ${box('견적서 요청', '견적서를 만들어 메일로 보낸 뒤 눌러주세요', quotes.map(o => `
-      <div class="item"><span class="kind doc">견적서</span><span class="t"><b>${esc(memberOf(o).kg)} · ${orderTitle(o)}</b><small>${esc(o.quote_email)}</small></span>
+      <div class="item"><span class="kind doc">견적서</span><span class="t"><b>${esc(memberOf(o).kg)} · ${esc(orderTitle(o))}</b><small>${esc(o.quote_email)}</small></span>
         <span class="a"><button class="btn small sun" data-act="quote" data-id="${o.id}">보냈어요</button></span></div>`).join(''))}
     ${box('거래명세서 요청', '거래명세서를 메일로 보낸 뒤 눌러주세요', stmts.map(o => `
-      <div class="item"><span class="kind doc">명세서</span><span class="t"><b>${esc(memberOf(o).kg)} · ${orderTitle(o)}</b><small>${esc(o.stmt_email)} · 요청 ${o.stmt_at?fmtDate(o.stmt_at):''}</small></span>
+      <div class="item"><span class="kind doc">명세서</span><span class="t"><b>${esc(memberOf(o).kg)} · ${esc(orderTitle(o))}</b><small>${esc(o.stmt_email)} · 요청 ${o.stmt_at?fmtDate(o.stmt_at):''}</small></span>
         <span class="a"><button class="btn small sun" data-act="stmt" data-id="${o.id}">보냈어요</button></span></div>`).join(''))}
-    ${box('A/S 진행 중', '업체별 방식(사이트·카톡·전화)으로 접수', asOpen.map(o => `
+    ${box('문의 답변', '원에 전화나 메일로 답한 뒤 눌러주세요 (원 어플에 완료로 보여요)', asks.map(o => `
+      <div class="item">${kindTag(o)}${itemHead(o)}
+        <span class="a"><button class="btn small sun" data-act="answered" data-id="${o.id}">${o.kind==='event'?'안내 완료':'답변 완료'}</button></span>
+        ${openId===o.id?`<div class="detail">${detail(o)}</div>`:''}</div>`).join(''))}
+    ${box('A/S·반품 진행 중', '업체별 방식(사이트·카톡·전화)으로 접수', asOpen.map(o => `
       <div class="item">${kindTag(o)}${itemHead(o)}
         <span class="a">${o.state===1?`<button class="btn small sun" data-act="asVendor" data-id="${o.id}">${esc(o.as_info?.vendor||'업체')} 접수했어요</button>`:`<button class="btn small" data-act="asDone" data-id="${o.id}">처리 완료</button>`}</span>
         ${openId===o.id?`<div class="detail">${detail(o)}</div>`:''}</div>`).join(''))}
@@ -179,19 +185,25 @@ function detail(o){
   const m = memberOf(o);
   let h = `<span class="hint">${esc(m.kg)} · ${esc(m.name)} · ${esc(fmtPhone(m.phone))} · ${esc(m.region)}${m.email?' · '+esc(m.email):''}</span>`;
   if (o.kind === 'book') h += `<div class="tbl-wrap"><table><thead><tr><th>교재</th><th>업체</th>${AGES.map(a => `<th class="r">${a.replace('만','')}</th>`).join('')}<th>단계</th><th class="r">합계</th></tr></thead><tbody>
-    ${o.lines.map(l => `<tr><td>${esc(l.name)}</td><td>${esc(l.vendor)}</td>${(l.q||[0,0,0,0,0,0]).map(x => `<td class="r num">${x||'·'}</td>`).join('')}<td>${esc(lineSummary({st:l.st})) || '·'}</td><td class="r num"><b>${lineTotal(l)}</b></td></tr>`).join('')}</tbody></table></div>`;
+    ${o.lines.map(l => `<tr><td>${esc(l.name)}</td><td>${esc(l.vendor)}</td>${(l.q||[0,0,0,0,0,0]).map(x => `<td class="r num">${+x||'·'}</td>`).join('')}<td>${esc(lineSummary({st:l.st})) || '·'}</td><td class="r num"><b>${lineTotal(l)}</b></td></tr>`).join('')}</tbody></table></div>`;
   else if (o.kind === 'goods') h += `<div class="tbl-wrap"><table><thead><tr><th>품목</th><th>업체</th><th class="r">수량</th><th class="r">금액</th></tr></thead><tbody>
-    ${o.lines.map(l => `<tr><td>${esc(l.name)}</td><td>${esc(l.vendor)}</td><td class="r num">${l.qty}</td><td class="r num">${l.price?won(l.price*l.qty):'확인 필요'}</td></tr>`).join('')}</tbody></table></div>
+    ${o.lines.map(l => `<tr><td>${esc(l.name)}</td><td>${esc(l.vendor)}</td><td class="r num">${+l.qty||0}</td><td class="r num">${l.price?won(l.price*l.qty):'확인 필요'}</td></tr>`).join('')}</tbody></table></div>
     <span class="hint">결제: ${PAY_NAME[o.pay]||'-'}</span>`;
-  if (o.kind !== 'as' && o.memo) h += `<div class="reco"><b>주문 메모</b> · ${esc(o.memo)}</div>`;
-  if (o.kind === 'as') h += `<span>${esc(o.memo||'(내용 없음)')}</span><div class="as-ph">${(photoCache[o.id]||[]).map((s,i) => `<a href="${s}" target="_blank" rel="noopener"><img src="${s}" alt="A/S 사진 ${i+1}"></a>`).join('') || '<span class="hint">사진 불러오는 중…</span>'}</div>`;
+  if (isOrder(o) && o.memo) h += `<div class="reco"><b>주문 메모</b> · ${esc(o.memo)}</div>`;
+  const a = o.as_info || {};
+  if (o.kind === 'ask') h += `${a.topic?`<span class="tag">${esc(a.topic)}</span>`:''}<span>${esc(o.memo||'(내용 없음)')}</span>`;
+  if (o.kind === 'event') h += `<span><b>${esc(a.name||'행사')}</b>${a.group?' ('+esc(a.group)+')':''}${a.date?' · 희망 날짜 '+esc(a.date):''}</span><span>연락받을 번호: <b class="num">${esc(fmtPhone(a.phone||''))}</b></span>${o.memo?`<span>${esc(o.memo)}</span>`:''}`;
+  if (o.kind === 'return') h += `<span><b>교재 반품</b> · ${esc(a.item||'')}${a.ho?' '+esc(a.ho):''}${a.qty?' · '+esc(a.qty)+'개':''}${a.vendor?' · '+esc(a.vendor):''} · 사유: ${esc(a.reason||'')}</span>${o.memo?`<span>${esc(o.memo)}</span>`:''}`;
+  const pics = (photoCache[o.id]||[]).map((s,i) => `<a href="${s}" target="_blank" rel="noopener"><img src="${s}" alt="사진 ${i+1}"></a>`).join('');
+  if (o.kind === 'as') h += `<span>${esc(o.memo||'(내용 없음)')}</span><div class="as-ph">${pics || '<span class="hint">사진 불러오는 중…</span>'}</div>`;
+  if (o.kind === 'return' && pics) h += `<div class="as-ph">${pics}</div>`;
   if (o.kind === 'book') h += `<span class="hint">납품시트: ${o.sheet_synced_at ? '반영됨 ' + fmtDate(o.sheet_synced_at) : o.state >= 1 ? '반영 대기' : '확인을 누르면 반영돼요'}${o.sheet_note ? ' · ' + esc(o.sheet_note) : ''}</span>`;
   h += `<ul class="log">${(o.log||[]).map(l => `<li class="num">${fmtDate(l.at)} ${esc(l.t)}</li>`).join('')}</ul>`;
   return h;
 }
 function vendorQueue(){
   const m = {};
-  orders.filter(o => o.kind !== 'as' && o.state === 1).forEach(o => (o.lines || []).forEach(l => {
+  orders.filter(o => isOrder(o) && o.state === 1).forEach(o => (o.lines || []).forEach(l => {
     if ((o.done || {})[l.vendor]) return;
     const v = m[l.vendor] || (m[l.vendor] = {vendor:l.vendor, rows:[], ids:new Set()});
     v.ids.add(o.id); v.rows.push({kg:memberOf(o).kg, region:memberOf(o).region, name:l.name, n:l.q||l.st ? lineTotal(l) : l.qty, sum:l.q||l.st ? lineSummary(l) : '', memo:o.memo||'', month:o.month});
@@ -211,7 +223,7 @@ function kgView(){
     <div class="box"><h3>원별 보기<small>${list.length}곳</small></h3>
     <div class="tbl-wrap"><table><thead><tr><th>원</th><th>지역</th><th>담당</th><th>연락처</th><th class="r">주문</th><th class="r">진행 중</th><th>최근 주문</th></tr></thead><tbody>
     ${list.map(m => { const os = orders.filter(o => o.member_id === m.id); const last = os[0];
-      return `<tr><td><b>${esc(m.kg)}</b></td><td>${esc(m.region)}</td><td>${esc(m.name)}</td><td class="num">${esc(fmtPhone(m.phone))}</td><td class="r num">${os.length}</td><td class="r num">${os.filter(o=>o.state<3).length}</td><td>${last?esc(orderTitle(last))+' · '+fmtDate(last.created_at):'-'}</td></tr>`; }).join('') || '<tr><td colspan="7" class="empty">아직 없어요</td></tr>'}
+      return `<tr><td><b>${esc(m.kg)}</b></td><td>${esc(m.region)}</td><td>${esc(m.name)}</td><td class="num">${esc(fmtPhone(m.phone))}</td><td class="r num">${os.length}</td><td class="r num">${os.filter(o=>!isDone(o)).length}</td><td>${last?esc(orderTitle(last))+' · '+fmtDate(last.created_at):'-'}</td></tr>`; }).join('') || '<tr><td colspan="7" class="empty">아직 없어요</td></tr>'}
     </tbody></table></div></div>`;
 }
 function membersView(){
@@ -249,9 +261,10 @@ document.addEventListener('click', async e => {
     if (d.open){
       const id = +d.open; openId = openId === id ? null : id; fresh.delete(id); render();
       const o = orders.find(x => x.id === id);
-      if (openId && o.kind === 'as' && !photoCache[id]){
+      if (openId && (o.kind === 'as' || o.kind === 'return') && !photoCache[id]){
         const { data } = await sb.from('nk_orders').select('photos').eq('id', id).single();
-        photoCache[id] = (data && data.photos) || []; render();
+        // 사진은 data:image 만 그림 (원이 보낸 값이라 다른 글자가 섞이면 화면에 코드가 들어갈 수 있음)
+        photoCache[id] = ((data && data.photos) || []).filter(s => typeof s === 'string' && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(s)); render();
       }
       return;
     }
@@ -279,11 +292,12 @@ document.addEventListener('click', async e => {
       if (d.act === 'confirm') await updateOrder(o, {state:1}, '확인');
       if (d.act === 'quote') await updateOrder(o, {quote_sent:true}, '견적서 발송');
       if (d.act === 'stmt') await updateOrder(o, {stmt_sent:true}, '거래명세서 발송');
-      if (d.act === 'asVendor') await updateOrder(o, {state:2}, `${o.as_info?.vendor||'업체'} A/S 접수`);
+      if (d.act === 'asVendor') await updateOrder(o, {state:2}, `${o.as_info?.vendor||'업체'} ${o.kind==='return'?'반품':'A/S'} 접수`);
+      if (d.act === 'answered') await updateOrder(o, {state:2}, o.kind==='event' ? '안내 완료' : '답변 완료');
       if (d.act === 'asDone') await updateOrder(o, {state:3}, '처리 완료');
       if (d.act === 'ship') await updateOrder(o, {state:3}, '배송 출발');
       if (d.act === 'vendor'){
-        for (const x of orders.filter(x => x.kind !== 'as' && x.state === 1 && vendorsOf(x).includes(d.v) && !(x.done||{})[d.v])){
+        for (const x of orders.filter(x => isOrder(x) && x.state === 1 && vendorsOf(x).includes(d.v) && !(x.done||{})[d.v])){
           const done = {...(x.done||{}), [d.v]:true};
           const all = vendorsOf(x).every(v => done[v]);
           await updateOrder(x, all ? {done, state:2} : {done}, `${d.v} 발주`);
@@ -300,7 +314,9 @@ function downloadCsv(){
   const rows = [['주문번호','접수','원','지역','담당','연락처','구분','호수','업체','품목','만0','만1','만2','만3','만4','만5','단계','수량','금액','결제','견적서','상태','메모']];
   orders.forEach(o => { const m = memberOf(o);
     const base = [o.id, fmtDate(o.created_at), m.kg, m.region, m.name||'', fmtPhone(m.phone||''), KIND_NAME[o.kind], o.month||''];
-    if (o.kind === 'as'){ const a = o.as_info||{}; rows.push([...base, a.vendor||'', `${a.prog} ${a.step} ${a.ho}`, '','','','','','', '', '', '', '', '', STATES.as[o.state], o.memo||'']); return; }
+    if (!isOrder(o)){ const a = o.as_info||{};
+      const what = o.kind==='as' ? `${a.prog} ${a.step} ${a.ho}` : o.kind==='ask' ? (a.topic||'') : o.kind==='event' ? [a.name, a.date, fmtPhone(a.phone||'')].filter(Boolean).join(' ') : `${a.item||''} ${a.ho||''} ${a.reason||''}`.trim();
+      rows.push([...base, a.vendor||'', what, '','','','','','', '', o.kind==='return'?a.qty||'':'', '', '', '', STATES[o.kind][o.state], o.memo||'']); return; }
     (o.lines||[]).forEach(l => rows.push([...base, l.vendor, l.name, ...(l.q||['','','','','','']), lineSummary({st:l.st}), l.q||l.st?lineTotal(l):l.qty, l.price?l.price*l.qty:'', PAY_NAME[o.pay]||'', o.quote_want?'요청':'', STATES[o.kind][o.state], o.memo||'']));
   });
   const csv = '﻿' + rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\r\n');

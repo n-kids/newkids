@@ -220,7 +220,7 @@ let tab = 'home';
 let book = {month:MONTHS[MONTHS.length-1], tag:'전체', q:'', sel:{}};
 let goods = {sec:null, cat:'rec', q:'', shown:24, wear:'전체'};
 let cart = {};
-let as = {prog:'', step:'', ho:'', photos:[], text:''};
+let as = {prog:'', step:'', ho:'', week:'없음', photos:[], text:''};
 const blankReq = kind => ({kind, topic:'', text:'', name:'', date:'', phone:me?fmtPhone(me.phone||''):'', item:'', ho:'', qty:'', reason:'', photos:[]});
 let req = blankReq('ask');   // 단순 문의 · 행사 문의 · 반품 요청
 let stmtOpen = null;
@@ -378,6 +378,7 @@ function bookView(){
     ${selCount?`<div class="sticky"><div class="cartbar"><span><b class="num">${selCount}</b>개 교재 · <b class="num">${total}</b>권</span><button class="btn small" id="bCheckout">${book.month} 주문하기</button></div></div>`:''}`;
 }
 // 교재 고르는 칸(A/S·반품)은 가나다 순
+const WEEKS = ['없음','1주차','2주차','3주차','4주차'];   // A/S 주차
 const BOOKS_ABC = [...BOOKS].sort((a,b)=>a.n.localeCompare(b.n,'ko'));
 const emptySel = () => ({q:[0,0,0,0,0,0], st:{}});
 // 연령별(또는 단계별) 수량 칸. 교재 목록과 주문 확인 창에서 같이 씀 (pre = id 앞머리, 두 곳의 id가 겹치지 않게)
@@ -513,11 +514,13 @@ function asView(){
         <select id="asStep" ${b?'':'disabled'}><option value="">단계를 고르세요</option>${steps.map(s=>`<option ${as.step===s?'selected':''}>${esc(s)}</option>`).join('')}</select></div>
       <div class="field"><label for="asHo">3. 호수</label>
         <select id="asHo" ${as.step?'':'disabled'}><option value="">호수를 고르세요</option>${HO.map(h=>`<option ${as.ho===h?'selected':''}>${h}</option>`).join('')}</select></div>
-      <div class="field"><span class="flabel">4. 사진 <span class="req">(필수)</span></span>
+      <div class="field"><label for="asWeek">4. 주차</label>
+        <select id="asWeek" ${as.ho?'':'disabled'}>${WEEKS.map(w=>`<option ${as.week===w?'selected':''}>${w}</option>`).join('')}</select></div>
+      <div class="field"><span class="flabel">5. 사진 <span class="req">(필수)</span></span>
         <div class="photos">${as.photos.map(s=>`<img src="${s}" alt="첨부 사진">`).join('')}
           ${as.photos.length<4?`<label class="upload" for="asFile">+ 사진<br>추가</label>`:''}<input id="asFile" type="file" accept="image/*" multiple hidden></div>
         ${as.photos.length?'':'<span class="hint">파손·불량 부분이 보이게 찍어주세요. 사진이 있어야 신청할 수 있어요.</span>'}</div>
-      <div class="field"><label for="asText">5. 내용</label><textarea id="asText" placeholder="예) 7호 교재 중 3권이 찢어져서 왔어요.">${esc(as.text)}</textarea></div>
+      <div class="field"><label for="asText">6. 내용</label><textarea id="asText" placeholder="예) 7호 교재 중 3권이 찢어져서 왔어요.">${esc(as.text)}</textarea></div>
     </div>
     <button class="btn block" id="asSubmit" ${ready?'':'disabled'}>${busy?'보내는 중…':'A/S 신청하기'}</button>`;
 }
@@ -744,8 +747,8 @@ document.addEventListener('click', async e => {
     const b = BOOKS.find(x=>x.n===as.prog);
     busy = true; keepScroll(render);
     try {
-      await rpc('nk_place_order', {p_token:me.token, p_order:{kind:'as', as_info:{prog:as.prog, step:as.step, ho:as.ho, vendor:b.v}, photos:as.photos, memo:as.text.trim()}});
-      as = {prog:'', step:'', ho:'', photos:[], text:''}; await loadOrders(); backTo = {tab:'as'}; pushView(); tab='track'; busy=false; render(); toast('A/S 신청이 접수됐어요.');
+      await rpc('nk_place_order', {p_token:me.token, p_order:{kind:'as', as_info:{prog:as.prog, step:as.step, ho:as.ho, week:as.week, vendor:b.v}, photos:as.photos, memo:as.text.trim()}});
+      as = {prog:'', step:'', ho:'', week:'없음', photos:[], text:''}; await loadOrders(); backTo = {tab:'as'}; pushView(); tab='track'; busy=false; render(); toast('A/S 신청이 접수됐어요.');
     } catch(err){ busy=false; keepScroll(render); toast(err.message); }
     return;
   }
@@ -814,6 +817,7 @@ document.addEventListener('change', e => {
   if (el.id==='asProg'){ as.prog = el.value; as.step=''; as.ho=''; keepScroll(render); }
   if (el.id==='asStep'){ as.step = el.value; keepScroll(render); }
   if (el.id==='asHo'){ as.ho = el.value; keepScroll(render); }
+  if (el.id==='asWeek'){ as.week = el.value; }
   if (el.id==='asFile'){
     const files = [...el.files].slice(0, 4-as.photos.length);
     Promise.all(files.map(f=>shrinkPhoto(f, 1280, .72))).then(list=>{ as.photos.push(...list.filter(Boolean)); keepScroll(render); });

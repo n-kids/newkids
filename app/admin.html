@@ -315,7 +315,7 @@ function downloadCsv(){
   orders.forEach(o => { const m = memberOf(o);
     const base = [o.id, fmtDate(o.created_at), m.kg, m.region, m.name||'', fmtPhone(m.phone||''), KIND_NAME[o.kind], o.month||''];
     if (!isOrder(o)){ const a = o.as_info||{};
-      const what = o.kind==='as' ? `${a.prog} ${a.step} ${a.ho}` : o.kind==='ask' ? (a.topic||'') : o.kind==='event' ? [a.name, a.date, fmtPhone(a.phone||'')].filter(Boolean).join(' ') : `${a.item||''} ${a.ho||''} ${a.reason||''}`.trim();
+      const what = o.kind==='as' ? `${a.prog} ${a.step} ${a.ho}${a.week && a.week!=='없음'?' '+a.week:''}` : o.kind==='ask' ? (a.topic||'') : o.kind==='event' ? [a.name, a.date, fmtPhone(a.phone||'')].filter(Boolean).join(' ') : `${a.item||''} ${a.ho||''} ${a.reason||''}`.trim();
       rows.push([...base, a.vendor||'', what, '','','','','','', '', o.kind==='return'?a.qty||'':'', '', '', '', STATES[o.kind][o.state], o.memo||'']); return; }
     (o.lines||[]).forEach(l => rows.push([...base, l.vendor, l.name, ...(l.q||['','','','','','']), lineSummary({st:l.st}), l.q||l.st?lineTotal(l):l.qty, l.price?l.price*l.qty:'', PAY_NAME[o.pay]||'', o.quote_want?'요청':'', STATES[o.kind][o.state], o.memo||'']));
   });

@@ -80,7 +80,7 @@ function orderSummary(o){
   if (o.kind === 'ask') return `${a.topic ? '[' + a.topic + '] ' : ''}${o.memo || ''}`;
   if (o.kind === 'event') return [a.name, a.date].filter(Boolean).join(' · ') || o.memo || '';
   if (o.kind === 'return') return [`${a.item || ''}${a.ho ? ' ' + a.ho : ''}`, a.qty ? `${a.qty}개` : '', a.reason].filter(Boolean).join(' · ');
-  return `${a.prog || ''} ${a.step && a.step !== '단계 없음' ? a.step + '단계 ' : ''}${a.ho || ''}`;
+  return `${a.prog || ''} ${a.step && a.step !== '단계 없음' ? a.step + '단계 ' : ''}${a.ho || ''}${a.week && a.week !== '없음' ? ' ' + a.week : ''}`;
 }
 
 // 국민서관 상품(용량이 커서 따로 불러옴)

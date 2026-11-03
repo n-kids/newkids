@@ -72,6 +72,12 @@ button.banner img{border-radius:var(--r-xs)!important}
 .quick button:hover{background:var(--sunk)}
 .quick button:active{transform:scale(.98)}
 .quick svg{width:24px;height:24px;color:var(--accent)}
+.homelink{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--ink);transition:background-color .3s var(--ease),transform .5s var(--ease)}
+.homelink:hover{background:var(--sunk)}
+.homelink:active{transform:scale(.98)}
+.homelink img{width:40px;height:40px;flex:none}
+.homelink span{flex:1;display:flex;flex-direction:column;gap:2px}
+.homelink svg{width:20px;height:20px;flex:none;color:var(--muted)}
 .notice{display:flex;flex-direction:column;gap:8px;margin:8px 0 0;padding:0;list-style:none}
 .notice li{display:flex;gap:8px;font-size:14px;line-height:20px;align-items:baseline;text-wrap:pretty}
 
@@ -297,6 +303,9 @@ function homeView(){
       <button data-go="as">${ICON.tool}A/S 신청</button>
       <button data-go="track">${ICON.doc}거래명세서</button>
     </div>
+    <a class="card homelink" href="https://n-kids.github.io/newkids/" target="_blank" rel="noopener">
+      <img src="logo-n.png" alt=""><span><b>뉴키즈 홈페이지</b><small class="hint">프로그램 소개와 소식 보러 가기</small></span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></a>
     <div class="card"><p class="h2" style="font-size:16px;line-height:24px">공지</p>
       <ul class="notice">${NOTICES.map(n=>`<li><span class="tag ${n.tag==='추천'?'sun':'info'}">${esc(n.tag)}</span><span>${esc(n.text)}</span></li>`).join('')}</ul></div>
     <div class="card"><b>궁금한 점은 전화 주세요</b><p class="sub num">010-2333-2563 · 010-5522-8109</p></div>`;

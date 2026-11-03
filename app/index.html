@@ -149,6 +149,8 @@ button.banner img{border-radius:var(--r-xs)!important}
 .price em{font-style:normal;color:var(--accent-text);font-weight:600;font-size:12px}
 .price strong{font-size:16px;line-height:24px;font-weight:600}
 .good .btn{margin-top:auto;border-radius:var(--r-2xs)}
+.kplink{align-self:flex-start;font-size:12px;line-height:16px;font-weight:600;color:var(--accent-text);text-decoration:none;padding:2px 0}
+.kplink:hover{text-decoration:underline}
 .more{align-self:center}
 .pages{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;flex-shrink:0}
 .pages button{flex:none;border:1px solid var(--line);border-radius:var(--r-xs);padding:0;background:var(--surface);overflow:hidden;width:64px;transition:transform .5s var(--ease)}
@@ -471,10 +473,15 @@ function goodCard(g){
   const inCart = cart[g.id]?.qty;
   const priced = g.type==='equip';
   const pct = priced && g.list && g.sale && g.sale<g.list ? Math.round((1-g.sale/g.list)*100) : 0;
+  // 국민서관 상품은 사진·상세보기를 누르면 키드팡 상품 쪽이 새 창으로 열림
+  const kp = g.vendor==='국민서관' && /^\d+$/.test(g.id) ? `https://kidpang.net/product/detail.html?product_no=${g.id}` : '';
+  const pic = th?`<img src="${th}" alt="" loading="lazy">`:`<span class="ph">${esc(g.name.replace(/^\[[^\]]*\]/,'').slice(0,4))}</span>`;
   return `<div class="good">
-    <div class="pic ${g.page?'page':''}">${g.page?`<button data-cat-page="${g.cat}|${g.page}" aria-label="카탈로그 ${g.page}쪽 크게 보기" style="border:0;padding:0;background:none;width:100%;height:100%">`:''}${th?`<img src="${th}" alt="" loading="lazy">`:`<span class="ph">${esc(g.name.replace(/^\[[^\]]*\]/,'').slice(0,4))}</span>`}${g.page?'</button>':''}</div>
+    <div class="pic ${g.page?'page':''}">${g.page?`<button data-cat-page="${g.cat}|${g.page}" aria-label="카탈로그 ${g.page}쪽 크게 보기" style="border:0;padding:0;background:none;width:100%;height:100%">${pic}</button>`
+      : kp?`<a href="${kp}" target="_blank" rel="noopener" aria-label="${esc(g.name)} 키드팡에서 자세히 보기" style="display:contents">${pic}</a>`:pic}</div>
     <div class="meta">${g.isNew?'<span class="tag sun" style="align-self:flex-start">NEW</span>':''}
       <b>${esc(g.name)}</b><small>${esc(g.vendor)}${g.sub?' · '+g.sub:''}</small>${g.note?`<small>${esc(g.note)}</small>`:''}
+      ${kp?`<a class="kplink" href="${kp}" target="_blank" rel="noopener">키드팡 상세보기 ›</a>`:''}
       ${priced?`<span class="price">${pct?`<s class="num">${won(g.list)}</s><em class="num">${pct}%</em>`:''}<strong class="num">${won(g.sale||g.list)}</strong></span>`:'<small>가격 문의</small>'}
       <button class="btn small ${inCart?'':'ghost'}" data-add="${esc(g.id)}" data-type="${g.type}" data-name="${esc(g.name)}" data-vendor="${esc(g.vendor)}" data-price="${priced?(g.sale||g.list):0}">${inCart?`담김 ${inCart} · 더 담기`:'담기'}</button>
     </div></div>`;

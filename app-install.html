@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="뉴키즈 주문 앱 설치 방법 안내 - 휴대폰 홈 화면에 추가하고 교재·물품 주문과 A/S를 간편하게 신청하세요.">
+    <meta property="og:title" content="뉴키즈 주문 앱 설치하기">
+    <meta property="og:description" content="교재·물품 주문과 A/S를 휴대폰에서 바로! 홈 화면에 추가하는 방법을 안내합니다.">
+    <meta property="og:image" content="https://n-kids.github.io/newkids/app/icon-512.png">
+    <title>뉴키즈 - 주문 앱 설치하기</title>
+    <link rel="stylesheet" href="style.css?v=20261103">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <style>
+        .ai-hero {
+            background: var(--brand-cream);
+            padding: 64px 0 56px;
+        }
+
+        .ai-hero-inner {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 40px;
+            align-items: center;
+        }
+
+        .ai-app {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            margin-bottom: 22px;
+        }
+
+        .ai-app img {
+            flex: 0 0 auto;
+            margin: 0;
+            width: 84px;
+            height: 84px;
+            border-radius: 22px;
+            box-shadow: 0 8px 20px rgba(23, 36, 81, 0.18);
+        }
+
+        .ai-app strong {
+            display: block;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--brand-navy);
+            letter-spacing: -0.02em;
+        }
+
+        .ai-app small {
+            color: #6b7183;
+            font-size: 0.98rem;
+        }
+
+        .ai-hero h1 {
+            font-size: 2.4rem;
+            font-weight: 800;
+            line-height: 1.3;
+            letter-spacing: -0.03em;
+            color: var(--brand-navy);
+            margin-bottom: 14px;
+            word-break: keep-all;
+        }
+
+        .ai-hero p {
+            font-size: 1.1rem;
+            line-height: 1.7;
+            color: #545b6e;
+            margin-bottom: 26px;
+            word-break: keep-all;
+        }
+
+        .ai-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .ai-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 15px 26px;
+            border-radius: 14px;
+            background: var(--brand-navy);
+            color: #fff;
+            font-weight: 800;
+            font-size: 1.05rem;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .ai-btn:hover {
+            background: #22346f;
+        }
+
+        .ai-btn.ghost {
+            background: #fff;
+            color: var(--brand-navy);
+            border: 1.5px solid var(--brand-navy);
+        }
+
+        .ai-qr {
+            background: #fff;
+            border: 1px solid #efe3cf;
+            border-radius: 22px;
+            padding: 20px 20px 14px;
+            text-align: center;
+            box-shadow: 0 6px 18px rgba(23, 36, 81, 0.06);
+        }
+
+        .ai-qr #qr {
+            width: 168px;
+            height: 168px;
+            margin: 0 auto 10px;
+        }
+
+        .ai-qr #qr img,
+        .ai-qr #qr canvas {
+            width: 168px !important;
+            height: 168px !important;
+        }
+
+        .ai-qr span {
+            font-size: 0.9rem;
+            color: #6b7183;
+            font-weight: 600;
+        }
+
+        .ai-feats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        .ai-feat {
+            background: #fff;
+            border: 1px solid #efe6d8;
+            border-radius: 18px;
+            padding: 20px 18px;
+            text-align: center;
+        }
+
+        .ai-feat b {
+            display: block;
+            font-size: 1.6rem;
+            margin-bottom: 6px;
+        }
+
+        .ai-feat strong {
+            display: block;
+            color: var(--brand-navy);
+            font-size: 1.05rem;
+            margin-bottom: 4px;
+        }
+
+        .ai-feat span {
+            color: #6b7183;
+            font-size: 0.92rem;
+            word-break: keep-all;
+        }
+
+        .ai-guide {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        .ai-tabs {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+        }
+
+        .ai-tab {
+            padding: 11px 22px;
+            border-radius: 999px;
+            border: 1.5px solid #e2d6c3;
+            background: #fff;
+            color: var(--brand-navy);
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .ai-tab.on {
+            background: var(--brand-navy);
+            border-color: var(--brand-navy);
+            color: #fff;
+        }
+
+        .ai-panel {
+            display: none;
+        }
+
+        .ai-panel.on {
+            display: block;
+        }
+
+        .ai-steps {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .ai-step {
+            background: #fff;
+            border: 1px solid #efe6d8;
+            border-radius: 20px;
+            padding: 24px 22px;
+            position: relative;
+        }
+
+        .ai-step .no {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: var(--brand-mustard);
+            color: var(--brand-navy);
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+
+        .ai-step strong {
+            display: block;
+            color: var(--brand-navy);
+            font-size: 1.12rem;
+            margin-bottom: 6px;
+            word-break: keep-all;
+        }
+
+        .ai-step p {
+            margin: 0;
+            color: #6b7183;
+            font-size: 0.97rem;
+            line-height: 1.6;
+            word-break: keep-all;
+        }
+
+        .ai-key {
+            display: inline-block;
+            padding: 1px 8px;
+            border-radius: 6px;
+            background: #f3eadb;
+            color: var(--brand-navy);
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .ai-note {
+            margin-top: 20px;
+            padding: 16px 20px;
+            border-radius: 14px;
+            background: #fdf4dc;
+            color: #6b5a2e;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            word-break: keep-all;
+        }
+
+        @media (max-width: 860px) {
+            .ai-hero-inner {
+                grid-template-columns: 1fr;
+            }
+
+            .ai-qr {
+                display: none;
+            }
+
+            .ai-feats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .ai-steps {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .ai-hero {
+                padding: 40px 0 36px;
+            }
+
+            .ai-hero-inner,
+            .ai-feats,
+            .ai-guide {
+                padding: 0 20px;
+            }
+
+            .ai-hero h1 {
+                font-size: 1.7rem;
+            }
+
+            .ai-hero p {
+                font-size: 1rem;
+            }
+
+            .ai-btn {
+                flex: 1 1 100%;
+                justify-content: center;
+            }
+
+            .ai-app img {
+                width: 68px;
+                height: 68px;
+                border-radius: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header></header>
+
+    <section class="ai-hero">
+        <div class="ai-hero-inner">
+            <div>
+                <div class="ai-app">
+                    <img src="app/icon-192.png" alt="뉴키즈 주문 앱 아이콘">
+                    <div>
+                        <strong>뉴키즈 주문</strong>
+                        <small>어린이집·유치원 전용 주문 앱</small>
+                    </div>
+                </div>
+                <h1>교재·물품 주문과 A/S,<br>이제 휴대폰에서 바로 하세요</h1>
+                <p>홈 화면에 한 번만 추가해 두면 앱처럼 바로 열려요.<br>앱스토어 설치 없이, 무료로 사용할 수 있어요.</p>
+                <div class="ai-actions">
+                    <a href="app/" class="ai-btn">앱 열기 <span aria-hidden="true">&rarr;</span></a>
+                    <a href="#guide" class="ai-btn ghost">설치 방법 보기</a>
+                </div>
+            </div>
+            <div class="ai-qr">
+                <div id="qr"></div>
+                <span>휴대폰 카메라로 찍어 보세요</span>
+            </div>
+        </div>
+    </section>
+
+    <section style="padding: 56px 0 0; background: #fff;">
+        <div class="ai-feats">
+            <div class="ai-feat"><b aria-hidden="true">📚</b><strong>교재 주문</strong><span>원별 교재를 호수·수량만 골라 주문</span></div>
+            <div class="ai-feat"><b aria-hidden="true">🧺</b><strong>물품 주문</strong><span>교구·원복·가방 등 물품 주문</span></div>
+            <div class="ai-feat"><b aria-hidden="true">🧾</b><strong>견적서 요청</strong><span>필요한 견적서를 메일로 받아보기</span></div>
+            <div class="ai-feat"><b aria-hidden="true">🛠️</b><strong>A/S 신청</strong><span>파손·불량 교구를 사진과 함께 접수</span></div>
+        </div>
+    </section>
+
+    <section id="guide" class="home-section">
+        <div class="ai-guide">
+            <span class="section-eyebrow">HOW TO</span>
+            <h2>홈 화면에 추가하는 방법</h2>
+            <p class="section-desc">사용하시는 기기를 골라 주세요</p>
+
+            <div class="ai-tabs" role="tablist">
+                <button class="ai-tab" data-tab="android" role="tab">안드로이드 (갤럭시 등)</button>
+                <button class="ai-tab" data-tab="iphone" role="tab">아이폰</button>
+                <button class="ai-tab" data-tab="pc" role="tab">PC</button>
+            </div>
+
+            <div class="ai-panel" id="tab-android">
+                <ol class="ai-steps">
+                    <li class="ai-step"><span class="no">1</span><strong>크롬 또는 삼성 인터넷에서 앱 열기</strong><p>위의 <span class="ai-key">앱 열기</span> 버튼을 누르거나 QR코드를 찍어 주문 앱을 열어요.</p></li>
+                    <li class="ai-step"><span class="no">2</span><strong>메뉴 누르기</strong><p>크롬은 오른쪽 위 <span class="ai-key">⋮</span>, 삼성 인터넷은 오른쪽 아래 <span class="ai-key">≡</span> 를 눌러요.</p></li>
+                    <li class="ai-step"><span class="no">3</span><strong>홈 화면에 추가</strong><p><span class="ai-key">앱 설치</span> 또는 <span class="ai-key">홈 화면에 추가</span> 를 누르면 바탕화면에 뉴키즈 아이콘이 생겨요.</p></li>
+                </ol>
+                <div class="ai-note">화면 아래에 “앱 설치” 안내가 바로 뜨면 그 버튼을 눌러도 돼요.</div>
+            </div>
+
+            <div class="ai-panel" id="tab-iphone">
+                <ol class="ai-steps">
+                    <li class="ai-step"><span class="no">1</span><strong>사파리(Safari)에서 앱 열기</strong><p>위의 <span class="ai-key">앱 열기</span> 버튼을 누르거나 카메라로 QR코드를 찍어 사파리로 열어요.</p></li>
+                    <li class="ai-step"><span class="no">2</span><strong>공유 버튼 누르기</strong><p>화면 아래(또는 위) 가운데의 <span class="ai-key">□↑ 공유</span> 버튼을 눌러요.</p></li>
+                    <li class="ai-step"><span class="no">3</span><strong>홈 화면에 추가</strong><p>목록을 내려 <span class="ai-key">홈 화면에 추가</span> 를 누르고, 오른쪽 위 <span class="ai-key">추가</span> 를 누르면 끝!</p></li>
+                </ol>
+                <div class="ai-note">아이폰은 카카오톡·네이버 앱 안에서 열면 홈 화면 추가가 안 보여요. 꼭 <b>사파리</b>에서 열어 주세요.</div>
+            </div>
+
+            <div class="ai-panel" id="tab-pc">
+                <ol class="ai-steps">
+                    <li class="ai-step"><span class="no">1</span><strong>크롬 또는 엣지에서 앱 열기</strong><p>위의 <span class="ai-key">앱 열기</span> 버튼을 눌러 주문 앱을 열어요.</p></li>
+                    <li class="ai-step"><span class="no">2</span><strong>설치 아이콘 누르기</strong><p>주소창 오른쪽 끝의 <span class="ai-key">설치(모니터 모양)</span> 아이콘을 눌러요.</p></li>
+                    <li class="ai-step"><span class="no">3</span><strong>설치</strong><p><span class="ai-key">설치</span> 를 누르면 바탕화면과 시작 메뉴에 뉴키즈 주문이 생겨요.</p></li>
+                </ol>
+                <div class="ai-note">아이콘이 안 보이면 오른쪽 위 메뉴 <span class="ai-key">⋮</span> → <span class="ai-key">전송, 저장 및 공유</span> → <span class="ai-key">페이지를 앱으로 설치</span> 를 눌러 주세요.</div>
+            </div>
+        </div>
+    </section>
+
+    <section id="contact" class="contact-section bg-gray">
+        <div class="container">
+            <h2 class="contact-title">설치가 어려우신가요?</h2>
+            <p class="contact-desc">전화 주시면 설치를 도와드릴게요.</p>
+            <div class="contact-info-wrap">
+                <a href="tel:010-2333-2563" class="contact-link"><span class="contact-icon">📞</span>상담문의 1: <strong>010-2333-2563</strong></a>
+                <a href="tel:010-5522-8109" class="contact-link"><span class="contact-icon">📞</span>상담문의 2: <strong>010-5522-8109</strong></a>
+            </div>
+        </div>
+    </section>
+
+    <footer></footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js?v=20261026"></script>
+    <script src="manager.js?v=20261102"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+        // 기기에 맞는 설치 방법 탭을 먼저 보여 줌
+        const ua = navigator.userAgent;
+        const isIOS = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        const isAndroid = /Android/.test(ua);
+        showTab(isIOS ? 'iphone' : (isAndroid ? 'android' : 'pc'));
+
+        document.querySelectorAll('.ai-tab').forEach(btn => {
+            btn.addEventListener('click', () => showTab(btn.dataset.tab));
+        });
+
+        function showTab(name) {
+            document.querySelectorAll('.ai-tab').forEach(b => {
+                const on = b.dataset.tab === name;
+                b.classList.toggle('on', on);
+                b.setAttribute('aria-selected', on);
+            });
+            document.querySelectorAll('.ai-panel').forEach(p => p.classList.toggle('on', p.id === 'tab-' + name));
+        }
+
+        // PC 화면에서 휴대폰으로 찍을 QR코드 (주문 앱 주소)
+        try {
+            new QRCode(document.getElementById('qr'), {
+                text: 'https://n-kids.github.io/newkids/app/',
+                width: 336, height: 336, colorDark: '#172451', colorLight: '#ffffff'
+            });
+        } catch (e) { document.querySelector('.ai-qr').style.display = 'none'; }
+    </script>
+</body>
+</html>

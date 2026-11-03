@@ -20,7 +20,7 @@
 <meta property="og:url" content="https://n-kids.github.io/newkids/index.html">
     
     <title>뉴키즈 - 김포·고양·파주 어린이집/유치원 파트너</title>
-    <link rel="stylesheet" href="style.css?v=20261028">
+    <link rel="stylesheet" href="style.css?v=20261103">
     <style>
         /* =========================================
            [팝업 슬라이더 스타일]
@@ -255,6 +255,19 @@
     <!-- 자료실 바로가기 -->
     <section id="quick-links" class="home-quick">
         <div class="container-home">
+            <a href="app-install.html" class="app-banner">
+                <img src="app/icon-192.png" alt="" class="app-banner-icon">
+                <span class="app-banner-text">
+                    <small>NEW · 원 전용 주문 앱</small>
+                    <strong>뉴키즈 주문 앱 설치하기</strong>
+                    <span>교재·물품 주문, 견적서 요청, A/S 신청을 휴대폰에서 바로!</span>
+                    <span class="app-banner-go">설치 방법 보기 <span aria-hidden="true">&rarr;</span></span>
+                </span>
+                <span class="app-banner-qr">
+                    <span id="app-qr"></span>
+                    <small>휴대폰 카메라로 찍으면<br>바로 설치 안내가 열려요</small>
+                </span>
+            </a>
             <div class="quick-banner">
                 <a href="notice.html#reference" class="quick-main">
                     <span class="quick-icon" data-icon="reference"></span>
@@ -308,6 +321,16 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js?v=20261026"></script>
     <script src="manager.js?v=20261102"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+        // 주문 앱 설치 배너: PC에서 휴대폰으로 찍을 QR코드 (설치 안내 페이지)
+        try {
+            new QRCode(document.getElementById('app-qr'), {
+                text: 'https://n-kids.github.io/newkids/app-install.html',
+                width: 240, height: 240, colorDark: '#172451', colorLight: '#ffffff'
+            });
+        } catch (e) { document.querySelectorAll('.app-banner-qr').forEach(el => el.style.display = 'none'); }
+    </script>
 
     <script>
         let currentSlideIndex = 0;

@@ -106,3 +106,26 @@ end $$;
 
 revoke all on function public.nk_ec_pending(text), public.nk_ec_push(text,bigint,text,text,jsonb,text) from public;
 grant execute on function public.nk_ec_pending(text), public.nk_ec_push(text,bigint,text,text,jsonb,text) to anon, authenticated;
+
+-- ===== 웍스 [반품] 할 일 ↔ 납품앱 회수·반품 (2026-11-06) =====
+-- 메인 PC sync-returns.py 가 15분마다: 열린 [반품] 할 일을 pickup 기록으로 올리고(nk_ec_pickup_put),
+-- 납품앱에서 완료 체크된 것(nk_ec_pickups)을 웍스에서 완료 처리한 뒤 worksDoneAt 을 적는다.
+create or replace function public.nk_ec_pickups(p_key text)
+returns jsonb language plpgsql security definer set search_path = public as $$
+begin
+  if not public.nk_sheet_key_ok(p_key) then raise exception 'sheet key mismatch'; end if;
+  return coalesce((select jsonb_agg(jsonb_build_object('rid', rid, 'value', value) order by rid)
+                     from public.ec_records where kind in ('pickup', 'school') and not deleted and value is not null), '[]');
+end $$;
+
+create or replace function public.nk_ec_pickup_put(p_key text, p_rid text, p_value jsonb)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if not public.nk_sheet_key_ok(p_key) then raise exception 'sheet key mismatch'; end if;
+  if coalesce(p_rid, '') = '' or p_value->>'id' is distinct from p_rid then raise exception 'bad pickup id'; end if;
+  insert into public.ec_records (kind, rid, value, deleted, updated_by) values ('pickup', p_rid, p_value, false, 'nk-works')
+    on conflict (kind, rid) do update set value = excluded.value, deleted = false, updated_by = excluded.updated_by;
+end $$;
+
+revoke all on function public.nk_ec_pickups(text), public.nk_ec_pickup_put(text,text,jsonb) from public;
+grant execute on function public.nk_ec_pickups(text), public.nk_ec_pickup_put(text,text,jsonb) to anon, authenticated;

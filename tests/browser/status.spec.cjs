@@ -2,6 +2,7 @@ const {test,expect}=require('@playwright/test');
 const fs=require('node:fs');
 const path=require('node:path');
 const mock=fs.readFileSync(path.join(__dirname,'fixtures/supabase-mock.js'),'utf8');
+const cors={'access-control-allow-origin':'*','access-control-allow-methods':'GET, OPTIONS','access-control-allow-headers':'apikey, authorization'};
 
 async function prepare(context,releaseAvailable){
  await context.route('**/*',async route=>{
@@ -10,9 +11,11 @@ async function prepare(context,releaseAvailable){
   if(url.hostname==='127.0.0.1')return route.continue();
   if(url.hostname==='cdn.jsdelivr.net'&&url.pathname.includes('@supabase/supabase-js'))return route.fulfill({status:200,contentType:'application/javascript',body:mock});
   if(url.hostname==='jmdyqdckclgfyimqpqce.supabase.co'&&url.pathname==='/rest/v1/page_editor_publications'){
-   expect(route.request().method()).toBe('GET');
+   const method=route.request().method();
+   if(method==='OPTIONS')return route.fulfill({status:204,headers:cors});
+   expect(method).toBe('GET');
    const key=(url.searchParams.get('page_key')||'').replace(/^eq\./,'');
-   return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(releaseAvailable?[{page_key:key,version:4,published_at:'2026-11-01T00:00:00Z'}]:[])});
+   return route.fulfill({status:200,headers:cors,contentType:'application/json',body:JSON.stringify(releaseAvailable?[{page_key:key,version:4,published_at:'2026-11-01T00:00:00Z'}]:[])});
   }
   if(url.hostname.endsWith('supabase.co'))throw new Error('Unexpected production API request: '+url.pathname);
   return route.abort();

@@ -2,12 +2,19 @@ const { test, expect } = require('@playwright/test');
 const fs = require('node:fs');
 const path = require('node:path');
 const mock = fs.readFileSync(path.join(__dirname,'fixtures/supabase-mock.js'),'utf8');
+const cors = {'access-control-allow-origin':'*','access-control-allow-methods':'GET, OPTIONS','access-control-allow-headers':'apikey, authorization'};
 
 test.beforeEach(async ({ context, page }) => {
  await context.route('**/*', async route => {
   const url=new URL(route.request().url());
   if(url.hostname==='127.0.0.1')return route.continue();
   if(url.hostname==='cdn.jsdelivr.net'&&url.pathname.includes('@supabase/supabase-js'))return route.fulfill({status:200,contentType:'application/javascript',body:mock});
+  if(url.hostname==='jmdyqdckclgfyimqpqce.supabase.co'&&url.pathname==='/rest/v1/page_editor_publications'){
+   const method=route.request().method();
+   if(method==='OPTIONS')return route.fulfill({status:204,headers:cors});
+   expect(method).toBe('GET');
+   return route.fulfill({status:200,headers:cors,contentType:'application/json',body:'[]'});
+  }
   if(url.hostname.endsWith('supabase.co'))throw new Error('Production database request blocked: '+url.pathname);
   return route.abort();
  });
@@ -59,10 +66,19 @@ test('publication preflight blocks blank titles and unsafe button URLs', async (
  expect(await page.evaluate(()=>Object.keys(window.__NK_EDITOR_TEST.publications).length)).toBe(0);
  await page.locator('#nk-preflight-cancel').click();
  await page.locator('#title').fill('정상 제목');
+ await page.locator('#main-settings summary').click();
+ await expect(page.locator('#buttonUrl')).toBeVisible();
  await page.locator('#buttonUrl').fill('javascript:alert(1)');
  await page.locator('#publish').click();
  await expect(page.locator('#nk-preflight-results .preflight-error')).toContainText('버튼 연결 주소');
  await expect(page.locator('#nk-preflight-confirm')).toBeDisabled();
+ expect(await page.evaluate(()=>Object.keys(window.__NK_EDITOR_TEST.publications).length)).toBe(0);
+});
+
+test('public diagnostics use a mocked GET without changing editor state', async ({page}) => {
+ await editor(page);
+ await expect(page.locator('#nk-deployment-publication')).toContainText('공개본 없음');
+ expect(await page.evaluate(()=>Object.keys(window.__NK_EDITOR_TEST.drafts).length)).toBe(0);
  expect(await page.evaluate(()=>Object.keys(window.__NK_EDITOR_TEST.publications).length)).toBe(0);
 });
 

@@ -1,0 +1,49 @@
+/* Board-only layout. Common theme remains in subpage-theme.css. */
+body#main-body.board-page [hidden] { display: none !important; }
+body#main-body.board-page .top-btn-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+body#main-body.board-page .board-mode-buttons { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+body#main-body.board-page #btn-user-write { margin: 0; }
+body#main-body.board-page #btn-scrap-mode { border-color: #9c4a10; color: #9c4a10; background: #fff; }
+body#main-body.board-page #btn-recent-mode { border-color: #17766b; color: #17766b; background: #fff; }
+body#main-body.board-page #btn-scrap-mode[aria-pressed=true] { background: #9c4a10; color: #fff; }
+body#main-body.board-page #btn-recent-mode[aria-pressed=true] { background: #17766b; color: #fff; }
+body#main-body.board-page .filter-wrap { display: flex; margin-bottom: 25px; width: 100%; }
+body#main-body.board-page #hashtag-area { flex: 1; min-width: 0; width: 100%; }
+body#main-body.board-page :is(.board-list-head,.board-list-row) { display: grid; grid-template-columns: 64px 100px minmax(0,1fr) 168px !important; align-items: center; }
+body#main-body.board-page .board-list-head { padding: 12px 10px; border-bottom: 2px solid #172451; }
+body#main-body.board-page .board-list-row { padding: 15px 10px; cursor: default; }
+body#main-body.board-page :is(.board-list-head,.board-list-row) > div { min-width: 0; }
+body#main-body.board-page :is(.board-col-number,.board-col-author,.board-col-meta) { text-align: center; }
+body#main-body.board-page .board-col-number { font-weight: 700; color: #596174; }
+body#main-body.board-page .board-col-title { padding-left: 10px; }
+body#main-body.board-page .board-list-head .board-col-meta { white-space: nowrap; }
+body#main-body.board-page .board-list-row .board-col-title { display: flex; align-items: center; gap: 4px; overflow: hidden; }
+body#main-body.board-page .board-post-link { display: flex; align-items: center; gap: 4px; min-width: 0; flex: 1; color: #172451; font-weight: 700; font-size: 1.2rem; }
+body#main-body.board-page .board-post-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+body#main-body.board-page .board-post-link:hover .board-post-text { text-decoration: underline; }
+body#main-body.board-page .scrap-btn { flex-shrink: 0; }
+body#main-body.board-page .board-list-row .board-col-meta { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+body#main-body.board-page .board-date { font-size: .85rem; color: #596174; }
+body#main-body.board-page .board-downloads { font-size: .75rem; color: #596174; background: rgba(0,0,0,.05); padding: 2px 6px; border-radius: 4px; }
+body#main-body.board-page .board-author { background: #f1f3f5; color: #555; padding: 3px 8px; border-radius: 4px; font-size: .8rem; }
+body#main-body.board-page .board-status { flex-shrink: 0; border-radius: 12px; padding: 3px 8px; font-size: .75rem; }
+body#main-body.board-page .board-status-done { background: #172451; color: #fff; }
+body#main-body.board-page .board-status-wait { background: #e9ecef; color: #545b6e; }
+body#main-body.board-page .board-notice-row { background: rgba(244,162,97,.08); }
+body#main-body.board-page .board-notice-label { color: #b42318; font-weight: 700; }
+body#main-body.board-page .board-category { background: #eef6ff; color: #172451; font-size: .75rem; padding: 3px 8px; border-radius: 4px; }
+body#main-body.board-page .board-state { text-align: center; padding: 50px 20px; color: #596174; }
+body#main-body.board-page #load-more-box { display: flex; justify-content: center; margin-top: 40px; }
+body#main-body.board-page .reference-help-panel { display: flex; }
+body#main-body.board-page .board-search { display: flex; justify-content: center; align-items: center; margin-top: 40px; gap: 8px; }
+body#main-body.board-page #search-input { width: 250px; min-width: 0; padding: 10px 12px; }
+body#main-body.board-page .board-search .btn-action { flex-shrink: 0; }
+body#main-body.board-page #download-guide-modal { display: flex; }
+@media (max-width: 768px) {
+ body#main-body.board-page :is(.board-list-head,.board-list-row) { grid-template-columns: 40px minmax(0,1fr) 110px !important; }
+ body#main-body.board-page .board-col-author { display: none; }
+ body#main-body.board-page .board-list-head { font-size: .75rem; }
+ body#main-body.board-page .board-post-link { font-size: 1rem; }
+ body#main-body.board-page .board-col-title { padding-left: 4px; }
+ body#main-body.board-page .board-search #search-input { width: 250px; max-width: 100%; flex: 1; }
+}

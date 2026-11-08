@@ -6,80 +6,53 @@
     <title>뉴키즈 - 게시판</title>
     <meta name="description" content="뉴키즈(New Kids)의 주요 공지사항과 교육 자료를 확인하세요. 어린이집과 유치원 원장님들을 위한 유익한 최신 운영 소식을 전해드립니다.">
     <meta name="keywords" content="뉴키즈 공지사항, 김포뉴키즈, 고양뉴키즈, 파주뉴키즈, 유치원 교육자료">
-    <!-- 공통 스타일 시트 로드 -->
-    <link rel="stylesheet" href="style.css?v=20261102">
-    <link id="nk-subpage-theme" rel="stylesheet" href="subpage-theme.css?v=20261108-board-2">
-<link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="stylesheet" href="style.css?v=20261108-board-3">
+    <link id="nk-subpage-theme" rel="stylesheet" href="subpage-theme.css?v=20261108-board-3">
+    <link rel="stylesheet" href="board.css?v=20261108-board-3">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
 </head>
-<body id="main-body" class="nk-subpage">
-
+<body id="main-body" class="nk-subpage board-page">
     <header></header>
-
     <div class="board-header-section" id="view-hero">
         <div class="container">
-            <h1 id="board-title" style="font-size: 2.2rem; margin-bottom:10px; color:#1a3c6e;">📢 알림 & 소식</h1>
-            <p id="board-desc" style="color:#666;">데이터를 불러오는 중입니다...</p>
+            <h1 id="board-title">📢 알림 & 소식</h1>
+            <p id="board-desc">데이터를 불러오는 중입니다...</p>
         </div>
     </div>
-
-    <div class="board-container" style="max-width: 1100px; margin: 40px auto; box-sizing: border-box;">
-
-        <!-- 상단 유틸리티 버튼 행 (찜하기 / 최근본자료 / 글쓰기) -->
-        <div class="top-btn-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
-            <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-                <!-- 찜한 자료 버튼 -->
-                <button id="btn-scrap-mode" onclick="toggleScrapMode()" class="hashtag-btn" style="border-color:#9c4a10; color:#9c4a10;">
-                    ⭐ 찜한 자료
-                </button>
-                <!-- 최근 본 자료 버튼 -->
-                <button id="btn-recent-mode" onclick="toggleRecentMode()" class="hashtag-btn" style="border-color:#17766b; color:#17766b;">
-                    🕒 최근 본 자료
-                </button>
+    <main class="board-container">
+        <div class="top-btn-row">
+            <div class="board-mode-buttons">
+                <button type="button" id="btn-scrap-mode" data-action="scraps" class="hashtag-btn" aria-pressed="false">⭐ 찜한 자료</button>
+                <button type="button" id="btn-recent-mode" data-action="recent" class="hashtag-btn" aria-pressed="false">🕒 최근 본 자료</button>
             </div>
-            <button id="btn-user-write" class="btn-action" style="display: none; margin:0;" onclick="location.href='write.html#' + currentCategory">✏️ 글쓰기</button>
+            <button type="button" id="btn-user-write" class="btn-action" data-action="write" hidden>✏️ 글쓰기</button>
         </div>
-
-
-
-        <!-- 해시태그 영역 -->
-        <div class="filter-wrap" style="display:flex; margin-bottom: 25px; width: 100%;">
-            <div class="hashtag-container" id="hashtag-area" style="flex:1; min-width: 0; width: 100%;">
-                <span style="color:#666; font-size:0.9rem;">태그 분석 중...</span>
-            </div>
+        <div class="filter-wrap">
+            <div class="hashtag-container" id="hashtag-area"></div>
         </div>
-
-        <div class="board-list-head" style="display:grid; grid-template-columns: 80px 100px 1fr 120px; padding:12px 10px; font-weight:bold; border-bottom:2px solid #1a3c6e; color:#333;">
-            <div style="text-align:center;">번호</div>
-            <div style="text-align:center;">작성자</div>
-            <div style="padding-left:10px;">제목</div>
-            <div style="text-align:center;">작성일 / 다운로드</div>
+        <div class="board-list-head">
+            <div class="board-col-number">번호</div>
+            <div class="board-col-author">작성자</div>
+            <div class="board-col-title">제목</div>
+            <div class="board-col-meta">작성일 / 다운로드</div>
         </div>
-
-        <div id="board-list-wrapper">
-            <div style="text-align:center; padding:50px; color:#666;">데이터를 불러오는 중입니다...</div>
+        <div id="board-list-wrapper" aria-live="polite"><p class="board-state">데이터를 불러오는 중입니다...</p></div>
+        <div id="load-more-box" hidden><button type="button" data-action="more" class="btn-load-more">더보기 ＋</button></div>
+        <div id="reference-help-panel" class="reference-help-panel" hidden>
+            <div><strong>자료 다운로드 안내</strong><span>첨부 파일을 누르면 내려받을 수 있습니다. 🔒 표시가 있으면 게시글에 안내된 비밀번호를 입력해 주세요.</span></div>
+            <button type="button" class="btn-action" data-action="guide-open">다운로드 방법</button>
+            <a class="btn-action reference-inquiry-link" href="notice.html#qna">문의하기 · 답변 확인</a>
+            <button type="button" class="btn-action" data-action="share">자료실 공유</button>
         </div>
-
-        <div id="load-more-box" style="display:none; justify-content:center; margin-top:40px;">
-            <button onclick="loadMore()" class="btn-load-more">더보기 ＋</button>
-        </div>
-
-            <div id="reference-help-panel" class="reference-help-panel" style="display:none;">
-                <div><strong>자료 다운로드 안내</strong><span>첨부 파일을 누르면 내려받을 수 있습니다. 🔒 표시가 있으면 게시글에 안내된 비밀번호를 입력해 주세요.</span></div>
-                <button type="button" class="btn-action" onclick="showDownloadGuide()">다운로드 방법</button>
-                <a class="btn-action reference-inquiry-link" href="notice.html#qna">문의하기 · 답변 확인</a>
-                <button type="button" class="btn-action" onclick="shareResourcePage()">자료실 공유</button>
-            </div>
-
-        <div style="display: flex; justify-content: center; align-items: center; margin-top: 40px; gap: 5px;">
-            <input type="text" id="search-input" class="form-input" style="width: 250px; padding: 8px;" placeholder="제목 검색" onkeypress="if(event.keyCode==13) executeSearch();">
-            <button onclick="executeSearch()" class="btn-action" style="padding: 8px 15px;">검색</button>
-        </div>
-    </div>
-
-    <div id="download-guide-modal" class="guide-modal" role="dialog" aria-modal="true" aria-labelledby="download-guide-title" style="display:none;">
+        <form id="board-search-form" class="board-search" role="search">
+            <input type="search" id="search-input" class="form-input" placeholder="제목 검색" aria-label="게시글 제목 검색">
+            <button type="submit" class="btn-action">검색</button>
+        </form>
+    </main>
+    <div id="download-guide-modal" class="guide-modal" role="dialog" aria-modal="true" aria-labelledby="download-guide-title" hidden>
         <div class="guide-modal-card">
-            <button type="button" class="guide-modal-close" aria-label="닫기" onclick="hideDownloadGuide()">×</button>
+            <button type="button" class="guide-modal-close" aria-label="닫기" data-action="guide-close">×</button>
             <h2 id="download-guide-title">자료 다운로드 방법</h2>
             <ol>
                 <li>자료 제목을 눌러 상세 화면으로 이동합니다.</li>
@@ -88,415 +61,18 @@
                 <li>열리지 않는 파일은 기기에 맞는 앱으로 열거나 자료별 문의를 남겨 주세요.</li>
             </ol>
             <p>파일을 열 때 문제가 있으면 <a href="notice.html#qna">문의사항 게시판</a>에서 문의하고 답변을 확인할 수 있습니다.</p>
-            <button type="button" class="btn-action" onclick="hideDownloadGuide()">확인</button>
+            <button type="button" class="btn-action" data-action="guide-close">확인</button>
         </div>
     </div>
-    <div id="mobile-resource-actions" class="mobile-resource-actions" aria-label="자료실 빠른 메뉴" style="display:none;">
-        <button type="button" onclick="showDownloadGuide()">다운로드 안내</button>
+    <div id="mobile-resource-actions" class="mobile-resource-actions" aria-label="자료실 빠른 메뉴" hidden>
+        <button type="button" data-action="guide-open">다운로드 안내</button>
         <a href="notice.html#qna">문의·답변</a>
-        <button type="button" onclick="shareResourcePage()">공유</button>
+        <button type="button" data-action="share">공유</button>
     </div>
-
     <footer></footer>
-
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="config.js?v=20261026"></script>
-    <script src="manager.js?v=20261102"></script>
-
-    <script>
-        const ITEMS_PER_PAGE = 10;
-        let currentPage = 1;
-        let currentCategory = location.hash.replace('#', '');
-        let currentSearchKeyword = '';
-        let boardCategories = [];
-        let isScrapMode = false;
-        let isRecentMode = false;
-        let currentFormatFilter = 'ALL';
-
-        document.addEventListener("DOMContentLoaded", () => {
-            const checkReady = setInterval(() => {
-                if (window.sb && window.GLOBAL_CATEGORIES && window.GLOBAL_CATEGORIES.length > 0) {
-                    clearInterval(checkReady);
-
-                    boardCategories = window.GLOBAL_CATEGORIES.filter(c => c.type === 'BOARD');
-
-                    if (boardCategories.length > 0) {
-                        if (!currentCategory || !boardCategories.find(c => c.code === currentCategory)) {
-                            currentCategory = boardCategories[0].code;
-                        }
-
-                        updateBoardHeader();
-                        buildDynamicHashtags().then(() => loadBoardList(1));
-                    } else {
-                        document.getElementById('board-list-wrapper').innerHTML = "<div style='text-align:center; padding:50px;'>생성된 게시판이 없습니다.</div>";
-                    }
-                }
-            }, 100);
-        });
-
-        window.addEventListener('hashchange', () => {
-            currentCategory = location.hash.replace('#', '');
-            if (!currentCategory && boardCategories.length > 0) currentCategory = boardCategories[0].code;
-
-            // 게시판 전환 시 찜/최근본 필터 모드 초기화 (다른 게시판 기록으로 빈 목록이 되는 문제 방지)
-            isScrapMode = false;
-            isRecentMode = false;
-            resetModeButtonStyles();
-
-            currentSearchKeyword = '';
-            const searchInput = document.getElementById('search-input');
-            if (searchInput) searchInput.value = '';
-
-            updateBoardHeader();
-            buildDynamicHashtags().then(() => loadBoardList(1));
-        });
-
-        function updateBoardHeader() {
-            const catInfo = boardCategories.find(c => c.code === currentCategory);
-            if (catInfo) {
-                document.getElementById('board-title').innerText = catInfo.name;
-                document.getElementById('board-desc').innerText = catInfo.hero_desc || "뉴키즈의 게시판입니다.";
-                document.title = "뉴키즈 - " + catInfo.name;
-            }
-
-            const writeBtn = document.getElementById('btn-user-write');
-            if (currentCategory === 'notice') {
-                writeBtn.style.display = 'none';
-            } else {
-                writeBtn.style.display = 'inline-block';
-            }
-            const isResourceBoard = currentCategory === 'reference';
-            document.body.classList.toggle('is-resource-board', isResourceBoard);
-            document.getElementById('reference-help-panel').style.display = isResourceBoard ? 'flex' : 'none';
-            document.getElementById('mobile-resource-actions').style.display = isResourceBoard ? '' : 'none';
-        }
-
-        window.showDownloadGuide = function () {
-            document.getElementById('download-guide-modal').style.display = 'flex';
-        };
-        window.hideDownloadGuide = function () {
-            document.getElementById('download-guide-modal').style.display = 'none';
-        };
-        window.shareResourcePage = async function () {
-            const shareData = { title: '뉴키즈 자료실', text: '뉴키즈 자료실에서 교육 자료를 확인해 보세요.', url: location.href };
-            if (navigator.share) {
-                try { await navigator.share(shareData); } catch (error) { if (error.name !== 'AbortError') copyResourceUrl(); }
-            } else {
-                copyResourceUrl();
-            }
-        };
-        function copyResourceUrl() {
-            const url = location.href;
-            if (navigator.clipboard && window.isSecureContext) {
-                navigator.clipboard.writeText(url).then(() => alert('자료실 주소를 복사했습니다.')).catch(() => prompt('아래 주소를 복사해 주세요.', url));
-            } else prompt('아래 주소를 복사해 주세요.', url);
-        }
-        document.addEventListener('keydown', event => { if (event.key === 'Escape') hideDownloadGuide(); });
-
-        async function buildDynamicHashtags() {
-            const hashtagArea = document.getElementById('hashtag-area');
-
-            const { data, error } = await window.sb.from('total_posts')
-                .select('title')
-                .eq('category', currentCategory)
-                .neq('is_visible', false);
-
-            if (error || !data || data.length === 0) {
-                hashtagArea.innerHTML = '';
-                return;
-            }
-
-            let tags = new Set();
-
-            data.forEach(item => {
-                if (item.title) {
-                    const match = item.title.match(/\[(.*?)\]/);
-                    if (match && match[1]) {
-                        const innerText = match[1];
-                        const parts = innerText.split(/[,-]/);
-                        parts.forEach(p => {
-                            const tag = p.trim();
-                            if (tag) tags.add(tag);
-                        });
-                    }
-                }
-            });
-
-            const sortedTags = Array.from(tags).sort();
-
-            if (sortedTags.length === 0) {
-                hashtagArea.innerHTML = '';
-                return;
-            }
-
-            let html = `<button class="hashtag-btn ${currentSearchKeyword === '' ? 'active' : ''}" onclick="clickHashtag('', this)">#전체보기</button>`;
-
-            sortedTags.forEach(tag => {
-                const isActive = (currentSearchKeyword === tag) ? 'active' : '';
-                html += `<button class="hashtag-btn ${isActive}" onclick="clickHashtag('${tag}', this)">#${tag}</button>`;
-            });
-
-            hashtagArea.innerHTML = html;
-        }
-
-        window.clickHashtag = function (keyword, btnEl) {
-            document.querySelectorAll('.hashtag-container .hashtag-btn').forEach(btn => btn.classList.remove('active'));
-            if (btnEl) btnEl.classList.add('active');
-
-            document.getElementById('search-input').value = keyword;
-            currentSearchKeyword = keyword;
-            loadBoardList(1);
-        };
-
-        window.filterByFormat = function (format, btnEl) {
-            document.querySelectorAll('.format-filter').forEach(b => b.classList.remove('active'));
-            btnEl.classList.add('active');
-            currentFormatFilter = format;
-            loadBoardList(1);
-        };
-
-        function executeSearch() {
-            const inputVal = document.getElementById('search-input').value.trim();
-            currentSearchKeyword = inputVal;
-            loadBoardList(1);
-        }
-
-        function resetModeButtonStyles() {
-            const scrapBtn = document.getElementById('btn-scrap-mode');
-            const recentBtn = document.getElementById('btn-recent-mode');
-            if (scrapBtn) {
-                scrapBtn.style.background = '#fff';
-                scrapBtn.style.color = '#9c4a10';
-                scrapBtn.innerText = '⭐ 찜한 자료';
-            }
-            if (recentBtn) {
-                recentBtn.style.background = '#fff';
-                recentBtn.style.color = '#17766b';
-                recentBtn.innerText = '🕒 최근 본 자료';
-            }
-        }
-
-        window.toggleScrapMode = function () {
-            isScrapMode = !isScrapMode;
-            isRecentMode = false;
-            document.getElementById('btn-recent-mode').style.background = '#fff';
-            document.getElementById('btn-recent-mode').style.color = '#17766b';
-            document.getElementById('btn-recent-mode').innerText = '🕒 최근 본 자료';
-
-            const btn = document.getElementById('btn-scrap-mode');
-            if (isScrapMode) {
-                btn.style.background = '#9c4a10';
-                btn.style.color = '#fff';
-                btn.innerText = '⭐ 찜한 자료 보는 중';
-            } else {
-                btn.style.background = '#fff';
-                btn.style.color = '#9c4a10';
-                btn.innerText = '⭐ 찜한 자료';
-            }
-            loadBoardList(1);
-        };
-
-        window.toggleRecentMode = function () {
-            isRecentMode = !isRecentMode;
-            isScrapMode = false;
-            document.getElementById('btn-scrap-mode').style.background = '#fff';
-            document.getElementById('btn-scrap-mode').style.color = '#9c4a10';
-            document.getElementById('btn-scrap-mode').innerText = '⭐ 찜한 자료';
-
-            const btn = document.getElementById('btn-recent-mode');
-            if (isRecentMode) {
-                btn.style.background = '#17766b';
-                btn.style.color = '#fff';
-                btn.innerText = '🕒 최근 본 자료 보는 중';
-            } else {
-                btn.style.background = '#fff';
-                btn.style.color = '#17766b';
-                btn.innerText = '🕒 최근 본 자료';
-            }
-            loadBoardList(1);
-        };
-
-        window.toggleScrap = function (event, postId) {
-            event.stopPropagation();
-            let savedScraps = JSON.parse(localStorage.getItem('nk_scraps') || '[]');
-            const btn = event.target;
-
-            if (savedScraps.includes(postId)) {
-                savedScraps = savedScraps.filter(id => id !== postId);
-                btn.innerText = '☆';
-            } else {
-                savedScraps.push(postId);
-                btn.innerText = '⭐';
-            }
-            localStorage.setItem('nk_scraps', JSON.stringify(savedScraps));
-        };
-
-        window.recordRecentAndGo = function (postId, url) {
-            let recentList = JSON.parse(localStorage.getItem('nk_recent') || '[]');
-            recentList = recentList.filter(id => id !== postId);
-            recentList.unshift(postId);
-            if (recentList.length > 20) recentList.pop();
-            localStorage.setItem('nk_recent', JSON.stringify(recentList));
-            location.href = url;
-        };
-
-        window.loadMore = function () {
-            loadBoardList(currentPage + 1, true);
-        };
-
-        async function loadBoardList(page, append = false) {
-            currentPage = page;
-            const listDiv = document.getElementById('board-list-wrapper');
-            const loadMoreBox = document.getElementById('load-more-box');
-
-            if (!append) {
-                listDiv.innerHTML = '<div style="text-align:center; padding:50px; color:#666;">로딩 중...</div>';
-            }
-
-            let savedScraps = JSON.parse(localStorage.getItem('nk_scraps') || '[]');
-            let recentList = JSON.parse(localStorage.getItem('nk_recent') || '[]');
-
-            if (isScrapMode && savedScraps.length === 0) {
-                listDiv.innerHTML = `<div style="text-align:center; padding:50px; border-bottom:1px solid #eaeaea;">찜(⭐)해둔 자료가 없습니다.</div>`;
-                loadMoreBox.style.display = 'none';
-                return;
-            }
-            if (isRecentMode && recentList.length === 0) {
-                listDiv.innerHTML = `<div style="text-align:center; padding:50px; border-bottom:1px solid #eaeaea;">최근 본 자료가 없습니다.</div>`;
-                loadMoreBox.style.display = 'none';
-                return;
-            }
-
-            const from = (page - 1) * ITEMS_PER_PAGE;
-            const to = from + ITEMS_PER_PAGE - 1;
-
-            let query = window.sb.from('total_posts')
-                .select('id, title, category, created_at, link_url, is_secret, download_count, is_notice, image_url', { count: 'exact' })
-                .neq('is_visible', false);
-
-            if (isRecentMode) {
-                // 최근 본 자료 모드: 게시판(카테고리) 구분 없이 전체 열람 기록을 표시
-                query = query.in('id', recentList);
-            } else {
-                query = query.eq('category', currentCategory);
-            }
-
-            if (currentSearchKeyword !== '') {
-                query = query.ilike('title', `%${currentSearchKeyword}%`);
-            }
-
-            if (isScrapMode) {
-                query = query.in('id', savedScraps);
-            }
-
-            // 자료실은 제목 앞 [과목명] 기준 가나다순, 그 외 게시판은 최신순
-            query = query.order('is_notice', { ascending: false, nullsFirst: false });
-            query = (currentCategory === 'reference')
-                ? query.order('title', { ascending: true }).order('created_at', { ascending: false })
-                : query.order('created_at', { ascending: false });
-            const { data, count, error } = await query.range(from, to);
-
-            if (error) {
-                if (!append) listDiv.innerHTML = `<div style="text-align:center; padding:30px;">에러: ${error.message}</div>`;
-                return;
-            }
-
-            let processedData = data || [];
-            if (isRecentMode && processedData.length > 1) {
-                // 가장 최근에 본 글이 위에 오도록 정렬
-                processedData.sort((a, b) => recentList.indexOf(a.id) - recentList.indexOf(b.id));
-            }
-            if (currentFormatFilter !== 'ALL' && processedData.length > 0) {
-                processedData = processedData.filter(item => {
-                    if (!item.image_url) return false;
-                    const upperUrl = item.image_url.toUpperCase();
-                    return upperUrl.includes('.' + currentFormatFilter);
-                });
-            }
-
-            if (processedData.length === 0) {
-                if (!append) listDiv.innerHTML = `<div style="text-align:center; padding:50px; border-bottom:1px solid #eaeaea;">등록되거나 조건에 맞는 글이 없습니다.</div>`;
-                loadMoreBox.style.display = 'none';
-                return;
-            }
-
-            if (!append) listDiv.innerHTML = '';
-
-            const postIds = processedData.map(item => item.id);
-            let answeredSet = new Set();
-
-            if (postIds.length > 0) {
-                const { data: commentsData } = await window.sb.from('post_comments').select('post_id').in('post_id', postIds);
-                if (commentsData) {
-                    commentsData.forEach(c => answeredSet.add(c.post_id));
-                }
-            }
-
-            let html = '';
-            processedData.forEach((item, index) => {
-                const date = new Date(item.created_at).toISOString().split('T')[0];
-                let authorName = item.link_url ? item.link_url.trim() : '익명';
-                let isAdminPost = false;
-
-                if (currentCategory === 'notice') {
-                    authorName = '관리자';
-                    isAdminPost = true;
-                } else if (authorName === '관리자') {
-                    isAdminPost = true;
-                } else if (authorName === '익명' || authorName.startsWith('http://') || authorName.startsWith('https://')) {
-                    authorName = '관리자';
-                    isAdminPost = true;
-                }
-
-                const displayNum = count - from - index;
-                const secretIcon = (item.is_secret === true || String(item.is_secret) === 'true') ? '🔒 ' : '';
-                const dlCount = item.download_count || 0;
-
-                let statusBadge = '';
-                if (!isAdminPost) {
-                    if (answeredSet.has(item.id)) {
-                        statusBadge = `<span class="badge" style="background:#1a3c6e; color:white; margin-right:8px; border-radius:12px; padding:3px 8px; font-size:0.75rem;">답변완료</span>`;
-                    } else {
-                        statusBadge = `<span class="badge" style="background:#e9ecef; color:#888; margin-right:8px; border-radius:12px; padding:3px 8px; font-size:0.75rem;">답변대기</span>`;
-                    }
-                }
-
-                const isScrapped = savedScraps.includes(item.id);
-                const starIcon = isScrapped ? '⭐' : '☆';
-
-                const isNoticePost = (item.is_notice === true);
-                const rowBg = isNoticePost ? 'background-color: rgba(244, 162, 97, 0.08);' : '';
-                let displayNumHtml = isNoticePost ? '<span style="color:#e74c3c; font-weight:bold;">공지</span>' : displayNum;
-                if (isRecentMode) {
-                    const catInfo = boardCategories.find(c => c.code === item.category);
-                    displayNumHtml = `<span class="badge" style="background:#eef6ff; color:#1a3c6e; font-size:0.75rem; padding:3px 8px; border-radius:4px;">${catInfo ? catInfo.name : item.category}</span>`;
-                }
-                const noticeIcon = isNoticePost ? '📌 ' : '';
-
-                html += `
-                            <div class="board-list-row" onclick="recordRecentAndGo(${item.id}, 'view.html?id=${item.id}')" style="display:grid; grid-template-columns: 80px 100px 1fr 120px; padding:15px 10px; align-items:center; cursor:pointer; ${rowBg}">
-                                <div style="text-align:center; font-weight:bold; color:#666;">${displayNumHtml}</div>
-                                <div style="text-align:center;"><span class="badge" style="background:#f1f3f5; color:#555; padding:3px 8px; border-radius:4px; font-size:0.8rem;">${authorName}</span></div>
-                                <div style="padding-left:10px; display:flex; align-items:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-                                    <button class="scrap-btn" onclick="toggleScrap(event, ${item.id})">${starIcon}</button>
-                                    ${statusBadge}${secretIcon}${noticeIcon}<span style="overflow:hidden; text-overflow:ellipsis;">${item.title}</span>
-                                </div>
-                                <div style="text-align:center; display:flex; flex-direction:column; align-items:center; gap:4px;">
-                                    <span style="font-size:0.85rem; color:#666;">${date}</span>
-                                    <span style="font-size:0.75rem; color:#888; background:rgba(0,0,0,0.05); padding:2px 6px; border-radius:4px;">📥 ${dlCount}</span>
-                                </div>
-                            </div>`;
-            });
-
-            listDiv.innerHTML += html;
-
-            if (count > to + 1) {
-                loadMoreBox.style.display = 'flex';
-            } else {
-                loadMoreBox.style.display = 'none';
-            }
-        }
-    </script>
+    <script src="config.js?v=20261108-board-3"></script>
+    <script src="manager.js?v=20261108-board-3"></script>
+    <script src="board.js?v=20261108-board-3"></script>
 </body>
 </html>
-

@@ -137,3 +137,31 @@ body#main-body.nk-subpage .board-container { margin: 0 auto !important; padding-
  body.nk-subpage #view-hero:is(.sub-hero,.board-header-section) { min-height: 220px !important; padding: 44px 0 !important; }
  body#main-body.nk-subpage .board-container { padding-top: 40px !important; padding-bottom: 40px !important; }
 }
+
+/* Board hero: supplied screenshot reference, without changing program pages. */
+body#main-body.nk-subpage #view-hero.board-header-section {
+ min-height: 310px !important; padding: 80px 24px !important; background: #f7f0e4 !important;
+ border-bottom: 1px solid #e6dfd3;
+}
+body#main-body.nk-subpage #view-hero.board-header-section > .container { position: relative; z-index: 1; padding: 0; }
+body#main-body.nk-subpage #view-hero.board-header-section #board-title {
+ font-size: 48px !important; line-height: 1.25 !important; font-weight: 800 !important;
+ letter-spacing: -.025em !important; margin: 0 0 24px !important; color: #172451 !important;
+}
+body#main-body.nk-subpage #view-hero.board-header-section #board-desc {
+ font-size: 20px !important; line-height: 1.6 !important; font-weight: 500 !important;
+ margin: 0 auto !important; color: #545b6e !important; max-width: 900px; word-break: keep-all;
+}
+body#main-body.nk-subpage #view-hero.board-header-section::before {
+ width: 310px; height: 310px; right: -95px; top: -115px; border: 36px solid #e7bb98; opacity: .35;
+}
+body#main-body.nk-subpage #view-hero.board-header-section::after {
+ width: 140px; height: 140px; left: -70px; bottom: -84px; background: #cbded0;
+}
+@media (max-width: 768px) {
+ body#main-body.nk-subpage #view-hero.board-header-section { min-height: 240px !important; padding: 56px 20px !important; }
+ body#main-body.nk-subpage #view-hero.board-header-section #board-title { font-size: 32px !important; margin-bottom: 16px !important; }
+ body#main-body.nk-subpage #view-hero.board-header-section #board-desc { font-size: 16px !important; line-height: 1.7 !important; }
+ body#main-body.nk-subpage #view-hero.board-header-section::before { width: 220px; height: 220px; right: -125px; top: -120px; border-width: 28px; }
+ body#main-body.nk-subpage #view-hero.board-header-section::after { width: 100px; height: 100px; left: -55px; bottom: -65px; }
+}

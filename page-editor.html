@@ -3,33 +3,33 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>뉴키즈 페이지 편집</title>
-<link rel="icon" href="favicon.ico"><link rel="stylesheet" href="page-editor.css?v=1">
+<link rel="icon" href="favicon.ico"><link rel="stylesheet" href="page-editor.css?v=20261108-ui2">
 </head>
 <body>
-<aside><h2>뉴키즈 관리자</h2><a href="admin.html">기존 관리자</a><a class="selected" href="page-editor.html">페이지 편집</a><a href="index.html" target="_blank" rel="noopener">홈페이지 열기</a></aside>
+<svg class="icon-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><symbol id="pe-home" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v11H3zM9 21v-8h6v8"/></symbol><symbol id="pe-edit" viewBox="0 0 24 24"><path d="m16 3 5 5L8 21H3v-5zM13 6l5 5"/></symbol><symbol id="pe-file" viewBox="0 0 24 24"><path d="M14 3H5v18h14V8zM14 3v5h5M8 12h8M8 16h8"/></symbol><symbol id="pe-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 6v6l4 2"/></symbol><symbol id="pe-save" viewBox="0 0 24 24"><path d="M3 3h15l3 3v15H3zM7 3v6h10V3M7 21v-7h10v7"/></symbol><symbol id="pe-send" viewBox="0 0 24 24"><path d="m3 10 18-7-7 18-3-8zM11 13 21 3"/></symbol><symbol id="pe-screen" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="13" rx="2"/><path d="M12 16v5M8 21h8"/></symbol><symbol id="pe-phone" viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></symbol><symbol id="pe-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h1M3 12h1M3 18h1"/></symbol></svg>
+<aside><h2>뉴키즈 관리자</h2><nav aria-label="관리자 메뉴"><a href="admin.html"><svg class="ic"><use href="#pe-home"/></svg>대시보드</a><a class="selected" href="page-editor.html" aria-current="page"><svg class="ic"><use href="#pe-edit"/></svg>페이지 편집</a><a href="admin.html"><svg class="ic"><use href="#pe-file"/></svg>게시글 관리 · 기존 관리자</a><a href="#history-card"><svg class="ic"><use href="#pe-clock"/></svg>변경 이력</a></nav><a class="site-link" href="index.html" target="_blank" rel="noopener">홈페이지 열기</a></aside>
 <main>
-<header><div><h1>페이지 편집</h1><p>초안 편집 중 · 공개 버튼을 누르기 전에는 사이트에 반영되지 않습니다.</p></div><div class="actions"><button id="compare" disabled>변경 비교</button><button id="save" disabled>초안 저장</button><button id="publish" class="primary" disabled>공개 반영</button></div></header>
+<header><div><h1>페이지 편집</h1><p>초안 편집 중 · 공개 사이트에는 반영되지 않습니다.</p></div><div class="actions"><button id="compare" disabled><svg class="ic"><use href="#pe-list"/></svg>변경 비교</button><button id="save" disabled><svg class="ic"><use href="#pe-save"/></svg>초안 저장</button><button id="publish" class="primary" disabled><svg class="ic"><use href="#pe-send"/></svg>공개 반영</button></div></header>
 <p id="status" role="status">로그인 확인 중...</p>
 <form id="login" hidden><h2>관리자 로그인</h2><p>기존 nk_admins 등록 계정으로 로그인하세요.</p><label>이메일<input id="email" type="email" autocomplete="username" required></label><label>비밀번호<input id="password" type="password" autocomplete="current-password" required></label><button class="primary" type="submit">로그인</button></form>
 <div id="workspace" class="workspace" hidden>
-<section class="settings"><label>편집 대상<select id="page"></select></label>
-<fieldset id="fields"><legend>내용과 디자인</legend>
-<label>제목<textarea id="title" rows="2" maxlength="200"></textarea></label>
-<label>설명<textarea id="description" rows="3" maxlength="1000"></textarea></label>
-<div class="notice">제목·설명·배너 디자인을 새 편집기가 관리합니다. 배경 이미지 교체는 이 템플릿에서 지원하지 않습니다. 기존 설정 편집기의 같은 항목보다 새 공개본이 우선합니다.</div>
-<label class="check"><input id="inherit" type="checkbox"> 공통 배너 설정 사용</label>
-<div id="hero-fields"><label>배너 프리셋<select id="preset"><option value="small">작게</option><option value="normal">기본</option><option value="large">크게</option></select></label>
-<div class="pair"><label>PC 최소 높이<input id="desktopHeight" type="number" min="120" max="900"></label><label>모바일 최소 높이<input id="mobileHeight" type="number" min="100" max="700"></label></div>
-<div class="pair"><label>PC 상하 여백<input id="desktopPadding" type="number" min="0" max="160"></label><label>모바일 상하 여백<input id="mobilePadding" type="number" min="0" max="120"></label></div>
-<div class="pair"><label>제목 색<input id="titleColor" type="color"></label><label>설명 색<input id="descriptionColor" type="color"></label></div>
-<label>배경색<input id="background" type="color"></label><label class="check"><input id="decoration" type="checkbox"> 장식 표시</label></div>
-<div id="main-settings" hidden><h2>메인 버튼</h2><label>버튼 문구<input id="buttonText" maxlength="80"></label><label>버튼 연결 주소<input id="buttonUrl" placeholder="proposal.html"></label><h2>메인 영역 표시·순서</h2><div id="sections"></div></div>
-</fieldset><button id="cancel">저장된 초안으로 되돌리기</button>
-<h2>변경 이력</h2><p class="muted">복구는 초안에만 반영됩니다. 공개 반영은 별도입니다. 새 편집기로 공개한 시점부터 기록됩니다.</p><div id="history"></div>
+<section class="settings" aria-label="페이지 설정">
+<div class="editor-card page-picker"><div class="segmented page-tabs" role="group" aria-label="페이지 유형"><button type="button" data-page-kind="main" aria-pressed="true">메인 페이지</button><button type="button" data-page-kind="sub" aria-pressed="false">서브 페이지</button></div><label class="sr-only" for="page">편집 대상</label><select id="page"></select></div>
+<div class="editor-card"><h2><svg class="ic"><use href="#pe-list"/></svg>적용 상태</h2><div class="apply-status"><div><span class="status-dot">✓</span><span id="theme-status">개별 테마 설정</span></div><div><span class="status-dot">✓</span><span>제목·설명</span><small>적용 가능</small></div><div><span class="status-dot">✓</span><span>배경 이미지</span><small>현재 템플릿에서 미사용</small></div></div><p class="muted status-help">새 공개본이 있으면 기존 편집기의 같은 항목보다 우선합니다.</p></div>
+<fieldset id="fields"><legend class="sr-only">내용과 디자인</legend>
+<div class="editor-card banner-card"><h2><svg class="ic"><use href="#pe-screen"/></svg>배너 설정</h2><label class="form-row"><span>제목</span><textarea id="title" rows="2" maxlength="200"></textarea></label><label class="form-row"><span>설명</span><textarea id="description" rows="3" maxlength="1000"></textarea></label>
+<label class="sr-only" for="preset">배너 프리셋</label><select id="preset" class="sr-only"><option value="small">작게</option><option value="normal">기본</option><option value="large">크게</option></select>
+<div class="form-row"><span>프리셋</span><div class="preset-pills" role="group" aria-label="배너 프리셋"><button type="button" data-preset="small">작게</button><button type="button" data-preset="normal">기본</button><button type="button" data-preset="large">크게</button></div></div>
+<label class="switch-row"><span>공통 설정 사용</span><input id="inherit" class="switch" type="checkbox"></label>
+<div id="hero-fields"><div class="pair"><label>PC 최소 높이<div class="unit-input"><input id="desktopHeight" type="number" min="120" max="900"><span>px</span></div></label><label>모바일 최소 높이<div class="unit-input"><input id="mobileHeight" type="number" min="100" max="700"><span>px</span></div></label></div>
+<details class="advanced"><summary>여백·색상·장식 설정</summary><div class="pair"><label>PC 상하 여백<input id="desktopPadding" type="number" min="0" max="160"></label><label>모바일 상하 여백<input id="mobilePadding" type="number" min="0" max="120"></label></div><div class="pair"><label>제목 색<input id="titleColor" type="color"></label><label>설명 색<input id="descriptionColor" type="color"></label></div><label>배경색<input id="background" type="color"></label><label class="check"><input id="decoration" type="checkbox">장식 표시</label></details></div></div>
+<div id="main-settings" class="editor-card main-card" hidden><h2><svg class="ic"><use href="#pe-list"/></svg>메인 영역 관리</h2><div id="sections"></div><details class="advanced"><summary>메인 버튼 설정</summary><label>버튼 문구<input id="buttonText" maxlength="80"></label><label>버튼 연결 주소<input id="buttonUrl" placeholder="proposal.html"></label></details></div>
+</fieldset><button id="cancel" class="cancel-button">저장된 초안으로 되돌리기</button>
 </section>
-<section class="preview"><div class="preview-toolbar"><div><button data-width="1280">PC</button><button data-width="768">태블릿</button><button data-width="390">모바일</button></div><span id="preview-status">읽기 전용 실제 페이지 미리보기</span><a id="open-page" target="_blank" rel="noopener">공개 페이지 열기</a></div><div class="frame-scroll"><iframe id="preview" title="페이지 편집 미리보기"></iframe></div></section>
+<section class="preview-column" aria-label="미리보기와 변경 사항"><div class="preview"><div class="preview-toolbar"><div class="segmented"><button type="button" class="active" data-width="1280" aria-pressed="true"><svg class="ic"><use href="#pe-screen"/></svg>PC</button><button type="button" data-width="768" aria-pressed="false"><svg class="ic"><use href="#pe-screen"/></svg>태블릿</button><button type="button" data-width="390" aria-pressed="false"><svg class="ic"><use href="#pe-phone"/></svg>모바일</button></div><span>미리보기</span></div><div class="frame-scroll"><iframe id="preview" title="페이지 편집 미리보기"></iframe></div><div class="preview-caption"><span id="preview-status">읽기 전용 실제 페이지 미리보기</span><a id="open-page" target="_blank" rel="noopener">공개 페이지 열기</a></div></div>
+<div class="review-grid"><section class="editor-card"><h2><svg class="ic"><use href="#pe-list"/></svg>변경 비교</h2><p class="muted">공개본과 현재 수정본의 차이를 확인합니다.</p><div id="inline-diff" class="inline-diff">변경 비교를 누르면 상세 변경 내역이 표시됩니다.</div><button type="button" id="compare-panel">변경 비교 보기</button></section><section id="history-card" class="editor-card"><h2><svg class="ic"><use href="#pe-clock"/></svg>변경 이력</h2><div class="publication-row"><span>현재 공개본</span><span id="publication-status" class="publication-badge">확인 중</span></div><p class="muted">복구는 초안에만 반영됩니다. 새 편집기로 공개한 시점부터 기록됩니다.</p><div id="history"></div></section></div></section>
 </div>
 <dialog id="diff-dialog"><h2>공개본 대비 변경 사항</h2><pre id="diff"></pre><button id="close-diff">닫기</button></dialog>
 </main>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js?v=20261108-editor-1"></script><script src="page-editor.js?v=1"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js?v=20261108-editor-1"></script><script src="page-editor.js?v=1"></script><script src="page-editor-ui.js?v=20261108-ui2"></script>
 </body></html>

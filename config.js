@@ -42,3 +42,16 @@
     link.href = new URL('subpage-theme.css?v=20261108', base).href;
     document.head.appendChild(link);
 })();
+
+// Published page design and administrator editor entry point.
+(() => {
+    const source = document.currentScript;
+    if (!source || !source.src) return;
+    const base = new URL('.', source.src);
+    if (location.origin !== base.origin || !location.pathname.startsWith(base.pathname)) return;
+    const path = location.pathname.slice(base.pathname.length);
+    if (!['','index.html','admin.html','notice.html','child.html','program.html','page.html','order.html','proposal.html'].includes(path)) return;
+    const script = document.createElement('script');
+    script.src = new URL('page-design.js?v=1', base).href;
+    document.head.appendChild(script);
+})();

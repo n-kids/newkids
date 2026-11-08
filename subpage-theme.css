@@ -165,3 +165,15 @@ body#main-body.nk-subpage #view-hero.board-header-section::after {
  body#main-body.nk-subpage #view-hero.board-header-section::before { width: 220px; height: 220px; right: -125px; top: -120px; border-width: 28px; }
  body#main-body.nk-subpage #view-hero.board-header-section::after { width: 100px; height: 100px; left: -55px; bottom: -65px; }
 }
+
+/* Compact only the resource board hero; preserve other board banners. */
+body#main-body.nk-subpage.is-resource-board #view-hero.board-header-section { min-height: 220px !important; padding: 40px 24px !important; }
+body#main-body.nk-subpage.is-resource-board #view-hero.board-header-section #board-title { margin-bottom: 16px !important; }
+body#main-body.nk-subpage .board-list-head > div:last-child { white-space: nowrap; word-break: keep-all; }
+@media (min-width: 769px) {
+ body#main-body.nk-subpage :is(.board-list-head,.board-list-row) { grid-template-columns: 64px 100px minmax(0,1fr) 168px !important; }
+ body#main-body.nk-subpage :is(.board-list-head,.board-list-row) > div { min-width: 0; }
+}
+@media (max-width: 768px) {
+ body#main-body.nk-subpage.is-resource-board #view-hero.board-header-section { min-height: 180px !important; padding: 32px 20px !important; }
+}

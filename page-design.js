@@ -49,7 +49,14 @@
    if(elements.length && elements.every(el=>el.parentNode===document.body)){const footer=document.querySelector('footer');const ordered=[...document.body.children].filter(el=>elements.includes(el));if(ordered.some((el,i)=>el!==elements[i]))elements.forEach(el=>document.body.insertBefore(el,footer));}
    sections.forEach(s=>{const el=selectors[s.id]&&document.querySelector(selectors[s.id]);if(el){const display=s.visible===false?'none':'';if(el.style.display!==display)el.style.display=display;}});
   }
-  if(!observer){observer=new MutationObserver(()=>{if(current)apply(current,shared);});observer.observe(h,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['style']});}
+  if(!observer){
+   const options={childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['style']};
+   observer=new MutationObserver(()=>{
+    observer.disconnect();
+    try{if(current)apply(current,shared);}finally{if(observer)observer.observe(h,options);}
+   });
+   observer.observe(h,options);
+  }
  }
  function key(){
   if(isMain)return 'main';
@@ -69,7 +76,7 @@
  window.NKPageDesign={apply};
  window.addEventListener('message',event=>{if(!preview||event.source!==window.parent||event.origin!==location.origin||event.data?.type!=='nk-page-editor-preview')return;apply(event.data.document,event.data.common);window.parent.postMessage({type:'nk-page-editor-preview-applied'},location.origin);});
  window.addEventListener('resize',()=>{if(current)apply(current,shared);});
- window.addEventListener('hashchange',()=>{current=null;if(observer){observer.disconnect();observer=null;}const h=hero();if(h){['min-height','padding','height','background'].forEach(k=>h.style.removeProperty(k));h.removeAttribute('data-nk-published-hero');}document.getElementById('nk-published-design')?.remove();setTimeout(refresh,100);});
+ window.addEventListener('hashchange',()=>{ticket++;current=null;if(observer){observer.disconnect();observer=null;}const h=hero();if(h){['min-height','padding','height','background'].forEach(k=>h.style.removeProperty(k));h.removeAttribute('data-nk-published-hero');}document.getElementById('nk-published-design')?.remove();setTimeout(refresh,100);});
  function start(){if(preview){window.parent.postMessage({type:'nk-page-editor-preview-ready'},location.origin);return;}let tries=0;const timer=setInterval(()=>{if(window.sb){client=window.sb;clearInterval(timer);setTimeout(refresh,300);}else if(++tries>=100)clearInterval(timer);},100);}
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();

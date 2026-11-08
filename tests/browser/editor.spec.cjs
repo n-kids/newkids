@@ -40,11 +40,30 @@ test('draft preview and save do not publish; explicit publish and restore use se
  await expect(page.locator('#status')).toContainText('초안 v1 저장 완료');
  expect(await page.evaluate(()=>Object.keys(window.__NK_EDITOR_TEST.publications).length)).toBe(0);
  await page.locator('#publish').click();
+ await expect(page.locator('#nk-preflight-dialog')).toBeVisible();
+ expect(await page.evaluate(()=>Object.keys(window.__NK_EDITOR_TEST.publications).length)).toBe(0);
+ await page.locator('#nk-preflight-confirm').click();
  await expect(page.locator('#status')).toContainText('공개본 v1 저장 완료');
  expect(await page.evaluate(()=>window.__NK_EDITOR_TEST.publications.main.document.title)).toBe('검증용 제목');
  await page.locator('#history button').first().click();
  await expect(page.locator('#status')).toContainText('초안으로 복구');
  expect(await page.evaluate(()=>window.__NK_EDITOR_TEST.publications.main.version)).toBe(1);
+});
+
+test('publication preflight blocks blank titles and unsafe button URLs', async ({page}) => {
+ await editor(page);
+ await page.locator('#title').fill('   ');
+ await page.locator('#publish').click();
+ await expect(page.locator('#nk-preflight-results')).toContainText('공백만 있는 제목');
+ await expect(page.locator('#nk-preflight-confirm')).toBeDisabled();
+ expect(await page.evaluate(()=>Object.keys(window.__NK_EDITOR_TEST.publications).length)).toBe(0);
+ await page.locator('#nk-preflight-cancel').click();
+ await page.locator('#title').fill('정상 제목');
+ await page.locator('#buttonUrl').fill('javascript:alert(1)');
+ await page.locator('#publish').click();
+ await expect(page.locator('#nk-preflight-results .preflight-error')).toContainText('버튼 연결 주소');
+ await expect(page.locator('#nk-preflight-confirm')).toBeDisabled();
+ expect(await page.evaluate(()=>Object.keys(window.__NK_EDITOR_TEST.publications).length)).toBe(0);
 });
 
 test('subpage tabs presets and device widths are connected', async ({page}) => {
@@ -56,7 +75,6 @@ test('subpage tabs presets and device widths are connected', async ({page}) => {
  await expect(page.locator('#desktopHeight')).toHaveValue('320');
  await expect(page.locator('#mobileHeight')).toHaveValue('240');
  await page.locator('[data-width="390"]').click();
- await expect(page.locator('#preview')).toHaveJSProperty('style',await page.locator('#preview').evaluate(el=>el.style));
  expect(await page.locator('#preview').evaluate(el=>parseInt(el.style.width,10))).toBe(390);
 });
 

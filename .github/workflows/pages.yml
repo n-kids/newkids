@@ -2,15 +2,18 @@ name: Deploy Newkids Pages
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read
 concurrency:
-  group: newkids-pages
+  group: newkids-pages-${{ github.ref }}
   cancel-in-progress: false
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -20,16 +23,30 @@ jobs:
         with:
           python-version: '3.12'
       - name: Validate application JavaScript
-        run: |
-          for file in config.js page-editor.js page-design.js board.js catalog.js; do
-            node --check "$file"
-          done
+        run: find . -maxdepth 1 -name '*.js' -type f -exec node --check {} \;
       - name: Build public site with release versions
         run: python scripts/build_pages.py
+      - name: Install isolated browser test dependencies
+        run: |
+          npm install --no-save --package-lock=false @playwright/test@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Check editor and board in a browser
+        run: npx playwright test --config=playwright.config.cjs
+      - name: Upload browser reports and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-checks-${{ github.sha }}
+          path: |
+            playwright-report
+            test-results
+          if-no-files-found: ignore
+          retention-days: 14
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
   deploy:
+    if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
     permissions:

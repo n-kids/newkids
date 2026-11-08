@@ -47,3 +47,13 @@ body#main-body.board-page #download-guide-modal { display: flex; }
  body#main-body.board-page .board-col-title { padding-left: 4px; }
  body#main-body.board-page .board-search #search-input { width: 250px; max-width: 100%; flex: 1; }
 }
+
+/* All board categories use the resource board's compact hero geometry. */
+body#main-body.nk-subpage.board-page #view-hero.board-header-section {
+ height: auto !important; min-height: 220px !important; padding: 40px 24px !important; flex-shrink: 0;
+}
+body#main-body.nk-subpage.board-page #view-hero.board-header-section #board-title { margin-bottom: 16px !important; }
+@media (max-width: 768px) {
+ body#main-body.nk-subpage.board-page #view-hero.board-header-section { min-height: 180px !important; padding: 32px 20px !important; }
+ body#main-body.nk-subpage.board-page #view-hero.board-header-section #board-desc { min-height: 3.4em; }
+}

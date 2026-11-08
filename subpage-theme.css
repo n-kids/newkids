@@ -1,0 +1,88 @@
+/* Public subpages only. Keep home, admin and standalone app unchanged. */
+body.nk-subpage {
+ --primary-color: #172451; --accent-color: #172451; --bg-light: #faf8f3; --text-color: #252d40; --text-sub: #596174; --border-color: #e6dfd3;
+ background: #fffdf9 !important; color: var(--text-color);
+}
+.nk-subpage :is(h1,h2,h3) { letter-spacing: -.025em; word-break: keep-all; }
+.nk-subpage :is(.container,.container-wide) { max-width: 1200px; padding-inline: 24px; }
+.nk-subpage section { padding-block: 64px; }
+.nk-subpage .bg-gray { background-color: #faf8f3; }
+.nk-subpage :is(.sub-hero,.board-header-section) {
+ position: relative; isolation: isolate; height: auto; min-height: 280px;
+ padding: 64px 24px; background: #f7f0e4 !important; color: #172451 !important;
+ border-bottom: 1px solid #e6dfd3; text-align: center; overflow: hidden;
+}
+.nk-subpage :is(.sub-hero,.board-header-section)::before {
+ content: ''; position: absolute; z-index: -1; width: 220px; height: 220px;
+ right: -90px; top: -110px; border: 34px solid #e7bb98; border-radius: 50%; opacity: .35; pointer-events: none;
+}
+.nk-subpage :is(.sub-hero,.board-header-section)::after {
+ content: ''; position: absolute; z-index: -1; width: 110px; height: 110px;
+ left: -48px; bottom: -60px; background: #cbded0; border-radius: 50%; pointer-events: none;
+}
+.nk-subpage :is(.sub-hero,.board-header-section) h1 {
+ color: #172451 !important; text-shadow: none !important; font-size: clamp(1.8rem,4vw,2.8rem);
+ line-height: 1.3; font-weight: 800; margin-bottom: 16px;
+}
+.nk-subpage :is(.sub-hero,.board-header-section) p {
+ color: #545b6e !important; text-shadow: none !important; font-size: clamp(1rem,2vw,1.15rem);
+ line-height: 1.8; font-weight: 500; max-width: 720px; margin-inline: auto; word-break: keep-all;
+}
+.nk-subpage :is(.card,.post-card,.proposal-box,.panel-box,.view-box,.post-detail-box,.intro-box) {
+ background: #fff; border: 1px solid #e6dfd3; border-radius: 20px; box-shadow: 0 4px 18px rgba(0,0,0,.035);
+}
+.nk-subpage :is(.card,.post-card) { padding: 0; transition: transform .2s ease,border-color .2s ease,box-shadow .2s ease; }
+.nk-subpage :is(.card,.post-card):hover { transform: translateY(-4px); border-color: #b7b4a9; box-shadow: 0 10px 24px rgba(0,0,0,.07); }
+.nk-subpage :is(.card-img-wrap,.post-thumb) { background: #faf8f3; border-bottom-color: #eee8de; }
+.nk-subpage :is(.card-body,.post-info) { padding: 22px; }
+.nk-subpage :is(.card-title,.post-title,.view-title) { color: #172451; }
+.nk-subpage :is(.card-text,.post-desc,.section-desc) { color: #596174; }
+.nk-subpage :is(.main-grid,.gallery-grid) { gap: 24px; }
+.nk-subpage :is(.proposal-box,.panel-box,.view-box,.post-detail-box) { padding: 36px; }
+.nk-subpage .intro-summary { background: #fffdf9; border-bottom-color: #eee8de; }
+.nk-subpage .intro-box { border-color: #e6dfd3; padding: 36px; }
+.nk-subpage :is(.btn,.btn-action,.btn-submit,.btn-list,.link-btn-style) {
+ background: #172451; color: #fff; border-radius: 12px; font-family: inherit; font-weight: 700;
+ min-height: 46px; padding: 12px 24px; box-shadow: none; line-height: 1.5;
+}
+.nk-subpage :is(.btn,.btn-action,.btn-submit,.btn-list,.link-btn-style):hover { background: #273968; color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,.08); }
+.nk-subpage .btn-white { background: #fff !important; color: #172451 !important; border: 1px solid #d8d3c8; }
+.nk-subpage :is(input:not([type]),input[type=text],input[type=email],input[type=tel],input[type=password],input[type=number],input[type=search],input[type=url],input[type=date],select,textarea) {
+ max-width: 100%; min-width: 0; border: 1px solid #c9c5bc; border-radius: 10px;
+ background: #fff; color: #252d40; font: inherit; padding: 12px 14px; transition: border-color .15s,box-shadow .15s;
+}
+.nk-subpage :is(input,textarea)::placeholder { color: #697080; opacity: 1; }
+.nk-subpage :is(input,select,textarea):focus { outline: none; border-color: #172451; box-shadow: 0 0 0 3px rgba(23,36,81,.14); }
+.nk-subpage :is(input[type=checkbox],input[type=radio]) { accent-color: #172451; }
+.nk-subpage :is(a,button,[tabindex]):focus-visible { outline: 3px solid #172451; outline-offset: 4px; }
+.nk-subpage :is(button,input,select,textarea):disabled { cursor: not-allowed; opacity: .65; }
+.nk-subpage :is(.btn-group,.btn-center-wrap) { flex-wrap: wrap; gap: 12px; }
+.nk-subpage :is(.order-category-header,.sub-cat-header,.sub-cat-wrapper) { border-color: #e6dfd3; border-radius: 12px; }
+.nk-subpage :is(.order-item-row,.proposal-item):hover { background: #faf8f3; }
+.nk-subpage :is(.order-item-row.active,.order-category-header.has-data,.sub-cat-header.has-checked) { background: #f2ecdf !important; color: #172451 !important; border-color: #172451 !important; }
+.nk-subpage .board-list-head { background: #f7f0e4; border-top-color: #172451; color: #172451; }
+.nk-subpage .board-list-row { border-bottom-color: #eee8de; }
+.nk-subpage .board-list-row:hover { background: #faf8f3; }
+.nk-subpage :is(.b-num,.b-date) { color: #697080; }
+.nk-subpage .badge { background: #f2ecdf; color: #172451; border-radius: 8px; }
+.nk-subpage .view-header { border-bottom: 1px solid #e6dfd3; }
+.nk-subpage .contact-section { background: #faf8f3; }
+.nk-subpage :is(.ai-app img,.ai-qr) { box-shadow: 0 6px 18px rgba(0,0,0,.06); }
+@media (max-width: 768px) {
+ .nk-subpage section { padding-block: 40px; }
+ .nk-subpage :is(.container,.container-wide) { padding-inline: 20px; }
+ .nk-subpage :is(.sub-hero,.board-header-section) { min-height: 220px; padding: 44px 0; }
+ .nk-subpage :is(.main-grid,.gallery-grid) { gap: 14px; grid-template-columns: repeat(2,minmax(0,1fr)); }
+ .nk-subpage :is(.card,.post-card) { border-radius: 16px; }
+ .nk-subpage :is(.card-body,.post-info) { padding: 16px 12px; }
+ .nk-subpage :is(.proposal-box,.panel-box,.view-box,.post-detail-box,.intro-box) { padding: 22px 18px; border-radius: 16px; }
+ .nk-subpage .form-grid { grid-template-columns: minmax(0,1fr); gap: 16px; }
+ .nk-subpage :is(.btn-group,.btn-center-wrap) > * { max-width: 100%; }
+}
+@media (max-width: 380px) {
+ .nk-subpage :is(.main-grid,.gallery-grid) { grid-template-columns: minmax(0,1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+ .nk-subpage :is(.card,.post-card,.btn,.btn-action,.btn-submit) { transition: none; }
+ .nk-subpage :is(.card,.post-card):hover { transform: none; }
+}

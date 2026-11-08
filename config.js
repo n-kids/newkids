@@ -23,3 +23,22 @@
         PHONE: "010-2333-2563 / 010-5522-8109"
     }
 };
+
+// Apply the homepage visual language to public website subpages only.
+(() => {
+    const script = document.currentScript;
+    if (!script || !script.src) return;
+    const base = new URL('.', script.src);
+    const page = new URL(window.location.href);
+    if (page.origin !== base.origin || !page.pathname.startsWith(base.pathname)) return;
+    const relative = page.pathname.slice(base.pathname.length);
+    const publicPages = new Set(['child.html','program.html','notice.html','view.html','write.html','order.html','proposal.html','form.html','page.html','cert.html','confetti.html','culture.html','performance.html','season.html','app-install.html']);
+    if (!publicPages.has(relative)) return;
+    document.body.classList.add('nk-subpage');
+    if (document.getElementById('nk-subpage-theme')) return;
+    const link = document.createElement('link');
+    link.id = 'nk-subpage-theme';
+    link.rel = 'stylesheet';
+    link.href = new URL('subpage-theme.css?v=20261108', base).href;
+    document.head.appendChild(link);
+})();

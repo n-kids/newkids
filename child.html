@@ -6,102 +6,30 @@
     <title>뉴키즈 - 교육 프로그램</title>
     <meta name="description" content="김포, 고양, 파주 어린이집·유치원을 위한 뉴키즈의 검증된 유아 교재와 정규 프로그램을 소개합니다. 연령별 맞춤형 교육 솔루션으로 우리 아이들의 성장을 돕습니다.">
     <meta name="keywords" content="뉴키즈 유아교재, 어린이집 교구, 유치원 교재, 김포 유아교육, 파주 어린이집">
-    <link rel="stylesheet" href="style.css?v=20261026">
-<link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="stylesheet" href="style.css?v=20261108-catalog-1">
+    <link id="nk-subpage-theme" rel="stylesheet" href="subpage-theme.css?v=20261108-catalog-1">
+    <link rel="stylesheet" href="catalog.css?v=20261108-catalog-1">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
 </head>
-<body>
+<body class="nk-subpage catalog-page catalog-education" data-catalog="education">
     <header></header>
-    <div id="loading" class="loading-overlay" style="display: flex;">데이터를 불러오는 중입니다...</div>
-
+    <div id="loading" class="loading-overlay is-loading" role="status">데이터를 불러오는 중입니다...</div>
     <section class="sub-hero bg-child" id="view-hero">
         <div class="container-wide">
             <h1 id="page-title">교육 프로그램</h1>
             <p id="page-desc">아이들의 꿈을 키워주는 다양한 교재를 소개합니다.</p>
         </div>
     </section>
-
     <section>
         <div class="container">
-            <div id="post-list" class="main-grid"></div>
+            <div id="post-list" class="main-grid" aria-live="polite"></div>
         </div>
     </section>
-
     <footer></footer>
-
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="config.js?v=20261026"></script>
-    <script src="manager.js?v=20261102"></script>
-
-    <script>
-        const NO_IMAGE_URL = "https://placehold.co/400x300/e0e0e0/666666?text=No+Image";
-
-        document.addEventListener("DOMContentLoaded", function () {
-            // ★ 수정 1: Supabase DB 연결이 완료될 때까지 0.1초 단위로 대기한 후 데이터 호출
-            const checkReady = setInterval(() => {
-                if (window.sb) {
-                    clearInterval(checkReady);
-                    loadCategoryPosts();
-                }
-            }, 100);
-
-            window.addEventListener('hashchange', () => {
-                if (window.sb) loadCategoryPosts();
-            });
-        });
-
-        async function loadCategoryPosts() {
-            const category = window.location.hash.substring(1) || 'korean';
-            setTimeout(() => { if (window.applySubPageHero) window.applySubPageHero(); }, 500);
-
-            document.getElementById('loading').style.display = 'flex';
-            const postListEl = document.getElementById('post-list');
-            postListEl.innerHTML = '';
-
-            try {
-                // ★ 수정 2: video_url이 비어있는(null) 일반 게시글도 정상적으로 불러오도록 or 조건 추가
-                const { data, error } = await window.sb.from('total_posts')
-                    .select('id, title, thumbnail_url, content, created_at, video_url')
-                    .eq('category', category)
-                    .eq('is_visible', true)
-                    .or('video_url.neq.ORDER_ITEM,video_url.is.null')
-                    .order('order_num', { ascending: true })
-                    .order('created_at', { ascending: false });
-
-                if (error) throw error;
-
-                if (!data || data.length === 0) {
-                    postListEl.innerHTML = `
-                        <div style="text-align:center; padding: 80px 20px; color:#888; background-color:#f9f9f9; border-radius:12px; grid-column: 1 / -1; width: 100%;">
-                            <div style="font-size: 3rem; margin-bottom: 15px;">📭</div>
-                            <h3 style="color:#555; margin-bottom: 10px;">현재 준비 중인 프로그램입니다.</h3>
-                            <p style="font-size: 1rem;">새로운 콘텐츠가 곧 업데이트될 예정입니다. 조금만 기다려주세요!</p>
-                        </div>
-                    `;
-                    return;
-                }
-
-                data.forEach(item => {
-                    let thumb = item.thumbnail_url || NO_IMAGE_URL;
-                    let desc = item.content ? item.content.replace(/<[^>]*>?/gm, '').substring(0, 50) + '...' : '';
-
-                    postListEl.insertAdjacentHTML('beforeend', `
-                                    <a href="view.html?id=${item.id}" class="card post-card">
-                                        <div class="card-img-wrap post-thumb">
-                                            <img src="${thumb}" alt="${item.title}" onerror="this.src='${NO_IMAGE_URL}';">
-                                        </div>
-                                        <div class="card-body post-info">
-                                            <h3 class="card-title post-title">${item.title}</h3>
-                                            <p class="card-text post-desc">${desc}</p>
-                                        </div>
-                                    </a>`);
-                });
-            } catch (err) {
-                console.error("데이터 불러오기 실패:", err);
-            } finally {
-                document.getElementById('loading').style.display = 'none';
-            }
-        }
-    </script>
+    <script src="config.js?v=20261108-catalog-1"></script>
+    <script src="manager.js?v=20261108-catalog-1"></script>
+    <script src="catalog.js?v=20261108-catalog-1"></script>
 </body>
 </html>

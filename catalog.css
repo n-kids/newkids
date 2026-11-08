@@ -1,0 +1,24 @@
+/* Only program.html and child.html load this stylesheet. */
+.catalog-page [hidden] { display: none !important; }
+.catalog-page .loading-overlay.is-loading { display: flex; }
+.catalog-page .catalog-gallery-section { background: var(--bg-light); }
+.catalog-page .catalog-gallery-heading { text-align: left; margin-bottom: 30px; }
+.catalog-page .intro-summary { background: #fffdf9; text-align: center; padding: 60px 20px; border-bottom: 1px solid #eee8de; }
+.catalog-page .intro-box { max-width: 800px; margin: 0 auto; padding: 36px; border: 1px solid #e6dfd3; border-radius: 20px; background: #fff; box-shadow: 0 4px 18px rgba(0,0,0,.035); }
+.catalog-page .intro-box h3 { font-size: 1.6rem; color: var(--primary-color); margin-bottom: 20px; font-weight: 700; }
+.catalog-page .intro-box p { font-size: 1.1rem; color: #555; word-break: keep-all; }
+.catalog-page .catalog-cta { text-align: center; background: var(--primary-color); color: #fff; }
+.catalog-page .catalog-cta h2 { color: #fff; }
+.catalog-page .catalog-cta p { margin-bottom: 20px; }
+.catalog-page .catalog-card { position: relative; padding: 0; cursor: pointer; }
+.catalog-page.catalog-events .catalog-card-body { padding: 15px; text-align: center; }
+.catalog-page.catalog-events .catalog-card-title { margin: 0; font-weight: 600; font-size: 1.1rem; word-break: keep-all; }
+.catalog-page .catalog-play { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); color: #fff; font-size: 3rem; text-shadow: 0 0 10px rgba(0,0,0,.5); }
+.catalog-page .catalog-state { text-align: center; padding: 80px 20px; color: #596174; background: #faf8f3; border-radius: 12px; grid-column: 1 / -1; width: 100%; }
+.catalog-page .catalog-state-icon { font-size: 3rem; margin-bottom: 15px; }
+.catalog-page .catalog-state h3 { color: #545b6e; margin-bottom: 10px; }
+.catalog-page .catalog-state p { font-size: 1rem; }
+.catalog-page .catalog-state-error { color: #b42318; padding: 50px 20px; }
+@media (max-width: 768px) {
+ .catalog-page .intro-box { padding: 22px 18px; border-radius: 16px; }
+}

@@ -23,7 +23,11 @@ jobs:
         with:
           python-version: '3.12'
       - name: Validate application JavaScript
-        run: find . -maxdepth 1 -name '*.js' -type f -exec node --check {} \;
+        run: |
+          set -e
+          for file in ./*.js; do
+            node --check "$file"
+          done
       - name: Build public site with release versions
         run: python scripts/build_pages.py
       - name: Install isolated browser test dependencies

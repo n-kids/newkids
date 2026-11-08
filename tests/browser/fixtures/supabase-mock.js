@@ -2,11 +2,11 @@
 (() => {
  const copy = value => JSON.parse(JSON.stringify(value));
  const categories = [
-  {code:'notice',name:'공지사항',type:'BOARD',hero_title:'공지사항',hero_desc:''},
-  {code:'reference',name:'자료실',type:'BOARD',hero_title:'자료실',hero_desc:'연간계획안 및 OT자료를 내려받으세요'},
-  {code:'qna',name:'문의사항',type:'BOARD',hero_title:'문의사항',hero_desc:''},
-  {code:'korean',name:'한글',type:'EDU',hero_title:'한글',hero_desc:'교재 안내'},
-  {code:'season',name:'시즌 행사',type:'EVENT',hero_title:'시즌 행사',hero_desc:'행사 안내'}
+  {code:'notice',name:'공지사항',type:'BOARD',hero_title:'공지사항',hero_desc:'',is_visible:true,order_num:0},
+  {code:'reference',name:'자료실',type:'BOARD',hero_title:'자료실',hero_desc:'연간계획안 및 OT자료를 내려받으세요',is_visible:true,order_num:1},
+  {code:'qna',name:'문의사항',type:'BOARD',hero_title:'문의사항',hero_desc:'',is_visible:true,order_num:2},
+  {code:'korean',name:'한글',type:'EDU',hero_title:'한글',hero_desc:'교재 안내',is_visible:true,order_num:3},
+  {code:'season',name:'시즌 행사',type:'EVENT',hero_title:'시즌 행사',hero_desc:'행사 안내',is_visible:true,order_num:4}
  ];
  const state = { drafts:{}, publications:{}, revisions:[], signedIn:!new URLSearchParams(location.search).has('test_logged_out') };
  window.__NK_EDITOR_TEST = state;

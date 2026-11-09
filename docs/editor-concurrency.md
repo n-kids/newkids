@@ -1,0 +1,9 @@
+# Concurrent draft version warnings
+
+The built editor gets a narrowly scoped, frozen NKEditorState adapter inside the controller closure. It exposes only key/version/dirty/busy and an authenticated metadata read using the controller's existing client. It neither exposes document content nor mutates controller state. The build checks a unique insertion marker and fails if the source integration drifts; a future controller refactor should move this adapter into the source. Test the built _site, not raw HTML.
+
+Visible/online tabs check about every 20 seconds and on focus, resume, page selection and completion of editor operations. Reads pause during controller work. Responses are discarded if the operation, page, generation or local version changed while waiting. A missing server row is consistent only with local version zero; otherwise it is a deletion warning. Failed reads never count as proof of consistency. Worker IDs are shown only if returned; the module does not claim a particular person is actively editing.
+
+Warnings preserve inputs. There is no automatic save, merge, overwrite or reload. A reload requires an explicit click and confirmation; the existing beforeunload dialog may also appear. The existing optimistic-version RPC checks remain the final protection against a race after a successful comparison. No Realtime subscription, schema migration or production DB change is required.
+
+Browser tests use independent contexts backed by the existing test-process server model. Source/helper/DOM and build tests are not proof of actual multi-user PostgreSQL/RLS or full Playwright execution. Before rollout, run the full browser suite and two-account integration checks, including a delayed response racing a save, deletion, failed publish after successful draft save, restore, offline/hidden-tab resume and page switching.

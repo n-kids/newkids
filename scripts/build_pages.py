@@ -11,7 +11,7 @@ if out.exists():
 out.mkdir()
 release = os.environ['GITHUB_SHA']
 allowed = {'.html', '.css', '.js', '.png', '.jpg', '.jpeg', '.webp', '.ico', '.txt', '.xml', '.json', '.webmanifest'}
-pattern = re.compile(r'(?<![\w/.-])(config\.js|manager\.js|page-design\.js|page-editor-tools\.js|page-editor-status\.js|page-editor-ui\.js|page-editor\.js|page-editor\.css)(?:\?v=[A-Za-z0-9_-]+)?')
+pattern = re.compile(r'(?<![\w/.-])(config\.js|manager\.js|page-design\.js|page-editor-audit\.js|page-editor-review\.js|page-editor-verify\.js|page-editor-schedule\.js|page-editor-tools\.js|page-editor-status\.js|page-editor-ui\.js|page-editor\.js|page-editor\.css)(?:\?v=[A-Za-z0-9_-]+)?')
 for source in root.iterdir():
     if not source.is_file() or source.suffix.lower() not in allowed:
         continue
@@ -19,7 +19,7 @@ for source in root.iterdir():
     if source.suffix.lower() in {'.html', '.js'}:
         text = source.read_text(encoding='utf-8-sig')
         if source.name == 'page-editor.html':
-            text = text.replace('</body>', '<script src="page-editor-status.js?v=1"></script>\n<script src="page-editor-tools.js?v=1"></script>\n</body>')
+            text = text.replace('</body>', '<script src="page-editor-status.js?v=1"></script>\n<script src="page-editor-tools.js?v=1"></script>\n<script src="page-editor-schedule.js?v=1"></script>\n<script src="page-editor-verify.js?v=1"></script>\n<script src="page-editor-review.js?v=1"></script>\n<script src="page-editor-audit.js?v=1"></script>\n</body>')
         target.write_text(pattern.sub(lambda match: match.group(1) + '?v=' + release, text), encoding='utf-8')
     else:
         shutil.copy2(source, target)
@@ -27,7 +27,7 @@ if (root / 'app').is_dir():
     shutil.copytree(root / 'app', out / 'app', ignore=shutil.ignore_patterns('*.sql', '.DS_Store'))
 (out / '.nojekyll').touch()
 (out / 'release.json').write_text(json.dumps({'commit': release, 'editor': 'page-editor.html'}, indent=2), encoding='utf-8')
-required = ['index.html', 'admin.html', 'page-editor.html', 'page-editor.js', 'page-editor-tools.js', 'page-editor-ui.js', 'page-editor-status.js', 'page-editor.css', 'page-design.js', 'config.js']
+required = ['index.html', 'admin.html', 'page-editor.html', 'page-editor.js', 'page-editor-audit.js', 'page-editor-review.js', 'page-editor-verify.js', 'page-editor-schedule.js', 'page-editor-tools.js', 'page-editor-ui.js', 'page-editor-status.js', 'page-editor.css', 'page-design.js', 'config.js']
 missing = [name for name in required if not (out / name).is_file()]
 if missing:
     raise RuntimeError('Missing deployment files: ' + ', '.join(missing))

@@ -72,6 +72,15 @@ button.banner img{border-radius:var(--r-xs)!important}
 .quick button:hover{background:var(--sunk)}
 .quick button:active{transform:scale(.98)}
 .quick svg{width:24px;height:24px;color:var(--accent)}
+.gpush{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--surface);border:1.5px solid var(--accent);border-radius:var(--r);padding:12px 16px;color:var(--ink);
+  transition:background-color .3s var(--ease),transform .5s var(--ease)}
+.gpush:hover{background:var(--soft)}
+.gpush:active{transform:scale(.98)}
+.gpush .ic{width:44px;height:44px;flex:none;border-radius:var(--r-xs);background:var(--soft);display:grid;place-items:center;color:var(--accent)}
+.gpush .ic svg{width:24px;height:24px}
+.gpush .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.gpush .tx b{font-size:16px;line-height:24px;font-weight:600}
+.gpush .tx small{font-size:12px;line-height:16px;color:var(--muted)}
 .homelink{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--ink);transition:background-color .3s var(--ease),transform .5s var(--ease)}
 .homelink:hover{background:var(--sunk)}
 .homelink:active{transform:scale(.98)}
@@ -280,7 +289,36 @@ async function boot(){
   }
   render();
 }
-async function loadOrders(){ if (me) myOrders = await rpc('nk_my_orders', {p_token:me.token}) || []; }
+async function loadOrders(){ if (me) myOrders = await rpc('nk_my_orders', {p_token:me.token}) || []; loadGatherings(); }
+// 원장님 행사 (관리자 화면에서 "앱에 띄우기"한 것만). 못 받아도 홈은 그대로
+let gatherings = [];
+async function loadGatherings(){
+  if (!me) return;
+  try { gatherings = await rpc('nk_open_gatherings', {p_token:me.token}) || []; } catch(_) { gatherings = []; }
+  if (tab==='home' && !$('#sheetHost .sheet') && !document.activeElement?.matches?.('input,textarea')) keepScroll(render);
+}
+const fmtDay = s => { const [, m, d] = String(s).split('-'); return `${+m}/${+d}`; };
+function openGather(id){
+  const g = gatherings.find(x => x.id === id); if (!g) return;
+  const v = g.mine || {name:me.name, phone:fmtPhone(me.phone||''), people:1, memo:''};
+  const lock = g.closed && !g.mine;
+  $('#sheetHost').innerHTML = `<div class="sheet ${$('#sheetHost .sheet')?'still':''}"><div class="panel" role="dialog" aria-label="${esc(g.title)} 신청">
+    <div class="grab"></div>
+    <div><span class="tag ${g.mine?'ok':g.closed?'':'sun'}">${g.mine?'신청 완료':g.closed?'신청 마감':'원장님 행사'}</span><p class="h2" style="margin-top:8px">${esc(g.title)}</p>
+      ${g.when_text?`<p class="sub">일시 · ${esc(g.when_text)}</p>`:''}${g.place?`<p class="sub">장소 · ${esc(g.place)}</p>`:''}${g.deadline?`<p class="sub">신청 마감 · ${esc(fmtDay(g.deadline))}</p>`:''}</div>
+    ${g.body?`<div class="card" style="white-space:pre-wrap;padding:12px">${esc(g.body)}</div>`:''}
+    ${lock?'<div class="card hint">신청이 마감됐어요. 궁금한 점은 010-2333-2563으로 연락 주세요.</div>':`
+    <div class="field"><label for="gName">참석하실 분 성함</label><input id="gName" maxlength="40" autocomplete="name" value="${esc(v.name||'')}"></div>
+    <div class="field"><label for="gPhone">연락처</label><input id="gPhone" inputmode="tel" autocomplete="tel" maxlength="13" placeholder="010-0000-0000" value="${esc(v.phone||'')}"></div>
+    <div class="field"><span class="flabel">참석 인원</span>
+      <div class="eline-q" style="justify-content:flex-start"><div class="step"><button data-gppl="-1" aria-label="한 명 빼기">−</button><input id="gPeople" class="num" inputmode="numeric" value="${+v.people||1}" aria-label="참석 인원"><button data-gppl="1" aria-label="한 명 더">+</button></div><span class="hint">명</span></div></div>
+    <div class="field"><label for="gMemo">메모 <span class="hint">(선택)</span></label><textarea id="gMemo" maxlength="500" placeholder="함께 오시는 분, 궁금한 점 등을 적어주세요.">${esc(v.memo||'')}</textarea></div>
+    <button class="btn block sun" id="gGo" data-id="${g.id}">${g.mine?'신청 내용 고치기':'신청하기'}</button>
+    ${g.mine?`<button class="btn block line" id="gOff" data-id="${g.id}">신청 취소</button>`:''}`}
+    <button class="btn block line" id="coClose">닫기</button>
+  </div></div>`;
+  sheetOpened();
+}
 
 /* ---------- 화면 ---------- */
 function render(){
@@ -339,6 +377,9 @@ function homeView(){
   return `
     <button class="banner" id="goRec"><span><small>${new Date().getMonth()+1}월 추천 교구</small><b>${esc(recThisMonth() || '이달의 추천 교구')}</b><small>국민서관이 고른 이번 달 교구 보러 가기 ›</small></span>
       ${recThumb()?`<img src="${recThumb()}" alt="" style="width:64px;height:64px;background:#fff;object-fit:contain">`:`<img src="logo-n.png" alt="" style="width:56px;height:56px">`}</button>
+    ${gatherings.map(g=>`<button class="gpush" data-gather="${g.id}"><span class="ic">${ICON.party}</span>
+      <span class="tx"><small>원장님 행사${g.deadline?` · ${esc(fmtDay(g.deadline))}까지 신청`:''}</small><b>${esc(g.title)}</b>${g.when_text||g.place?`<small>${esc([g.when_text,g.place].filter(Boolean).join(' · '))}</small>`:''}</span>
+      <span class="tag ${g.mine?'ok':g.closed?'':'sun'}">${g.mine?'신청 완료':g.closed?'마감':'신청하기'}</span></button>`).join('')}
     <div class="quick three">
       <button data-go="book">${ICON.book}교재 주문</button>
       <button data-go="goods">${ICON.box}물품 주문</button>
@@ -686,6 +727,28 @@ document.addEventListener('click', async e => {
       await loadOrders(); tab='home'; render();
       toast(me.status==='approved' ? '로그인했어요.' : '가입 신청이 접수됐어요. 승인되면 주문할 수 있어요.');
     } catch(err){ auth.busy = false; render(); toast(err.message); }
+    return;
+  }
+  // 원장님 행사 신청
+  if (d.gather){ openGather(+d.gather); return; }
+  if (d.gppl){ const i = $('#gPeople'); i.value = Math.min(20, Math.max(1, (parseInt(i.value)||1) + +d.gppl)); return; }
+  if (t.id==='gGo'){
+    const people = parseInt($('#gPeople').value)||0;
+    if (!$('#gName').value.trim()){ toast('참석하실 분 성함을 적어주세요.'); return; }
+    if (!/^\d{9,11}$/.test(digits($('#gPhone').value))){ toast('연락처를 확인해 주세요.'); return; }
+    if (people<1 || people>20){ toast('인원을 확인해 주세요.'); return; }
+    t.disabled = true;
+    try {
+      await rpc('nk_gathering_signup', {p_token:me.token, p_id:+d.id, p_name:$('#gName').value.trim(), p_phone:digits($('#gPhone').value), p_people:people, p_memo:$('#gMemo').value.trim()});
+      const was = gatherings.find(x=>x.id===+d.id)?.mine;
+      dismissSheet(); await loadGatherings(); keepScroll(render); toast(was ? '신청 내용을 고쳤어요.' : '신청됐어요. 확인 후 연락드릴게요.');
+    } catch(err){ t.disabled = false; toast(err.message); }
+    return;
+  }
+  if (t.id==='gOff'){
+    if (!confirm('신청을 취소할까요?')) return;
+    try { await rpc('nk_gathering_cancel', {p_token:me.token, p_id:+d.id}); dismissSheet(); await loadGatherings(); keepScroll(render); toast('신청을 취소했어요.'); }
+    catch(err){ toast(err.message); }
     return;
   }
   if (t.id==='whoBtn'){

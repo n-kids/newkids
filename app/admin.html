@@ -60,6 +60,12 @@ td.r,th.r{text-align:right}
 .as-ph img{width:140px;height:105px;object-fit:cover;border-radius:10px;border:1px solid var(--line);cursor:zoom-in}
 .log{font-size:12px;color:var(--muted);margin:0;padding:0 0 0 16px}
 .filters{display:flex;gap:6px;flex-wrap:wrap}
+.gform{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:14px}
+.gform .wide{grid-column:1/-1}
+.gform .row2{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.kind.gather{background:var(--ok-soft);color:var(--ok)}
+.kind.off{background:var(--sunk);color:var(--muted)}
+@media (max-width:760px){.gform{grid-template-columns:minmax(0,1fr)}}
 .toast{bottom:24px}
 @media (max-width:760px){
   .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -81,6 +87,7 @@ let session = null, isAdmin = false;
 let members = [], orders = [];
 let tab = 'todo', openId = null, kgFilter = '전체';
 let photoCache = {};
+let gatherings = [], gCounts = {}, gEdit = null, gOpen = null, gSignups = {};   // 원장님 행사 (참가 신청)
 let seen = new Set(); let firstLoad = true; let fresh = new Set();
 const memberOf = o => members.find(m => m.id === o.member_id) || {kg:'(알 수 없음)', region:''};
 const vendorsOf = o => [...new Set((o.lines || []).map(l => l.vendor))];
@@ -97,11 +104,24 @@ async function load(){
   ]);
   if (m.error || o.error){ toast((m.error || o.error).message); return; }
   members = m.data; orders = o.data;
+  await loadGatherings();
   orders.forEach(x => { if (!seen.has(x.id)){ if (!firstLoad) fresh.add(x.id); seen.add(x.id); } });
   firstLoad = false;
   const n = orders.filter(x => x.state === 0).length + members.filter(x => x.status === 'pending').length;
   document.title = (n ? `(${n}) ` : '') + '뉴키즈 주문관리';
 }
+// 원장님 행사: 행사 목록과 신청 수 (명단은 연락처를 풀어야 해서 열 때 따로 받음)
+async function loadGatherings(){
+  const [g, s] = await Promise.all([
+    sb.from('nk_gatherings').select('*').order('created_at', {ascending:false}),
+    sb.from('nk_gathering_signups').select('gathering_id,people'),
+  ]);
+  if (g.error || s.error) return;   // 표가 아직 없으면 탭만 비어 보임
+  gatherings = g.data; gCounts = {};
+  s.data.forEach(x => { const c = gCounts[x.gathering_id] || (gCounts[x.gathering_id] = {kg:0, people:0}); c.kg++; c.people += x.people; });
+  if (gOpen) await loadSignups(gOpen);
+}
+async function loadSignups(id){ const r = await sb.rpc('nk_admin_gathering_signups', {p_id:id}); if (!r.error) gSignups[id] = r.data; }
 
 function render(){
   const root = $('#root');
@@ -132,9 +152,9 @@ function render(){
       <div class="stat"><small>거래명세서 요청</small><b class="num">${stmts.length}</b></div>
       <div class="stat ${pending.length?'hot':''}"><small>가입 승인 대기</small><b class="num">${pending.length}</b></div>
     </div>
-    <nav class="nav">${[['todo','할 일',todo],['vendor','업체별 발주',vq.length],['kg','원별 보기',0],['members','가입한 원',pending.length]].map(([k,l,n]) =>
+    <nav class="nav">${[['todo','할 일',todo],['vendor','업체별 발주',vq.length],['kg','원별 보기',0],['members','가입한 원',pending.length],['gather','원장님 행사',0]].map(([k,l,n]) =>
       `<button data-tab="${k}" ${tab===k?'aria-current="page"':''}>${l}${n?`<span class="n num">${n}</span>`:''}</button>`).join('')}</nav>
-    ${({todo:() => todoView(need, quotes, stmts, asOpen, asks, ship, sheet, sheetNotes), vendor:() => vendorView(vq), kg:kgView, members:membersView})[tab]()}`;
+    ${({todo:() => todoView(need, quotes, stmts, asOpen, asks, ship, sheet, sheetNotes), vendor:() => vendorView(vq), kg:kgView, members:membersView, gather:gatherView})[tab]()}`;
 }
 
 function loginView(){
@@ -237,6 +257,48 @@ function membersView(){
       ${m.status!=='approved'?`<button class="btn small brand" data-member="${m.id}" data-status="approved">승인</button>`:''}${m.status==='pending'?`<button class="btn small line" data-member="${m.id}" data-status="rejected">거절</button>`:''}</span></div>`).join('') || '<div class="empty">아직 가입한 원이 없어요</div>'}</div>`;
 }
 
+/* 원장님 행사: 만들고 고치기 · 앱에 띄우기 · 신청 명단 */
+const todayStr = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
+function gatherView(){
+  const e = gEdit;
+  const form = e ? `<div class="box"><h3>${e.id ? '행사 고치기' : '새 행사 만들기'}<small>저장하고 "앱에 띄우기"를 켜면 원 어플 홈에 신청 버튼이 생겨요</small></h3>
+    <div class="gform">
+      <div class="field wide"><label for="gTitle">행사 이름 (홈 버튼에 보여요)</label><input id="gTitle" maxlength="60" placeholder="예) 2027 원장님 신년 간담회" value="${esc(e.title||'')}"></div>
+      <div class="field"><label for="gWhen">일시</label><input id="gWhen" maxlength="60" placeholder="예) 12월 5일(금) 오전 11시" value="${esc(e.when_text||'')}"></div>
+      <div class="field"><label for="gPlace">장소</label><input id="gPlace" maxlength="80" placeholder="예) 김포 라베니체 OO식당" value="${esc(e.place||'')}"></div>
+      <div class="field wide"><label for="gBody">안내 내용</label><textarea id="gBody" maxlength="2000" placeholder="행사 소개, 준비물, 주차 안내 등">${esc(e.body||'')}</textarea></div>
+      <div class="field"><label for="gDeadline">신청 마감일 <span class="hint">(이 날까지 신청, 비우면 마감 없음)</span></label><input id="gDeadline" type="date" value="${esc(e.deadline||'')}"></div>
+      <div class="field"><label for="gMax">최대 인원 <span class="hint">(비우면 제한 없음)</span></label><input id="gMax" inputmode="numeric" maxlength="4" value="${e.max_count||''}"></div>
+      <label class="row2 wide"><input type="checkbox" id="gOpenChk" ${e.open?'checked':''}> 앱에 띄우기 (원 어플 홈에 신청 버튼 보이기)</label>
+      <div class="row2 wide"><button class="btn small brand" id="gSave">저장</button><button class="btn small line" id="gCancel">취소</button></div>
+    </div></div>` : `<div><button class="btn small brand" id="gNew">+ 새 행사 만들기</button></div>`;
+  const list = gatherings.map(g => { const c = gCounts[g.id] || {kg:0, people:0}; const past = g.deadline && g.deadline < todayStr();
+    const rows = gSignups[g.id];
+    return `<div class="item"><span class="kind ${g.open?'gather':'off'}">${g.open?(past?'마감':'신청 중'):'숨김'}</span>
+      <button class="t" data-gopen="${g.id}"><b>${esc(g.title)}</b><small class="num">${[g.when_text, g.place, g.deadline?'마감 '+g.deadline:''].filter(Boolean).map(esc).join(' · ')} · 신청 ${c.kg}곳 ${c.people}명${g.max_count?' / 최대 '+g.max_count+'명':''}</small></button>
+      <span class="a"><button class="btn small ${g.open?'line':'sun'}" data-gtoggle="${g.id}">${g.open?'앱에서 내리기':'앱에 띄우기'}</button><button class="btn small line" data-gedit="${g.id}">고치기</button><button class="btn small line" data-gdel="${g.id}">삭제</button></span>
+      ${gOpen===g.id?`<div class="detail">
+        ${g.body?`<span style="white-space:pre-wrap">${esc(g.body)}</span>`:''}
+        ${!rows?'<span class="hint">명단 불러오는 중…</span>':rows.length?`<div class="tbl-wrap"><table><thead><tr><th>원</th><th>지역</th><th>참석자</th><th>연락처</th><th class="r">인원</th><th>메모</th><th>신청</th></tr></thead><tbody>
+          ${rows.map(r=>`<tr><td><b>${esc(r.kg)}</b></td><td>${esc(r.region)}</td><td>${esc(r.name)}</td><td class="num">${esc(fmtPhone(r.phone||''))}</td><td class="r num">${+r.people||0}</td><td style="white-space:normal">${esc(r.memo||'')}</td><td class="num">${fmtDate(r.created_at)}</td></tr>`).join('')}
+          </tbody></table></div>
+          <div class="row2" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small line" data-gcopy="${g.id}">명단 복사</button><button class="btn small line" data-gcsv="${g.id}">명단 내려받기</button></div>`
+        :'<span class="hint">아직 신청한 원이 없어요.</span>'}</div>`:''}
+    </div>`; }).join('');
+  return `<div class="reco"><b>원장님 행사</b> · 행사를 만들고 "앱에 띄우기"를 누르면 원 어플 홈에 신청 버튼이 생겨요. 원장님이 직접 성함·연락처·인원을 적어 신청하고, 여기서 명단을 보고 복사하거나 내려받을 수 있어요.</div>
+    ${form}
+    <div class="box"><h3>행사 목록<small>${gatherings.length}개 · 이름을 누르면 신청 명단</small></h3>${list || '<div class="empty">아직 만든 행사가 없어요.</div>'}</div>`;
+}
+function gatherFromForm(){
+  const max = parseInt(digits($('#gMax').value)) || null;
+  return {title:$('#gTitle').value.trim(), when_text:$('#gWhen').value.trim()||null, place:$('#gPlace').value.trim()||null, body:$('#gBody').value.trim()||null,
+    deadline:$('#gDeadline').value||null, max_count:max, open:$('#gOpenChk').checked};
+}
+function signupText(g){
+  const rows = gSignups[g.id] || [];
+  return `[${g.title} 신청 명단] ${rows.length}곳 ${rows.reduce((a,r)=>a+(+r.people||0),0)}명\n` + rows.map((r,i)=>`${i+1}. ${r.kg}(${r.region}) ${r.name} ${fmtPhone(r.phone||'')} ${r.people}명${r.memo?' - '+r.memo:''}`).join('\n');
+}
+
 async function updateOrder(o, patch, logText){
   const log = [...(o.log || []), {at:new Date().toISOString(), t:logText}];
   const { error } = await sb.from('nk_orders').update({...patch, log, updated_at:new Date().toISOString()}).eq('id', o.id);
@@ -287,6 +349,42 @@ document.addEventListener('click', async e => {
       try { await navigator.clipboard.writeText(text); toast('복사했어요.'); } catch(_) { prompt('아래 내용을 복사하세요', text); }
       return;
     }
+    // 원장님 행사
+    if (t.id === 'gNew'){ gEdit = {open:true}; render(); $('#gTitle')?.focus(); return; }
+    if (t.id === 'gCancel'){ gEdit = null; render(); return; }
+    if (d.gedit){ gEdit = {...gatherings.find(g => g.id === +d.gedit)}; render(); window.scrollTo(0, 0); return; }
+    if (t.id === 'gSave'){
+      const v = gatherFromForm();
+      if (!v.title){ toast('행사 이름을 적어주세요.'); return; }
+      const now = new Date().toISOString();
+      const { error } = gEdit.id ? await sb.from('nk_gatherings').update({...v, updated_at:now}).eq('id', gEdit.id) : await sb.from('nk_gatherings').insert(v);
+      if (error) throw error;
+      gEdit = null; await loadGatherings(); render(); toast(v.open ? '저장했어요. 원 어플 홈에 신청 버튼이 보여요.' : '저장했어요. (앱에는 아직 안 보여요)'); return;
+    }
+    if (d.gtoggle){
+      const g = gatherings.find(x => x.id === +d.gtoggle);
+      const { error } = await sb.from('nk_gatherings').update({open:!g.open, updated_at:new Date().toISOString()}).eq('id', g.id);
+      if (error) throw error;
+      await loadGatherings(); render(); toast(g.open ? '앱에서 내렸어요.' : '앱에 띄웠어요. 원 어플 홈에 신청 버튼이 보여요.'); return;
+    }
+    if (d.gdel){
+      const g = gatherings.find(x => x.id === +d.gdel); const c = gCounts[g.id];
+      if (!confirm(`'${g.title}' 행사를 지울까요?${c?.kg ? `\n신청한 ${c.kg}곳의 명단도 함께 지워져요.` : ''}`)) return;
+      const { error } = await sb.from('nk_gatherings').delete().eq('id', g.id);
+      if (error) throw error;
+      if (gOpen === g.id) gOpen = null; await loadGatherings(); render(); toast('행사를 지웠어요.'); return;
+    }
+    if (d.gopen){ const id = +d.gopen; gOpen = gOpen === id ? null : id; render(); if (gOpen){ await loadSignups(id); render(); } return; }
+    if (d.gcopy){
+      const text = signupText(gatherings.find(x => x.id === +d.gcopy));
+      try { await navigator.clipboard.writeText(text); toast('명단을 복사했어요.'); } catch(_) { prompt('아래 내용을 복사하세요', text); }
+      return;
+    }
+    if (d.gcsv){
+      const g = gatherings.find(x => x.id === +d.gcsv);
+      const rows = [['원','지역','참석자','연락처','인원','메모','신청'], ...(gSignups[g.id]||[]).map(r => [r.kg, r.region, r.name, fmtPhone(r.phone||''), r.people, r.memo||'', fmtDate(r.created_at)])];
+      saveCsv(rows, `${g.title.replace(/[\\/:*?"<>|]/g,'')}_신청명단.csv`); return;
+    }
     if (d.act){
       const o = d.id ? orders.find(x => x.id === +d.id) : null; if (o) fresh.delete(o.id);
       if (d.act === 'confirm') await updateOrder(o, {state:1}, '확인');
@@ -319,13 +417,18 @@ function downloadCsv(){
       rows.push([...base, a.vendor||'', what, '','','','','','', '', o.kind==='return'?a.qty||'':'', '', '', '', STATES[o.kind][o.state], o.memo||'']); return; }
     (o.lines||[]).forEach(l => rows.push([...base, l.vendor, l.name, ...(l.q||['','','','','','']), lineSummary({st:l.st}), l.q||l.st?lineTotal(l):l.qty, l.price?l.price*l.qty:'', PAY_NAME[o.pay]||'', o.quote_want?'요청':'', STATES[o.kind][o.state], o.memo||'']));
   });
-  const csv = '﻿' + rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\r\n');
+  const d = new Date(); saveCsv(rows, `뉴키즈주문_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}.csv`);
+}
+// 엑셀에서 바로 열리는 CSV (첫 글자가 = + - @ 이면 수식으로 읽히지 않게 ' 를 붙임)
+function saveCsv(rows, name){
+  const cell = v => { let s = String(v ?? ''); if (/^[=+\-@]/.test(s)) s = "'" + s; return `"${s.replace(/"/g,'""')}"`; };
+  const csv = '﻿' + rows.map(r => r.map(cell).join(',')).join('\r\n');
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
-  const d = new Date(); a.download = `뉴키즈주문_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}.csv`; a.click();
+  a.download = name; a.click();
 }
 
 // 1분마다 새 주문 확인
-setInterval(async () => { if (isAdmin && !openId){ await load(); render(); } }, 60000);
+setInterval(async () => { if (isAdmin && !openId && !gEdit){ await load(); render(); } }, 60000);
 boot();
 </script>
 </body>

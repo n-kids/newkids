@@ -472,8 +472,8 @@ function addScrollButtons() {
     if (document.querySelector('.scroll-btns')) return;
     document.body.insertAdjacentHTML('beforeend', `
         <div class="scroll-btns">
-            <button class="btn-scroll" onclick="window.scrollToTop()">▲</button>
-            <button class="btn-scroll" onclick="window.scrollToBottom()">▼</button>
+            <button type="button" class="btn-scroll" aria-label="맨 위로 이동" title="맨 위로" onclick="window.scrollToTop()">▲</button>
+            <button type="button" class="btn-scroll" aria-label="맨 아래로 이동" title="맨 아래로" onclick="window.scrollToBottom()">▼</button>
         </div>`);
 }
 

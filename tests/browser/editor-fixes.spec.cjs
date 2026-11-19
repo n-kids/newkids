@@ -389,3 +389,100 @@ test('editor tabs, preview size presets, sticky preview, and mid-check overlay r
   await expect(page.locator('body')).not.toHaveClass(/nk-preview-open/);
   await expect(page.locator('#nk-check-fab')).toBeVisible();
 });
+
+test('all 10 power-user features work end-to-end (undo/redo, split drag, click-to-edit, reset, contrast, custom themes, dual preview, autosave, shortcuts/badges, JSON backup)', async ({ page, context }) => {
+  await setupRoutes(context);
+  page.on('dialog', d => d.accept());
+  await page.goto('/page-editor.html');
+  await expect(page.locator('#save')).toBeEnabled();
+  await expect(page.locator('#preview-status')).toContainText('초안 미리보기 반영됨');
+
+  // 1) Undo / Redo + Tab dirty dot badge
+  const origTitle = await page.locator('#title').inputValue();
+  await page.locator('#title').fill('실행취소 테스트 제목');
+  await expect(page.locator('[data-editor-view="banner"] .nk-tab-dot')).toBeVisible();
+  await page.waitForTimeout(400);
+  await expect(page.locator('#nk-undo')).toBeEnabled();
+  await page.locator('#nk-undo').click();
+  await expect(page.locator('#title')).toHaveValue(origTitle);
+  await expect(page.locator('#nk-redo')).toBeEnabled();
+  await page.locator('#nk-redo').click();
+  await expect(page.locator('#title')).toHaveValue('실행취소 테스트 제목');
+
+  // 2) Drag split handle resizes preview column freely
+  const handleBox = await page.locator('#nk-split-handle').boundingBox();
+  expect(handleBox).not.toBeNull();
+  const beforeW = await page.locator('.preview-column').evaluate(el => el.getBoundingClientRect().width);
+  await page.mouse.move(handleBox.x + handleBox.width / 2, handleBox.y + 40);
+  await page.mouse.down();
+  await page.mouse.move(handleBox.x - 120, handleBox.y + 40, { steps: 5 });
+  await page.mouse.up();
+  const afterW = await page.locator('.preview-column').evaluate(el => el.getBoundingClientRect().width);
+  expect(afterW).toBeGreaterThan(beforeW + 80);
+  await expect(page.locator('body')).toHaveAttribute('data-nk-preview-size', 'custom');
+
+  // 3) Click-to-Edit inside preview jumps to the corresponding tab & input
+  await page.frameLocator('#preview').locator('#events h2').click({ force: true });
+  await expect(page.locator('[data-editor-view="body"]')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('#evTitle')).toBeVisible();
+
+  // 4) Per-section reset button restores banner baseline
+  await page.locator('[data-editor-view="banner"]').click();
+  await page.locator('[data-reset-section="banner"]').click();
+  await expect(page.locator('#title')).toHaveValue(origTitle);
+
+  // 5) WCAG color contrast warning & one-click auto-fix
+  await page.locator('#background').fill('#ffffff');
+  await page.locator('#titleColor').fill('#f8fafc');
+  await expect(page.locator('#nk-contrast-alert')).toHaveClass(/warn/);
+  await page.locator('#nk-contrast-fix').click();
+  await expect(page.locator('#nk-contrast-alert')).toHaveClass(/ok/);
+
+  // 6) Custom themes save & apply
+  await page.locator('[data-hero-theme="navy"]').click();
+  await page.locator('#nk-theme-name').fill('테스트 시즌 테마');
+  await page.locator('#nk-theme-save').click();
+  await expect(page.locator('#nk-custom-theme-list')).toContainText('테스트 시즌 테마');
+  await page.locator('[data-hero-theme="cream"]').click();
+  await expect(page.locator('#background')).toHaveValue('#fbf6ee');
+  await page.locator('#nk-custom-theme-list [data-custom-theme-id]').first().click();
+  await expect(page.locator('#background')).toHaveValue('#172451');
+
+  // 7) Dual PC + Mobile preview toggle inside mid-check overlay
+  await page.locator('#nk-split-preview-btn').click();
+  await expect(page.locator('body')).toHaveClass(/nk-dual-preview/);
+  await expect(page.locator('#preview-mobile')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('body')).not.toHaveClass(/nk-dual-preview/);
+
+  // 8) Autosave & recovery banner across reload
+  await page.locator('#title').fill('임시저장 복구 대상 제목');
+  await page.reload();
+  await expect(page.locator('#save')).toBeEnabled();
+  await expect(page.locator('#nk-autosave-banner')).toBeVisible();
+  await page.locator('#nk-autosave-restore').click();
+  await expect(page.locator('#title')).toHaveValue('임시저장 복구 대상 제목');
+
+  // 9) Keyboard shortcut Ctrl+S saves draft and clears dirty dot
+  await page.keyboard.press('Control+s');
+  await expect(page.locator('#status')).toContainText('초안 v1 저장 완료');
+  await expect(page.locator('[data-editor-view="banner"] .nk-tab-dot')).toHaveCount(0);
+
+  // 10) JSON backup import restores document cleanly
+  await page.locator('[data-editor-view="env"]').click();
+  await page.locator('#nk-env-settings-card summary').last().click();
+  const backupJson = JSON.stringify({
+    nkEditorBackupV1: true,
+    pageKey: 'main',
+    document: { schemaVersion: 1, title: '백업에서 복원된 제목', description: '복원 설명', inherit: false, hero: { preset: 'large', desktopHeight: 560, mobileHeight: 440, desktopPadding: 80, mobilePadding: 56, titleColor: '#172451', descriptionColor: '#545b6e', background: '#f7f0e4', decoration: true }, button: { text: '제안서 / 견적 요청하기', url: 'proposal.html' } }
+  });
+  await page.locator('#nk-backup-import-file').setInputFiles({
+    name: 'backup.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(backupJson, 'utf8')
+  });
+  await page.locator('#nk-backup-import-btn').click();
+  await expect(page.locator('#nk-backup-status')).toContainText('백업 파일 복원이 완료되었습니다');
+  await page.locator('[data-editor-view="banner"]').click();
+  await expect(page.locator('#title')).toHaveValue('백업에서 복원된 제목');
+});

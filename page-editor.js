@@ -351,15 +351,19 @@
   if($('heroImageClear'))$('heroImageClear').disabled=doc.inherit===true;
   renderSections();
  }
- function changed(){dirty=true;status('저장되지 않은 변경 사항이 있습니다. 공개 사이트에는 아직 반영되지 않았습니다.');preview();}
+ function emitState(reason){
+  try{window.dispatchEvent(new CustomEvent('nk-editor-state',{detail:{reason,key,dirty}}));}catch(_){}
+ }
+ function changed(){dirty=true;status('저장되지 않은 변경 사항이 있습니다. 공개 사이트에는 아직 반영되지 않았습니다.');preview();emitState('change');}
  function preview(){
   try{$('preview').contentWindow.postMessage({type:'nk-page-editor-preview',document:doc,common},location.origin);}catch(_){}
+  try{if(typeof window.__nkSyncExtraPreview==='function')window.__nkSyncExtraPreview(doc,common);}catch(_){}
  }
  async function readHistory(){
   const {data,error}=await sb.from('page_editor_revisions').select('id,publication_version,created_at').eq('page_key',key).order('created_at',{ascending:false}).limit(30);
   if(error)throw error;$('history').replaceChildren();
   if(!data||!data.length){const empty=document.createElement('p');empty.className='muted';empty.textContent='아직 기록된 공개 이력이 없습니다.';$('history').append(empty);return;}
-  data.forEach(item=>{const row=document.createElement('div');row.className='history-row';row.textContent='공개 v'+item.publication_version+' · '+new Date(item.created_at).toLocaleString('ko-KR');const b=document.createElement('button');b.textContent='초안으로 복구';b.addEventListener('click',async()=>{if(busy||!confirm('이 버전을 초안으로 가져올까요? 저장하지 않은 수정은 사라집니다. 공개본은 바뀌지 않습니다.'))return;lock(true);try{const {data,error}=await sb.rpc('page_editor_restore_draft',{p_revision_id:item.id,p_expected_draft_version:version});if(error)throw error;const r=Array.isArray(data)?data[0]:data;version=r.version;doc=r.document;saved=clone(doc);dirty=false;await window.__nkEditorFallback.recordAudit(sb,key,'page_editor_drafts:UPDATE',{version:Number(version)});fill();preview();status('이전 버전을 초안으로 복구했습니다. 공개하려면 공개 반영을 누르세요.');}catch(error){status('복구 실패: '+error.message);}finally{lock(false);fill();}});row.append(b);$('history').append(row);});
+  data.forEach(item=>{const row=document.createElement('div');row.className='history-row';row.textContent='공개 v'+item.publication_version+' · '+new Date(item.created_at).toLocaleString('ko-KR');const b=document.createElement('button');b.textContent='초안으로 복구';b.addEventListener('click',async()=>{if(busy||!confirm('이 버전을 초안으로 가져올까요? 저장하지 않은 수정은 사라집니다. 공개본은 바뀌지 않습니다.'))return;lock(true);try{const {data,error}=await sb.rpc('page_editor_restore_draft',{p_revision_id:item.id,p_expected_draft_version:version});if(error)throw error;const r=Array.isArray(data)?data[0]:data;version=r.version;doc=r.document;saved=clone(doc);dirty=false;await window.__nkEditorFallback.recordAudit(sb,key,'page_editor_drafts:UPDATE',{version:Number(version)});fill();preview();emitState('restore');status('이전 버전을 초안으로 복구했습니다. 공개하려면 공개 반영을 누르세요.');}catch(error){status('복구 실패: '+error.message);}finally{lock(false);fill();}});row.append(b);$('history').append(row);});
  }
  function route(option){if(option.key==='main')return 'index.html';if(option.key==='page:defaults')return 'notice.html#reference';const r=option.row;if(r.type==='EDU')return 'child.html#'+encodeURIComponent(r.code);if(r.type==='EVENT')return 'program.html#'+encodeURIComponent(r.code);if(r.type==='BOARD')return 'notice.html#'+encodeURIComponent(r.code);return ['order','proposal','app-install'].includes(r.code)?r.code+'.html':'page.html?id='+encodeURIComponent(r.code);}
  async function select(){
@@ -374,11 +378,13 @@
    version=draftResult.data?.version||0;saved=clone(doc);dirty=false;pageLoaded=true;fill();
    const url=new URL(route(option),base);$('open-page').href=url.href;url.searchParams.set('nkpreview','1');url.searchParams.set('editor_v','1');url.searchParams.set('nk_page',key);$('preview-status').textContent='미리보기 로딩 중';$('preview').src=url.href;
    await readHistory();status('초안 v'+version+' · '+(pubResult.data?'새 편집기 공개본 있음':'새 공개본 없음: 현재 홈페이지는 기존 설정 유지'));
+   emitState('select');
   }catch(error){pageLoaded=false;status('불러오기 실패: '+error.message+' (다른 페이지를 선택하거나 새로고침해 다시 시도하세요.)');}finally{lock(false);fill();}
  }
  async function save(){
   const {data,error}=await sb.rpc('page_editor_save_draft',{p_page_key:key,p_document:doc,p_expected_version:version});if(error)throw error;const row=Array.isArray(data)?data[0]:data;version=row.version;saved=clone(doc);dirty=false;
   await window.__nkEditorFallback.recordAudit(sb,key,Number(version)===1?'page_editor_drafts:INSERT':'page_editor_drafts:UPDATE',{version:Number(version)});
+  emitState('save');
  }
  async function syncMainPublicationToSiteConfig(d){
   try{
@@ -658,16 +664,39 @@
   setEnvStatus("이 브라우저의 '오늘 하루 열지 않기' 설정이 해제되었습니다.");
  });
  $('page').addEventListener('change',()=>{if(dirty&&!confirm('저장하지 않은 변경을 버리고 이동할까요?')){$('page').value=key;return;}select();});
- $('cancel').addEventListener('click',()=>{if(busy||!confirm('저장된 초안으로 되돌릴까요?'))return;doc=clone(saved);dirty=false;fill();preview();status('저장된 초안을 불러왔습니다.');});
+ $('cancel').addEventListener('click',()=>{if(busy||!confirm('저장된 초안으로 되돌릴까요?'))return;doc=clone(saved);dirty=false;fill();preview();emitState('cancel');status('저장된 초안을 불러왔습니다.');});
  $('save').addEventListener('click',async()=>{lock(true);try{await save();status('초안 v'+version+' 저장 완료. 공개 사이트는 변경되지 않았습니다.');}catch(error){status('저장 실패: '+error.message);}finally{lock(false);fill();}});
- $('publish').addEventListener('click',async()=>{if(busy||!confirm('현재 수정본을 저장하고 공개 홈페이지에 반영할까요? 공통 설정은 이를 사용하는 모든 페이지에 영향을 줍니다.'))return;lock(true);try{await save();const {data,error}=await sb.rpc('page_editor_publish',{p_page_key:key,p_expected_draft_version:version});if(error)throw error;const row=Array.isArray(data)?data[0]:data;published=clone(row.document);if(key==='page:defaults')common=clone(row.document);if(key==='main')await syncMainPublicationToSiteConfig(row.document);await window.__nkEditorFallback.markPublished(sb,key,row.document,row.version);await readHistory();status('공개본 v'+row.version+' 저장 완료. 공개 페이지를 새로 열어 결과를 확인하세요.');}catch(error){status('공개 처리 실패: '+error.message);}finally{lock(false);fill();}});
+ $('publish').addEventListener('click',async()=>{if(busy||!confirm('현재 수정본을 저장하고 공개 홈페이지에 반영할까요? 공통 설정은 이를 사용하는 모든 페이지에 영향을 줍니다.'))return;lock(true);try{await save();const {data,error}=await sb.rpc('page_editor_publish',{p_page_key:key,p_expected_draft_version:version});if(error)throw error;const row=Array.isArray(data)?data[0]:data;published=clone(row.document);if(key==='page:defaults')common=clone(row.document);if(key==='main')await syncMainPublicationToSiteConfig(row.document);await window.__nkEditorFallback.markPublished(sb,key,row.document,row.version);await readHistory();emitState('publish');status('공개본 v'+row.version+' 저장 완료. 공개 페이지를 새로 열어 결과를 확인하세요.');}catch(error){status('공개 처리 실패: '+error.message);}finally{lock(false);fill();}});
  $('compare').addEventListener('click',()=>{const changes=[];const fmt=v=>v===undefined||v===null?'없음':typeof v==='boolean'?(v?'사용':'미사용'):typeof v==='string'?v:JSON.stringify(v);function walk(a,b,path){if(JSON.stringify(a)===JSON.stringify(b))return;if(a&&b&&typeof a==='object'&&typeof b==='object'&&!Array.isArray(a)&&!Array.isArray(b)){new Set([...Object.keys(a),...Object.keys(b)]).forEach(k=>walk(a[k],b[k],path?path+'.'+k:k));}else changes.push((diffLabels[path]||path)+': '+fmt(a)+' → '+fmt(b));}walk(published,doc,'');$('diff').textContent=changes.join('\n')||'공개본과 차이가 없습니다.';$('diff-dialog').showModal();});
  $('close-diff').addEventListener('click',()=>$('diff-dialog').close());
  $('diff-dialog').addEventListener('click',event=>{if(event.target===$('diff-dialog'))$('diff-dialog').close();});
  document.querySelectorAll('[data-width]').forEach(button=>button.addEventListener('click',()=>{$('preview').style.width=button.dataset.width+'px';}));
  window.addEventListener('beforeunload',event=>{if(dirty){event.preventDefault();event.returnValue='';}});
  window.addEventListener('message',event=>{if(event.source!==$('preview').contentWindow||event.origin!==location.origin)return;if(event.data?.type==='nk-page-editor-preview-ready')preview();if(event.data?.type==='nk-page-editor-preview-applied')$('preview-status').textContent='초안 미리보기 반영됨 · 읽기 전용';});
- $('preview').addEventListener('load',()=>{try{const win=$('preview').contentWindow;const frameDoc=$('preview').contentDocument;frameDoc.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();},true);frameDoc.addEventListener('submit',e=>{e.preventDefault();e.stopImmediatePropagation();},true);if(win.NKPageDesign)preview();else{const script=frameDoc.createElement('script');script.src=new URL('page-design.js?v=1',base).href;script.onload=preview;frameDoc.head.appendChild(script);}}catch(_){$('preview-status').textContent='미리보기 연결 실패: 같은 주소의 페이지인지 확인하세요.';}});
+ $('preview').addEventListener('load',()=>{try{const win=$('preview').contentWindow;const frameDoc=$('preview').contentDocument;frameDoc.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();try{if(typeof window.__nkOnPreviewClick==='function')window.__nkOnPreviewClick(e.target);}catch(_){}},true);frameDoc.addEventListener('submit',e=>{e.preventDefault();e.stopImmediatePropagation();},true);if(win.NKPageDesign)preview();else{const script=frameDoc.createElement('script');script.src=new URL('page-design.js?v=1',base).href;script.onload=preview;frameDoc.head.appendChild(script);}}catch(_){$('preview-status').textContent='미리보기 연결 실패: 같은 주소의 페이지인지 확인하세요.';}});
+ window.__nkEditorBridge={
+  getState(){
+   const option=options.find(o=>o.key===key)||options[0]||{key,row:{}};
+   return {key,doc:clone(doc),saved:clone(saved),published:clone(published),common:clone(common),dirty,busy,allowed,pageLoaded,baseline:baseline(option),catRows:clone(catRows),popupRows:clone(popupRows)};
+  },
+  applyDoc(nextDoc,opts={}){
+   if(busy||!nextDoc||typeof nextDoc!=='object')return false;
+   const option=options.find(o=>o.key===key)||options[0]||{key,row:{}};
+   const b=baseline(option);
+   doc=clone(nextDoc);
+   doc.hero={...b.hero,...(doc.hero||{})};
+   doc.sections=doc.sections||b.sections;
+   doc.button=doc.button||b.button;
+   dirty=opts.dirty!==false;
+   fill();preview();
+   if(opts.status)status(opts.status);
+   else if(dirty)status('저장되지 않은 변경 사항이 있습니다. 공개 사이트에는 아직 반영되지 않았습니다.');
+   emitState(opts.reason||'apply');
+   return true;
+  },
+  getPreviewUrl(){return $('preview')?.src||'';},
+  preview
+ };
  async function enter(){
   const {data,error}=await sb.rpc('page_editor_is_admin');if(error)throw error;if(data!==true)throw new Error('지정된 관리자 계정만 사용할 수 있습니다.');
   const result=await sb.from('program_categories').select('*').order('order_num');if(result.error)throw result.error;

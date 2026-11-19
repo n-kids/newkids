@@ -11,7 +11,7 @@ if out.exists():
 out.mkdir()
 release = os.environ['GITHUB_SHA']
 allowed = {'.html', '.css', '.js', '.png', '.jpg', '.jpeg', '.webp', '.ico', '.txt', '.xml', '.json', '.webmanifest'}
-pattern = re.compile(r'(?<![\w/.-])(config\.js|manager\.js|board\.js|catalog\.js|style\.css|form-shared\.js|admin-forms\.js|admin-convenience\.js|admin\.css|page-design\.js|page-editor-audit\.js|page-editor-review\.js|page-editor-verify\.js|page-editor-schedule\.js|page-editor-tools\.js|page-editor-status\.js|page-editor-ui\.js|page-editor\.js|page-editor\.css)(?:\?v=[A-Za-z0-9_-]+)?')
+pattern = re.compile(r'(?<![\w/.-])(config\.js|manager\.js|board\.js|catalog\.js|style\.css|form-shared\.js|admin-forms\.js|admin-convenience\.js|admin\.css|page-design\.js|page-editor-audit\.js|page-editor-review\.js|page-editor-verify\.js|page-editor-schedule\.js|page-editor-tools\.js|page-editor-status\.js|page-editor-power\.js|page-editor-ui\.js|page-editor\.js|page-editor\.css)(?:\?v=[A-Za-z0-9_-]+)?')
 for source in root.iterdir():
     if not source.is_file() or source.suffix.lower() not in allowed:
         continue
@@ -27,7 +27,7 @@ if (root / 'app').is_dir():
     shutil.copytree(root / 'app', out / 'app', ignore=shutil.ignore_patterns('*.sql', '.DS_Store'))
 (out / '.nojekyll').touch()
 (out / 'release.json').write_text(json.dumps({'commit': release, 'editor': 'page-editor.html'}, indent=2), encoding='utf-8')
-required = ['index.html', 'admin.html', 'form.html', 'form-shared.js', 'admin-forms.js', 'page-editor.html', 'page-editor.js', 'page-editor-audit.js', 'page-editor-review.js', 'page-editor-verify.js', 'page-editor-schedule.js', 'page-editor-tools.js', 'page-editor-ui.js', 'page-editor-status.js', 'page-editor.css', 'page-design.js', 'config.js']
+required = ['index.html', 'admin.html', 'form.html', 'form-shared.js', 'admin-forms.js', 'page-editor.html', 'page-editor.js', 'page-editor-audit.js', 'page-editor-review.js', 'page-editor-verify.js', 'page-editor-schedule.js', 'page-editor-tools.js', 'page-editor-status.js', 'page-editor-power.js', 'page-editor-ui.js', 'page-editor.css', 'page-design.js', 'config.js']
 missing = [name for name in required if not (out / name).is_file()]
 if missing:
     raise RuntimeError('Missing deployment files: ' + ', '.join(missing))

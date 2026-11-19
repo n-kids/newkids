@@ -384,6 +384,12 @@ test('editor tabs, preview size presets, sticky preview, and mid-check overlay r
   await expect(page.locator('#nk-preview-close')).toBeVisible();
   const openH = await page.locator('.frame-scroll').evaluate(el => el.getBoundingClientRect().height);
   expect(openH).toBeGreaterThan(compactH * 1.5);
+  const openFill = await page.evaluate(() => {
+    const vp = document.querySelector('.frame-scroll').getBoundingClientRect().width - 24;
+    const fr = document.getElementById('preview').getBoundingClientRect().width;
+    return fr / vp;
+  });
+  expect(openFill).toBeGreaterThan(0.95);
   await expect(page.frameLocator('#preview').locator('.hero h1')).toHaveText('중간 점검 제목');
   await page.keyboard.press('Escape');
   await expect(page.locator('body')).not.toHaveClass(/nk-preview-open/);

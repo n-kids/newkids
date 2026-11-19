@@ -62,8 +62,10 @@
 #nk-preview-backdrop[hidden]{display:none}
 body.nk-preview-open{overflow:hidden}
 body.nk-preview-open .preview-column{z-index:999}
-body.nk-preview-open .preview{position:fixed;top:3vh;left:3vw;right:3vw;bottom:3vh;z-index:999;display:flex;flex-direction:column;background:#fff;border-radius:12px;padding:14px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
-body.nk-preview-open .frame-scroll{flex:1 1 auto;height:auto!important;min-height:0}
+body.nk-preview-open .preview{position:fixed;top:2.5vh;left:3vw;right:3vw;bottom:2.5vh;max-width:1600px;margin:0 auto;z-index:999;display:flex;flex-direction:column;background:#fff;border-radius:12px;padding:14px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+body.nk-preview-open .frame-scroll{flex:1 1 auto;height:auto!important;min-height:0;background:#f1f5f9;overflow:hidden}
+body.nk-preview-open #preview{box-shadow:0 2px 12px rgba(15,23,42,.08);border-radius:6px}
+body.nk-preview-open .nk-preview-size{display:none}
 body.nk-preview-open .nk-preview-close{display:inline-flex}
 body.nk-preview-open #nk-check-fab{display:none}
 @media(min-width:851px){

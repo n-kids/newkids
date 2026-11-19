@@ -57,22 +57,52 @@
  const previewBox=document.querySelector('.preview');
  const toolbar=document.querySelector('.preview-toolbar');
  const sizeCaps={compact:260,normal:420,large:0};
- let previewSize='normal';
+ let previewSize='normal',selectedWidth=1280;
  try{const s=localStorage.getItem('nk_editor_preview_size');if(s&&s in sizeCaps)previewSize=s;}catch(_){}
  const isOpen=()=>document.body.classList.contains('nk-preview-open');
+ const isDual=()=>document.body.classList.contains('nk-dual-preview');
  function fit(){
-  if(!viewport.clientWidth)return;const width=parseInt(frame.style.width,10)||1280;
-  let scale=Math.min(1,Math.max(.1,(viewport.clientWidth-24)/width));
+  if(!viewport.clientWidth)return;
+  const open=isOpen(),dual=open&&isDual();
+  const baseW=selectedWidth||parseInt(frame.style.width,10)||1280;
+  const availW=Math.max(240,viewport.clientWidth-24);
+  if(open&&!dual){
+   frame.style.marginRight='';
+   if(baseW>=1280&&availW>1280){
+    frame.style.width=availW+'px';frame.style.margin='0';
+    frame.style.transform='none';
+    frame.style.height=Math.max(600,viewport.clientHeight-24)+'px';
+    return;
+   }
+   frame.style.width=baseW+'px';
+   const scale=Math.min(1,Math.max(.1,availW/baseW));
+   frame.style.transform=scale===1?'none':'scale('+scale+')';
+   frame.style.margin=scale===1&&baseW<availW?'0 auto':'0';
+   frame.style.height=Math.max(600,Math.ceil((viewport.clientHeight-24)/scale))+'px';
+   return;
+  }
+  if(dual){
+   const pcAvail=Math.max(320,viewport.clientWidth-390-44);
+   frame.style.margin='0';
+   if(pcAvail>=1280){
+    frame.style.width=pcAvail+'px';frame.style.transform='none';frame.style.marginRight='';
+    frame.style.height=Math.max(600,viewport.clientHeight-24)+'px';
+   }else{
+    const scale=Math.max(.1,pcAvail/1280);
+    frame.style.width='1280px';frame.style.transform='scale('+scale+')';
+    frame.style.marginRight=-(1280-Math.round(1280*scale))+'px';
+    frame.style.height=Math.max(600,Math.ceil((viewport.clientHeight-24)/scale))+'px';
+   }
+   return;
+  }
+  frame.style.width=baseW+'px';frame.style.margin='0';frame.style.marginRight='';
+  let scale=Math.min(1,Math.max(.1,availW/baseW));
   const stacked=window.innerWidth<=850;
   const cap=sizeCaps[previewSize];
-  if(!isOpen()&&stacked&&cap)scale=Math.min(scale,Math.max(.1,(cap-24)/760));
+  if(stacked&&cap)scale=Math.min(scale,Math.max(.1,(cap-24)/760));
   const transform='scale('+scale+')';if(frame.style.transform!==transform)frame.style.transform=transform;
-  if(isOpen()){
-   const h=Math.max(760,Math.ceil((viewport.clientHeight-24)/scale))+'px';if(frame.style.height!==h)frame.style.height=h;
-  }else{
-   if(frame.style.height)frame.style.height='';
-   const height=Math.max(200,Math.ceil(760*scale)+24)+'px';if(viewport.style.height!==height)viewport.style.height=height;
-  }
+  if(frame.style.height)frame.style.height='';
+  const height=Math.max(200,Math.ceil(760*scale)+24)+'px';if(viewport.style.height!==height)viewport.style.height=height;
  }
  /* Preview size presets (작게 / 보통 / 크게) */
  const sizeGroup=document.createElement('div');sizeGroup.className='nk-preview-size';sizeGroup.setAttribute('role','group');sizeGroup.setAttribute('aria-label','미리보기 크기');
@@ -128,7 +158,7 @@
  }
  const fieldsEl=document.getElementById('fields');
  if(fieldsEl)fieldsEl.addEventListener('focusin',e=>{if(e.target.matches('input,textarea,select'))scrollPreview(targetFor(e.target));});
- widths.forEach(button=>button.addEventListener('click',()=>{widths.forEach(other=>{other.classList.toggle('active',other===button);other.setAttribute('aria-pressed',String(other===button));});fit();}));
+ widths.forEach(button=>button.addEventListener('click',()=>{selectedWidth=parseInt(button.dataset.width,10)||1280;widths.forEach(other=>{other.classList.toggle('active',other===button);other.setAttribute('aria-pressed',String(other===button));});fit();}));
  if(window.ResizeObserver)new ResizeObserver(fit).observe(viewport);
  window.addEventListener('resize',fit);
  frame.addEventListener('load',fit);sync();syncView('banner');fit();

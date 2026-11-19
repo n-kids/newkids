@@ -9,6 +9,7 @@
         body.is-iframe header,
         body.is-iframe footer,
         body.is-iframe #view-hero,
+        html body.is-iframe.nk-subpage #view-hero.sub-hero,
         body.is-iframe .scroll-btns {
             display: none !important;
         }
@@ -120,7 +121,9 @@
             if (window !== window.parent) {
                 const wrap = document.getElementById('form-content-wrap');
                 if (wrap) {
-                    const height = wrap.scrollHeight + 50; // 여유 공간 50px
+                    const hero = document.getElementById('view-hero');
+                    const heroH = (hero && getComputedStyle(hero).display !== 'none') ? hero.offsetHeight : 0;
+                    const height = wrap.scrollHeight + heroH + 50; // 여유 공간 50px (상단 영역이 보일 경우 포함)
                     if (Math.abs(height - lastSentHeight) > 5) {
                         lastSentHeight = height;
                         window.parent.postMessage({ type: 'resizeIframe', formId: currentFormId, height: height }, '*');

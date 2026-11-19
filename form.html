@@ -55,6 +55,12 @@
         <div class="container">
             <div id="form-content-wrap" style="max-width: 800px; margin: 0 auto;">
                 <div id="form-container" class="proposal-box" style="padding: 20px;">
+                    <!-- 게시글 안에 끼워 넣었을 때(상단 제목 영역이 숨겨짐) 제목·안내문을 여기서 보여 줌 -->
+                    <div id="form-info" style="display:none; margin-bottom:24px; padding:20px; background:#fff; border:1px solid #e3e8f0; border-left:5px solid #1a3c6e; border-radius:8px;">
+                        <h2 id="form-info-title" style="margin:0 0 10px; font-size:1.25rem; color:#1a3c6e; word-break:keep-all;"></h2>
+                        <p id="form-info-desc" style="margin:0; white-space:pre-line; line-height:1.7; color:#333; word-break:keep-all; overflow-wrap:anywhere;"></p>
+                        <p id="form-info-meta" style="margin:12px 0 0; font-size:0.95rem; color:#9a6b3c; font-weight:600;"></p>
+                    </div>
                     <div id="form-status" style="text-align:center; padding:50px; color:#666;">데이터를 불러오는 중입니다...</div>
 
                     <form id="customForm" style="display:none;">
@@ -164,6 +170,19 @@
             document.getElementById('form-title').innerText = data.title;
             document.getElementById('form-desc').innerText = data.description || "아래 항목을 꼼꼼히 확인하고 작성해 주세요.";
             document.title = "뉴키즈 - " + data.title;
+            document.getElementById('form-desc').style.whiteSpace = 'pre-line';
+            if (document.body.classList.contains('is-iframe')) {
+                document.getElementById('form-info-title').innerText = data.title;
+                document.getElementById('form-info-desc').innerText = data.description || "";
+                const meta = [];
+                if (data.end_date) {
+                    const d = new Date(new Date(data.end_date).getTime() - 1000);
+                    meta.push(`신청 마감: ${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`);
+                }
+                if (data.max_participants) meta.push(`정원 ${data.max_participants}명`);
+                document.getElementById('form-info-meta').innerText = meta.join(' · ');
+                document.getElementById('form-info').style.display = 'block';
+            }
 
             if (!data.is_active) {
                 statusDiv.innerHTML = "<div><h2 style='color:#d33b3b; margin-bottom:10px;'>마감된 폼입니다.</h3><p style='color:#666;'>현재 응답을 받고 있지 않습니다.</p></div>";
@@ -278,4 +297,4 @@
         });
     </script>
 </body>
-</html>
+</html>

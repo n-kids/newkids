@@ -98,6 +98,13 @@ window.sanitizeHtml = function (html) {
         const out = document.createElement(node.tagName.toLowerCase());
         Array.from(node.attributes).forEach(attr => {
             const name = attr.name.toLowerCase(), value = attr.value;
+            if (name === "target") {
+                if (out.tagName === "A" && value === "_blank") {
+                    out.setAttribute("target", "_blank");
+                    out.setAttribute("rel", "noopener noreferrer");
+                }
+                return;
+            }
             if (!allowedAttrs.has(name) || name.startsWith("on")) return;
             if ((name === "href" || name === "src") && !safeUrl(value, name === "src")) return;
             if (name === "style") {
@@ -132,7 +139,7 @@ window.safeColor = function (value) {
 // ★ 유튜브 쇼츠(shorts/) 및 다양한 URL 형식을 완벽하게 지원하도록 개선된 파싱 함수 ★
 window.getYoutubeId = function (url) {
     if (!url) return null;
-    const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|shorts\/)([^#&?]*).*/;
+    const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|shorts\/)([^#&?]*).*/;
     const match = url.match(regExp);
     return (match && match[2].length === 11) ? match[2] : null;
 };

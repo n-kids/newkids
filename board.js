@@ -59,7 +59,8 @@
         const area = $('hashtag-area');
         area.replaceChildren();
         try {
-            const { data, error } = await window.sb.from('total_posts').select('title').eq('category', category).neq('is_visible', false);
+            const nowIso = new Date().toISOString();
+            const { data, error } = await window.sb.from('total_posts').select('title').eq('category', category).neq('is_visible', false).neq('is_draft', true).or(`publish_at.is.null,publish_at.lte.${nowIso}`);
             if (request !== tagGeneration || error) return;
             const values = new Set();
             (data || []).forEach(item => {
@@ -119,7 +120,8 @@
                 message(mode === 'scraps' ? '찜해둔 자료가 없습니다.' : '최근 본 자료가 없습니다.'); page = 1; return;
             }
             const offset = (nextPage - 1) * pageSize;
-            let query = window.sb.from('total_posts').select('id, title, category, created_at, link_url, is_secret, download_count, is_notice, image_url', { count: 'exact' }).neq('is_visible', false);
+            const nowIso = new Date().toISOString();
+            let query = window.sb.from('total_posts').select('id, title, category, created_at, link_url, is_secret, download_count, is_notice, image_url', { count: 'exact' }).neq('is_visible', false).neq('is_draft', true).or(`publish_at.is.null,publish_at.lte.${nowIso}`);
             query = mode === 'recent' ? query.in('id', recent) : query.eq('category', category);
             if (keyword) query = query.ilike('title', '%' + keyword + '%');
             if (mode === 'scraps') query = query.in('id', scraps);

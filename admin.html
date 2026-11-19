@@ -49,13 +49,9 @@
         .ql-picker.ql-font .ql-picker-label[data-value="song-myung"]::before,
         .ql-picker.ql-font .ql-picker-item[data-value="song-myung"]::before { content: '송명조'; font-family: 'Song Myung', sans-serif; }
 
-        /* 실제 에디터 내 폰트 적용 스타일 */
+        /* 실제 에디터 내 폰트 적용 스타일 (나머지 11종은 style.css에서 공통 로드) */
         .ql-font-nanum-gothic { font-family: 'Nanum Gothic', sans-serif; }
         .ql-font-nanum-myeongjo { font-family: 'Nanum Myeongjo', serif; }
-
-        /* 커스텀 표 삽입 버튼 텍스트 처리 */
-        .ql-insertTable:after { content: '표 삽입'; font-weight: bold; font-size: 12px; color: #1a3c6e; width: 40px !important; }
-        .ql-toolbar.ql-snow .ql-insertTable { width: 50px; }
     </style>
 <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -116,7 +112,6 @@
     <div id="toast-wrap" class="toast-wrap" aria-live="polite"></div>
 
     <div id="loading" class="loading-overlay">처리 중입니다...</div>
-    <button id="img-edit-btn" onclick="openEditorForSelectedImage()"><svg class="ic"><use href="#i-pencil"/></svg> 이미지 편집</button>
 
     <div id="login-section">
         <form class="login-box" id="admin-login-form" onsubmit="event.preventDefault(); adminLogin();">
@@ -161,13 +156,29 @@
             <!-- 게시글 관리 탭 -->
             <div id="tab-posts" class="admin-section">
                 <div class="panel-box">
-                    <h2 id="form-title" style="border-bottom:2px solid #1a3c6e; padding-bottom:15px; margin-bottom:20px;"><svg class="ic"><use href="#i-file-text"/></svg> 게시글 작성/수정</h2>
+                    <h2 id="form-title" style="border-bottom:2px solid #1a3c6e; padding-bottom:15px; margin-bottom:16px;"><svg class="ic"><use href="#i-file-text"/></svg> 게시글 작성/수정</h2>
+
+                    <div id="draft-restore-banner" class="nk-post-banner is-draft-restore" style="display:none;">
+                        <div class="nk-post-banner-info">
+                            <strong><svg class="ic"><use href="#i-save"/></svg> 임시 저장된 작성 글이 있습니다.</strong>
+                            <span id="draft-restore-meta" style="font-size:0.84rem;"></span>
+                        </div>
+                        <div class="nk-post-banner-actions">
+                            <button type="button" onclick="restoreDraft()" class="adm-btn adm-btn-primary adm-btn-sm">불러오기</button>
+                            <button type="button" onclick="discardDraft()" class="adm-btn adm-btn-secondary adm-btn-sm">삭제</button>
+                        </div>
+                    </div>
+
+                    <div id="post-mode-banner" class="nk-post-banner" style="display:none;"></div>
+
                     <div style="background:#fff3cd; padding:15px; border-radius:8px; margin-bottom:20px; border:1px solid #ffeeba;">
                         <label style="font-weight:bold; margin-right:20px; color:#856404;"><svg class="ic"><use href="#i-megaphone"/></svg> 노출 위치 선택</label>
                         <div style="display:inline-flex; gap:20px; align-items:center;" class="flex-row-to-col">
                             <label style="cursor:pointer; display:flex; align-items:center;"><input type="checkbox" id="chk-intro" checked onchange="toggleEditorState()" style="width:18px; height:18px; margin-right:5px;"><strong>소개 페이지</strong> (일반 게시글)</label>
                             <label style="cursor:pointer; display:flex; align-items:center;"><input type="checkbox" id="chk-order" onchange="toggleEditorState()" style="width:18px; height:18px; margin-right:5px;"><strong>발주 페이지</strong> (상품 리스트)</label>
                         </div>
+                        <p id="order-exposure-help" class="nk-field-help is-warn" style="display:none;"></p>
+                        <div id="order-only-notice" class="nk-order-only-notice" style="display:none;">발주 전용 모드에서는 교재명·카테고리·순서만 발주 목록에 사용됩니다. 본문과 상단 유튜브 URL은 저장 시 발주 전용 플래그로 대체되므로 비활성화됩니다.</div>
                     </div>
 
                     <input type="file" id="hidden-image-input" accept="image/*" multiple style="display:none;">
@@ -175,16 +186,16 @@
                     <div class="write-inline-row">
                         <div class="form-group w-col-order" style="margin-bottom:0;"><label class="form-label">순서</label><input type="number" id="post-order" class="form-input" value="0" style="text-align:center; padding: 12px 5px;"></div>
                         <div class="form-group w-col-category" style="margin-bottom:0; position:relative;">
-                            <label class="form-label">카테고리</label>
+                            <label class="form-label">카테고리 <span style="color:#b3261e;">*</span></label>
                             <input type="hidden" id="post-category" value="">
-                            <div id="custom-cat-trigger" class="form-input" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;" onclick="toggleCustomSelect()">
+                            <div id="custom-cat-trigger" class="form-input" tabindex="0" role="button" aria-haspopup="listbox" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;" onclick="toggleCustomSelect()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCustomSelect();}">
                                 <span id="custom-cat-text" style="color:#666;">카테고리를 선택하세요</span><span style="font-size:0.8rem; color:#5c6b7a;">▼</span>
                             </div>
                             <div id="custom-cat-dropdown" class="custom-select-dropdown" style="display:none;"></div>
                         </div>
                         <div class="form-group w-col-title" style="margin-bottom:0;">
                             <label class="form-label" style="display:flex; justify-content:space-between; align-items:center;">
-                                제목 (교재명)
+                                <span>제목 (교재명) <span style="color:#b3261e;">*</span></span>
                                 <label style="cursor:pointer; display:flex; align-items:center; font-size:0.85rem; color:#b84800; font-weight:bold;">
                                     <input type="checkbox" id="chk-is-notice" style="margin-right:5px; width:16px; height:16px;"> <svg class="ic"><use href="#i-pin"/></svg> 상단 고정
                                 </label>
@@ -204,50 +215,78 @@
                         </div>
                     </div>
 
-                    <div style="display: flex; gap: 20px; align-items: flex-end; margin-bottom: 20px; margin-top: 15px;" class="flex-row-to-col">
+                    <div style="display: flex; gap: 20px; align-items: stretch; margin-bottom: 20px; margin-top: 15px;" class="flex-row-to-col">
                         <div class="form-group" style="flex: 1; margin-bottom: 0; padding: 15px; border: 1px solid #ddd; border-radius: 8px; background: #fff;">
                             <label class="form-label">썸네일 이미지 (WebP 자동 변환)</label>
                             <input type="file" id="post-thumb-file" class="form-input" accept="image/*" style="margin-bottom:0;">
-                            <div id="thumb-manage-area" style="display:none; margin-top:10px;"><label style="font-size:0.9rem; color:#b02a20;"><input type="checkbox" id="delete-thumb-check"> 기존 썸네일 삭제</label></div>
+                            <div id="thumb-preview-row" class="nk-thumb-preview-row">
+                                <div id="thumb-preview-img-wrap" class="nk-thumb-preview-img-wrap">미설정</div>
+                                <div class="nk-thumb-preview-meta">
+                                    <span id="thumb-preview-badge" class="nk-thumb-badge">미설정</span>
+                                    <div class="nk-thumb-actions">
+                                        <button type="button" id="btn-clear-new-thumb" onclick="clearSelectedThumbnail()" class="adm-btn adm-btn-secondary adm-btn-sm" style="display:none;">선택 취소</button>
+                                        <div id="thumb-manage-area" style="display:none;">
+                                            <label style="font-size:0.84rem; color:#b02a20; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:4px;"><input type="checkbox" id="delete-thumb-check"> 기존 썸네일 삭제</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="form-group" style="flex: 1; margin-bottom: 0; background:#eef6ff; padding:15px; border-radius:8px; border:1px solid #cce5ff;">
+                        <div class="form-group" style="flex: 1; margin-bottom: 0; background:#eef6ff; padding:15px; border-radius:8px; border:1px solid #cce5ff; display:flex; flex-direction:column; justify-content:center;">
                             <label class="form-label" style="color:#1a3c6e; margin-bottom:10px;"><svg class="ic"><use href="#i-chart"/></svg> 폼/투표 간편 삽입</label>
                             <div style="display:flex; gap:10px;" class="flex-row-to-col">
                                 <select id="form-insert-select" class="form-input w-100-mob" style="flex:1;"><option value="">삽입할 투표를 선택하세요</option></select>
                                 <button type="button" onclick="insertFormToEditor()" class="adm-btn adm-btn-warn w-100-mob" style="width:120px; height:46px;"><svg class="ic"><use href="#i-chevron-down"/></svg> 본문에 넣기</button>
                             </div>
+                            <p class="nk-field-help">선택한 폼의 <code>[투표:ID]</code> 코드가 커서 위치에 삽입됩니다.</p>
                         </div>
                     </div>
 
                     <div class="form-group" id="editor-area">
-                        <div style="margin-bottom:5px;display:flex;justify-content:space-between;align-items:center;gap:8px;"><label class="form-label" style="margin:0;">내용 (자동 임시저장 적용 중)</label><button type="button" onclick="openMediaLibrary('editor')" class="btn-mini"><svg class="ic"><use href="#i-image"/></svg> 미디어 라이브러리</button></div>
+                        <div style="margin-bottom:5px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+                            <label class="form-label" style="margin:0;">내용 (이미지 붙여넣기·드래그 시 자동 WebP 업로드)</label>
+                            <button type="button" onclick="openMediaLibrary('editor')" class="btn-mini"><svg class="ic"><use href="#i-image"/></svg> 미디어 라이브러리</button>
+                        </div>
                         <div id="editor-container"></div>
+                        <div class="nk-editor-meta-bar">
+                            <span id="editor-char-count">공백 포함 0자 · 공백 제외 0자</span>
+                            <span id="autosave-status">새 글 작성 중 10초마다 자동 임시저장</span>
+                        </div>
                     </div>
 
-                    <div class="form-group" style="margin-top:20px; background-color: #fcfcfc; padding: 15px; border: 1px dashed #ccc; border-radius: 8px;">
-                        <label class="form-label">상세 미디어 또는 첨부파일 (여러 개 파일 동시 선택 가능) <button type="button" onclick="openMediaLibrary('attachment')" class="btn-mini"><svg class="ic"><use href="#i-book"/></svg> 기존 파일 불러오기</button></label>
+                    <div id="attach-dropzone" class="form-group nk-attach-box" style="margin-top:20px; background-color: #fcfcfc; padding: 15px; border: 1px dashed #ccc; border-radius: 8px;">
+                        <label class="form-label">상세 미디어 또는 첨부파일 (여러 개 선택·드래그앤드롭 가능) <button type="button" onclick="openMediaLibrary('attachment')" class="btn-mini"><svg class="ic"><use href="#i-book"/></svg> 기존 파일 불러오기</button></label>
                         <input type="file" id="post-file" class="form-input" accept="*/*" multiple onchange="handleNewFiles(this)">
-                        <p style="font-size: 0.8rem; color:#5c6b7a; margin-top: 5px;">* 첨부파일 항목별 <strong>[<svg class="ic"><use href="#i-grip"/></svg>]</strong> 핸들을 잡고 마우스로 드래그하여 순서를 자유롭게 변경할 수 있습니다.</p>
+                        <p style="font-size: 0.8rem; color:#5c6b7a; margin-top: 5px;">* 파일을 이 영역에 끌어다 놓아 추가하거나 <strong>[<svg class="ic"><use href="#i-grip"/></svg>]</strong> 핸들을 드래그해 순서를 바꿀 수 있습니다.</p>
                         <div id="existing-files-list" style="margin-top:15px; display:flex; flex-direction:column; gap:8px;"></div>
                     </div>
 
                     <div class="form-grid">
-                        <div class="form-group" id="youtube-area"><label class="form-label">유튜브 URL</label><input type="text" id="youtube-url" class="form-input" placeholder="https://youtu.be/..."></div>
-                        <div class="form-group"><label class="form-label">관련 링크 URL</label><input type="text" id="post-link" class="form-input" placeholder="이동할 URL"></div>
+                        <div class="form-group" id="youtube-area">
+                            <label class="form-label">유튜브 URL (일반 · Shorts 지원)</label>
+                            <input type="text" id="youtube-url" class="form-input" placeholder="https://youtu.be/... 또는 https://youtube.com/shorts/...">
+                            <p id="youtube-help" class="nk-field-help">상세 페이지 상단에 영상 플레이어로 표시되며, 썸네일 미등록 시 자동 썸네일로 사용됩니다.</p>
+                        </div>
+                        <div class="form-group">
+                            <label id="post-link-label" class="form-label">관련 링크 URL (선택)</label>
+                            <input type="text" id="post-link" class="form-input" placeholder="https://...">
+                            <p id="post-link-help" class="nk-field-help">행사(EVENT) 카테고리 카드의 외부 이동 링크 또는 상세 화면 바로가기 링크로 사용됩니다.</p>
+                        </div>
                     </div>
 
-                    <!-- 위치 이동: 예약 발행 일시 지정 박스 (업로드 버튼 바로 위) -->
+                    <!-- 예약 발행 일시 지정 박스 (업로드 버튼 바로 위) -->
                     <div style="background:#f4f0fa; padding:15px; border-radius:8px; border:1px solid #dcd0f0; margin-top:10px; margin-bottom:25px;">
-                        <label class="form-label" style="color:#6c3483; margin-bottom:5px;"><svg class="ic"><use href="#i-clock"/></svg> 예약 발행 설정 (선택)</label>
-                        <div style="display:flex; align-items:center; gap:15px; flex-wrap:wrap;">
-                            <input type="datetime-local" id="post-publish-at" class="form-input" style="background:#fff; max-width:320px;">
-                            <span style="font-size:0.85rem; color:#6b5390;">* 설정한 시간 이후에만 일반 사용자 화면에 노출됩니다. (비워둘 시 즉시 공개)</span>
+                        <label class="form-label" style="color:#6c3483; margin-bottom:8px;"><svg class="ic"><use href="#i-clock"/></svg> 예약 발행 설정 (선택)</label>
+                        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                            <input type="datetime-local" id="post-publish-at" class="form-input" style="background:#fff; max-width:260px;">
+                            <button type="button" id="btn-clear-publish-at" onclick="clearPublishAt()" class="adm-btn adm-btn-secondary adm-btn-sm">즉시 공개로 초기화</button>
+                            <span id="publish-at-status" class="nk-schedule-status">비워두면 즉시 공개됩니다.</span>
                         </div>
                     </div>
 
                     <div class="btn-center-wrap">
-                        <button id="btn-submit" onclick="uploadPost(false)" class="btn-action w-100-mob" style="min-width: 200px;">업로드 저장</button><button type="button" onclick="previewPost()" class="adm-btn adm-btn-neutral w-100-mob"><svg class="ic"><use href="#i-eye"/></svg> 미리보기</button><button type="button" onclick="uploadPost(true)" class="adm-btn adm-btn-draft w-100-mob"><svg class="ic"><use href="#i-save"/></svg> 초안 저장</button>
-                        <button id="btn-cancel-edit" onclick="cancelEdit()" class="adm-btn adm-btn-neutral w-100-mob" style="display:none;">취소</button>
+                        <button id="btn-submit" type="button" onclick="uploadPost(false)" class="btn-action w-100-mob" style="min-width: 200px;">업로드 저장</button><button type="button" onclick="previewPost()" class="adm-btn adm-btn-neutral w-100-mob"><svg class="ic"><use href="#i-eye"/></svg> 미리보기</button><button id="btn-draft-submit" type="button" onclick="uploadPost(true)" class="adm-btn adm-btn-draft w-100-mob"><svg class="ic"><use href="#i-save"/></svg> 초안 저장</button>
+                        <button id="btn-cancel-edit" type="button" onclick="cancelEdit()" class="adm-btn adm-btn-neutral w-100-mob" style="display:none;">취소</button>
                     </div>
                 </div>
 
@@ -666,6 +705,12 @@
         let isDraftFilter = false;
         let isScheduledFilter = false;
         let editingPostIsDraft = false;
+        let originalPublishAt = null;
+        let thumbPreviewObjectUrl = null;
+        let isPopulatingForm = false;
+        let currentEditMeta = null;
+        window.__nkPostSubmitting = false;
+        window.__nkPostMap = new Map();
 
         // 4번 기능: 작성 폼 Dirty 플래그 (이탈 방지용)
         let isFormDirty = false;
@@ -804,7 +849,11 @@
                     }
                 });
 
-                quill.on('text-change', () => { isFormDirty = true; });
+                quill.on('text-change', (_delta, _oldDelta, source) => {
+                    updateEditorCharCount();
+                    updateThumbPreview();
+                    if (source === 'user' && !isPopulatingForm) isFormDirty = true;
+                });
 
                 const editorContainer = document.getElementById('editor-container');
                 let draggedImgBlot = null;
@@ -824,9 +873,78 @@
                 });
                 quill.root.addEventListener('dragstart', function (e) { if (e.target && e.target.tagName === 'IMG') { const blot = Quill.find(e.target); if (blot) { draggedImgBlot = blot; e.dataTransfer.setData('text/plain', 'quill-image-move'); e.dataTransfer.effectAllowed = 'move'; e.target.style.opacity = '0.5'; } } });
                 quill.root.addEventListener('dragend', function (e) { if (e.target && e.target.tagName === 'IMG') { e.target.style.opacity = '1'; } draggedImgBlot = null; });
+                quill.root.addEventListener('paste', function (e) {
+                    const cd = e.clipboardData || window.clipboardData;
+                    if (!cd) return;
+                    const imgFiles = [];
+                    if (cd.items && cd.items.length) {
+                        for (let i = 0; i < cd.items.length; i++) {
+                            const it = cd.items[i];
+                            if (it.kind === 'file' && it.type && it.type.startsWith('image/')) {
+                                const f = it.getAsFile();
+                                if (f) imgFiles.push(f);
+                            }
+                        }
+                    } else if (cd.files && cd.files.length) {
+                        for (let i = 0; i < cd.files.length; i++) {
+                            if (cd.files[i].type && cd.files[i].type.startsWith('image/')) imgFiles.push(cd.files[i]);
+                        }
+                    }
+                    if (imgFiles.length > 0) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleDirectUpload(imgFiles);
+                    }
+                });
             }
 
-            document.getElementById('post-title').addEventListener('input', () => { isFormDirty = true; });
+            const markFormDirty = () => { if (!isPopulatingForm) isFormDirty = true; };
+            ['post-title', 'post-order', 'post-password', 'post-dl-password', 'youtube-url', 'post-link', 'post-publish-at'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.addEventListener('input', markFormDirty);
+            });
+            ['chk-is-notice', 'chk-intro', 'chk-order', 'delete-thumb-check', 'post-publish-at'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.addEventListener('change', markFormDirty);
+            });
+
+            const ytInput = document.getElementById('youtube-url');
+            if (ytInput) ytInput.addEventListener('input', () => updateThumbPreview());
+            const delThumbChk = document.getElementById('delete-thumb-check');
+            if (delThumbChk) delThumbChk.addEventListener('change', () => updateThumbPreview());
+            const pubAtInput = document.getElementById('post-publish-at');
+            if (pubAtInput) {
+                pubAtInput.addEventListener('input', () => updateScheduleHint());
+                pubAtInput.addEventListener('change', () => updateScheduleHint());
+            }
+
+            const attachDropzone = document.getElementById('attach-dropzone');
+            if (attachDropzone) {
+                attachDropzone.addEventListener('dragover', function (e) {
+                    if (e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files')) {
+                        e.preventDefault();
+                        attachDropzone.classList.add('drag-over');
+                    }
+                });
+                attachDropzone.addEventListener('dragleave', function (e) {
+                    if (e.target === attachDropzone || !attachDropzone.contains(e.relatedTarget)) {
+                        attachDropzone.classList.remove('drag-over');
+                    }
+                });
+                attachDropzone.addEventListener('drop', function (e) {
+                    attachDropzone.classList.remove('drag-over');
+                    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                        e.preventDefault();
+                        addAttachmentFiles(e.dataTransfer.files);
+                    }
+                });
+            }
+
+            updateThumbPreview();
+            updateScheduleHint();
+            updateEditorCharCount();
+            updateCategoryContextHints();
+            renderFileList();
 
             // 4번 기능: 작성 중 실수 이탈 방지
             window.addEventListener('beforeunload', function (e) {
@@ -980,39 +1098,143 @@
         };
 
         window.copyPost = function (item) {
-            editPost(item);
+            if (isFormDirty && !confirm('작성 중인 변경사항이 있습니다. 복사할 글로 덮어쓸까요?')) return false;
+            editPost(item, { skipDirtyCheck: true });
+            isPopulatingForm = true;
             editingId = null;
+            editingPostIsDraft = false;
+            originalPublishAt = null;
+            currentEditMeta = { mode: 'copy', sourceTitle: item.title || '', sourceId: item.id };
             document.getElementById('post-title').value = "[복사본] " + (item.title || '');
+            document.getElementById('post-password').value = '';
+            document.getElementById('post-dl-password').value = '';
+            document.getElementById('chk-is-notice').checked = false;
+            document.getElementById('post-publish-at').value = '';
             document.getElementById('form-title').innerHTML = '<svg class="ic"><use href="#i-file-text"/></svg> 게시글 복사 (새 글로 저장)';
             document.getElementById('btn-submit').innerText = "복사본 등록";
+            document.getElementById('btn-cancel-edit').style.display = "inline-block";
+            renderPostModeBanner('copy', item);
+            updateScheduleHint();
+            updateThumbPreview();
+            updateEditorCharCount();
+            setTimeout(() => { isPopulatingForm = false; isFormDirty = false; }, 0);
             window.scrollTo({ top: 0, behavior: 'smooth' });
+            return true;
         };
 
         function startAutoSave() {
             if (draftInterval) clearInterval(draftInterval);
             draftInterval = setInterval(() => {
                 if (editingId) return;
-                const title = document.getElementById('post-title').value;
+                const title = document.getElementById('post-title')?.value || '';
                 const content = quill ? quill.root.innerHTML : '';
-                if (title || (content !== '<p><br></p>' && content !== '')) {
-                    localStorage.setItem('nk_post_draft', JSON.stringify({ title, content, time: Date.now() }));
+                const category = document.getElementById('post-category')?.value || '';
+                const categoryName = document.getElementById('custom-cat-text')?.innerText || '';
+                const order = document.getElementById('post-order')?.value || '0';
+                const isIntro = !!document.getElementById('chk-intro')?.checked;
+                const isOrder = !!document.getElementById('chk-order')?.checked;
+                const isNotice = !!document.getElementById('chk-is-notice')?.checked;
+                const youtubeUrl = document.getElementById('youtube-url')?.value || '';
+                const linkUrl = document.getElementById('post-link')?.value || '';
+                const publishAt = document.getElementById('post-publish-at')?.value || '';
+                const hasContent = (content && content !== '<p><br></p>' && content.trim() !== '');
+                if (title.trim() || hasContent || youtubeUrl.trim() || linkUrl.trim()) {
+                    const now = Date.now();
+                    try {
+                        localStorage.setItem('nk_post_draft', JSON.stringify({
+                            title, content, category, categoryName, order,
+                            isIntro, isOrder, isNotice, youtubeUrl, linkUrl, publishAt,
+                            time: now
+                        }));
+                        const st = document.getElementById('autosave-status');
+                        if (st) {
+                            const t = new Date(now).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                            st.textContent = '임시저장됨 (' + t + ')';
+                        }
+                    } catch (_) { }
                 }
             }, 10000);
         }
         function checkDraft() {
-            const draft = localStorage.getItem('nk_post_draft');
-            if (draft && !editingId) {
-                const parsed = JSON.parse(draft);
-                if (confirm("작성 중이던 임시 저장 글이 있습니다. 불러오시겠습니까?")) {
-                    document.getElementById('post-title').value = parsed.title || '';
-                    if (quill) quill.root.innerHTML = parsed.content || '';
-                } else {
-                    localStorage.removeItem('nk_post_draft');
-                }
+            const banner = document.getElementById('draft-restore-banner');
+            const meta = document.getElementById('draft-restore-meta');
+            let raw = null;
+            try { raw = localStorage.getItem('nk_post_draft'); } catch (_) { return; }
+            if (!raw || editingId) {
+                if (banner) banner.style.display = 'none';
+                return;
+            }
+            let parsed = null;
+            try {
+                parsed = JSON.parse(raw);
+            } catch (_) {
+                try { localStorage.removeItem('nk_post_draft'); } catch (__) { }
+                if (banner) banner.style.display = 'none';
+                return;
+            }
+            if (!parsed || typeof parsed !== 'object') {
+                try { localStorage.removeItem('nk_post_draft'); } catch (__) { }
+                if (banner) banner.style.display = 'none';
+                return;
+            }
+            if (banner) {
+                const when = parsed.time ? new Date(parsed.time).toLocaleString('ko-KR') : '시간 정보 없음';
+                const previewTitle = (parsed.title || '').trim() || '(제목 없음)';
+                if (meta) meta.textContent = `저장 시각: ${when} · 제목: "${previewTitle}"`;
+                banner.style.display = 'flex';
             }
         }
-        function clearDraft() { 
-            localStorage.removeItem('nk_post_draft'); 
+        window.restoreDraft = function () {
+            let parsed = null;
+            try {
+                const raw = localStorage.getItem('nk_post_draft');
+                if (raw) parsed = JSON.parse(raw);
+            } catch (_) { }
+            if (!parsed) {
+                window.discardDraft();
+                return;
+            }
+            isPopulatingForm = true;
+            document.getElementById('post-title').value = parsed.title || '';
+            if (quill) quill.root.innerHTML = parsed.content || '';
+            if (parsed.order !== undefined) document.getElementById('post-order').value = parsed.order;
+            if (parsed.category) {
+                document.getElementById('post-category').value = parsed.category;
+                const foundCat = categoryList ? categoryList.find(c => c.code === parsed.category) : null;
+                document.getElementById('custom-cat-text').innerText = foundCat ? foundCat.name : (parsed.categoryName || parsed.category);
+                document.getElementById('custom-cat-text').style.color = '#333';
+                document.getElementById('custom-cat-trigger')?.classList.remove('nk-cat-trigger-error');
+            }
+            if (typeof parsed.isIntro === 'boolean') document.getElementById('chk-intro').checked = parsed.isIntro;
+            if (typeof parsed.isOrder === 'boolean') document.getElementById('chk-order').checked = parsed.isOrder;
+            if (typeof parsed.isNotice === 'boolean') document.getElementById('chk-is-notice').checked = parsed.isNotice;
+            if (parsed.youtubeUrl !== undefined) document.getElementById('youtube-url').value = parsed.youtubeUrl;
+            if (parsed.linkUrl !== undefined) document.getElementById('post-link').value = parsed.linkUrl;
+            if (parsed.publishAt !== undefined) document.getElementById('post-publish-at').value = parsed.publishAt;
+            const banner = document.getElementById('draft-restore-banner');
+            if (banner) banner.style.display = 'none';
+            toggleEditorState();
+            updateCategoryContextHints();
+            updateThumbPreview();
+            updateScheduleHint();
+            updateEditorCharCount();
+            setTimeout(() => { isPopulatingForm = false; isFormDirty = true; }, 0);
+            showToast('임시 저장된 글을 불러왔습니다.', 'success');
+        };
+        window.discardDraft = function () {
+            try { localStorage.removeItem('nk_post_draft'); } catch (_) { }
+            const banner = document.getElementById('draft-restore-banner');
+            if (banner) banner.style.display = 'none';
+            const st = document.getElementById('autosave-status');
+            if (st) st.textContent = '새 글 작성 중 10초마다 자동 임시저장';
+            showToast('임시 저장된 글을 삭제했습니다.', 'info');
+        };
+        function clearDraft() {
+            try { localStorage.removeItem('nk_post_draft'); } catch (_) { }
+            const banner = document.getElementById('draft-restore-banner');
+            if (banner) banner.style.display = 'none';
+            const st = document.getElementById('autosave-status');
+            if (st) st.textContent = '새 글 작성 중 10초마다 자동 임시저장';
             isFormDirty = false;
         }
 
@@ -1035,10 +1257,11 @@
                 top5Html += '<li style="color:#64748b; text-align:center; margin-top:16px;">다운로드 기록이 없습니다.</li>';
             } else {
                 sortedByDl.forEach((item, idx) => {
+                    const safeTitle = window.escapeHtml ? window.escapeHtml(item.title || '') : String(item.title || '');
                     top5Html += `<li>
                                         <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:flex; align-items:center; min-width:0;">
                                             <span class="rank">${idx + 1}</span>
-                                            <span class="t">${item.title}</span>
+                                            <span class="t">${safeTitle}</span>
                                         </span>
                                         <span class="v">${item.download_count || 0}회</span>
                                     </li>`;
@@ -1107,7 +1330,7 @@
 
         function openCropModalFromFile(file) { const reader = new FileReader(); reader.onload = function (evt) { const img = new Image(); img.onload = function () { openCropModalWithImage(img); }; img.src = evt.target.result; }; reader.readAsDataURL(file); }
         function openCropModalWithImage(img) { cropImage = img; originalImageSrc = img.src; cropCanvas.width = img.width; cropCanvas.height = img.height; const containerW = document.querySelector('.crop-container').clientWidth - 40; const containerH = window.innerHeight * 0.65; const scaleW = containerW / img.width; const scaleH = containerH / img.height; let startScale = Math.min(scaleW, scaleH); if (startScale > 1) startScale = 1; currentZoom = startScale; updateCanvasZoom(); textObjects = []; selectedTextIdx = -1; setEditMode('crop'); cropRectW = 0; cropRectH = 0; redrawCanvas(); document.getElementById('crop-modal').style.display = 'flex'; }
-        function setEditMode(mode) { ['crop', 'draw', 'text'].forEach(m => { const btn = document.getElementById('btn-mode-' + m); if (btn) btn.className = (m === mode) ? 'btn-tool active' : 'btn-tool'; }); if (mode === 'crop') { cropCanvas.style.cursor = 'crosshair'; document.getElementById('guide-msg').innerHTML = "드래그하여 자르기"; redrawCanvas(); } else if (mode === 'draw') { cropCanvas.style.cursor = 'pen'; document.getElementById('guide-msg').innerHTML = "그리기 (그린 후 마우스를 떼면 저장됩니다)"; updateCropImageFromCanvas(); textObjects = []; selectedTextIdx = -1; cropRectW = 0; redrawCanvas(); } else if (mode === 'text') { cropCanvas.style.cursor = 'default'; document.getElementById('guide-msg').innerHTML = "텍스트 선택(이동) / ■ 핸들(크기 조절)"; cropRectW = 0; redrawCanvas(); } }
+        function setEditMode(mode) { currentMode = mode; ['crop', 'draw', 'text'].forEach(m => { const btn = document.getElementById('btn-mode-' + m); if (btn) btn.className = (m === mode) ? 'btn-tool active' : 'btn-tool'; }); if (mode === 'crop') { cropCanvas.style.cursor = 'crosshair'; document.getElementById('guide-msg').innerHTML = "드래그하여 자르기"; redrawCanvas(); } else if (mode === 'draw') { cropCanvas.style.cursor = 'crosshair'; document.getElementById('guide-msg').innerHTML = "그리기 (그린 후 마우스를 떼면 저장됩니다)"; updateCropImageFromCanvas(); textObjects = []; selectedTextIdx = -1; cropRectW = 0; redrawCanvas(); } else if (mode === 'text') { cropCanvas.style.cursor = 'default'; document.getElementById('guide-msg').innerHTML = "텍스트 선택(이동) / ■ 핸들(크기 조절)"; cropRectW = 0; redrawCanvas(); } }
         function getPos(e) { const rect = cropCanvas.getBoundingClientRect(); const scaleX = cropCanvas.width / rect.width; const scaleY = cropCanvas.height / rect.height; return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY }; }
         function handleMouseDown(e) { isDragging = true; const pos = getPos(e); if (currentMode === 'text' && selectedTextIdx !== -1) { const t = textObjects[selectedTextIdx]; cropCtx.font = `bold ${t.size}px sans-serif`; const metrics = cropCtx.measureText(t.text); const w = metrics.width + 10; const h = t.size + 10; const handleX = t.x + w / 2; const handleY = t.y + h / 2; if (Math.hypot(pos.x - handleX, pos.y - handleY) < 15) { isResizingText = true; return; } } if (currentMode === 'crop') { cropStartX = pos.x; cropStartY = pos.y; cropRectW = 0; cropRectH = 0; } else if (currentMode === 'draw') { cropCtx.beginPath(); cropCtx.moveTo(pos.x, pos.y); cropCtx.strokeStyle = document.getElementById('pen-color').value; cropCtx.lineWidth = parseInt(document.getElementById('pen-width').value, 10); cropCtx.lineCap = 'round'; cropCtx.lineJoin = 'round'; } else if (currentMode === 'text') { let clickedIdx = -1; for (let i = textObjects.length - 1; i >= 0; i--) { const t = textObjects[i]; cropCtx.font = `bold ${t.size}px sans-serif`; const metrics = cropCtx.measureText(t.text); if (pos.x >= t.x - metrics.width / 2 && pos.x <= t.x + metrics.width / 2 && pos.y >= t.y - t.size / 2 && pos.y <= t.y + t.size / 2) { clickedIdx = i; break; } } selectedTextIdx = clickedIdx; if (selectedTextIdx !== -1) { const sel = textObjects[selectedTextIdx]; document.getElementById('pen-color').value = sel.color; let val = Math.round((sel.size - 20) / 5); if ([2, 5, 10, 20].includes(val)) document.getElementById('pen-width').value = val; } redrawCanvas(); } }
         function handleMouseMove(e) { const pos = getPos(e); if (currentMode === 'text' && selectedTextIdx !== -1) { const t = textObjects[selectedTextIdx]; cropCtx.font = `bold ${t.size}px sans-serif`; const w = cropCtx.measureText(t.text).width + 10; const h = t.size + 10; if (Math.hypot(pos.x - (t.x + w / 2), pos.y - (t.y + h / 2)) < 15) cropCanvas.style.cursor = 'nwse-resize'; else cropCanvas.style.cursor = 'default'; } if (!isDragging) return; if (isResizingText && selectedTextIdx !== -1) { const t = textObjects[selectedTextIdx]; const dy = Math.abs(pos.y - t.y); t.size = Math.max(10, dy * 2 - 10); redrawCanvas(); return; } if (currentMode === 'crop') { cropRectW = pos.x - cropStartX; cropRectH = pos.y - cropStartY; redrawCanvas(); } else if (currentMode === 'draw') { cropCtx.lineTo(pos.x, pos.y); cropCtx.stroke(); } else if (currentMode === 'text' && selectedTextIdx !== -1) { textObjects[selectedTextIdx].x = pos.x; textObjects[selectedTextIdx].y = pos.y; redrawCanvas(); } }
@@ -1141,6 +1364,12 @@
                 if (!blob) return showToast("이미지 처리 오류", 'error'); 
                 if (currentCropType === 'thumb') { 
                     croppedThumbnailBlob = blob; 
+                    if (thumbPreviewObjectUrl) { try { URL.revokeObjectURL(thumbPreviewObjectUrl); } catch (_) { } }
+                    thumbPreviewObjectUrl = URL.createObjectURL(blob);
+                    const delChk = document.getElementById('delete-thumb-check');
+                    if (delChk) delChk.checked = false;
+                    isFormDirty = true;
+                    updateThumbPreview();
                     showToast("썸네일이 준비되었습니다.", 'success'); 
                 } else if (currentCropType === 'main-hero') { 
                     croppedMainHeroBlob = blob; 
@@ -1180,21 +1409,45 @@
             }, 'image/webp', 0.85); 
         }
 
-        function closeCropModal() { document.getElementById('crop-modal').style.display = 'none'; document.querySelectorAll('input[type="file"]').forEach(i => i.value = ''); textObjects = []; selectedTextIdx = -1; activeCategoryCode = null; }
+        function closeCropModal() {
+            document.getElementById('crop-modal').style.display = 'none';
+            let targetInput = null;
+            if (currentCropType === 'thumb') targetInput = document.getElementById('post-thumb-file');
+            else if (currentCropType === 'main-hero') targetInput = document.getElementById('conf-main-hero');
+            else if (currentCropType === 'sub-hero-new') targetInput = document.getElementById('new-cat-file');
+            else if (currentCropType === 'sub-hero-list' && activeCategoryCode) targetInput = document.getElementById('file-' + activeCategoryCode);
+            if (targetInput) targetInput.value = '';
+            textObjects = [];
+            selectedTextIdx = -1;
+            activeCategoryCode = null;
+        }
+
+        function formatFileSize(bytes) {
+            if (!Number.isFinite(bytes) || bytes < 0) return '';
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        function addAttachmentFiles(files) {
+            if (!files || !files.length) return;
+            for (let i = 0; i < files.length; i++) {
+                fileItems.push({ type: 'new', value: files[i] });
+            }
+            renderFileList();
+            isFormDirty = true;
+        }
 
         function handleNewFiles(input) {
             if (input.files && input.files.length > 0) {
-                for (let i = 0; i < input.files.length; i++) {
-                    fileItems.push({ type: 'new', value: input.files[i] });
-                }
+                addAttachmentFiles(input.files);
                 input.value = '';
-                renderFileList();
-                isFormDirty = true;
             }
         }
 
         function renderFileList() {
             const list = document.getElementById('existing-files-list');
+            if (!list) return;
             list.innerHTML = '';
 
             if (fileItems.length === 0) {
@@ -1202,10 +1455,13 @@
                 return;
             }
 
+            const esc = window.escapeHtml || (s => String(s ?? ''));
             fileItems.forEach((fileObj, idx) => {
                 let displayName = '';
-                if (fileObj.type === 'server') {
-                    let item = fileObj.value;
+                const isServer = fileObj.type === 'server';
+                let sizeBadge = '';
+                if (isServer) {
+                    let item = String(fileObj.value || '');
                     if (item.includes('@@')) { displayName = item.split('@@')[1]; }
                     else {
                         let rawFilename = item.split('/').pop().split('?')[0];
@@ -1213,23 +1469,30 @@
                         displayName = rawFilename.includes('___') ? rawFilename.split('___').pop() : rawFilename;
                     }
                 } else {
-                    displayName = fileObj.value.name;
+                    displayName = fileObj.value?.name || '첨부파일';
+                    const sizeText = formatFileSize(fileObj.value?.size);
+                    if (sizeText) sizeBadge = `<span class="nk-file-size">${esc(sizeText)}</span>`;
                 }
+
+                const originBadge = isServer
+                    ? '<span class="nk-file-origin-badge is-server">기존</span>'
+                    : '<span class="nk-file-origin-badge is-new">신규</span>';
 
                 list.innerHTML += `
                     <div class="file-item-row" data-index="${idx}" style="display:flex; justify-content:space-between; align-items:center; background:#f0f7ff; padding:10px 12px; border-radius:6px; border:1px solid #cce5ff; cursor:grab;">
-                        <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
+                        <div style="display:flex; align-items:center; gap:8px; flex:1; min-width:0;">
                             <span class="file-drag-handle" style="cursor:grab; font-size:1.1rem;" title="마우스로 드래그하여 순서 변경"><svg class="ic"><use href="#i-grip"/></svg></span>
-                            <span style="font-size:0.9rem; color:#1a3c6e; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><svg class="ic"><use href="#i-paperclip"/></svg> ${displayName}</span>
+                            ${originBadge}
+                            <span style="font-size:0.9rem; color:#1a3c6e; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><svg class="ic"><use href="#i-paperclip"/></svg> ${esc(displayName)}</span>
+                            ${sizeBadge}
                         </div>
                         <button type="button" onclick="removeFile(${idx})" class="adm-btn adm-btn-danger-solid adm-btn-sm" style="flex-shrink:0; margin-left:10px;">삭제</button>
                     </div>`;
             });
 
-            const fileListContainer = document.getElementById('existing-files-list');
-            if (typeof Sortable !== 'undefined' && fileListContainer) {
-                if (fileListContainer.sortableInstance) fileListContainer.sortableInstance.destroy();
-                fileListContainer.sortableInstance = new Sortable(fileListContainer, {
+            if (typeof Sortable !== 'undefined' && list) {
+                if (list.sortableInstance) list.sortableInstance.destroy();
+                list.sortableInstance = new Sortable(list, {
                     handle: '.file-drag-handle',
                     animation: 150,
                     onEnd: function (evt) {
@@ -1241,6 +1504,7 @@
                 });
             }
         }
+        window.renderFileList = renderFileList;
 
         window.removeFile = function (idx) {
             fileItems.splice(idx, 1);
@@ -1248,122 +1512,434 @@
             isFormDirty = true;
         };
 
-        function getYoutubeId(url) { if (!url) return null; const m = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/); return (m && m[2].length === 11) ? m[2] : null; }
-        function getFirstImageFromContent(html) { const d = document.createElement('div'); d.innerHTML = html; const i = d.querySelector('img'); return i ? i.src : null; }
+        function getYoutubeId(url) {
+            if (!url) return null;
+            const m = String(url).match(/^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|shorts\/)([^#&?]*).*/);
+            return (m && m[2].length === 11) ? m[2] : null;
+        }
+        function getFirstImageFromContent(html) {
+            const d = document.createElement('div');
+            d.innerHTML = html || '';
+            const i = d.querySelector('img');
+            return i ? i.src : null;
+        }
 
-        // 게시글 업로드 (1번 고아파일 삭제 및 예약발행, 2번 썸네일 WebP 압축 포함)
+        function updateThumbPreview() {
+            const wrap = document.getElementById('thumb-preview-img-wrap');
+            const badge = document.getElementById('thumb-preview-badge');
+            const clearBtn = document.getElementById('btn-clear-new-thumb');
+            const manageArea = document.getElementById('thumb-manage-area');
+            const delChk = document.getElementById('delete-thumb-check');
+            if (!wrap || !badge) return;
+
+            const isDeleteChecked = !!(delChk && delChk.checked);
+            const rawFile = document.getElementById('post-thumb-file')?.files?.[0] || null;
+            const isIntro = !!document.getElementById('chk-intro')?.checked;
+
+            if (manageArea) {
+                manageArea.style.display = (originalThumbUrl && !croppedThumbnailBlob && !rawFile) ? 'block' : 'none';
+            }
+            if (clearBtn) {
+                clearBtn.style.display = (croppedThumbnailBlob || rawFile) ? 'inline-flex' : 'none';
+            }
+
+            let previewUrl = null;
+            let badgeText = '미설정';
+            let badgeClass = 'nk-thumb-badge';
+
+            if (croppedThumbnailBlob && thumbPreviewObjectUrl) {
+                previewUrl = thumbPreviewObjectUrl;
+                badgeText = '새 썸네일 적용 예정';
+                badgeClass = 'nk-thumb-badge is-new';
+            } else if (rawFile) {
+                if (thumbPreviewObjectUrl) { try { URL.revokeObjectURL(thumbPreviewObjectUrl); } catch (_) { } }
+                thumbPreviewObjectUrl = URL.createObjectURL(rawFile);
+                previewUrl = thumbPreviewObjectUrl;
+                badgeText = '새 썸네일 선택됨';
+                badgeClass = 'nk-thumb-badge is-new';
+            } else if (originalThumbUrl && !isDeleteChecked) {
+                previewUrl = originalThumbUrl;
+                badgeText = '기존 썸네일 유지';
+                badgeClass = 'nk-thumb-badge is-existing';
+            } else {
+                const ytVal = isIntro ? (document.getElementById('youtube-url')?.value || '') : '';
+                const yId = getYoutubeId(ytVal);
+                if (yId) {
+                    previewUrl = `https://img.youtube.com/vi/${yId}/hqdefault.jpg`;
+                    badgeText = '유튜브 자동 추출 예정';
+                    badgeClass = 'nk-thumb-badge is-auto';
+                } else {
+                    const firstImg = getFirstImageFromContent(quill ? quill.root.innerHTML : '');
+                    if (firstImg) {
+                        previewUrl = firstImg;
+                        badgeText = '본문 첫 이미지 자동 사용';
+                        badgeClass = 'nk-thumb-badge is-auto';
+                    } else if (originalThumbUrl && isDeleteChecked) {
+                        badgeText = '기존 썸네일 삭제 예정';
+                    }
+                }
+            }
+
+            wrap.innerHTML = '';
+            if (previewUrl) {
+                const img = document.createElement('img');
+                img.src = previewUrl;
+                img.alt = '썸네일 미리보기';
+                wrap.appendChild(img);
+            } else {
+                wrap.textContent = '미설정';
+            }
+            badge.className = badgeClass;
+            badge.textContent = badgeText;
+        }
+
+        window.clearSelectedThumbnail = function () {
+            croppedThumbnailBlob = null;
+            if (thumbPreviewObjectUrl) {
+                try { URL.revokeObjectURL(thumbPreviewObjectUrl); } catch (_) { }
+                thumbPreviewObjectUrl = null;
+            }
+            const thumbInput = document.getElementById('post-thumb-file');
+            if (thumbInput) thumbInput.value = '';
+            updateThumbPreview();
+        };
+
+        function updateEditorCharCount() {
+            const el = document.getElementById('editor-char-count');
+            if (!el) return;
+            const text = (quill && typeof quill.getText === 'function')
+                ? quill.getText().replace(/\n$/, '')
+                : (quill && quill.root ? (quill.root.textContent || '') : '');
+            const withSpaces = text.length;
+            const withoutSpaces = text.replace(/\s/g, '').length;
+            el.textContent = `공백 포함 ${withSpaces.toLocaleString()}자 · 공백 제외 ${withoutSpaces.toLocaleString()}자`;
+        }
+
+        function updateScheduleHint() {
+            const el = document.getElementById('publish-at-status');
+            const input = document.getElementById('post-publish-at');
+            if (!el || !input) return;
+            const val = input.value;
+            el.className = 'nk-schedule-status';
+            if (!val) {
+                if (editingId && originalPublishAt && new Date(originalPublishAt).getTime() <= Date.now()) {
+                    el.textContent = '비워두면 기존 공개 일시가 유지됩니다.';
+                } else {
+                    el.textContent = '비워두면 즉시 공개됩니다.';
+                }
+                return;
+            }
+            const d = new Date(val);
+            if (Number.isNaN(d.getTime())) {
+                el.textContent = '유효한 날짜/시간을 선택해주세요.';
+                return;
+            }
+            if (d.getTime() > Date.now()) {
+                el.classList.add('is-scheduled');
+                el.textContent = '예약 발행 예정: ' + d.toLocaleString('ko-KR');
+            } else {
+                el.classList.add('is-past');
+                el.textContent = '선택한 시각이 현재보다 이전이므로 저장 즉시 공개됩니다.';
+            }
+        }
+
+        window.clearPublishAt = function () {
+            const input = document.getElementById('post-publish-at');
+            if (input) input.value = '';
+            if (originalPublishAt && new Date(originalPublishAt).getTime() > Date.now()) {
+                originalPublishAt = null;
+            }
+            isFormDirty = true;
+            updateScheduleHint();
+        };
+
+        function updateCategoryContextHints() {
+            const catCode = document.getElementById('post-category')?.value || '';
+            const list = (categoryList && categoryList.length) ? categoryList : (window.GLOBAL_CATEGORIES || []);
+            const found = list.find(c => c.code === catCode) || null;
+            const type = found ? found.type : '';
+            const isOrder = !!document.getElementById('chk-order')?.checked;
+
+            const orderHelp = document.getElementById('order-exposure-help');
+            if (orderHelp) {
+                if (isOrder && catCode && type && type !== 'EDU') {
+                    orderHelp.textContent = '안내: 발주 페이지는 교육(EDU) 카테고리 상품만 노출됩니다. 현재 선택한 카테고리에서는 발주 페이지에 표시되지 않을 수 있습니다.';
+                    orderHelp.style.display = 'block';
+                } else {
+                    orderHelp.style.display = 'none';
+                }
+            }
+
+            const linkLabel = document.getElementById('post-link-label');
+            const linkHelp = document.getElementById('post-link-help');
+            if (linkLabel && linkHelp) {
+                if (type === 'EVENT') {
+                    linkLabel.textContent = '외부 이동 링크 URL (행사 카드 연결)';
+                    linkHelp.textContent = '행사(EVENT) 목록에서 카드를 클릭할 때 연결되는 외부 URL입니다. 비워두면 상세 페이지로 이동합니다.';
+                } else if (type === 'BOARD') {
+                    linkLabel.textContent = '관련 링크 URL (또는 작성자 표기)';
+                    linkHelp.textContent = 'http(s)://로 시작하는 주소를 입력하면 상세 상단에 바로가기 링크가 표시되고 작성자는 관리자로 표기됩니다.';
+                } else {
+                    linkLabel.textContent = '관련 링크 URL (선택)';
+                    linkHelp.textContent = 'http(s):// 주소를 입력하면 상세 화면에 관련 링크 바로가기 배너로 표시됩니다.';
+                }
+            }
+        }
+
+        function renderPostModeBanner(mode, item) {
+            const banner = document.getElementById('post-mode-banner');
+            if (!banner) return;
+            if (!mode || !item) {
+                banner.style.display = 'none';
+                banner.innerHTML = '';
+                banner.className = 'nk-post-banner';
+                return;
+            }
+            const esc = window.escapeHtml || (s => String(s ?? ''));
+            if (mode === 'edit') {
+                const statusLabel = item.is_draft
+                    ? '초안'
+                    : (item.publish_at && new Date(item.publish_at).getTime() > Date.now()
+                        ? '예약 발행 대기'
+                        : (item.is_visible === false ? '숨김' : '공개 중'));
+                banner.className = 'nk-post-banner is-edit';
+                banner.innerHTML = `
+                    <div class="nk-post-banner-info">
+                        <strong><svg class="ic"><use href="#i-pencil"/></svg> 수정 중 (#${Number(item.id)} · ${esc(statusLabel)})</strong>
+                        <span style="font-size:0.84rem;">원본 제목: "${esc(item.title || '')}"</span>
+                    </div>
+                    <div class="nk-post-banner-actions">
+                        <button type="button" onclick="cancelEdit()" class="adm-btn adm-btn-secondary adm-btn-sm">수정 취소하고 새 글 작성</button>
+                    </div>`;
+                banner.style.display = 'flex';
+            } else if (mode === 'copy') {
+                banner.className = 'nk-post-banner is-copy';
+                banner.innerHTML = `
+                    <div class="nk-post-banner-info">
+                        <strong><svg class="ic"><use href="#i-file-text"/></svg> 복사본 작성 중 (새 글로 저장됩니다)</strong>
+                        <span style="font-size:0.84rem;">원본: "${esc(item.title || '')}" · 비밀번호·상단고정·예약일시는 자동 초기화되었습니다.</span>
+                    </div>
+                    <div class="nk-post-banner-actions">
+                        <button type="button" onclick="cancelEdit()" class="adm-btn adm-btn-secondary adm-btn-sm">복사 취소</button>
+                    </div>`;
+                banner.style.display = 'flex';
+            }
+        }
+
+        window.validatePostForm = function () {
+            const titleEl = document.getElementById('post-title');
+            const ti = titleEl ? titleEl.value.trim() : '';
+            if (!ti) {
+                showToast("제목을 입력해주세요.", 'error');
+                if (titleEl) titleEl.focus();
+                return false;
+            }
+            const cat = (document.getElementById('post-category')?.value || '').trim();
+            const catTrigger = document.getElementById('custom-cat-trigger');
+            if (!cat) {
+                if (catTrigger) {
+                    catTrigger.classList.add('nk-cat-trigger-error');
+                    catTrigger.focus();
+                    if (typeof catTrigger.scrollIntoView === 'function') catTrigger.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                showToast("카테고리를 선택해주세요.", 'error');
+                return false;
+            }
+            if (catTrigger) catTrigger.classList.remove('nk-cat-trigger-error');
+
+            const isIntro = !!document.getElementById('chk-intro')?.checked;
+            const isOrder = !!document.getElementById('chk-order')?.checked;
+            if (!isIntro && !isOrder) {
+                showToast("최소한 하나의 노출 위치를 선택해주세요.", 'error');
+                return false;
+            }
+
+            const linkVal = (document.getElementById('post-link')?.value || '').trim();
+            if (linkVal && /^(?:javascript|data|vbscript):/i.test(linkVal)) {
+                showToast("안전하지 않은 링크 형식입니다. http(s):// 주소를 입력해주세요.", 'error');
+                document.getElementById('post-link')?.focus();
+                return false;
+            }
+            return true;
+        };
+
+        function dataUrlToBlob(dataUrl) {
+            const parts = String(dataUrl).split(',');
+            if (parts.length < 2) return null;
+            const mimeMatch = parts[0].match(/data:([^;]+);base64/i);
+            const mime = mimeMatch ? mimeMatch[1] : 'image/png';
+            const bin = atob(parts[1]);
+            const arr = new Uint8Array(bin.length);
+            for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+            return new Blob([arr], { type: mime });
+        }
+
+        async function replaceInlineDataImagesInHtml(html) {
+            if (!html || !html.includes('data:image/')) return html;
+            const container = document.createElement('div');
+            container.innerHTML = html;
+            const imgs = Array.from(container.querySelectorAll('img[src^="data:image/"]'));
+            if (!imgs.length) return html;
+            let replaced = false;
+            for (let i = 0; i < imgs.length; i++) {
+                const img = imgs[i];
+                const src = img.getAttribute('src') || '';
+                const blob = dataUrlToBlob(src);
+                if (!blob) continue;
+                const rawFile = new File([blob], `paste_${Date.now()}_${i}.png`, { type: blob.type || 'image/png' });
+                const webpFile = await compressImageToWebP(rawFile, 1600, 0.8);
+                const safeKey = `editor_paste_${Date.now()}_${i}.webp`;
+                const { data, error } = await window.sb.storage.from('images').upload(safeKey, webpFile);
+                if (error) throw new Error('본문 이미지 업로드 실패: ' + error.message);
+                const publicUrl = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl;
+                img.setAttribute('src', publicUrl);
+                replaced = true;
+            }
+            const nextHtml = container.innerHTML;
+            if (replaced && quill && quill.root) {
+                isPopulatingForm = true;
+                quill.root.innerHTML = nextHtml;
+                setTimeout(() => { isPopulatingForm = false; }, 0);
+            }
+            return nextHtml;
+        }
+
+        // 게시글 업로드 (고아파일 보존, 예약발행, 썸네일 WebP 압축, 중복제출 방지, 본문 data:image 자동 업로드)
         async function uploadPost(saveAsDraft = false) {
-            try { const formatter = quill.getModule('blotFormatter'); if (formatter?.hide) formatter.hide(); } catch (e) { }
+            if (window.__nkPostSubmitting) return;
+            try { const formatter = quill?.getModule?.('blotFormatter'); if (formatter?.hide) formatter.hide(); } catch (e) { }
             if (quill) { quill.setSelection(null); quill.blur(); }
             await new Promise(resolve => setTimeout(resolve, 50));
-            
+
+            if (!window.validatePostForm()) return;
+
             const ti = document.getElementById('post-title').value.trim();
-            if (!ti) return showToast("제목을 입력해주세요.", 'error');
-            const isIntro = document.getElementById('chk-intro').checked; 
+            const isIntro = document.getElementById('chk-intro').checked;
             const isOrder = document.getElementById('chk-order').checked;
-            if (!isIntro && !isOrder) return showToast("최소한 하나의 노출 위치를 선택해주세요.", 'error');
-            
-            showLoading(true); 
-            const cat = document.getElementById('post-category').value;
-            
-            // 썸네일 처리 및 고아파일 방지
-            const isDeleteThumbChecked = document.getElementById('delete-thumb-check').checked;
-            let tu = isDeleteThumbChecked ? null : originalThumbUrl;
-            if (isDeleteThumbChecked && originalThumbUrl) {
-                // 변경 이력 복구를 위해 기존 파일은 Storage에 보존합니다.
-            }
+            const cat = document.getElementById('post-category').value.trim();
 
-            const rawFile = document.getElementById('post-thumb-file').files[0];
-            let fileToUpload = croppedThumbnailBlob ? croppedThumbnailBlob : rawFile;
+            const submitBtn = document.getElementById('btn-submit');
+            const draftBtn = document.getElementById('btn-draft-submit');
+            window.__nkPostSubmitting = true;
+            if (submitBtn) submitBtn.disabled = true;
+            if (draftBtn) draftBtn.disabled = true;
+            showLoading(true);
 
-            if (fileToUpload) {
-                if (!croppedThumbnailBlob) {
-                    fileToUpload = await compressImageToWebP(fileToUpload, 800, 0.8);
-                }
-                const fileName = `t_${Date.now()}.webp`;
-                const { data, error } = await window.sb.storage.from('images').upload(fileName, fileToUpload);
-                if (error) { 
-                    showLoading(false); 
-                    return showToast("썸네일 업로드 실패: " + error.message, 'error'); 
-                }
-                // 변경 이력 복구를 위해 교체 전 썸네일은 Storage에 보존합니다.
-                tu = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl;
-            } else if (!tu) {
-                const yId = getYoutubeId(document.getElementById('youtube-url').value);
-                if (yId) tu = `https://img.youtube.com/vi/${yId}/hqdefault.jpg`;
-                else {
-                    const firstImg = getFirstImageFromContent(quill.root.innerHTML);
-                    if (firstImg) tu = firstImg;
-                }
-            }
+            try {
+                const rawContent = quill ? quill.root.innerHTML : '';
+                const cleanedContent = await replaceInlineDataImagesInHtml(rawContent);
 
-            // 첨부파일 처리
-            let currentServerUrls = [];
-            let finalFileUrls = [];
-            for (let i = 0; i < fileItems.length; i++) {
-                const item = fileItems[i];
-                if (item.type === 'server') {
-                    finalFileUrls.push(item.value);
-                    currentServerUrls.push(item.value.split('@@')[0]);
+                // 썸네일 처리 (변경 이력 복구를 위해 기존 파일은 Storage에 보존)
+                const isDeleteThumbChecked = !!document.getElementById('delete-thumb-check')?.checked;
+                let tu = isDeleteThumbChecked ? null : originalThumbUrl;
+
+                const rawFile = document.getElementById('post-thumb-file')?.files?.[0];
+                let fileToUpload = croppedThumbnailBlob ? croppedThumbnailBlob : rawFile;
+
+                if (fileToUpload) {
+                    if (!croppedThumbnailBlob) {
+                        fileToUpload = await compressImageToWebP(fileToUpload, 800, 0.8);
+                    }
+                    const fileName = `t_${Date.now()}.webp`;
+                    const { data, error } = await window.sb.storage.from('images').upload(fileName, fileToUpload);
+                    if (error) {
+                        showToast("썸네일 업로드 실패: " + error.message, 'error');
+                        return;
+                    }
+                    tu = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl;
+                } else if (!tu) {
+                    const yId = isIntro ? getYoutubeId(document.getElementById('youtube-url').value) : null;
+                    if (yId) tu = `https://img.youtube.com/vi/${yId}/hqdefault.jpg`;
+                    else {
+                        const firstImg = getFirstImageFromContent(cleanedContent);
+                        if (firstImg) tu = firstImg;
+                    }
+                }
+
+                // 첨부파일 처리
+                let finalFileUrls = [];
+                for (let i = 0; i < fileItems.length; i++) {
+                    const item = fileItems[i];
+                    if (item.type === 'server') {
+                        finalFileUrls.push(item.value);
+                    } else {
+                        const df = item.value;
+                        const nameParts = String(df.name || '').split('.');
+                        const rawExt = nameParts.length > 1 ? nameParts.pop().toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+                        const safeKey = `d_${Date.now()}_${i}${rawExt ? '.' + rawExt : ''}`;
+                        const { data, error } = await window.sb.storage.from('images').upload(safeKey, df);
+                        if (error) {
+                            showToast("첨부파일 업로드 실패: " + error.message, 'error');
+                            return;
+                        }
+                        const fileUrl = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl;
+                        finalFileUrls.push(fileUrl + '@@' + df.name);
+                    }
+                }
+
+                let du = finalFileUrls.length > 0 ? finalFileUrls.join('||') : null;
+                let videoVal = document.getElementById('youtube-url').value.trim();
+                if (isOrder && isIntro) videoVal = FLAG_ORDER_ALL + (videoVal ? '|' + videoVal : '');
+                else if (isOrder && !isIntro) videoVal = FLAG_ORDER_ONLY;
+
+                const passwordVal = document.getElementById('post-password').value.trim();
+                const dlPasswordVal = document.getElementById('post-dl-password').value.trim();
+                const isNoticeVal = document.getElementById('chk-is-notice').checked;
+
+                // 예약 발행 일시 (기존 공개 글 수정 시 비어 있으면 기존 publish_at 보존)
+                const publishAtInput = document.getElementById('post-publish-at').value;
+                let publishAtVal;
+                if (publishAtInput) {
+                    publishAtVal = new Date(publishAtInput).toISOString();
+                } else if (editingId && originalPublishAt && new Date(originalPublishAt).getTime() <= Date.now()) {
+                    publishAtVal = originalPublishAt;
                 } else {
-                    const df = item.value;
-                    const ext = df.name.split('.').pop();
-                    const safeKey = `d_${Date.now()}_${i}.${ext}`;
-                    const { data, error } = await window.sb.storage.from('images').upload(safeKey, df);
-                    if (error) { showLoading(false); return showToast("첨부파일 업로드 실패: " + error.message, 'error'); }
-                    const fileUrl = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl;
-                    finalFileUrls.push(fileUrl + '@@' + df.name);
+                    publishAtVal = new Date().toISOString();
                 }
-            }
 
-            // 수정 전 첨부파일은 게시글 이력 복구를 위해 Storage에 보존합니다.
+                const pd = {
+                    title: ti,
+                    content: cleanedContent,
+                    category: cat,
+                    order_num: parseInt(document.getElementById('post-order').value, 10) || 0,
+                    video_url: videoVal,
+                    link_url: document.getElementById('post-link').value.trim(),
+                    thumbnail_url: tu,
+                    image_url: du,
+                    password: passwordVal,
+                    download_password: dlPasswordVal,
+                    is_notice: isNoticeVal,
+                    publish_at: publishAtVal
+                };
+                pd.is_draft = !!saveAsDraft;
+                if (saveAsDraft) pd.is_visible = false;
+                else if (!editingId || editingPostIsDraft) pd.is_visible = true;
 
-            let du = finalFileUrls.length > 0 ? finalFileUrls.join('||') : null;
-            let videoVal = document.getElementById('youtube-url').value; 
-            if (isOrder && isIntro) videoVal = FLAG_ORDER_ALL + (videoVal ? '|' + videoVal : ''); 
-            else if (isOrder && !isIntro) videoVal = FLAG_ORDER_ONLY;
+                const currentEditId = editingId;
+                const { data: resultPost, error } = currentEditId
+                    ? await window.sb.from('total_posts').update(pd).eq('id', currentEditId).select()
+                    : await window.sb.from('total_posts').insert([pd]).select();
 
-            const passwordVal = document.getElementById('post-password').value.trim();
-            const dlPasswordVal = document.getElementById('post-dl-password').value.trim();
-            const isNoticeVal = document.getElementById('chk-is-notice').checked;
-            
-            // 1번 기능: 예약 발행 일시
-            const publishAtInput = document.getElementById('post-publish-at').value;
-            const publishAtVal = publishAtInput ? new Date(publishAtInput).toISOString() : new Date().toISOString();
+                if (error) {
+                    showToast(error.message, 'error');
+                    return;
+                }
 
-            const pd = {
-                title: ti,
-                content: quill.root.innerHTML,
-                category: cat,
-                order_num: parseInt(document.getElementById('post-order').value) || 0,
-                video_url: videoVal,
-                link_url: document.getElementById('post-link').value,
-                thumbnail_url: tu,
-                image_url: du,
-                password: passwordVal,
-                download_password: dlPasswordVal,
-                is_notice: isNoticeVal,
-                publish_at: publishAtVal
-            };
-            pd.is_draft = !!saveAsDraft;
-            if (saveAsDraft) pd.is_visible = false;
-            else if (!editingId || editingPostIsDraft) pd.is_visible = true;
-
-            const { data: resultPost, error } = editingId 
-                ? await window.sb.from('total_posts').update(pd).eq('id', editingId).select() 
-                : await window.sb.from('total_posts').insert([pd]).select();
-            
-            showLoading(false);
-            if (error) { 
-                showToast(error.message, 'error'); 
-            } else {
-                await logAdminActivity(editingId ? 'UPDATE_POST' : 'CREATE_POST', { id: editingId || resultPost[0]?.id, title: ti });
+                await logAdminActivity(currentEditId ? 'UPDATE_POST' : 'CREATE_POST', { id: currentEditId || resultPost?.[0]?.id, title: ti });
                 showToast(saveAsDraft ? "초안으로 저장했습니다." : "저장되었습니다.", 'success');
                 clearDraft();
-                cancelEdit();
+                cancelEdit(true);
                 loadManageList(currentPage);
-                const navItems = document.querySelectorAll('.nav-item'); 
+                const navItems = document.querySelectorAll('.nav-item');
                 if (navItems && navItems.length > 1) { switchTab('posts', navItems[1]); }
+            } catch (err) {
+                console.error(err);
+                showToast("저장 중 오류 발생: " + (err?.message || err), 'error');
+            } finally {
+                window.__nkPostSubmitting = false;
+                if (submitBtn) submitBtn.disabled = false;
+                if (draftBtn) draftBtn.disabled = false;
+                showLoading(false);
             }
         }
 
@@ -1421,12 +1997,16 @@
             const pageData = filteredData.slice(from, to);
 
             list.innerHTML = "";
+            window.__nkPostMap.clear();
 
             const now = new Date();
+            const esc = window.escapeHtml || (s => String(s ?? ''));
 
             pageData.forEach(item => {
-                const thumb = item.thumbnail_url || 'https://via.placeholder.com/300x200?text=No+Image';
-                let catName = item.category;
+                window.__nkPostMap.set(String(item.id), item);
+                const pid = Number(item.id);
+                const thumb = esc(item.thumbnail_url || 'https://via.placeholder.com/300x200?text=No+Image');
+                let catName = item.category || '';
                 if (categoryList) { const f = categoryList.find(c => c.code === item.category); if (f) catName = f.name; }
                 let badge = ""; const v = item.video_url || "";
                 if (v === FLAG_ORDER_ONLY) badge = `<span class="badge" style="background:#fff3cd; color:#856404;"><svg class="ic"><use href="#i-package"/></svg>발주</span>`;
@@ -1434,17 +2014,17 @@
                 else badge = `<span class="badge" style="background:#eef6ff; color:#1a3c6e;"><svg class="ic"><use href="#i-book"/></svg>소개</span>`;
 
                 let isVis = item.is_visible !== false;
-                let visBtnStr = isVis ? `<button onclick="togglePostVisibility(${item.id}, false)" class="pm-btn c-solid-success"><svg class="ic"><use href="#i-eye"/></svg> 노출 중</button>` : `<button onclick="togglePostVisibility(${item.id}, true)" class="pm-btn c-solid-neutral"><svg class="ic"><use href="#i-eye-off"/></svg> 숨김</button>`;
+                let visBtnStr = isVis ? `<button type="button" onclick="togglePostVisibility(${pid}, false)" class="pm-btn c-solid-success"><svg class="ic"><use href="#i-eye"/></svg> 노출 중</button>` : `<button type="button" onclick="togglePostVisibility(${pid}, true)" class="pm-btn c-solid-neutral"><svg class="ic"><use href="#i-eye-off"/></svg> 숨김</button>`;
 
-                const postPassword = item.password || '없음';
-                const dlPassword = item.download_password || '없음';
+                const postPassword = esc(item.password || '없음');
+                const dlPassword = esc(item.download_password || '없음');
                 const pinBadge = (item.is_notice === true) ? `<span class="badge" style="background:#e74c3c; color:white; margin-right:5px;"><svg class="ic"><use href="#i-pin"/></svg>고정</span> ` : '';
 
                 // 예약 발행 뱃지
                 let scheduleBadge = '';
                 if (item.publish_at && new Date(item.publish_at) > now) {
                     const pDateStr = new Date(item.publish_at).toLocaleDateString([], { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
-                    scheduleBadge = `<span class="badge badge-scheduled" title="예약시간: ${item.publish_at}"><svg class="ic"><use href="#i-clock"/></svg> ${pDateStr} 예약</span>`;
+                    scheduleBadge = `<span class="badge badge-scheduled" title="예약시간: ${esc(item.publish_at)}"><svg class="ic"><use href="#i-clock"/></svg> ${esc(pDateStr)} 예약</span>`;
                 }
 
                 let ansBadge = answeredSet.has(item.id)
@@ -1452,24 +2032,24 @@
                     : `<span class="badge" style="background:#e9ecef; color:#5c6b7a;">답변대기</span>`;
 
                 list.innerHTML += `
-                    <div class="post-manage-card" data-id="${item.id}" style="position:relative;">
+                    <div class="post-manage-card" data-id="${pid}" data-draft="${item.is_draft ? '1' : '0'}" style="position:relative;">
                         <div class="pm-card-head">
-                            <label class="pm-check-label"><input type="checkbox" class="post-check" value="${item.id}"> 선택</label>
+                            <label class="pm-check-label"><input type="checkbox" class="post-check" value="${pid}"> 선택</label>
                             <span class="pm-grip" title="드래그하여 순서 변경"><svg class="ic"><use href="#i-grip"/></svg><span class="pm-grip-text">드래그하여 순서 변경</span></span>
                         </div>
                         <img src="${thumb}" class="pm-thumb" alt="thumbnail">
                         <div class="pm-body">
-                            <div style="margin-bottom:5px;">${ansBadge} ${badge} ${scheduleBadge} <span class="pm-cat-badge">${catName}</span></div>
-                            <div class="pm-title" onclick='editPost(${JSON.stringify(item).replace(/'/g, "&#39;")})'>${pinBadge}${item.title}</div>
-                            <div class="pm-info">순서: ${item.order_num} | 등록: ${item.created_at ? item.created_at.split('T')[0] : '-'}</div>
+                            <div style="margin-bottom:5px;">${ansBadge} ${badge} ${scheduleBadge} <span class="pm-cat-badge">${esc(catName)}</span></div>
+                            <div class="pm-title" onclick="editPostById(${pid})">${pinBadge}${esc(item.title || '')}</div>
+                            <div class="pm-info">순서: ${Number(item.order_num) || 0} | 등록: ${esc(item.created_at ? item.created_at.split('T')[0] : '-')}</div>
                             <div style="font-size:0.8rem; color:#d9534f; font-weight:bold; margin-top:12px;"><svg class="ic"><use href="#i-key"/></svg> 자체비번: ${postPassword}</div>
                             <div style="font-size:0.8rem; color:#026da8; font-weight:bold; margin-top:3px;"><svg class="ic"><use href="#i-download"/></svg> 다운비번: ${dlPassword}</div>
                         </div>
                         <div class="pm-actions">
                             ${visBtnStr}
-                            <button onclick='copyPost(${JSON.stringify(item).replace(/'/g, "&#39;")})' class="pm-btn c-solid-warn">복사</button>
-                            <button onclick='editPost(${JSON.stringify(item).replace(/'/g, "&#39;")})' class="pm-btn">수정</button>
-                            <button onclick='deletePost(${item.id})' class="pm-btn c-solid-danger">삭제</button>
+                            <button type="button" onclick="copyPostById(${pid})" class="pm-btn c-solid-warn">복사</button>
+                            <button type="button" onclick="editPostById(${pid})" class="pm-btn">수정</button>
+                            <button type="button" onclick="deletePost(${pid})" class="pm-btn c-solid-danger">삭제</button>
                         </div>
                     </div>`;
             });
@@ -1498,27 +2078,59 @@
 
         function renderPagination(t, c) { const p = document.getElementById('pagination-controls'); p.innerHTML = ""; const tp = Math.ceil(t / ITEMS_PER_PAGE); if (tp <= 1) return; for (let i = 1; i <= tp; i++) p.innerHTML += `<button class="page-btn ${i === c ? 'active' : ''}" onclick="loadManageList(${i})">${i}</button>`; }
 
-        window.editPost = function (i) {
-            editingId = i.id; editingPostIsDraft = !!i.is_draft; originalDetailUrl = i.image_url; originalThumbUrl = i.thumbnail_url;
-            document.getElementById('post-category').value = i.category;
+        window.editPostById = function (id) {
+            const item = window.__nkPostMap.get(String(id));
+            if (item) window.editPost(item);
+        };
+        window.copyPostById = function (id) {
+            const item = window.__nkPostMap.get(String(id));
+            if (item) window.copyPost(item);
+        };
 
-            let catName = i.category;
+        window.editPost = function (i, opts = {}) {
+            if (!opts.skipDirtyCheck && isFormDirty && !confirm('작성 중인 변경사항이 있습니다. 선택한 게시글 수정으로 전환할까요?')) return false;
+            isPopulatingForm = true;
+            croppedThumbnailBlob = null;
+            if (thumbPreviewObjectUrl) {
+                try { URL.revokeObjectURL(thumbPreviewObjectUrl); } catch (_) { }
+                thumbPreviewObjectUrl = null;
+            }
+            const thumbInput = document.getElementById('post-thumb-file');
+            if (thumbInput) thumbInput.value = '';
+            const delThumbChk = document.getElementById('delete-thumb-check');
+            if (delThumbChk) delThumbChk.checked = false;
+
+            editingId = i.id;
+            editingPostIsDraft = !!i.is_draft;
+            originalDetailUrl = i.image_url || null;
+            originalThumbUrl = i.thumbnail_url || null;
+            originalPublishAt = i.publish_at || null;
+            currentEditMeta = { mode: 'edit', id: i.id };
+
+            document.getElementById('post-category').value = i.category || '';
+            document.getElementById('custom-cat-trigger')?.classList.remove('nk-cat-trigger-error');
+
+            let catName = i.category || '카테고리를 선택하세요';
             if (categoryList) { const f = categoryList.find(c => c.code === i.category); if (f) catName = f.name; }
             document.getElementById('custom-cat-text').innerText = catName;
-            document.getElementById('custom-cat-text').style.color = '#333';
+            document.getElementById('custom-cat-text').style.color = i.category ? '#333' : '#666';
 
             document.getElementById('post-password').value = i.password || '';
             document.getElementById('post-dl-password').value = i.download_password || '';
             document.getElementById('chk-is-notice').checked = (i.is_notice === true);
-            document.getElementById('post-title').value = i.title; 
-            quill.root.innerHTML = i.content || ""; 
-            document.getElementById('post-link').value = i.link_url || ""; 
+            document.getElementById('post-title').value = i.title || '';
+            if (quill && quill.root) quill.root.innerHTML = i.content || "";
+            document.getElementById('post-link').value = i.link_url || "";
             document.getElementById('post-order').value = i.order_num || 0;
 
             if (i.publish_at) {
                 const pDate = new Date(i.publish_at);
-                const localIso = new Date(pDate.getTime() - pDate.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-                document.getElementById('post-publish-at').value = localIso;
+                if (!Number.isNaN(pDate.getTime()) && pDate.getTime() > Date.now()) {
+                    const localIso = new Date(pDate.getTime() - pDate.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+                    document.getElementById('post-publish-at').value = localIso;
+                } else {
+                    document.getElementById('post-publish-at').value = '';
+                }
             } else {
                 document.getElementById('post-publish-at').value = '';
             }
@@ -1530,29 +2142,88 @@
             }
             renderFileList();
 
-            let val = i.video_url || ""; const chkIntro = document.getElementById('chk-intro'); const chkOrder = document.getElementById('chk-order'); const youtubeInput = document.getElementById('youtube-url');
-            if (val === FLAG_ORDER_ONLY) { chkIntro.checked = false; chkOrder.checked = true; youtubeInput.value = ""; } 
-            else if (val.startsWith(FLAG_ORDER_ALL)) { chkIntro.checked = true; chkOrder.checked = true; youtubeInput.value = val.replace(FLAG_ORDER_ALL, '').replace('|', ''); } 
+            let val = i.video_url || "";
+            const chkIntro = document.getElementById('chk-intro');
+            const chkOrder = document.getElementById('chk-order');
+            const youtubeInput = document.getElementById('youtube-url');
+            if (val === FLAG_ORDER_ONLY) { chkIntro.checked = false; chkOrder.checked = true; youtubeInput.value = ""; }
+            else if (val.startsWith(FLAG_ORDER_ALL)) { chkIntro.checked = true; chkOrder.checked = true; youtubeInput.value = val.replace(FLAG_ORDER_ALL, '').replace(/^\|/, ''); }
             else { chkIntro.checked = true; chkOrder.checked = false; youtubeInput.value = val; }
-            
-            toggleEditorState(); 
-            document.getElementById('form-title').innerHTML = '<svg class="ic"><use href="#i-pencil"/></svg> 수정 모드'; 
-            document.getElementById('btn-submit').innerText = "수정 완료"; 
-            document.getElementById('btn-cancel-edit').style.display = "inline-block"; 
+
+            toggleEditorState();
+            updateCategoryContextHints();
+            updateThumbPreview();
+            updateScheduleHint();
+            updateEditorCharCount();
+
+            const draftBanner = document.getElementById('draft-restore-banner');
+            if (draftBanner) draftBanner.style.display = 'none';
+            renderPostModeBanner('edit', i);
+
+            document.getElementById('form-title').innerHTML = '<svg class="ic"><use href="#i-pencil"/></svg> 수정 모드';
+            document.getElementById('btn-submit').innerText = "수정 완료";
+            document.getElementById('btn-cancel-edit').style.display = "inline-block";
             window.scrollTo({ top: 0, behavior: 'smooth' });
-            isFormDirty = false;
+            setTimeout(() => { isPopulatingForm = false; isFormDirty = false; }, 0);
+            return true;
         };
 
-        window.cancelEdit = function () {
-            editingId = null; editingPostIsDraft = false; croppedThumbnailBlob = null; document.getElementById('post-title').value = ""; document.getElementById('post-password').value = "";
-            document.getElementById('post-dl-password').value = ""; document.getElementById('chk-is-notice').checked = false;
+        window.cancelEdit = function (force = false) {
+            if (!force && isFormDirty && !confirm('작성 중인 변경사항을 초기화할까요?')) return false;
+            isPopulatingForm = true;
+            editingId = null;
+            editingPostIsDraft = false;
+            originalDetailUrl = null;
+            originalThumbUrl = null;
+            originalPublishAt = null;
+            croppedThumbnailBlob = null;
+            currentEditMeta = null;
+            if (thumbPreviewObjectUrl) {
+                try { URL.revokeObjectURL(thumbPreviewObjectUrl); } catch (_) { }
+                thumbPreviewObjectUrl = null;
+            }
+
+            document.getElementById('post-title').value = "";
+            document.getElementById('post-order').value = "0";
+            document.getElementById('post-password').value = "";
+            document.getElementById('post-dl-password').value = "";
+            document.getElementById('youtube-url').value = "";
+            document.getElementById('post-link').value = "";
+            document.getElementById('chk-is-notice').checked = false;
             document.getElementById('post-publish-at').value = "";
-            quill.root.innerHTML = ""; document.querySelectorAll('input[type="file"]').forEach(i => i.value = ""); document.getElementById('chk-intro').checked = true; document.getElementById('chk-order').checked = false; toggleEditorState(); document.getElementById('form-title').innerHTML = '<svg class="ic"><use href="#i-file-text"/></svg> 게시글 작성/수정'; document.getElementById('btn-submit').innerText = "업로드 저장"; document.getElementById('btn-cancel-edit').style.display = "none";
+            const delThumbChk = document.getElementById('delete-thumb-check');
+            if (delThumbChk) delThumbChk.checked = false;
+
+            if (quill) {
+                if (typeof quill.setContents === 'function') quill.setContents([], 'silent');
+                else if (quill.root) quill.root.innerHTML = "";
+            }
+            ['post-thumb-file', 'post-file', 'hidden-image-input'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+            document.getElementById('chk-intro').checked = true;
+            document.getElementById('chk-order').checked = false;
             document.getElementById('post-category').value = '';
             document.getElementById('custom-cat-text').innerText = '카테고리를 선택하세요';
             document.getElementById('custom-cat-text').style.color = '#666';
-            fileItems = []; document.getElementById('existing-files-list').innerHTML = '';
-            isFormDirty = false;
+            document.getElementById('custom-cat-trigger')?.classList.remove('nk-cat-trigger-error');
+
+            document.getElementById('form-title').innerHTML = '<svg class="ic"><use href="#i-file-text"/></svg> 게시글 작성/수정';
+            document.getElementById('btn-submit').innerText = "업로드 저장";
+            document.getElementById('btn-cancel-edit').style.display = "none";
+
+            fileItems = [];
+            renderFileList();
+            renderPostModeBanner(null);
+            toggleEditorState();
+            updateCategoryContextHints();
+            updateThumbPreview();
+            updateScheduleHint();
+            updateEditorCharCount();
+            checkDraft();
+            setTimeout(() => { isPopulatingForm = false; isFormDirty = false; }, 0);
+            return true;
         };
 
         // 1번 기능: 단일 게시글 삭제 시 스토리지 고아 파일 동시 제거
@@ -1694,6 +2365,9 @@
             document.getElementById('custom-cat-text').innerText = name;
             document.getElementById('custom-cat-dropdown').style.display = 'none';
             document.getElementById('custom-cat-text').style.color = '#333';
+            document.getElementById('custom-cat-trigger')?.classList.remove('nk-cat-trigger-error');
+            if (!isPopulatingForm) isFormDirty = true;
+            updateCategoryContextHints();
         };
 
         window.selectFilterCustomCategory = function (code, name) {
@@ -1911,15 +2585,21 @@
         async function populateCategorySelects() {
             const { data } = await window.sb.from('program_categories').select('*').order('order_num');
             if (!data) return;
+            categoryList = data;
 
+            const esc = window.escapeHtml || (s => String(s ?? ''));
             let writeGroups = { 'PAGE': '', 'BOARD': '', 'EVENT': '', 'EDU': '' };
             let filterGroups = { 'PAGE': '', 'BOARD': '', 'EVENT': '', 'EDU': '' };
             const groupNames = { 'PAGE': '<svg class="ic"><use href="#i-settings"/></svg> 고정 페이지', 'BOARD': '<svg class="ic"><use href="#i-megaphone"/></svg> 게시판', 'EVENT': '<svg class="ic"><use href="#i-party"/></svg> 행사', 'EDU': '<svg class="ic"><use href="#i-graduation"/></svg> 교육' };
 
             data.forEach(c => {
-                const safeName = c.name.replace(/'/g, "\\'");
-                writeGroups[c.type] += `<div class="cs-item" onclick="selectCustomCategory('${c.code}', '${safeName}')">${c.name}</div>`;
-                filterGroups[c.type] += `<div class="cs-item" onclick="selectFilterCustomCategory('${c.code}', '${safeName}')">${c.name}</div>`;
+                const jsCode = String(c.code || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+                const jsName = String(c.name || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+                const htmlName = esc(c.name || '');
+                if (writeGroups[c.type] !== undefined) {
+                    writeGroups[c.type] += `<div class="cs-item" onclick="selectCustomCategory('${jsCode}', '${jsName}')">${htmlName}</div>`;
+                    filterGroups[c.type] += `<div class="cs-item" onclick="selectFilterCustomCategory('${jsCode}', '${jsName}')">${htmlName}</div>`;
+                }
             });
 
             const mainOrder = [];
@@ -1943,12 +2623,30 @@
 
             const ddFilter = document.getElementById('filter-cat-dropdown');
             if (ddFilter) ddFilter.innerHTML = filterDropdownHtml;
+
+            updateCategoryContextHints();
         }
 
-        window.toggleEditorState = function () { 
-            const isIntro = document.getElementById('chk-intro').checked; 
-            document.getElementById('editor-area').style.opacity = isIntro ? '1' : '0.5'; 
-            document.getElementById('editor-area').style.pointerEvents = isIntro ? 'auto' : 'none'; 
+        window.toggleEditorState = function () {
+            const isIntro = !!document.getElementById('chk-intro')?.checked;
+            const isOrder = !!document.getElementById('chk-order')?.checked;
+            const editorArea = document.getElementById('editor-area');
+            if (editorArea) {
+                editorArea.style.opacity = isIntro ? '1' : '0.5';
+                editorArea.style.pointerEvents = isIntro ? 'auto' : 'none';
+            }
+            const isOrderOnly = !isIntro && isOrder;
+            const ytArea = document.getElementById('youtube-area');
+            const ytInput = document.getElementById('youtube-url');
+            const orderOnlyNotice = document.getElementById('order-only-notice');
+            if (ytArea) {
+                ytArea.style.opacity = isOrderOnly ? '0.5' : '1';
+                ytArea.style.pointerEvents = isOrderOnly ? 'none' : 'auto';
+            }
+            if (ytInput) ytInput.disabled = isOrderOnly;
+            if (orderOnlyNotice) orderOnlyNotice.style.display = isOrderOnly ? 'block' : 'none';
+            updateCategoryContextHints();
+            updateThumbPreview();
         };
 
         async function loadConfigToForm() {

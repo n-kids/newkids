@@ -50,6 +50,8 @@
 
             <div id="main-content-wrap" style="display:none; width: 100%;">
 
+                <div id="admin-unpublished-banner" style="display:none; margin-bottom:16px; padding:12px 16px; border-radius:8px; background:#fff3cd; border:1px solid #ffe082; color:#7a5900; font-size:0.9rem; font-weight:600;"></div>
+
                 <div class="view-header">
                     <h2 class="view-title" id="v-title">불러오는 중...</h2>
                     <div class="view-meta">
@@ -60,6 +62,8 @@
                         <button class="view-tool-button" onclick="window.print()">🖨️ 인쇄</button>
                     </div>
                 </div>
+
+                <div id="related-link-banner" style="display:none; margin-bottom:18px; padding:12px 16px; border-radius:8px; background:#f0f7ff; border:1px solid #cce5ff; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;"></div>
 
                 <div id="youtube-player-area" style="display:none; margin-bottom: 20px;"></div>
 
@@ -254,6 +258,31 @@
                 return;
             }
 
+            const isDraftPost = data.is_draft === true;
+            const isHiddenPost = data.is_visible === false;
+            const isFutureScheduled = !!(data.publish_at && new Date(data.publish_at).getTime() > Date.now());
+
+            if ((isDraftPost || isHiddenPost || isFutureScheduled) && !isAdminLoggedIn) {
+                document.getElementById('v-title').innerText = '비공개 게시글';
+                document.getElementById('v-content').innerHTML = "<div style='text-align:center; padding:50px; color:#555;'>아직 공개되지 않았거나 숨김 처리된 게시글입니다.</div>";
+                document.getElementById('main-content-wrap').style.display = 'block';
+                return;
+            }
+
+            const adminBanner = document.getElementById('admin-unpublished-banner');
+            if (adminBanner) {
+                if (isAdminLoggedIn && (isDraftPost || isHiddenPost || isFutureScheduled)) {
+                    const reasons = [];
+                    if (isDraftPost) reasons.push('초안');
+                    if (isHiddenPost) reasons.push('숨김');
+                    if (isFutureScheduled) reasons.push('예약 발행(' + new Date(data.publish_at).toLocaleString('ko-KR') + ')');
+                    adminBanner.innerText = '🔒 관리자 전용 미리보기: 현재 [' + reasons.join(' · ') + '] 상태이며 일반 사용자에게는 노출되지 않습니다.';
+                    adminBanner.style.display = 'block';
+                } else {
+                    adminBanner.style.display = 'none';
+                }
+            }
+
             // 최근 본 자료 기록 (어떤 경로로 열람해도 view.html 도착 시 기록)
             try {
                 const numericId = parseInt(id, 10);
@@ -274,9 +303,30 @@
             document.title = "뉴키즈 - " + data.title;
 
             const isNotice = data.category === 'notice';
-            document.getElementById('v-author').innerText = "작성자: " + (isNotice ? "관리자" : (data.link_url || '익명'));
+            const rawLink = typeof data.link_url === 'string' ? data.link_url.trim() : '';
+            const isExternalLink = /^https?:\/\//i.test(rawLink);
+            document.getElementById('v-author').innerText = "작성자: " + ((isNotice || isExternalLink) ? "관리자" : (rawLink || '익명'));
             document.getElementById('v-date').innerText = "작성일: " + new Date(data.created_at).toISOString().split('T')[0];
             document.getElementById('v-download-count').innerText = `📥 다운로드 ${data.download_count || 0}회`;
+
+            const relatedLinkBanner = document.getElementById('related-link-banner');
+            if (relatedLinkBanner) {
+                if (isExternalLink) {
+                    try {
+                        const parsed = new URL(rawLink);
+                        if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+                            relatedLinkBanner.innerHTML = `<span style="color:#1a3c6e; font-size:0.92rem; font-weight:700; overflow-wrap:anywhere;">🔗 관련 링크: ${window.escapeHtml(parsed.href)}</span><a href="${window.escapeHtml(parsed.href)}" target="_blank" rel="noopener noreferrer" class="btn-action" style="padding:6px 14px; font-size:0.85rem; text-decoration:none; white-space:nowrap;">바로가기 ↗</a>`;
+                            relatedLinkBanner.style.display = 'flex';
+                        } else {
+                            relatedLinkBanner.style.display = 'none';
+                        }
+                    } catch (_) {
+                        relatedLinkBanner.style.display = 'none';
+                    }
+                } else {
+                    relatedLinkBanner.style.display = 'none';
+                }
+            }
 
             const isSecretPost = (data.is_secret === true || String(data.is_secret) === 'true');
 
@@ -408,8 +458,9 @@
                             fileName = rawName.includes('___') ? rawName.split('___').pop() : rawName;
                         }
 
-                        const safeUrl = fileUrl.replace(/'/g, "\\'");
-                        const safeName = fileName.replace(/'/g, "\\'");
+                        const safeUrl = window.escapeHtml(fileUrl.replace(/\\/g, '\\\\').replace(/'/g, "\\'"));
+                        const safeName = window.escapeHtml(fileName.replace(/\\/g, '\\\\').replace(/'/g, "\\'"));
+                        const displayFileName = window.escapeHtml(fileName);
                         const fileIcon = getFileIcon(fileName);
 
                         const ext = fileName.split('.').pop().toLowerCase();
@@ -426,7 +477,7 @@
                                 <div onclick="attemptDownload('${safeUrl}', '${safeName}')" style="display:flex; justify-content:space-between; align-items:center; background:#f0f7ff; padding:15px; border-radius:10px; border:1px solid #cce5ff; cursor:pointer; transition: background 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
                                     <div style="display:flex; align-items:center; gap:12px; flex: 1; min-width: 0;">
                                         <span style="font-size:1.6rem;">${fileIcon}</span>
-                                        <span style="font-size:1.05rem; color:#1a3c6e; font-weight:bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${fileName}</span>
+                                        <span style="font-size:1.05rem; color:#1a3c6e; font-weight:bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${displayFileName}</span>
                                     </div>
                                     <div style="display:flex; align-items:center; margin-left:15px;" onclick="event.stopPropagation()">
                                         ${previewBtn}
@@ -459,7 +510,7 @@
 
             const ext = filename.split('.').pop().toLowerCase();
             if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) {
-                body.innerHTML = `<img src="${url}" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:6px; box-shadow:0 2px 10px rgba(0,0,0,0.1);">`;
+                body.innerHTML = `<img src="${window.escapeHtml(url)}" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:6px; box-shadow:0 2px 10px rgba(0,0,0,0.1);">`;
             } else if (ext === 'pdf') {
                 // PDF 구글 뷰어 연동
                 const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
@@ -486,25 +537,30 @@
             const orQuery = parts.map(tag => `title.ilike.%${tag}%`).join(',');
 
             const { data, error } = await window.sb.from('total_posts')
-                .select('id, title, created_at, is_secret')
+                .select('id, title, created_at, is_secret, is_draft, publish_at')
                 .eq('category', category)
                 .neq('id', currentId)
                 .neq('is_visible', false)
+                .neq('is_draft', true)
                 .or(orQuery)
                 .order('created_at', { ascending: false })
-                .limit(5);
+                .limit(10);
 
-            if (error || !data || data.length === 0) return;
+            const nowMs = Date.now();
+            const visibleRelated = (data || [])
+                .filter(item => item.is_draft !== true && (!item.publish_at || new Date(item.publish_at).getTime() <= nowMs))
+                .slice(0, 5);
+            if (error || visibleRelated.length === 0) return;
 
             const relatedArea = document.getElementById('related-posts-area');
             let html = `<h3 style="color:#1a3c6e; margin-bottom:15px; font-size:1.1rem;">💡 이 자료와 비슷한 추천 자료</h3>
                             <div style="display:flex; flex-direction:column; gap:8px;">`;
 
-            data.forEach(item => {
+            visibleRelated.forEach(item => {
                 const secretIcon = (item.is_secret === true || String(item.is_secret) === 'true') ? '🔒 ' : '';
                 html += `
-                        <div onclick="location.href='view.html?id=${item.id}'" style="display:flex; justify-content:space-between; align-items:center; padding:12px 15px; background:#f9f9f9; border:1px solid #eee; border-radius:8px; cursor:pointer; transition:0.2s;" onmouseover="this.style.background='#f0f7ff'" onmouseout="this.style.background='#f9f9f9'">
-                            <span style="color:#333; font-weight:bold; font-size:0.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${secretIcon}${item.title}</span>
+                        <div onclick="location.href='view.html?id=${encodeURIComponent(item.id)}'" style="display:flex; justify-content:space-between; align-items:center; padding:12px 15px; background:#f9f9f9; border:1px solid #eee; border-radius:8px; cursor:pointer; transition:0.2s;" onmouseover="this.style.background='#f0f7ff'" onmouseout="this.style.background='#f9f9f9'">
+                            <span style="color:#333; font-weight:bold; font-size:0.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${secretIcon}${window.escapeHtml(item.title)}</span>
                             <span style="color:#767676; font-size:0.8rem; margin-left:10px;">${new Date(item.created_at).toISOString().split('T')[0]}</span>
                         </div>
                     `;

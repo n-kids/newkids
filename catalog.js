@@ -120,16 +120,20 @@
         list.setAttribute('aria-busy', 'true');
         list.replaceChildren();
         try {
+            const nowIso = new Date().toISOString();
             let query = window.sb.from('total_posts')
-                .select(isEvents ? '*' : 'id, title, thumbnail_url, content, created_at, video_url')
-                .eq('category', code).eq('is_visible', true);
+                .select(isEvents ? '*' : 'id, title, thumbnail_url, content, created_at, video_url, publish_at, is_draft')
+                .eq('category', code).eq('is_visible', true).neq('is_draft', true);
             if (!isEvents) query = query.or('video_url.neq.ORDER_ITEM,video_url.is.null');
+            else query = query.or(`publish_at.is.null,publish_at.lte.${nowIso}`);
             const { data, error } = await query.order('order_num', { ascending: true }).order('created_at', { ascending: false });
             if (request !== revision) return;
             if (error) throw error;
-            if (!data || !data.length) { state(false); return; }
+            const nowMs = Date.now();
+            const visibleData = (data || []).filter(item => item.is_draft !== true && (!item.publish_at || new Date(item.publish_at).getTime() <= nowMs));
+            if (!visibleData.length) { state(false); return; }
             const fragment = document.createDocumentFragment();
-            data.forEach(item => fragment.appendChild(card(item)));
+            visibleData.forEach(item => fragment.appendChild(card(item)));
             list.replaceChildren(fragment);
         } catch (error) {
             if (request === revision) { console.error('목록 로드 오류:', error); state(true); }

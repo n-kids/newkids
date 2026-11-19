@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
@@ -101,10 +101,14 @@
                     eduCodes.push(c.code);
                 });
 
+                const nowIso = new Date().toISOString();
                 const { data: posts, error: postError } = await sb.from('total_posts')
                     .select('*')
                     .in('category', eduCodes)
                     .like('video_url', 'ORDER_%')
+                    .neq('is_visible', false)
+                    .neq('is_draft', true)
+                    .or(`publish_at.is.null,publish_at.lte.${nowIso}`)
                     .order('order_num', { ascending: true });
 
                 document.getElementById('loading-msg').style.display = 'none';

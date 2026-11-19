@@ -323,7 +323,7 @@ test('main hero image crop updates preview immediately, avoids placeholder URL c
   await expect(page.locator('#main-hero-status-badge')).toHaveText('기존 배경 유지');
 });
 
-test('color HEX inputs, reset buttons, live previews, and page-editor publication sync work and reflect on index.html', async ({ context, page }) => {
+test('color HEX inputs, presets, reset buttons, live previews, and page-editor publication sync work and reflect all hero colors on index.html', async ({ context, page }) => {
   const seed = makeSeedDb({
     page_editor_publications: [
       {
@@ -333,7 +333,7 @@ test('color HEX inputs, reset buttons, live previews, and page-editor publicatio
           title: '이전 편집기 제목',
           description: '이전 편집기 설명',
           inherit: false,
-          hero: { background: '#fbf6ee', titleColor: '#172451', descriptionColor: '#545b6e', desktopHeight: 560, mobileHeight: 440 }
+          hero: { background: '#f7f0e4', titleColor: '#172451', descriptionColor: '#545b6e', desktopHeight: 560, mobileHeight: 440 }
         }
       }
     ]
@@ -346,16 +346,43 @@ test('color HEX inputs, reset buttons, live previews, and page-editor publicatio
   await expect(page.locator('#main-hero-publication-banner')).toBeVisible();
   await expect(page.locator('#chk-sync-page-editor')).toBeChecked();
 
-  // Typing a 3-digit or 6-digit HEX code updates the color picker and live preview
+  // Clicking a 1-click preset updates all hero color pickers and live preview
+  await page.locator('.nk-hero-preset-btn', { hasText: '스카이 블루' }).click();
+  await expect(page.locator('#conf-main-bg-color')).toHaveValue('#eef6ff');
+  await expect(page.locator('#conf-main-circle-color')).toHaveValue('#dbeafe');
+
+  // Typing HEX codes for all hero screenshot elements updates pickers and live preview
   await page.locator('#hex-main-bg-color').fill('#fff4e6');
   await page.locator('#hex-main-bg-color').blur();
   await expect(page.locator('#conf-main-bg-color')).toHaveValue('#fff4e6');
+
+  await page.locator('#hex-main-circle-color').fill('#fde68a');
+  await page.locator('#hex-main-circle-color').blur();
+  await expect(page.locator('#conf-main-circle-color')).toHaveValue('#fde68a');
+  await expect(page.locator('#preview-hero-live-circle')).toHaveAttribute('fill', '#fde68a');
 
   await page.locator('#hex-main-title-color').fill('#0f172a');
   await page.locator('#hex-main-title-color').blur();
   await expect(page.locator('#conf-main-title-color')).toHaveValue('#0f172a');
 
-  // Reset buttons restore defaults
+  await page.locator('#hex-main-desc-color').fill('#334155');
+  await page.locator('#hex-main-desc-color').blur();
+  await expect(page.locator('#conf-main-desc-color')).toHaveValue('#334155');
+
+  await page.locator('#hex-main-badge-bg-color').fill('#fef3c7');
+  await page.locator('#hex-main-badge-bg-color').blur();
+  await page.locator('#hex-main-badge-text-color').fill('#b45309');
+  await page.locator('#hex-main-badge-text-color').blur();
+
+  await page.locator('#hex-main-btn-color').fill('#1e3a8a');
+  await page.locator('#hex-main-btn-color').blur();
+  await page.locator('#hex-main-btn-text-color').fill('#fef08a');
+  await page.locator('#hex-main-btn-text-color').blur();
+
+  await page.locator('#hex-main-tag-color').fill('#475569');
+  await page.locator('#hex-main-tag-color').blur();
+
+  // Reset brand colors button restores brand defaults
   await page.locator('#tab-settings button', { hasText: '기본 브랜드 컬러 복원' }).click();
   await expect(page.locator('#conf-primary')).toHaveValue('#1a3c6e');
   await expect(page.locator('#conf-accent')).toHaveValue('#b85a17');
@@ -376,28 +403,72 @@ test('color HEX inputs, reset buttons, live previews, and page-editor publicatio
   });
   expect(afterSave.config.main_hero_bg_color).toBe('#fff4e6');
   expect(afterSave.config.main_hero_title_color).toBe('#0f172a');
-  expect(afterSave.pub.title).toBe('동기화된 메인 제목');
-  expect(afterSave.pub.hero.background).toBe('#fff4e6');
-  expect(afterSave.pub.hero.titleColor).toBe('#0f172a');
+  expect(afterSave.config.main_hero_desc_color).toBe('#334155');
+  const savedExtra = JSON.parse(afterSave.config.popup_link);
+  expect(savedExtra.nkHeroStyleV1).toBe(true);
+  expect(savedExtra.circleColor).toBe('#fde68a');
+  expect(savedExtra.badgeBgColor).toBe('#fef3c7');
+  expect(savedExtra.badgeTextColor).toBe('#b45309');
+  expect(savedExtra.btnBgColor).toBe('#1e3a8a');
+  expect(savedExtra.btnTextColor).toBe('#fef08a');
+  expect(savedExtra.tagColor).toBe('#475569');
 
-  // Verify index.html applies custom hero colors from site_config even when no page_editor_publications override is active
+  // Simulate stale page_editor_publications in Supabase (e.g. RLS blocked direct table update)
   await page.evaluate(() => {
     const db = window.__nkReadSettingsTestDb();
-    db.page_editor_publications = [];
+    db.page_editor_publications = [
+      {
+        page_key: 'main',
+        version: 1,
+        document: {
+          title: '오래된 편집기 제목',
+          description: '오래된 편집기 설명',
+          inherit: false,
+          hero: { background: '#f7f0e4', titleColor: '#172451', descriptionColor: '#545b6e', desktopHeight: 560, mobileHeight: 440 }
+        }
+      }
+    ];
     window.__nkWriteSettingsTestDb(db);
   });
+
+  // Verify index.html applies all custom hero colors from site_config even when stale page_editor_publications exists
   await page.goto('/index.html');
   await expect(page.locator('.hero h1')).toContainText('동기화된 메인 제목');
-  const heroStyles = await page.evaluate(() => {
-    const hero = document.querySelector('.hero');
-    const h1 = hero.querySelector('h1');
-    return {
-      bg: getComputedStyle(hero).backgroundColor,
-      titleColor: getComputedStyle(h1).color
-    };
+  await expect.poll(async () => {
+    return page.evaluate(() => {
+      const hero = document.querySelector('.hero');
+      const h1 = hero.querySelector('h1');
+      const p = hero.querySelector('p');
+      const badge = hero.querySelector('.hero-eyebrow');
+      const btn = hero.querySelector('.hero-v2-actions .btn:not(.btn-ghost)');
+      const ghost = hero.querySelector('.hero-v2-actions .btn-ghost');
+      const tags = hero.querySelector('.hero-v2-tags');
+      const circle = hero.querySelector('.hero-v2-art svg circle');
+      return {
+        bg: getComputedStyle(hero).backgroundColor,
+        titleColor: getComputedStyle(h1).color,
+        descColor: getComputedStyle(p).color,
+        badgeBg: getComputedStyle(badge).backgroundColor,
+        badgeText: getComputedStyle(badge).color,
+        btnBg: getComputedStyle(btn).backgroundColor,
+        btnText: getComputedStyle(btn).color,
+        ghostText: getComputedStyle(ghost).color,
+        tagColor: getComputedStyle(tags).color,
+        circleFill: circle.getAttribute('fill')
+      };
+    });
+  }).toEqual({
+    bg: 'rgb(255, 244, 230)', // #fff4e6
+    titleColor: 'rgb(15, 23, 42)', // #0f172a
+    descColor: 'rgb(51, 65, 85)', // #334155
+    badgeBg: 'rgb(254, 243, 199)', // #fef3c7
+    badgeText: 'rgb(180, 83, 9)', // #b45309
+    btnBg: 'rgb(30, 58, 138)', // #1e3a8a
+    btnText: 'rgb(254, 240, 138)', // #fef08a
+    ghostText: 'rgb(30, 58, 138)', // #1e3a8a
+    tagColor: 'rgb(71, 85, 105)', // #475569
+    circleFill: '#fde68a'
   });
-  expect(heroStyles.bg).toBe('rgb(255, 244, 230)'); // #fff4e6
-  expect(heroStyles.titleColor).toBe('rgb(15, 23, 42)'); // #0f172a
 });
 
 test('popup management escapes XSS, validates links, edits popup links inline, increments order_num, and openSavedSheet highlights the sheets nav item', async ({ context, page }) => {

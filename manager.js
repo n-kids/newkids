@@ -181,10 +181,112 @@ function startSupabase() {
 function isValidHeroImageUrl(url) {
     if (!url || typeof url !== 'string') return false;
     const trimmed = url.trim();
-    if (!trimmed || /^data:image\/gif/i.test(trimmed) || /^blob:/i.test(trimmed)) return false;
+    if (!trimmed || /^data:image\/(gif|svg\+xml)/i.test(trimmed) || /^blob:/i.test(trimmed)) return false;
     if (/via\.placeholder\.com/i.test(trimmed)) return false;
     return /^(https?:\/\/|\/|\.\/)/i.test(trimmed);
 }
+window.isValidHeroImageUrl = isValidHeroImageUrl;
+
+window.parseNkHeroExtraStyle = function (raw) {
+    if (!raw || typeof raw !== 'string') return {};
+    const trimmed = raw.trim();
+    if (!trimmed.startsWith('{')) return {};
+    try {
+        const parsed = JSON.parse(trimmed);
+        return (parsed && typeof parsed === 'object') ? parsed : {};
+    } catch (_) {
+        return {};
+    }
+};
+
+window.deriveNkHeroCircleColor = function (bgHex) {
+    const s = String(bgHex || '').trim().toLowerCase();
+    if (!/^#[0-9a-f]{6}$/i.test(s) || s === '#fbf6ee' || s === '#f7f0e4') return '#f3eadb';
+    const r = parseInt(s.slice(1, 3), 16);
+    const g = parseInt(s.slice(3, 5), 16);
+    const b = parseInt(s.slice(5, 7), 16);
+    const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    const adjust = (c) => lum > 0.5
+        ? Math.max(0, Math.round(c * 0.93))
+        : Math.min(255, Math.round(c + (255 - c) * 0.14));
+    const toHex = (n) => n.toString(16).padStart(2, '0');
+    return '#' + toHex(adjust(r)) + toHex(adjust(g)) + toHex(adjust(b));
+};
+
+window.applyNkHeroVisuals = function (mainHero, data) {
+    if (!mainHero || !data) return;
+    const fixedHero = mainHero.hasAttribute('data-fixed-design');
+    const titleEl = mainHero.querySelector('h1');
+    const descEl = mainHero.querySelector('p');
+    if (titleEl && data.main_hero_title) titleEl.innerHTML = window.sanitizeRichText(data.main_hero_title);
+    if (descEl && data.main_hero_desc) descEl.innerHTML = window.sanitizeRichText(data.main_hero_desc);
+
+    const hasHeroImage = isValidHeroImageUrl(data.main_hero_image);
+    const bg = window.safeColor(String(data.main_hero_bg_color || '').trim().toLowerCase());
+    const tc = window.safeColor(String(data.main_hero_title_color || '').trim().toLowerCase());
+    const dc = window.safeColor(String(data.main_hero_desc_color || '').trim().toLowerCase());
+    const extra = window.parseNkHeroExtraStyle(data.popup_link);
+
+    const isLegacyUntouchedV1 = !hasHeroImage && !extra.nkHeroStyleV1 && (!bg || bg === '#1a3c6e') && (!tc || tc === '#ffffff') && (!dc || dc === '#ffffff');
+    const shouldApplyCustomVisuals = !fixedHero || hasHeroImage || !isLegacyUntouchedV1;
+
+    if (shouldApplyCustomVisuals) {
+        if (hasHeroImage) {
+            const overlayColor = data.main_hero_overlay_color || '#1a3c6e';
+            const overlayOpacity = data.main_hero_overlay_opacity !== undefined ? data.main_hero_overlay_opacity : 0.4;
+            const rgba = hexToRgba(overlayColor, overlayOpacity);
+            const bgValue = `linear-gradient(${rgba}, ${rgba}), url('${data.main_hero_image}') center / cover no-repeat`;
+            mainHero.style.setProperty('background', bgValue, 'important');
+        } else if (bg) {
+            mainHero.style.setProperty('background', bg, 'important');
+        }
+        if (titleEl && tc) titleEl.style.setProperty('color', tc, 'important');
+        if (descEl && dc) descEl.style.setProperty('color', dc, 'important');
+    }
+
+    const eyebrowEl = mainHero.querySelector('.hero-eyebrow');
+    const badgeBg = window.safeColor(extra.badgeBgColor);
+    const badgeTxt = window.safeColor(extra.badgeTextColor);
+    if (eyebrowEl) {
+        if (badgeBg) eyebrowEl.style.setProperty('background', badgeBg, 'important');
+        if (badgeTxt) {
+            eyebrowEl.style.setProperty('color', badgeTxt, 'important');
+            eyebrowEl.style.setProperty('border-color', hexToRgba(badgeTxt, 0.28), 'important');
+        }
+    }
+
+    const btnEl = mainHero.querySelector('.hero-v2-actions .btn');
+    const ghostBtnEl = mainHero.querySelector('.hero-v2-actions .btn-ghost');
+    const btnBg = window.safeColor(extra.btnBgColor);
+    const btnTxt = window.safeColor(extra.btnTextColor);
+    if (btnEl) {
+        if (btnBg) btnEl.style.setProperty('background', btnBg, 'important');
+        if (btnTxt) btnEl.style.setProperty('color', btnTxt, 'important');
+    }
+    if (ghostBtnEl && btnBg) {
+        ghostBtnEl.style.setProperty('border-color', btnBg, 'important');
+        ghostBtnEl.style.setProperty('color', btnBg, 'important');
+    }
+
+    const tagsEl = mainHero.querySelector('.hero-v2-tags');
+    const tagCol = window.safeColor(extra.tagColor);
+    if (tagsEl && tagCol) {
+        tagsEl.style.setProperty('color', tagCol, 'important');
+    }
+
+    const circleEl = mainHero.querySelector('.hero-v2-art svg circle');
+    if (circleEl) {
+        const rawCircle = window.safeColor(extra.circleColor);
+        let circleCol = rawCircle;
+        if (!circleCol || (circleCol.toLowerCase() === '#f3eadb' && !extra.circleCustom && bg && bg !== '#fbf6ee' && bg !== '#f7f0e4' && shouldApplyCustomVisuals)) {
+            circleCol = (bg && shouldApplyCustomVisuals) ? window.deriveNkHeroCircleColor(bg) : '#f3eadb';
+        }
+        if (circleCol) {
+            circleEl.setAttribute('fill', circleCol);
+            circleEl.style.setProperty('fill', circleCol, 'important');
+        }
+    }
+};
 
 async function loadSiteConfig() {
     if (!window.sb) return;
@@ -193,6 +295,7 @@ async function loadSiteConfig() {
     try {
         const { data } = await window.sb.from('site_config').select('*').eq('id', 1).single();
         if (data) {
+            window.__nkSiteConfig = data;
             if (data.company_name) CONFIG.COMPANY.NAME = data.company_name;
             if (data.ceo_name) CONFIG.COMPANY.CEO = data.ceo_name;
             if (data.address) CONFIG.COMPANY.ADDRESS = data.address;
@@ -202,35 +305,12 @@ async function loadSiteConfig() {
             if (data.primary_color) root.style.setProperty('--primary-color', data.primary_color);
             if (data.accent_color) root.style.setProperty('--accent-color', data.accent_color);
 
-            if (mainHero && !mainHero.hasAttribute('data-nk-published-hero')) {
-                const fixedHero = mainHero.hasAttribute('data-fixed-design');
-                const titleEl = mainHero.querySelector('h1');
-                const descEl = mainHero.querySelector('p');
-                if (titleEl && data.main_hero_title) titleEl.innerHTML = window.sanitizeRichText(data.main_hero_title);
-                if (descEl && data.main_hero_desc) descEl.innerHTML = window.sanitizeRichText(data.main_hero_desc);
-
-                const hasHeroImage = isValidHeroImageUrl(data.main_hero_image);
-                const bg = String(data.main_hero_bg_color || '').trim().toLowerCase();
-                const tc = String(data.main_hero_title_color || '').trim().toLowerCase();
-                const dc = String(data.main_hero_desc_color || '').trim().toLowerCase();
-
-                // 레거시 v1 기본값(#1a3c6e / #ffffff / #ffffff)만 남아 있고 배경 이미지가 없는 경우에는 v2 크림 디자인을 유지하고,
-                // 관리자가 배경 이미지를 등록했거나 색상(배경/제목/설명)을 변경한 경우 실제 메인 배너에 즉시 반영합니다.
-                const isLegacyUntouchedV1 = !hasHeroImage && (!bg || bg === '#1a3c6e') && (!tc || tc === '#ffffff') && (!dc || dc === '#ffffff');
-                const shouldApplyCustomVisuals = !fixedHero || hasHeroImage || !isLegacyUntouchedV1;
-
-                if (shouldApplyCustomVisuals) {
-                    if (hasHeroImage) {
-                        const overlayColor = data.main_hero_overlay_color || '#1a3c6e';
-                        const overlayOpacity = data.main_hero_overlay_opacity !== undefined ? data.main_hero_overlay_opacity : 0.4;
-                        const rgba = hexToRgba(overlayColor, overlayOpacity);
-                        const bgValue = `linear-gradient(${rgba}, ${rgba}), url('${data.main_hero_image}') center / cover no-repeat`;
-                        mainHero.style.setProperty('background', bgValue, 'important');
-                    } else if (bg) {
-                        mainHero.style.setProperty('background', bg, 'important');
-                    }
-                    if (titleEl && tc) titleEl.style.setProperty('color', tc, 'important');
-                    if (descEl && dc) descEl.style.setProperty('color', dc, 'important');
+            const isPreviewOrVerify = (window.parent !== window && new URLSearchParams(location.search).get('nkpreview') === '1') || new URLSearchParams(location.search).has('nk_verify');
+            if (mainHero && !isPreviewOrVerify) {
+                if (window.NKPageDesign && typeof window.NKPageDesign.refreshFromSiteConfig === 'function') {
+                    window.NKPageDesign.refreshFromSiteConfig();
+                } else {
+                    window.applyNkHeroVisuals(mainHero, data);
                 }
             }
             loadFooter();

@@ -57,10 +57,24 @@
         .nk-color-control { display: inline-flex; align-items: center; gap: 8px; background: #fff; padding: 6px 10px; border: 1px solid #d0d7de; border-radius: 8px; }
         .nk-color-control input[type="color"] { width: 34px; height: 34px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0; cursor: pointer; background: none; }
         .nk-color-hex-input { width: 86px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.85rem; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 6px; color: #1e293b; text-transform: lowercase; }
-        .nk-hero-mini-preview { margin-top: 22px; border-radius: 12px; padding: 26px 24px; border: 1px solid #dce3ec; background: #fbf6ee; transition: background 0.2s, color 0.2s; position: relative; overflow: hidden; }
-        .nk-hero-mini-preview-tag { display: inline-block; font-size: 0.75rem; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: rgba(255,255,255,0.88); color: #1a3c6e; margin-bottom: 10px; border: 1px solid rgba(26,60,110,0.15); }
-        .nk-hero-mini-preview h4 { margin: 0 0 8px 0; font-size: 1.35rem; font-weight: 800; line-height: 1.35; color: #172451; white-space: pre-line; word-break: keep-all; }
-        .nk-hero-mini-preview p { margin: 0; font-size: 0.95rem; line-height: 1.6; color: #545b6e; white-space: pre-line; word-break: keep-all; }
+        .nk-hero-preset-bar { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+        .nk-hero-preset-btn { display: inline-flex; align-items: center; gap: 7px; padding: 7px 13px; border-radius: 999px; border: 1px solid #cbd5e1; background: #fff; color: #1e293b; font-size: 0.84rem; font-weight: 700; cursor: pointer; transition: all 0.15s ease; }
+        .nk-hero-preset-btn:hover { border-color: #1a3c6e; transform: translateY(-1px); box-shadow: 0 2px 6px rgba(15,23,42,0.08); }
+        .nk-hero-preset-swatch { width: 16px; height: 16px; border-radius: 50%; border: 1px solid rgba(15,23,42,0.2); display: inline-block; flex-shrink: 0; }
+        .nk-hero-mini-preview { margin-top: 22px; border-radius: 14px; padding: 26px 28px; border: 1px solid #dce3ec; background: #fbf6ee; transition: background 0.2s, color 0.2s; position: relative; overflow: hidden; }
+        .nk-hero-mini-preview-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; gap: 8px; flex-wrap: wrap; }
+        .nk-hero-mini-preview-tag { display: inline-block; font-size: 0.74rem; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: rgba(15,23,42,0.08); color: #334155; }
+        .nk-hero-preview-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(220px, 0.9fr); gap: 22px; align-items: center; }
+        @media (max-width: 820px) { .nk-hero-preview-grid { grid-template-columns: 1fr; } }
+        .nk-hero-preview-badge { display: inline-block; padding: 6px 14px; border-radius: 999px; background: #ffffff; border: 1px solid #ecdfca; color: #9a6b3c; font-size: 0.8rem; font-weight: 700; margin-bottom: 12px; }
+        .nk-hero-mini-preview h4 { margin: 0 0 10px 0; font-size: 1.45rem; font-weight: 800; line-height: 1.32; color: #172451; white-space: pre-line; word-break: keep-all; }
+        .nk-hero-mini-preview p { margin: 0 0 16px 0; font-size: 0.94rem; line-height: 1.6; color: #545b6e; white-space: pre-line; word-break: keep-all; }
+        .nk-hero-preview-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+        .nk-hero-preview-btn { display: inline-flex; align-items: center; justify-content: center; padding: 10px 18px; border-radius: 999px; background: #172451; color: #ffffff; font-size: 0.86rem; font-weight: 700; border: 1.5px solid transparent; }
+        .nk-hero-preview-btn-ghost { display: inline-flex; align-items: center; justify-content: center; padding: 10px 18px; border-radius: 999px; background: transparent; color: #172451; font-size: 0.86rem; font-weight: 700; border: 1.5px solid #172451; }
+        .nk-hero-preview-tags { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 0.82rem; font-weight: 600; color: #6b7183; }
+        .nk-hero-preview-art { display: flex; justify-content: center; align-items: center; }
+        .nk-hero-preview-art svg { width: 100%; max-width: 280px; height: auto; display: block; }
         .nk-footer-mini-preview { margin-top: 18px; padding: 18px 20px; border-radius: 10px; background: #1e293b; color: #cbd5e1; font-size: 0.88rem; line-height: 1.65; border: 1px solid #334155; }
         .nk-popup-inline-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 6px; }
         .nk-popup-inline-row .form-input { flex: 1; min-width: 180px; padding: 7px 10px; font-size: 0.86rem; height: 36px; }
@@ -552,8 +566,32 @@
                         <div class="form-group"><label class="form-label" for="conf-main-title">메인 큰 제목</label><input type="text" id="conf-main-title" class="form-input" placeholder="우리 원에 필요한 모든 즐거움 뉴키즈 (New Kids)"></div>
                         <div class="form-group"><label class="form-label" for="conf-main-desc">메인 설명글</label><textarea id="conf-main-desc" class="form-input" placeholder="검증된 영유아 교재부터 특별한 원어민 행사까지, 선생님과 아이들이 모두 행복한 교육 파트너"></textarea></div>
                         <div class="form-group" style="margin-top:15px; border-top:1px dashed #ccc; padding-top:15px;">
-                            <label class="form-label">텍스트 색상 설정</label>
-                            <div style="display:flex; gap:24px; flex-wrap:wrap;" class="flex-row-to-col">
+                            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                                <label class="form-label" style="margin:0;">원클릭 배너 색상 테마 프리셋</label>
+                                <span style="font-size:0.78rem; color:#64748b;">프리셋 선택 후 개별 색상을 미세 조정할 수 있습니다.</span>
+                            </div>
+                            <div class="nk-hero-preset-bar" role="group" aria-label="배너 색상 테마 프리셋">
+                                <button type="button" class="nk-hero-preset-btn" onclick="applyMainHeroColorPreset('cream')">
+                                    <span class="nk-hero-preset-swatch" style="background:linear-gradient(135deg,#fbf6ee 50%,#172451 50%);"></span>크림 &amp; 네이비 (기본)
+                                </button>
+                                <button type="button" class="nk-hero-preset-btn" onclick="applyMainHeroColorPreset('sky')">
+                                    <span class="nk-hero-preset-swatch" style="background:linear-gradient(135deg,#eef6ff 50%,#1e3a8a 50%);"></span>스카이 블루
+                                </button>
+                                <button type="button" class="nk-hero-preset-btn" onclick="applyMainHeroColorPreset('mint')">
+                                    <span class="nk-hero-preset-swatch" style="background:linear-gradient(135deg,#ecfdf5 50%,#065f46 50%);"></span>소프트 민트
+                                </button>
+                                <button type="button" class="nk-hero-preset-btn" onclick="applyMainHeroColorPreset('peach')">
+                                    <span class="nk-hero-preset-swatch" style="background:linear-gradient(135deg,#fff1f2 50%,#9f1239 50%);"></span>피치 코랄
+                                </button>
+                                <button type="button" class="nk-hero-preset-btn" onclick="applyMainHeroColorPreset('navy')">
+                                    <span class="nk-hero-preset-swatch" style="background:linear-gradient(135deg,#172451 50%,#fbbf24 50%);"></span>딥 네이비 (다크)
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-top:15px; border-top:1px dashed #ccc; padding-top:15px;">
+                            <label class="form-label">텍스트 · 배지 · 버튼 · 태그 색상 설정</label>
+                            <div style="display:flex; gap:18px 24px; flex-wrap:wrap;" class="flex-row-to-col">
                                 <div class="color-picker-group">
                                     <span class="color-picker-label">큰 제목</span>
                                     <span class="nk-color-control">
@@ -566,6 +604,41 @@
                                     <span class="nk-color-control">
                                         <input type="color" id="conf-main-desc-color" value="#545b6e">
                                         <input type="text" id="hex-main-desc-color" class="nk-color-hex-input" value="#545b6e" maxlength="7" aria-label="설명글 색상 HEX">
+                                    </span>
+                                </div>
+                                <div class="color-picker-group">
+                                    <span class="color-picker-label">상단 배지 배경</span>
+                                    <span class="nk-color-control">
+                                        <input type="color" id="conf-main-badge-bg-color" value="#ffffff">
+                                        <input type="text" id="hex-main-badge-bg-color" class="nk-color-hex-input" value="#ffffff" maxlength="7" aria-label="상단 배지 배경 색상 HEX">
+                                    </span>
+                                </div>
+                                <div class="color-picker-group">
+                                    <span class="color-picker-label">상단 배지 글자</span>
+                                    <span class="nk-color-control">
+                                        <input type="color" id="conf-main-badge-text-color" value="#9a6b3c">
+                                        <input type="text" id="hex-main-badge-text-color" class="nk-color-hex-input" value="#9a6b3c" maxlength="7" aria-label="상단 배지 글자 색상 HEX">
+                                    </span>
+                                </div>
+                                <div class="color-picker-group">
+                                    <span class="color-picker-label">버튼 배경/테두리</span>
+                                    <span class="nk-color-control">
+                                        <input type="color" id="conf-main-btn-color" value="#172451">
+                                        <input type="text" id="hex-main-btn-color" class="nk-color-hex-input" value="#172451" maxlength="7" aria-label="버튼 배경 및 테두리 색상 HEX">
+                                    </span>
+                                </div>
+                                <div class="color-picker-group">
+                                    <span class="color-picker-label">버튼 글자</span>
+                                    <span class="nk-color-control">
+                                        <input type="color" id="conf-main-btn-text-color" value="#ffffff">
+                                        <input type="text" id="hex-main-btn-text-color" class="nk-color-hex-input" value="#ffffff" maxlength="7" aria-label="버튼 글자 색상 HEX">
+                                    </span>
+                                </div>
+                                <div class="color-picker-group">
+                                    <span class="color-picker-label">하단 태그 글자</span>
+                                    <span class="nk-color-control">
+                                        <input type="color" id="conf-main-tag-color" value="#6b7183">
+                                        <input type="text" id="hex-main-tag-color" class="nk-color-hex-input" value="#6b7183" maxlength="7" aria-label="하단 태그 글자 색상 HEX">
                                     </span>
                                 </div>
                             </div>
@@ -585,16 +658,26 @@
                             <div style="flex:1;">
                                 <label class="form-label" for="conf-main-hero">배경 이미지 변경 (편집 가능)</label>
                                 <input type="file" id="conf-main-hero" class="form-input" accept="image/*">
-                                <div style="display:flex; gap:24px; margin-top:20px; flex-wrap:wrap;" class="flex-row-to-col">
+                                <div style="display:flex; gap:20px 24px; margin-top:20px; flex-wrap:wrap;" class="flex-row-to-col">
                                     <div>
-                                        <label class="form-label">배경 색상</label>
+                                        <label class="form-label">배경 색상 (전체 배너)</label>
                                         <span class="nk-color-control">
                                             <input type="color" id="conf-main-bg-color" value="#fbf6ee">
                                             <input type="text" id="hex-main-bg-color" class="nk-color-hex-input" value="#fbf6ee" maxlength="7" aria-label="배경 색상 HEX">
                                         </span>
                                     </div>
                                     <div>
-                                        <label class="form-label">오버레이 색상</label>
+                                        <div style="display:flex; align-items:center; justify-content:space-between; gap:6px; margin-bottom:8px;">
+                                            <label class="form-label" style="margin:0;">우측 일러스트 원 배경</label>
+                                            <button type="button" onclick="syncMainHeroCircleToBg()" class="adm-btn adm-btn-secondary adm-btn-sm" style="padding:2px 7px; font-size:0.72rem;">배경색 맞춤</button>
+                                        </div>
+                                        <span class="nk-color-control">
+                                            <input type="color" id="conf-main-circle-color" value="#f3eadb">
+                                            <input type="text" id="hex-main-circle-color" class="nk-color-hex-input" value="#f3eadb" maxlength="7" aria-label="우측 일러스트 원 배경 색상 HEX">
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <label class="form-label">오버레이 색상 (이미지용)</label>
                                         <span class="nk-color-control">
                                             <input type="color" id="conf-main-overlay-color" value="#1a3c6e">
                                             <input type="text" id="hex-main-overlay-color" class="nk-color-hex-input" value="#1a3c6e" maxlength="7" aria-label="오버레이 색상 HEX">
@@ -612,9 +695,49 @@
                         </div>
 
                         <div id="settings-hero-live-preview" class="nk-hero-mini-preview" aria-label="메인 배너 실시간 미리보기">
-                            <span class="nk-hero-mini-preview-tag">실시간 배너 미리보기</span>
-                            <h4 id="preview-hero-live-title">우리 원에 필요한 모든 즐거움 뉴키즈 (New Kids)</h4>
-                            <p id="preview-hero-live-desc">검증된 영유아 교재부터 특별한 원어민 행사까지, 선생님과 아이들이 모두 행복한 교육 파트너</p>
+                            <div class="nk-hero-mini-preview-header">
+                                <span class="nk-hero-mini-preview-tag">실시간 배너 미리보기 (메인 첫 화면 레이아웃)</span>
+                            </div>
+                            <div class="nk-hero-preview-grid">
+                                <div>
+                                    <span id="preview-hero-live-badge" class="nk-hero-preview-badge">어린이집 · 유치원 교육 파트너</span>
+                                    <h4 id="preview-hero-live-title">우리 원에 필요한 모든 즐거움 뉴키즈 (New Kids)</h4>
+                                    <p id="preview-hero-live-desc">검증된 영유아 교재부터 특별한 원어민 행사까지, 선생님과 아이들이 모두 행복한 교육 파트너</p>
+                                    <div class="nk-hero-preview-actions">
+                                        <span id="preview-hero-live-btn" class="nk-hero-preview-btn">제안서 / 견적 요청하기</span>
+                                        <span id="preview-hero-live-btn-ghost" class="nk-hero-preview-btn-ghost">교육 프로그램 보기</span>
+                                    </div>
+                                    <div id="preview-hero-live-tags" class="nk-hero-preview-tags">
+                                        <span>• 영유아 교재</span>
+                                        <span>• 원어민 문화체험</span>
+                                        <span>• 부모 참여 행사</span>
+                                        <span>• 시즌 테마 행사</span>
+                                    </div>
+                                </div>
+                                <div class="nk-hero-preview-art" aria-hidden="true">
+                                    <svg viewBox="0 0 420 340" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <circle id="preview-hero-live-circle" cx="210" cy="180" r="145" fill="#F3EADB"/>
+                                        <path d="M95 235 C95 162, 325 162, 325 235" stroke="#E06D53" stroke-width="18" stroke-linecap="round"/>
+                                        <path d="M115 235 C115 178, 305 178, 305 235" stroke="#F2B84B" stroke-width="18" stroke-linecap="round"/>
+                                        <path d="M135 235 C135 194, 285 194, 285 235" stroke="#6BA368" stroke-width="18" stroke-linecap="round"/>
+                                        <path d="M155 235 C155 210, 265 210, 265 235" stroke="#4F7CAC" stroke-width="18" stroke-linecap="round"/>
+                                        <circle cx="88" cy="112" r="24" fill="#F2B84B"/>
+                                        <g fill="#FFFFFF">
+                                            <circle cx="305" cy="110" r="18"/>
+                                            <circle cx="325" cy="106" r="22"/>
+                                            <circle cx="345" cy="112" r="16"/>
+                                            <rect x="303" y="110" width="44" height="18" rx="9"/>
+                                        </g>
+                                        <rect x="92" y="232" width="58" height="44" rx="10" fill="#172451"/>
+                                        <rect x="158" y="220" width="64" height="56" rx="10" fill="#E06D53"/>
+                                        <polygon points="190,192 162,220 218,220" fill="#F2B84B"/>
+                                        <rect x="230" y="232" width="96" height="44" rx="10" fill="#6BA368"/>
+                                        <circle cx="256" cy="254" r="9" fill="#FFFDF9"/>
+                                        <circle cx="278" cy="254" r="9" fill="#FFFDF9"/>
+                                        <circle cx="300" cy="254" r="9" fill="#FFFDF9"/>
+                                    </svg>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -2768,10 +2891,19 @@
             updateThumbPreview();
         };
 
+        let mainPageEditorPublication = null;
+        let isMainHeroCircleCustom = false;
+
         const SETTINGS_COLOR_PAIRS = [
             ['conf-main-title-color', 'hex-main-title-color'],
             ['conf-main-desc-color', 'hex-main-desc-color'],
+            ['conf-main-badge-bg-color', 'hex-main-badge-bg-color'],
+            ['conf-main-badge-text-color', 'hex-main-badge-text-color'],
+            ['conf-main-btn-color', 'hex-main-btn-color'],
+            ['conf-main-btn-text-color', 'hex-main-btn-text-color'],
+            ['conf-main-tag-color', 'hex-main-tag-color'],
             ['conf-main-bg-color', 'hex-main-bg-color'],
+            ['conf-main-circle-color', 'hex-main-circle-color'],
             ['conf-main-overlay-color', 'hex-main-overlay-color'],
             ['conf-primary', 'hex-primary'],
             ['conf-accent', 'hex-accent']
@@ -2787,6 +2919,15 @@
             return /^#[0-9a-f]{6}$/i.test(s) ? s : fallback;
         }
 
+        function deriveHeroCircleHex(bgHex) {
+            if (typeof window.deriveNkHeroCircleColor === 'function') {
+                return normalizeHexColor(window.deriveNkHeroCircleColor(bgHex), '#f3eadb');
+            }
+            const h = normalizeHexColor(bgHex, '#fbf6ee');
+            if (h === '#fbf6ee' || h === '#f7f0e4') return '#f3eadb';
+            return h;
+        }
+
         function syncHexInputsFromColorPickers() {
             SETTINGS_COLOR_PAIRS.forEach(([colorId, hexId]) => {
                 const cEl = document.getElementById(colorId);
@@ -2794,6 +2935,104 @@
                 if (cEl && hEl) hEl.value = (cEl.value || '').toLowerCase();
             });
         }
+
+        window.syncMainHeroCircleToBg = function () {
+            isMainHeroCircleCustom = false;
+            const bg = normalizeHexColor(document.getElementById('conf-main-bg-color')?.value, '#fbf6ee');
+            const circleHex = deriveHeroCircleHex(bg);
+            const cEl = document.getElementById('conf-main-circle-color');
+            const hEl = document.getElementById('hex-main-circle-color');
+            if (cEl) cEl.value = circleHex;
+            if (hEl) hEl.value = circleHex;
+            updateSettingsLivePreview();
+        };
+
+        const MAIN_HERO_COLOR_PRESETS = {
+            cream: {
+                label: '크림 & 네이비 (기본)',
+                title: '#172451',
+                desc: '#545b6e',
+                badgeBg: '#ffffff',
+                badgeText: '#9a6b3c',
+                btnBg: '#172451',
+                btnText: '#ffffff',
+                tag: '#6b7183',
+                bg: '#fbf6ee',
+                circle: '#f3eadb'
+            },
+            sky: {
+                label: '스카이 블루',
+                title: '#0f2957',
+                desc: '#334e68',
+                badgeBg: '#ffffff',
+                badgeText: '#1d4ed8',
+                btnBg: '#1e3a8a',
+                btnText: '#ffffff',
+                tag: '#475569',
+                bg: '#eef6ff',
+                circle: '#dbeafe'
+            },
+            mint: {
+                label: '소프트 민트',
+                title: '#064e3b',
+                desc: '#375a4e',
+                badgeBg: '#ffffff',
+                badgeText: '#047857',
+                btnBg: '#065f46',
+                btnText: '#ffffff',
+                tag: '#4b635b',
+                bg: '#ecfdf5',
+                circle: '#d1fae5'
+            },
+            peach: {
+                label: '피치 코랄',
+                title: '#4c1d24',
+                desc: '#6e474b',
+                badgeBg: '#ffffff',
+                badgeText: '#be123c',
+                btnBg: '#9f1239',
+                btnText: '#ffffff',
+                tag: '#7c585c',
+                bg: '#fff1f2',
+                circle: '#ffe4e6'
+            },
+            navy: {
+                label: '딥 네이비 (다크)',
+                title: '#ffffff',
+                desc: '#cbd5e1',
+                badgeBg: '#24366b',
+                badgeText: '#fbbf24',
+                btnBg: '#f59e0b',
+                btnText: '#172451',
+                tag: '#94a3b8',
+                bg: '#172451',
+                circle: '#21326b'
+            }
+        };
+
+        window.applyMainHeroColorPreset = function (presetKey) {
+            const p = MAIN_HERO_COLOR_PRESETS[presetKey];
+            if (!p) return;
+            const map = {
+                'conf-main-title-color': p.title,
+                'conf-main-desc-color': p.desc,
+                'conf-main-badge-bg-color': p.badgeBg,
+                'conf-main-badge-text-color': p.badgeText,
+                'conf-main-btn-color': p.btnBg,
+                'conf-main-btn-text-color': p.btnText,
+                'conf-main-tag-color': p.tag,
+                'conf-main-bg-color': p.bg,
+                'conf-main-circle-color': p.circle
+            };
+            Object.entries(map).forEach(([id, val]) => {
+                const el = document.getElementById(id);
+                if (el) el.value = val;
+            });
+            isMainHeroCircleCustom = false;
+            syncHexInputsFromColorPickers();
+            updateSettingsLivePreview();
+            showToast(`'${p.label}' 테마 색상이 적용되었습니다. [설정 저장하기]를 눌러 반영하세요.`, 'info');
+        };
 
         function updateMainHeroPreviewState() {
             const imgEl = document.getElementById('preview-main-hero');
@@ -2858,13 +3097,20 @@
             const defaults = {
                 'conf-main-title-color': '#172451',
                 'conf-main-desc-color': '#545b6e',
+                'conf-main-badge-bg-color': '#ffffff',
+                'conf-main-badge-text-color': '#9a6b3c',
+                'conf-main-btn-color': '#172451',
+                'conf-main-btn-text-color': '#ffffff',
+                'conf-main-tag-color': '#6b7183',
                 'conf-main-bg-color': '#fbf6ee',
+                'conf-main-circle-color': '#f3eadb',
                 'conf-main-overlay-color': '#1a3c6e'
             };
             Object.entries(defaults).forEach(([id, val]) => {
                 const el = document.getElementById(id);
                 if (el) el.value = val;
             });
+            isMainHeroCircleCustom = false;
             const opEl = document.getElementById('conf-main-overlay-opacity');
             const opValEl = document.getElementById('op-val-main');
             if (opEl) opEl.value = 0.4;
@@ -2893,7 +3139,13 @@
                 const rawDesc = (document.getElementById('conf-main-desc')?.value || '').trim() || '검증된 영유아 교재부터 특별한 원어민 행사까지,\n선생님과 아이들이 모두 행복한 교육 파트너';
                 const tc = normalizeHexColor(document.getElementById('conf-main-title-color')?.value, '#172451');
                 const dc = normalizeHexColor(document.getElementById('conf-main-desc-color')?.value, '#545b6e');
+                const badgeBg = normalizeHexColor(document.getElementById('conf-main-badge-bg-color')?.value, '#ffffff');
+                const badgeText = normalizeHexColor(document.getElementById('conf-main-badge-text-color')?.value, '#9a6b3c');
+                const btnBg = normalizeHexColor(document.getElementById('conf-main-btn-color')?.value, '#172451');
+                const btnText = normalizeHexColor(document.getElementById('conf-main-btn-text-color')?.value, '#ffffff');
+                const tagColor = normalizeHexColor(document.getElementById('conf-main-tag-color')?.value, '#6b7183');
                 const bg = normalizeHexColor(document.getElementById('conf-main-bg-color')?.value, '#fbf6ee');
+                const circleColor = normalizeHexColor(document.getElementById('conf-main-circle-color')?.value, deriveHeroCircleHex(bg));
                 const oc = normalizeHexColor(document.getElementById('conf-main-overlay-color')?.value, '#1a3c6e');
                 const opRaw = parseFloat(document.getElementById('conf-main-overlay-opacity')?.value);
                 const op = Number.isFinite(opRaw) ? opRaw : 0.4;
@@ -2923,6 +3175,33 @@
                     heroBox.style.background = bg;
                     titleEl.style.color = tc;
                     descEl.style.color = dc;
+                }
+
+                const badgeEl = document.getElementById('preview-hero-live-badge');
+                if (badgeEl) {
+                    badgeEl.style.backgroundColor = badgeBg;
+                    badgeEl.style.color = badgeText;
+                    badgeEl.style.borderColor = typeof hexToRgba === 'function' ? hexToRgba(badgeText, 0.25) : '#ecdfca';
+                }
+                const btnEl = document.getElementById('preview-hero-live-btn');
+                if (btnEl) {
+                    btnEl.style.backgroundColor = btnBg;
+                    btnEl.style.color = btnText;
+                    btnEl.style.borderColor = btnBg;
+                }
+                const btnGhostEl = document.getElementById('preview-hero-live-btn-ghost');
+                if (btnGhostEl) {
+                    btnGhostEl.style.color = btnBg;
+                    btnGhostEl.style.borderColor = btnBg;
+                }
+                const tagsEl = document.getElementById('preview-hero-live-tags');
+                if (tagsEl) {
+                    tagsEl.style.color = tagColor;
+                }
+                const circleEl = document.getElementById('preview-hero-live-circle');
+                if (circleEl) {
+                    circleEl.setAttribute('fill', circleColor);
+                    circleEl.style.fill = circleColor;
                 }
             }
 
@@ -2956,8 +3235,21 @@
                 const cEl = document.getElementById(colorId);
                 const hEl = document.getElementById(hexId);
                 if (!cEl || !hEl) return;
+                const handleColorSideEffects = (val) => {
+                    if (colorId === 'conf-main-circle-color') {
+                        isMainHeroCircleCustom = true;
+                    } else if (colorId === 'conf-main-bg-color' && !isMainHeroCircleCustom) {
+                        const autoCircle = deriveHeroCircleHex(val);
+                        const circleColorEl = document.getElementById('conf-main-circle-color');
+                        const circleHexEl = document.getElementById('hex-main-circle-color');
+                        if (circleColorEl) circleColorEl.value = autoCircle;
+                        if (circleHexEl) circleHexEl.value = autoCircle;
+                    }
+                };
                 const syncFromColor = () => {
-                    hEl.value = (cEl.value || '').toLowerCase();
+                    const lower = (cEl.value || '').toLowerCase();
+                    hEl.value = lower;
+                    handleColorSideEffects(lower);
                     updateSettingsLivePreview();
                 };
                 cEl.addEventListener('input', syncFromColor);
@@ -2966,6 +3258,7 @@
                     const normalized = normalizeHexColor(hEl.value, null);
                     if (normalized) {
                         cEl.value = normalized;
+                        handleColorSideEffects(normalized);
                         updateSettingsLivePreview();
                     }
                 });
@@ -2973,6 +3266,7 @@
                     const normalized = normalizeHexColor(hEl.value, (cEl.value || '#1a3c6e').toLowerCase());
                     cEl.value = normalized;
                     hEl.value = normalized;
+                    handleColorSideEffects(normalized);
                     updateSettingsLivePreview();
                 });
             });
@@ -3040,13 +3334,33 @@
                 document.getElementById('conf-accent').value = normalizeHexColor(data.accent_color, "#b85a17"); 
                 document.getElementById('conf-main-title').value = data.main_hero_title || ""; 
                 document.getElementById('conf-main-desc').value = data.main_hero_desc || ""; 
+                const loadedBg = normalizeHexColor(data.main_hero_bg_color, "#fbf6ee");
                 document.getElementById('conf-main-title-color').value = normalizeHexColor(data.main_hero_title_color, "#172451"); 
                 document.getElementById('conf-main-desc-color').value = normalizeHexColor(data.main_hero_desc_color, "#545b6e"); 
-                document.getElementById('conf-main-bg-color').value = normalizeHexColor(data.main_hero_bg_color, "#fbf6ee"); 
+                document.getElementById('conf-main-bg-color').value = loadedBg; 
                 document.getElementById('conf-main-overlay-color').value = normalizeHexColor(data.main_hero_overlay_color, "#1a3c6e"); 
                 const mop = data.main_hero_overlay_opacity !== undefined && data.main_hero_overlay_opacity !== null ? data.main_hero_overlay_opacity : 0.4; 
                 document.getElementById('conf-main-overlay-opacity').value = mop; 
                 document.getElementById('op-val-main').innerText = mop;
+
+                const extra = typeof window.parseNkHeroExtraStyle === 'function'
+                    ? window.parseNkHeroExtraStyle(data.popup_link)
+                    : {};
+                const badgeBgEl = document.getElementById('conf-main-badge-bg-color');
+                const badgeTextEl = document.getElementById('conf-main-badge-text-color');
+                const btnBgEl = document.getElementById('conf-main-btn-color');
+                const btnTextEl = document.getElementById('conf-main-btn-text-color');
+                const tagEl = document.getElementById('conf-main-tag-color');
+                const circleEl = document.getElementById('conf-main-circle-color');
+
+                if (badgeBgEl) badgeBgEl.value = normalizeHexColor(extra.badgeBgColor, '#ffffff');
+                if (badgeTextEl) badgeTextEl.value = normalizeHexColor(extra.badgeTextColor, '#9a6b3c');
+                if (btnBgEl) btnBgEl.value = normalizeHexColor(extra.btnBgColor, '#172451');
+                if (btnTextEl) btnTextEl.value = normalizeHexColor(extra.btnTextColor, '#ffffff');
+                if (tagEl) tagEl.value = normalizeHexColor(extra.tagColor, '#6b7183');
+                const autoCircle = deriveHeroCircleHex(loadedBg);
+                if (circleEl) circleEl.value = normalizeHexColor(extra.circleColor, autoCircle);
+                isMainHeroCircleCustom = Boolean(extra.circleCustom && extra.circleColor);
 
                 croppedMainHeroBlob = null;
                 if (mainHeroPreviewObjectUrl) {
@@ -3113,10 +3427,27 @@
                 const accentColor = normalizeHexColor(document.getElementById('conf-accent').value, '#b85a17');
                 const titleColor = normalizeHexColor(document.getElementById('conf-main-title-color').value, '#172451');
                 const descColor = normalizeHexColor(document.getElementById('conf-main-desc-color').value, '#545b6e');
+                const badgeBgColor = normalizeHexColor(document.getElementById('conf-main-badge-bg-color')?.value, '#ffffff');
+                const badgeTextColor = normalizeHexColor(document.getElementById('conf-main-badge-text-color')?.value, '#9a6b3c');
+                const btnBgColor = normalizeHexColor(document.getElementById('conf-main-btn-color')?.value, '#172451');
+                const btnTextColor = normalizeHexColor(document.getElementById('conf-main-btn-text-color')?.value, '#ffffff');
+                const tagColor = normalizeHexColor(document.getElementById('conf-main-tag-color')?.value, '#6b7183');
                 const bgColor = normalizeHexColor(document.getElementById('conf-main-bg-color').value, '#fbf6ee');
+                const circleColor = normalizeHexColor(document.getElementById('conf-main-circle-color')?.value, deriveHeroCircleHex(bgColor));
                 const overlayColor = normalizeHexColor(document.getElementById('conf-main-overlay-color').value, '#1a3c6e');
                 const opParsed = parseFloat(document.getElementById('conf-main-overlay-opacity').value);
                 const overlayOpacity = Number.isFinite(opParsed) ? opParsed : 0.4;
+
+                const heroExtraStyleJson = JSON.stringify({
+                    nkHeroStyleV1: true,
+                    badgeBgColor,
+                    badgeTextColor,
+                    btnBgColor,
+                    btnTextColor,
+                    tagColor,
+                    circleColor,
+                    circleCustom: isMainHeroCircleCustom
+                });
 
                 const updateData = {
                     company_name: document.getElementById('conf-name').value.trim(), 
@@ -3132,7 +3463,8 @@
                     main_hero_image: u, 
                     main_hero_bg_color: bgColor, 
                     main_hero_overlay_color: overlayColor, 
-                    main_hero_overlay_opacity: overlayOpacity, 
+                    main_hero_overlay_opacity: overlayOpacity,
+                    popup_link: heroExtraStyleJson,
                     updated_at: new Date()
                 };
 
@@ -3152,9 +3484,28 @@
                         nextDoc.hero = Object.assign({}, nextDoc.hero || {}, {
                             background: bgColor,
                             titleColor: titleColor,
-                            descriptionColor: descColor
+                            descriptionColor: descColor,
+                            circleColor: circleColor,
+                            btnBgColor: btnBgColor,
+                            btnTextColor: btnTextColor,
+                            badgeBgColor: badgeBgColor,
+                            badgeTextColor: badgeTextColor,
+                            tagColor: tagColor
                         });
-                        await window.sb.from('page_editor_publications').update({ document: nextDoc, updated_at: new Date().toISOString() }).eq('page_key', 'main');
+                        if (typeof window.sb.rpc === 'function') {
+                            try {
+                                await window.sb.rpc('page_editor_save_draft', {
+                                    p_page_key: 'main',
+                                    p_document: nextDoc,
+                                    p_expected_revision: null
+                                });
+                                await window.sb.rpc('page_editor_publish', {
+                                    p_page_key: 'main',
+                                    p_summary: '환경 설정 메인 배너 색상 동기화'
+                                });
+                            } catch (_) { }
+                        }
+                        await window.sb.from('page_editor_publications').update({ document: nextDoc }).eq('page_key', 'main');
                         mainPageEditorPublication.document = nextDoc;
                     } catch (_) { }
                 }

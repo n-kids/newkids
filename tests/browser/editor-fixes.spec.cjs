@@ -340,14 +340,36 @@ test('editor tabs, preview size presets, sticky preview, and mid-check overlay r
   await expect(page.locator('#nk-env-settings-card')).toBeVisible();
   await page.locator('[data-editor-view="banner"]').click();
 
-  // Preview size presets shrink the preview frame
+  // Preview size presets resize BOTH the right preview frame and the left settings column
   await page.locator('[data-preview-size="normal"]').click();
   const normalH = await page.locator('.frame-scroll').evaluate(el => el.getBoundingClientRect().height);
+  const normalRightW = await page.locator('.preview-column').evaluate(el => el.getBoundingClientRect().width);
+  const normalLeftW = await page.locator('.settings').evaluate(el => el.getBoundingClientRect().width);
+
   await page.locator('[data-preview-size="compact"]').click();
   await expect(page.locator('[data-preview-size="compact"]')).toHaveAttribute('aria-pressed', 'true');
   const compactH = await page.locator('.frame-scroll').evaluate(el => el.getBoundingClientRect().height);
+  const compactRightW = await page.locator('.preview-column').evaluate(el => el.getBoundingClientRect().width);
+  const compactLeftW = await page.locator('.settings').evaluate(el => el.getBoundingClientRect().width);
   expect(compactH).toBeLessThan(normalH);
   expect(compactH).toBeLessThanOrEqual(310);
+  expect(compactRightW).toBeLessThan(normalRightW - 100);
+  expect(compactLeftW).toBeGreaterThan(normalLeftW + 100);
+
+  // Scaled iframe fills .frame-scroll width with no dead whitespace on the right
+  const fillRatio = await page.evaluate(() => {
+    const vp = document.querySelector('.frame-scroll').getBoundingClientRect().width - 24;
+    const fr = document.getElementById('preview').getBoundingClientRect().width;
+    return fr / vp;
+  });
+  expect(fillRatio).toBeGreaterThan(0.95);
+
+  await page.locator('[data-preview-size="large"]').click();
+  const largeRightW = await page.locator('.preview-column').evaluate(el => el.getBoundingClientRect().width);
+  const largeLeftW = await page.locator('.settings').evaluate(el => el.getBoundingClientRect().width);
+  expect(largeRightW).toBeGreaterThan(normalRightW + 100);
+  expect(largeLeftW).toBeLessThan(normalLeftW - 100);
+  await page.locator('[data-preview-size="compact"]').click();
 
   // Sticky preview stays in view after scrolling the editor column
   await page.evaluate(() => window.scrollTo(0, 1500));

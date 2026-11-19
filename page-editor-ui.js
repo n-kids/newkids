@@ -56,15 +56,16 @@
  const viewport=frame.parentElement;
  const previewBox=document.querySelector('.preview');
  const toolbar=document.querySelector('.preview-toolbar');
- const sizeCaps={compact:300,normal:460,large:0};
+ const sizeCaps={compact:260,normal:420,large:0};
  let previewSize='normal';
  try{const s=localStorage.getItem('nk_editor_preview_size');if(s&&s in sizeCaps)previewSize=s;}catch(_){}
  const isOpen=()=>document.body.classList.contains('nk-preview-open');
  function fit(){
   if(!viewport.clientWidth)return;const width=parseInt(frame.style.width,10)||1280;
   let scale=Math.min(1,Math.max(.1,(viewport.clientWidth-24)/width));
+  const stacked=window.innerWidth<=850;
   const cap=sizeCaps[previewSize];
-  if(!isOpen()&&cap)scale=Math.min(scale,Math.max(.1,(cap-24)/760));
+  if(!isOpen()&&stacked&&cap)scale=Math.min(scale,Math.max(.1,(cap-24)/760));
   const transform='scale('+scale+')';if(frame.style.transform!==transform)frame.style.transform=transform;
   if(isOpen()){
    const h=Math.max(760,Math.ceil((viewport.clientHeight-24)/scale))+'px';if(frame.style.height!==h)frame.style.height=h;
@@ -76,8 +77,8 @@
  /* Preview size presets (작게 / 보통 / 크게) */
  const sizeGroup=document.createElement('div');sizeGroup.className='nk-preview-size';sizeGroup.setAttribute('role','group');sizeGroup.setAttribute('aria-label','미리보기 크기');
  const sizeLabel=document.createElement('span');sizeLabel.textContent='크기';sizeGroup.append(sizeLabel);
- const sizeBtns=[['compact','작게'],['normal','보통'],['large','크게']].map(([v,t])=>{const b=document.createElement('button');b.type='button';b.dataset.previewSize=v;b.textContent=t;b.addEventListener('click',()=>{previewSize=v;try{localStorage.setItem('nk_editor_preview_size',v);}catch(_){}syncSize();fit();});sizeGroup.append(b);return b;});
- function syncSize(){sizeBtns.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.previewSize===previewSize)));}
+ const sizeBtns=[['compact','작게'],['normal','보통'],['large','크게']].map(([v,t])=>{const b=document.createElement('button');b.type='button';b.dataset.previewSize=v;b.textContent=t;b.addEventListener('click',()=>{previewSize=v;try{localStorage.setItem('nk_editor_preview_size',v);}catch(_){}syncSize();fit();requestAnimationFrame(fit);});sizeGroup.append(b);return b;});
+ function syncSize(){document.body.dataset.nkPreviewSize=previewSize;sizeBtns.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.previewSize===previewSize)));}
  const closeBtn=document.createElement('button');closeBtn.type='button';closeBtn.id='nk-preview-close';closeBtn.className='nk-preview-close primary';closeBtn.textContent='점검 닫기 (Esc)';
  if(toolbar){const label=toolbar.querySelector(':scope>span');toolbar.insertBefore(sizeGroup,label||null);toolbar.append(closeBtn);}
  syncSize();

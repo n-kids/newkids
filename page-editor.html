@@ -14,17 +14,157 @@
 <form id="login" hidden><h2>관리자 로그인</h2><p>기존 nk_admins 등록 계정으로 로그인하세요.</p><label>이메일<input id="email" type="email" autocomplete="username" required></label><label>비밀번호<input id="password" type="password" autocomplete="current-password" required></label><button class="primary" type="submit">로그인</button></form>
 <div id="workspace" class="workspace" hidden>
 <section class="settings" aria-label="페이지 설정">
-<div class="editor-card page-picker"><div class="segmented page-tabs" role="group" aria-label="페이지 유형"><button type="button" data-page-kind="main" aria-pressed="true">메인 페이지</button><button type="button" data-page-kind="sub" aria-pressed="false">서브 페이지</button></div><label class="sr-only" for="page">편집 대상</label><select id="page"></select></div>
-<div class="editor-card"><h2><svg class="ic"><use href="#pe-list"/></svg>적용 상태</h2><div class="apply-status"><div><span class="status-dot">✓</span><span id="theme-status">개별 테마 설정</span></div><div><span class="status-dot">✓</span><span>제목·설명</span><small>적용 가능</small></div><div><span class="status-dot muted-dot">–</span><span>배경 이미지</span><small>현재 템플릿에서 미사용</small></div></div><p class="muted status-help">새 공개본이 있으면 기존 편집기의 같은 항목보다 우선합니다.</p></div>
-<fieldset id="fields"><legend class="sr-only">내용과 디자인</legend>
-<div class="editor-card banner-card"><h2><svg class="ic"><use href="#pe-screen"/></svg>배너 설정</h2><label class="form-row"><span>제목</span><textarea id="title" rows="2" maxlength="200"></textarea></label><label class="form-row"><span>설명</span><textarea id="description" rows="3" maxlength="1000"></textarea></label>
+<div class="editor-card page-picker"><div class="segmented page-tabs" role="group" aria-label="페이지 유형"><button type="button" data-page-kind="main" aria-pressed="true">메인 페이지</button><button type="button" data-page-kind="sub" aria-pressed="false">서브 페이지</button></div><label class="sr-only" for="page">편집 대상</label><select id="page"></select>
+<div id="nk-editor-nav-pills" class="nk-view-pills" role="group" aria-label="편집 영역 필터">
+<button type="button" class="active" data-editor-view="all" aria-pressed="true">전체 통합</button>
+<button type="button" data-editor-view="design" aria-pressed="false">디자인 편집</button>
+<button type="button" data-editor-view="subpages" aria-pressed="false">서브 페이지 관리</button>
+<button type="button" data-editor-view="env" aria-pressed="false">환경 설정 · 팝업</button>
+</div></div>
+<div class="editor-card" data-view-group="design"><h2><svg class="ic"><use href="#pe-list"/></svg>적용 상태</h2><div class="apply-status"><div><span class="status-dot">✓</span><span id="theme-status">개별 테마 설정</span></div><div><span class="status-dot">✓</span><span>제목·설명·전체 섹션</span><small>실시간 편집 가능</small></div><div><span class="status-dot">✓</span><span>배경 이미지·색상·레이아웃</span><small>모든 페이지 지원</small></div></div><p class="muted status-help">새 공개본이 있으면 기존 편집기의 같은 항목보다 우선합니다.</p></div>
+<fieldset id="fields" data-view-group="design"><legend class="sr-only">내용과 디자인</legend>
+<div class="editor-card banner-card"><h2><svg class="ic"><use href="#pe-screen"/></svg>배너 설정 (상단 히어로)</h2><label class="form-row"><span>제목</span><textarea id="title" rows="2" maxlength="200"></textarea></label><label class="form-row"><span>설명</span><textarea id="description" rows="3" maxlength="1000"></textarea></label>
 <label class="sr-only" for="preset">배너 프리셋</label><select id="preset" class="sr-only"><option value="small">작게</option><option value="normal">기본</option><option value="large">크게</option></select>
 <div class="form-row"><span>프리셋</span><div class="preset-pills" role="group" aria-label="배너 프리셋"><button type="button" data-preset="small">작게</button><button type="button" data-preset="normal">기본</button><button type="button" data-preset="large">크게</button></div></div>
+<div class="nk-theme-bar" role="group" aria-label="원클릭 배너 색상 테마">
+<button type="button" class="nk-theme-chip" data-hero-theme="cream"><span class="nk-swatch" style="background:linear-gradient(135deg,#fbf6ee 50%,#172451 50%)"></span>크림·네이비</button>
+<button type="button" class="nk-theme-chip" data-hero-theme="sky"><span class="nk-swatch" style="background:linear-gradient(135deg,#eef6ff 50%,#1e3a8a 50%)"></span>스카이 블루</button>
+<button type="button" class="nk-theme-chip" data-hero-theme="mint"><span class="nk-swatch" style="background:linear-gradient(135deg,#ecfdf5 50%,#065f46 50%)"></span>소프트 민트</button>
+<button type="button" class="nk-theme-chip" data-hero-theme="peach"><span class="nk-swatch" style="background:linear-gradient(135deg,#fff1f2 50%,#9f1239 50%)"></span>피치 코랄</button>
+<button type="button" class="nk-theme-chip" data-hero-theme="navy"><span class="nk-swatch" style="background:linear-gradient(135deg,#172451 50%,#fbbf24 50%)"></span>딥 네이비</button>
+</div>
 <label class="switch-row"><span>공통 설정 사용</span><input id="inherit" class="switch" type="checkbox"></label>
 <div id="hero-fields"><div class="pair"><label>PC 최소 높이<div class="unit-input"><input id="desktopHeight" type="number" min="120" max="900"><span>px</span></div></label><label>모바일 최소 높이<div class="unit-input"><input id="mobileHeight" type="number" min="100" max="700"><span>px</span></div></label></div>
-<details class="advanced" open><summary>여백·색상·장식 설정</summary><div class="pair"><label>PC 상하 여백<input id="desktopPadding" type="number" min="0" max="160"></label><label>모바일 상하 여백<input id="mobilePadding" type="number" min="0" max="120"></label></div><div class="pair"><label>제목 색<input id="titleColor" type="color"></label><label>설명 색<input id="descriptionColor" type="color"></label></div><label>배경색<input id="background" type="color"></label><label class="check"><input id="decoration" type="checkbox">장식 표시</label></details></div></div>
-<div id="main-settings" class="editor-card main-card" hidden><h2><svg class="ic"><use href="#pe-list"/></svg>메인 영역 관리</h2><div id="sections"></div><details class="advanced"><summary>메인 버튼 설정</summary><label>버튼 문구<input id="buttonText" maxlength="80"></label><label>버튼 연결 주소<input id="buttonUrl" placeholder="proposal.html"></label></details></div>
-</fieldset><button id="cancel" class="cancel-button">저장된 초안으로 되돌리기</button>
+<details class="advanced" open><summary>여백·색상·배경 이미지·장식 설정</summary><div class="pair"><label>PC 상하 여백<input id="desktopPadding" type="number" min="0" max="160"></label><label>모바일 상하 여백<input id="mobilePadding" type="number" min="0" max="120"></label></div><div class="pair"><label>제목 색<input id="titleColor" type="color"></label><label>설명 색<input id="descriptionColor" type="color"></label></div><div class="pair"><label>배경색<input id="background" type="color"></label><label>텍스트 정렬<select id="heroAlign"><option value="">기본 정렬</option><option value="left">왼쪽 정렬</option><option value="center">가운데 정렬</option></select></label></div>
+<div class="pair"><label>제목 크기 비율 (%)<input id="titleScale" type="number" min="70" max="150" placeholder="100"></label><label>오버레이 색 (이미지용)<input id="overlayColor" type="color"></label></div>
+<label>배경 이미지 주소 (URL) 또는 파일 업로드<input id="heroImageUrl" type="text" placeholder="https://... 또는 아래에서 이미지 파일 선택"></label>
+<div class="nk-inline-file-row"><input id="heroImageFile" type="file" accept="image/*"><button type="button" id="heroImageClear">이미지 비우기</button></div>
+<label>배경 이미지 오버레이 투명도 (0 ~ 1)<input id="overlayOpacity" type="number" min="0" max="1" step="0.05" placeholder="0.4"></label>
+<label class="check"><input id="decoration" type="checkbox">장식 표시</label></details></div></div>
+<div id="main-settings" class="editor-card main-card" hidden><h2><svg class="ic"><use href="#pe-list"/></svg>메인 영역 관리</h2><div id="sections"></div><details class="advanced"><summary>메인 버튼 · 배지 · 태그 · 일러스트 설정</summary>
+<div class="pair"><label>버튼 문구<input id="buttonText" maxlength="80"></label><label>버튼 연결 주소<input id="buttonUrl" placeholder="proposal.html"></label></div>
+<div class="pair"><label>버튼 배경/테두리 색<input id="btnBgColor" type="color"></label><label>버튼 글자 색<input id="btnTextColor" type="color"></label></div>
+<label class="check"><input id="ghostButtonVisible" type="checkbox">보조 버튼(두 번째 버튼) 표시</label>
+<div class="pair"><label>보조 버튼 문구<input id="ghostButtonText" maxlength="80" placeholder="교육 프로그램 보기"></label><label>보조 버튼 주소<input id="ghostButtonUrl" placeholder="#curriculum"></label></div>
+<label>보조 버튼 글자·테두리 색<input id="ghostBtnColor" type="color"></label>
+<label class="check"><input id="showEyebrow" type="checkbox">상단 배지(어린이집·유치원 교육 파트너) 표시</label>
+<label>상단 배지 문구<input id="eyebrowText" maxlength="80" placeholder="어린이집 · 유치원 교육 파트너"></label>
+<div class="pair"><label>상단 배지 배경색<input id="badgeBgColor" type="color"></label><label>상단 배지 글자색<input id="badgeTextColor" type="color"></label></div>
+<label class="check"><input id="showTags" type="checkbox">하단 키워드 태그 목록 표시</label>
+<label>하단 태그 목록 (쉼표로 구분)<input id="tagsText" maxlength="200" placeholder="영유아 교재, 원어민 문화체험, 부모 참여 행사, 시즌 테마 행사"></label>
+<label>하단 태그 글자색<input id="tagColor" type="color"></label>
+<label class="check"><input id="showArt" type="checkbox">우측 일러스트 그래픽 표시</label>
+<div class="nk-color-sync-row"><label style="flex:1;margin:0">우측 일러스트 원 배경색<input id="circleColor" type="color"></label><button type="button" id="syncCircleColor">배경색 맞춤</button></div>
+</details></div>
+<div id="main-sections-design" class="editor-card" hidden>
+<h2><svg class="ic"><use href="#pe-edit"/></svg>메인 본문 섹션별 상세 편집</h2>
+<p class="muted">메인 페이지의 각 섹션 문구, 전화번호, 배경색, 카드 색상을 자유롭게 변경할 수 있습니다.</p>
+<details class="advanced" open><summary>① 바로가기 · 주문 앱 안내 섹션</summary>
+<label>섹션 전체 배경색<input id="qlBgColor" type="color"></label>
+<label class="check"><input id="qlShowApp" type="checkbox">원 전용 주문 앱 배너 표시</label>
+<div class="pair"><label>앱 배너 상단 라벨<input id="qlAppBadge" maxlength="80" placeholder="NEW · 원 전용 주문 앱"></label><label>앱 배너 이동 문구<input id="qlAppCta" maxlength="60" placeholder="설치 방법 보기"></label></div>
+<label>앱 배너 제목<input id="qlAppTitle" maxlength="120" placeholder="뉴키즈 주문 앱 설치하기"></label>
+<label>앱 배너 설명<input id="qlAppDesc" maxlength="200" placeholder="교재·물품 주문, 견적서 요청, A/S 신청을 휴대폰에서 바로!"></label>
+<label>앱 배너 연결 주소<input id="qlAppUrl" placeholder="app-install.html"></label>
+<div class="pair"><label>앱 배너 배경색<input id="qlAppBgColor" type="color"></label><label>앱 배너 글자색<input id="qlAppTextColor" type="color"></label></div>
+<label class="check"><input id="qlShowRef" type="checkbox">자료실·공지·문의 바로가기 배너 표시</label>
+<div class="pair"><label>자료실 배너 제목<input id="qlRefTitle" maxlength="100" placeholder="자료실 바로가기"></label><label>자료실 열기 문구<input id="qlRefCta" maxlength="60" placeholder="자료실 열기"></label></div>
+<label>자료실 배너 설명<input id="qlRefDesc" maxlength="200" placeholder="연간계획안 · OT자료 등 수업에 필요한 자료를 내려받으세요"></label>
+<div class="pair"><label>보조 바로가기 1 문구<input id="qlSub1Text" maxlength="40" placeholder="공지사항"></label><label>보조 바로가기 2 문구<input id="qlSub2Text" maxlength="40" placeholder="문의사항"></label></div>
+<div class="pair"><label>자료실 배너 배경색<input id="qlRefBgColor" type="color"></label><label>자료실 배너 글자색<input id="qlRefTextColor" type="color"></label></div>
+</details>
+<details class="advanced"><summary>② 행사 프로그램 섹션</summary>
+<div class="pair"><label>상단 라벨<input id="evEyebrow" maxlength="40" placeholder="EVENT"></label><label>섹션 제목<input id="evTitle" maxlength="80" placeholder="행사프로그램"></label></div>
+<label>섹션 설명<input id="evDesc" maxlength="200" placeholder="아이들에게 잊지 못할 추억을 선물하세요"></label>
+<div class="pair"><label>섹션 배경색<input id="evBgColor" type="color"></label><label>라벨 글자색<input id="evEyebrowColor" type="color"></label></div>
+<div class="pair"><label>섹션 제목색<input id="evTitleColor" type="color"></label><label>섹션 설명색<input id="evDescColor" type="color"></label></div>
+<div class="pair"><label>카드 배경색<input id="evCardBgColor" type="color"></label><label>카드 테두리색<input id="evCardBorderColor" type="color"></label></div>
+<div class="pair"><label>카드 제목색<input id="evCardTitleColor" type="color"></label><label>카드 설명색<input id="evCardDescColor" type="color"></label></div>
+</details>
+<details class="advanced"><summary>③ 교육 프로그램 섹션</summary>
+<div class="pair"><label>상단 라벨<input id="cuEyebrow" maxlength="40" placeholder="EDUCATION"></label><label>섹션 제목<input id="cuTitle" maxlength="80" placeholder="교육프로그램"></label></div>
+<label>섹션 설명<input id="cuDesc" maxlength="200" placeholder="영아부터 유아까지, 핵심 영역의 통합 교육 솔루션"></label>
+<div class="pair"><label>섹션 배경색<input id="cuBgColor" type="color"></label><label>라벨 글자색<input id="cuEyebrowColor" type="color"></label></div>
+<div class="pair"><label>섹션 제목색<input id="cuTitleColor" type="color"></label><label>섹션 설명색<input id="cuDescColor" type="color"></label></div>
+<div class="pair"><label>카드 배경색<input id="cuCardBgColor" type="color"></label><label>카드 테두리색<input id="cuCardBorderColor" type="color"></label></div>
+<div class="pair"><label>카드 제목색<input id="cuCardTitleColor" type="color"></label><label>카드 설명색<input id="cuCardDescColor" type="color"></label></div>
+</details>
+<details class="advanced"><summary>④ 하단 상담 안내 섹션</summary>
+<label>상담 섹션 제목<input id="ctTitle" maxlength="100" placeholder="궁금하신 점이 있으신가요?"></label>
+<label>상담 섹션 설명<input id="ctDesc" maxlength="200" placeholder="아래 번호로 전화주시면 자세한 상담을 도와드리겠습니다."></label>
+<div class="pair"><label>상담 1 라벨<input id="ctPhone1Label" maxlength="40" placeholder="상담문의 1"></label><label>상담 1 전화번호<input id="ctPhone1" maxlength="30" placeholder="010-2333-2563"></label></div>
+<div class="pair"><label>상담 2 라벨<input id="ctPhone2Label" maxlength="40" placeholder="상담문의 2"></label><label>상담 2 전화번호<input id="ctPhone2" maxlength="30" placeholder="010-5522-8109"></label></div>
+<div class="pair"><label>섹션 배경색<input id="ctBgColor" type="color"></label><label>제목 글자색<input id="ctTitleColor" type="color"></label></div>
+<div class="pair"><label>설명 글자색<input id="ctDescColor" type="color"></label><label>전화 버튼 배경색<input id="ctCardBgColor" type="color"></label></div>
+<label>전화 버튼 글자색<input id="ctCardTextColor" type="color"></label>
+</details>
+</div>
+<div id="subpage-design-card" class="editor-card" hidden>
+<h2><svg class="ic"><use href="#pe-edit"/></svg>서브 페이지 본문 · 카드 · 양식 디자인</h2>
+<p class="muted">서브 페이지(교육·행사·게시판·발주·견적·고정 페이지)의 본문 배경, 카드, 버튼 색상 및 제목·문구를 편집합니다.</p>
+<div class="nk-theme-bar" role="group" aria-label="서브 페이지 본문 색상 테마">
+<button type="button" class="nk-theme-chip" data-sub-theme="clean"><span class="nk-swatch" style="background:linear-gradient(135deg,#f8f9fa 50%,#172451 50%)"></span>기본 클린</button>
+<button type="button" class="nk-theme-chip" data-sub-theme="cream"><span class="nk-swatch" style="background:linear-gradient(135deg,#fbf6ee 50%,#9a6b3c 50%)"></span>웜 크림</button>
+<button type="button" class="nk-theme-chip" data-sub-theme="sky"><span class="nk-swatch" style="background:linear-gradient(135deg,#f0f7ff 50%,#1e3a8a 50%)"></span>스카이 블루</button>
+<button type="button" class="nk-theme-chip" data-sub-theme="mint"><span class="nk-swatch" style="background:linear-gradient(135deg,#f0fdf4 50%,#065f46 50%)"></span>소프트 민트</button>
+</div>
+<div class="pair"><label>본문 영역 배경색<input id="subBodyBgColor" type="color"></label><label>카드·박스 배경색<input id="subCardBgColor" type="color"></label></div>
+<div class="pair"><label>카드·박스 테두리색<input id="subCardBorderColor" type="color"></label><label>카드 모서리 둥글기 (px)<input id="subCardRadius" type="number" min="0" max="36" placeholder="14"></label></div>
+<div class="pair"><label>본문·카드 제목색<input id="subHeadingColor" type="color"></label><label>본문·카드 설명색<input id="subTextColor" type="color"></label></div>
+<div class="pair"><label>포인트 버튼·배지 배경색<input id="subAccentBgColor" type="color"></label><label>포인트 버튼·배지 글자색<input id="subAccentTextColor" type="color"></label></div>
+<details class="advanced"><summary>서브 페이지 본문 제목 · 버튼 · 안내 문구 편집</summary>
+<label>본문 섹션 제목 1 (발주·견적·고정 페이지 제목)<input id="subSection1Title" maxlength="100" placeholder="예: 👤 주문자 정보 / 신청자 정보"></label>
+<label>본문 섹션 제목 2 (교재·교육 선택 섹션 제목)<input id="subSection2Title" maxlength="100" placeholder="예: 📦 교재 선택 / 🎓 관심 교육 프로그램 선택"></label>
+<label>본문 섹션 제목 3 (행사 선택 섹션 제목)<input id="subSection3Title" maxlength="100" placeholder="예: 🎉 관심 행사 프로그램 선택"></label>
+<div class="pair"><label>주요 버튼 문구 (제출·검색)<input id="subSubmitText" maxlength="40" placeholder="예: 발주하기 / 견적 요청하기 / 검색"></label><label>입력·검색창 안내 문구<input id="subPlaceholderText" maxlength="80" placeholder="예: 제목 검색"></label></div>
+<label class="check"><input id="subShowHelpPanel" type="checkbox">게시판 하단 자료 다운로드 안내 박스 표시</label>
+</details>
+</div>
+<div id="global-layout-card" class="editor-card">
+<h2><svg class="ic"><use href="#pe-home"/></svg>상단 헤더 · 네비게이션 · 하단 푸터 디자인</h2>
+<p class="muted">페이지 상단 로고·메뉴바와 하단 푸터, 전체 페이지 기본 배경·글자 색상을 설정합니다.</p>
+<details class="advanced"><summary>헤더 · 메뉴 · 푸터 색상 및 로고 문구 상세 설정</summary>
+<div class="pair"><label>상단 로고 제목<input id="layLogoTitle" maxlength="40" placeholder="뉴키즈"></label><label>상단 로고 부제<input id="layLogoSub" maxlength="60" placeholder="어린이집 · 유치원 파트너"></label></div>
+<div class="pair"><label>상단 헤더 배경색<input id="layHeaderBgColor" type="color"></label><label>상단 메뉴 글자색<input id="layHeaderTextColor" type="color"></label></div>
+<div class="pair"><label>강조 메뉴(견적) 배경색<input id="layCtaBgColor" type="color"></label><label>강조 메뉴(견적) 글자색<input id="layCtaTextColor" type="color"></label></div>
+<div class="pair"><label>페이지 기본 배경색<input id="layPageBgColor" type="color"></label><label>페이지 기본 글자색<input id="layPageTextColor" type="color"></label></div>
+<div class="pair"><label>하단 푸터 배경색<input id="layFooterBgColor" type="color"></label><label>하단 푸터 글자색<input id="layFooterTextColor" type="color"></label></div>
+<label>푸터 저작권 문구<input id="layFooterCopy" maxlength="120" placeholder="© 2026 New Kids. All rights reserved."></label>
+<div class="pair"><label>브랜드 메인 컬러<input id="layPrimaryColor" type="color"></label><label>브랜드 강조 컬러<input id="layAccentColor" type="color"></label></div>
+</details>
+</div>
+</fieldset><button id="cancel" class="cancel-button" data-view-group="design">저장된 초안으로 되돌리기</button>
+<section id="nk-subpage-manager-card" class="editor-card" data-view-group="subpages">
+<h2><svg class="ic"><use href="#pe-file"/></svg>서브 페이지 · 메뉴 통합 관리</h2>
+<p class="muted">교육(EDU)·행사(EVENT)·게시판(BOARD)·고정 페이지(PAGE)를 추가하거나 메뉴 이름, 색상, 노출 순서, 배너 정보를 한곳에서 관리하고 바로 디자인을 편집할 수 있습니다.</p>
+<p id="nk-cat-status" role="status"></p>
+<details class="advanced" open><summary>새 서브 페이지(카테고리/메뉴) 추가</summary>
+<div class="pair"><label>페이지 유형<select id="nk-cat-new-type"><option value="EDU">교육 프로그램 (child.html)</option><option value="EVENT">행사 프로그램 (program.html)</option><option value="BOARD">알림·소식 게시판 (notice.html)</option><option value="PAGE">고정·단독 페이지 (page.html)</option></select></label><label>영문 코드<input id="nk-cat-new-code" maxlength="40" placeholder="예: cooking"></label></div>
+<div class="pair"><label>메뉴 이름<input id="nk-cat-new-name" maxlength="60" placeholder="예: 요리 활동"></label><label>메뉴 글자색<input id="nk-cat-new-color" type="color" value="#172451"></label></div>
+<label>기본 배너 설명글<input id="nk-cat-new-desc" maxlength="200" placeholder="서브 페이지 상단 배너 설명"></label>
+<div class="actions"><button type="button" id="nk-cat-add-btn" class="primary">새 서브 페이지 생성</button><button type="button" id="nk-cat-refresh-btn">목록 새로고침</button></div>
+</details>
+<div id="nk-cat-list" class="nk-managed-list" aria-live="polite"></div>
+</section>
+<section id="nk-env-settings-card" class="editor-card" data-view-group="env">
+<h2><svg class="ic"><use href="#pe-home"/></svg>환경 설정 · 회사 정보 · 팝업 통합 관리</h2>
+<p class="muted">기존 관리자 환경 설정(회사 정보, 푸터, 브랜드 컬러, 메인 배너 DB 설정, 공지 팝업 슬라이더)을 페이지 편집기에서 통합 관리합니다.</p>
+<p id="nk-env-status" role="status"></p>
+<details class="advanced" open><summary>회사 정보 · 푸터 · 전역 브랜드 컬러 설정</summary>
+<div class="pair"><label>회사명<input id="nk-env-company" maxlength="80" placeholder="뉴키즈"></label><label>대표자<input id="nk-env-ceo" maxlength="60" placeholder="홍길동"></label></div>
+<label>주소<input id="nk-env-address" maxlength="200" placeholder="경기도 김포시 ..."></label>
+<label>대표 연락처<input id="nk-env-phone" maxlength="60" placeholder="010-2333-2563"></label>
+<div class="pair"><label>브랜드 메인 컬러<input id="nk-env-primary" type="color" value="#1a3c6e"></label><label>브랜드 강조 컬러<input id="nk-env-accent" type="color" value="#b85a17"></label></div>
+<div class="actions"><button type="button" id="nk-env-save-btn" class="primary">환경 설정 · 메인 배너 DB 저장</button><button type="button" id="nk-env-reset-brand">기본 브랜드 컬러 복원</button></div>
+</details>
+<details class="advanced" open><summary>공지 팝업(슬라이더) 목록 관리</summary>
+<label>새 팝업 이미지 주소(URL) 또는 파일 선택<input id="nk-popup-url" type="text" placeholder="https://... 또는 아래 파일 선택"></label>
+<input id="nk-popup-file" type="file" accept="image/*">
+<div class="pair"><label>클릭 이동 링크 (선택)<input id="nk-popup-link" placeholder="https://... 또는 notice.html#notice"></label><label>이미지 대체 설명<input id="nk-popup-alt" maxlength="100" placeholder="공지 팝업 이미지"></label></div>
+<div class="actions"><button type="button" id="nk-popup-add-btn" class="primary">새 팝업 추가</button><button type="button" id="nk-popup-reset-today">'오늘 하루 열지 않기' 해제</button></div>
+<div id="nk-popup-list" class="nk-managed-list" aria-live="polite"></div>
+</details>
+</section>
 </section>
 <section class="preview-column" aria-label="미리보기와 변경 사항"><div class="preview"><div class="preview-toolbar"><div class="segmented"><button type="button" class="active" data-width="1280" aria-pressed="true"><svg class="ic"><use href="#pe-screen"/></svg>PC</button><button type="button" data-width="768" aria-pressed="false"><svg class="ic"><use href="#pe-screen"/></svg>태블릿</button><button type="button" data-width="390" aria-pressed="false"><svg class="ic"><use href="#pe-phone"/></svg>모바일</button></div><span>미리보기</span></div><div class="frame-scroll"><iframe id="preview" title="페이지 편집 미리보기"></iframe></div><div class="preview-caption"><span id="preview-status">읽기 전용 실제 페이지 미리보기</span><a id="open-page" target="_blank" rel="noopener">공개 페이지 열기</a></div></div>
 <div class="review-grid"><section class="editor-card"><h2><svg class="ic"><use href="#pe-list"/></svg>변경 비교</h2><p class="muted">공개본과 현재 수정본의 차이를 확인합니다.</p><div id="inline-diff" class="inline-diff">변경 비교를 누르면 상세 변경 내역이 표시됩니다.</div><button type="button" id="compare-panel">변경 비교 보기</button></section><section id="history-card" class="editor-card"><h2><svg class="ic"><use href="#pe-clock"/></svg>변경 이력</h2><div class="publication-row"><span>현재 공개본</span><span id="publication-status" class="publication-badge">확인 중</span></div><p class="muted">복구는 초안에만 반영됩니다. 새 편집기로 공개한 시점부터 기록됩니다.</p><div id="history"></div></section></div></section>

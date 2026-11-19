@@ -7,7 +7,17 @@
  const tabs=[...document.querySelectorAll('[data-page-kind]')];
  const pills=[...document.querySelectorAll('[data-preset]')];
  const widths=[...document.querySelectorAll('[data-width]')];
- let lastSub='';
+ const viewBtns=[...document.querySelectorAll('[data-editor-view]')];
+ let lastSub='',currentView='all';
+ function syncView(mode){
+  currentView=mode||currentView;
+  viewBtns.forEach(btn=>{const on=btn.dataset.editorView===currentView;btn.classList.toggle('active',on);btn.setAttribute('aria-pressed',String(on));});
+  document.querySelectorAll('[data-view-group]').forEach(el=>{
+   el.hidden=currentView!=='all'&&el.dataset.viewGroup!==currentView;
+  });
+ }
+ viewBtns.forEach(btn=>btn.addEventListener('click',()=>syncView(btn.dataset.editorView)));
+ window.__nkSetEditorView=syncView;
  function sync(){
   const main=page.value==='main';
   if(page.value&&!main)lastSub=page.value;

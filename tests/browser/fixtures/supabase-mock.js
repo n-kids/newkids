@@ -8,19 +8,51 @@
   {code:'korean',name:'한글',type:'EDU',hero_title:'한글',hero_desc:'교재 안내',is_visible:true,order_num:3},
   {code:'season',name:'시즌 행사',type:'EVENT',hero_title:'시즌 행사',hero_desc:'행사 안내',is_visible:true,order_num:4}
  ];
- const state = { drafts:{}, publications:{}, revisions:[], signedIn:!new URLSearchParams(location.search).has('test_logged_out') };
+ const state = { drafts:{}, publications:{}, revisions:[], categories, siteConfig:[], popups:[], signedIn:!new URLSearchParams(location.search).has('test_logged_out') };
  window.__NK_EDITOR_TEST = state;
  function query(table) {
-  const filters=[]; let single=false, start=0, end=Infinity;
+  const filters=[]; let single=false, start=0, end=Infinity, op='select', payload=null;
+  const getSource=()=>table==='program_categories'?state.categories:table==='site_config'?state.siteConfig:table==='site_popups'?state.popups:table==='page_editor_drafts'?Object.values(state.drafts):table==='page_editor_publications'?Object.values(state.publications):table==='page_editor_revisions'?state.revisions:[];
   const chain={
-   select(){return chain;}, eq(key,value){filters.push(row=>row[key]===value);return chain;},
+   select(){return chain;},
+   insert(rows){op='insert';payload=Array.isArray(rows)?rows:[rows];return chain;},
+   update(patch){op='update';payload=patch;return chain;},
+   upsert(rows){op='upsert';payload=Array.isArray(rows)?rows:[rows];return chain;},
+   delete(){op='delete';return chain;},
+   eq(key,value){filters.push(row=>row[key]===value);return chain;},
    neq(key,value){filters.push(row=>row[key]!==value);return chain;},
    in(key,values){filters.push(row=>values.map(String).includes(String(row[key])));return chain;},
    order(){return chain;}, limit(value){end=value-1;return chain;},
    range(from,to){start=from;end=to;return chain;}, or(){return chain;}, ilike(){return chain;},
    single(){single=true;return chain;}, maybeSingle(){single=true;return chain;},
    then(resolve,reject){
-    const source=table==='program_categories'?categories:table==='page_editor_drafts'?Object.values(state.drafts):table==='page_editor_publications'?Object.values(state.publications):table==='page_editor_revisions'?state.revisions:[];
+    const source=getSource();
+    if(op==='insert'&&Array.isArray(source)){
+     const added=(payload||[]).map((r,idx)=>({id:r.id??(source.length+idx+1),...copy(r)}));
+     source.push(...added);
+     return Promise.resolve({data:copy(single?(added[0]||null):added),error:null}).then(resolve,reject);
+    }
+    if(op==='upsert'&&Array.isArray(source)){
+     const out=[];
+     for(const r of (payload||[])){
+      const keyField=table==='program_categories'?'code':'id';
+      const existing=source.find(x=>x[keyField]!==undefined&&x[keyField]===r[keyField]);
+      if(existing){Object.assign(existing,copy(r));out.push(existing);}
+      else{const row={id:r.id??(source.length+1),...copy(r)};source.push(row);out.push(row);}
+     }
+     return Promise.resolve({data:copy(single?(out[0]||null):out),error:null}).then(resolve,reject);
+    }
+    if(op==='update'&&Array.isArray(source)){
+     let matched=source.filter(row=>filters.every(filter=>filter(row)));
+     if(!matched.length&&table==='site_config'){const row={id:1,...copy(payload||{})};source.push(row);matched=[row];}
+     else matched.forEach(row=>Object.assign(row,copy(payload||{})));
+     return Promise.resolve({data:copy(single?(matched[0]||null):matched),error:null}).then(resolve,reject);
+    }
+    if(op==='delete'&&Array.isArray(source)){
+     const removed=[];
+     for(let i=source.length-1;i>=0;i--){if(filters.every(filter=>filter(source[i])))removed.push(...source.splice(i,1));}
+     return Promise.resolve({data:copy(removed),error:null}).then(resolve,reject);
+    }
     const filtered=source.filter(row=>filters.every(filter=>filter(row)));
     const data=filtered.slice(start,Number.isFinite(end)?end+1:undefined);
     return Promise.resolve({data:copy(single?(data[0]||null):data),error:null,count:filtered.length}).then(resolve,reject);

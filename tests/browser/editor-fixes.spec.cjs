@@ -257,3 +257,63 @@ test('missing workflow schema cache transparently uses built-in fallback for rev
   expect(await page.locator('#nk-audit-table tbody tr').count()).toBeGreaterThanOrEqual(4);
 });
 
+test('integrated full-page design controls, subpage manager, and environment settings work end-to-end', async ({ page, context }) => {
+  await setupRoutes(context);
+  page.on('dialog', d => d.accept());
+  await page.goto('/page-editor.html');
+  await expect(page.locator('#save')).toBeEnabled();
+
+  // 1) Main page: apply hero theme preset, edit body section title & contact phone, and edit global header logo
+  await page.locator('[data-hero-theme="sky"]').click();
+  await expect(page.locator('#background')).toHaveValue('#eef6ff');
+  await expect(page.locator('#titleColor')).toHaveValue('#1e3a8a');
+
+  await page.locator('#main-sections-design summary').nth(1).click();
+  await page.locator('#evTitle').fill('맞춤형 특별 행사');
+  await expect(page.frameLocator('#preview').locator('#events h2')).toHaveText('맞춤형 특별 행사');
+
+  await page.locator('#main-sections-design summary').nth(3).click();
+  await page.locator('#ctPhone1').fill('010-9999-8888');
+  await expect(page.frameLocator('#preview').locator('#contact .contact-link').first()).toContainText('010-9999-8888');
+
+  await page.locator('#global-layout-card summary').click();
+  await page.locator('#layLogoTitle').fill('뉴키즈 에듀');
+  await expect(page.frameLocator('#preview').locator('header .logo-text strong')).toHaveText('뉴키즈 에듀');
+
+  // Save main draft to clear dirty state before switching
+  await page.locator('#save').click();
+  await expect(page.locator('#status')).toContainText('초안 v1 저장 완료');
+
+  // 2) Subpage manager: create a new category and jump directly to its design editor
+  await page.locator('[data-editor-view="subpages"]').click();
+  await expect(page.locator('#nk-subpage-manager-card')).toBeVisible();
+  await page.locator('#nk-cat-new-type').selectOption('EDU');
+  await page.locator('#nk-cat-new-code').fill('cooking');
+  await page.locator('#nk-cat-new-name').fill('요리 활동');
+  await page.locator('#nk-cat-new-desc').fill('즐거운 오감 요리 수업');
+  await page.locator('#nk-cat-add-btn').click();
+  await expect(page.locator('#nk-cat-status')).toContainText('새 서브 페이지(요리 활동)가 생성되었습니다');
+
+  await page.locator('[data-cat-design="page:cooking"]').click();
+  await expect(page.locator('#page')).toHaveValue('page:cooking');
+  await expect(page.locator('#subpage-design-card')).toBeVisible();
+
+  await page.locator('[data-sub-theme="mint"]').click();
+  await expect(page.locator('#subBodyBgColor')).toHaveValue('#f0fdf4');
+  await expect(page.frameLocator('#preview').locator('#view-hero h1')).toHaveText('요리 활동');
+
+  // 3) Environment settings & popup manager
+  await page.locator('[data-editor-view="env"]').click();
+  await expect(page.locator('#nk-env-settings-card')).toBeVisible();
+  await page.locator('#nk-env-company').fill('주식회사 뉴키즈에듀');
+  await page.locator('#nk-env-ceo').fill('김뉴키즈');
+  await page.locator('#nk-env-save-btn').click();
+  await expect(page.locator('#nk-env-status')).toContainText('환경 설정(회사 정보 · 브랜드 컬러 · 메인 배너 DB)이 저장되었습니다');
+
+  await page.locator('#nk-popup-url').fill('https://example.com/popup.webp');
+  await page.locator('#nk-popup-alt').fill('신학기 안내 팝업');
+  await page.locator('#nk-popup-add-btn').click();
+  await expect(page.locator('#nk-env-status')).toContainText('새 공지 팝업이 추가되었습니다');
+  await expect(page.locator('#nk-popup-list')).toContainText('신학기 안내 팝업');
+});
+

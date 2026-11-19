@@ -12,7 +12,7 @@
   if(key==='main')matches=['','index.html'].includes(relative);
   else if(['notice.html','child.html','program.html'].includes(relative))matches=decodeURIComponent(url.hash.slice(1))===code;
   else if(relative==='page.html')matches=(url.searchParams.get('id')||url.searchParams.get('c'))===code;
-  else matches=['order','proposal'].includes(code)&&relative===code+'.html';
+  else matches=['order','proposal','app-install'].includes(code)&&relative===code+'.html';
   if(!matches)throw new Error('편집 대상과 공개 주소가 일치하지 않습니다.');
   const id=relative==='page.html'?url.searchParams.get('id'):null,legacy=relative==='page.html'&&!id?url.searchParams.get('c'):null;
   url.search='';if(id)url.searchParams.set('id',id);else if(legacy)url.searchParams.set('c',legacy);url.searchParams.set('nk_verify',String(nonce));return url;
@@ -50,7 +50,7 @@
   let mismatches=null;try{
    frame.src=url.href;document.body.append(frame);const deadline=Date.now()+10000;
    while(Date.now()<deadline){if(op.controller.signal.aborted)throw new Error('검사를 취소했습니다.');
-    try{const doc=frame.contentDocument,hero=doc?.querySelector('#view-hero[data-nk-published-hero],#page-hero[data-nk-published-hero],.hero[data-nk-published-hero]');if(hero){publicURL(frame.contentWindow.location.href,base.href,op.key,0);const link=hero.querySelector('.hero-v2-actions .btn'),domText=node=>node?String(node.textContent).replace(/\r\n/g,'\n'):undefined;const actual={viewportWidth:frame.contentWindow.innerWidth,title:domText(hero.querySelector('h1')),description:domText(hero.querySelector('p')),minHeight:parseFloat(frame.contentWindow.getComputedStyle(hero).minHeight),buttonText:domText(link),buttonUrl:link?.href};mismatches=compare(wanted,actual);if(!mismatches.length)return {width,mismatches:[]};}}catch(error){throw new Error('공개 프레임 접근 실패: '+error.message);}
+    try{const doc=frame.contentDocument,hero=doc?.querySelector('#view-hero[data-nk-published-hero],#page-hero[data-nk-published-hero],.hero[data-nk-published-hero],.ai-hero[data-nk-published-hero]');if(hero){publicURL(frame.contentWindow.location.href,base.href,op.key,0);const link=hero.querySelector('.hero-v2-actions .btn'),domText=node=>node?String(node.textContent).replace(/\r\n/g,'\n'):undefined;const actual={viewportWidth:frame.contentWindow.innerWidth,title:domText(hero.querySelector('h1')),description:domText(hero.querySelector('p')),minHeight:parseFloat(frame.contentWindow.getComputedStyle(hero).minHeight),buttonText:domText(link),buttonUrl:link?.href};mismatches=compare(wanted,actual);if(!mismatches.length)return {width,mismatches:[]};}}catch(error){throw new Error('공개 프레임 접근 실패: '+error.message);}
     await new Promise(resolve=>setTimeout(resolve,75));
    }
    return {width,mismatches:mismatches||[{label:'렌더러',expected:'공개본 적용',actual:'10초 내 확인하지 못함'}]};

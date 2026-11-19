@@ -207,12 +207,12 @@
                 html += `<label class="form-label" style="font-size:1.1rem; color:#1a3c6e; margin-bottom:15px;">${index + 1}. ${window.escapeHtml(q.title)}</label>`;
 
                 if (q.type === 'text') {
-                    html += `<input type="text" name="${q.id}" class="form-input" required placeholder="답변을 입력하세요">`;
+                    html += `<input type="text" name="${q.id}" class="form-input" placeholder="답변을 입력하세요 (선택)">`;
                 } else if (q.type === 'radio') {
                     html += `<div style="display:flex; flex-direction:column; gap:10px;">`;
                     q.options.forEach((opt) => {
                         html += `<label style="cursor:pointer; display:flex; align-items:center; gap:8px;">
-                                        <input type="radio" name="${q.id}" value="${window.escapeHtml(opt)}" required style="width:18px; height:18px;">
+                                        <input type="radio" name="${q.id}" value="${window.escapeHtml(opt)}" style="width:18px; height:18px;">
                                         ${window.escapeHtml(opt)}
                                      </label>`;
                     });
@@ -256,17 +256,17 @@
             currentSchema.forEach(q => {
                 if (q.type === 'text') {
                     const val = document.querySelector(`input[name="${q.id}"]`).value.trim();
-                    if (!val) isValid = false;
+                    // 질문 답변은 선택 사항 (비워도 제출 가능)
                     answers[q.id] = val;
                 } else if (q.type === 'radio') {
                     const checked = document.querySelector(`input[name="${q.id}"]:checked`);
-                    if (!checked) isValid = false;
+                    if (!checked) answers[q.id] = "";
                     else answers[q.id] = checked.value;
                 } else if (q.type === 'checkbox') {
                     const checkedNodes = document.querySelectorAll(`input[name="${q.id}"]:checked`);
                     let checkedValues = [];
                     checkedNodes.forEach(n => checkedValues.push(n.value));
-                    if (checkedValues.length === 0) isValid = false;
+                    // 아무것도 고르지 않아도 제출 가능
                     answers[q.id] = checkedValues;
                 }
             });

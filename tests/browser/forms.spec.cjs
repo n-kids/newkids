@@ -538,7 +538,8 @@ test('participant form.html: live submit, Works notify, poll results, quota/dupl
   // Custom completion screen + external link + live poll results
   await expect(page.locator('#form-status')).toContainText('체험 신청이 접수되었습니다.');
   await expect(page.locator('#form-status a')).toHaveAttribute('href', 'https://n-kids.github.io/newkids/');
-  await expect(page.locator('#form-status')).toContainText('실시간 투표 현황 (총 2명 참여)');
+  await expect(page.locator('#form-status')).toContainText('실시간 투표 현황');
+  await expect(page.locator('#form-status')).toContainText('총 2명 참여');
   await expect(page.locator('#form-status')).toContainText('기타(직접 입력)');
 
   // Verify Naver Works notification fired

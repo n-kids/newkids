@@ -1,5 +1,5 @@
 begin;
-create table public.page_editor_work_items (
+create table if not exists public.page_editor_work_items (
  id uuid primary key default gen_random_uuid(), kind text not null check(kind in ('review','schedule','link')),
  page_key text not null check(page_key ~ '^(main|page:[a-zA-Z0-9_-]+)$'), status text not null,
  snapshot jsonb not null, draft_version bigint not null, created_by uuid not null,
@@ -8,9 +8,9 @@ create table public.page_editor_work_items (
  expires_at timestamptz, token_hash text unique, previous_document jsonb,
  expected_publication_version bigint, applied_version bigint, error text
 );
-create index on public.page_editor_work_items(page_key,created_at desc);
-create index on public.page_editor_work_items(starts_at) where kind='schedule' and status='scheduled';
-create table public.page_editor_audit (
+create index if not exists page_editor_work_items_page_key_created_at_idx on public.page_editor_work_items(page_key,created_at desc);
+create index if not exists page_editor_work_items_scheduled_starts_at_idx on public.page_editor_work_items(starts_at) where kind='schedule' and status='scheduled';
+create table if not exists public.page_editor_audit (
  id bigint generated always as identity primary key, page_key text not null,
  action text not null, actor uuid, happened_at timestamptz not null default now(), details jsonb not null
 );
@@ -18,10 +18,12 @@ alter table public.page_editor_work_items enable row level security;
 alter table public.page_editor_audit enable row level security;
 revoke all on public.page_editor_work_items,public.page_editor_audit from public,anon,authenticated;
 grant select on public.page_editor_work_items,public.page_editor_audit to authenticated;
+drop policy if exists editor_work_read on public.page_editor_work_items;
 create policy editor_work_read on public.page_editor_work_items for select to authenticated using(public.page_editor_is_admin());
+drop policy if exists editor_audit_read on public.page_editor_audit;
 create policy editor_audit_read on public.page_editor_audit for select to authenticated using(public.page_editor_is_admin());
 
-create function public.page_editor_audit_event() returns trigger language plpgsql security definer set search_path='' as $$
+create or replace function public.page_editor_audit_event() returns trigger language plpgsql security definer set search_path='' as $$
 declare r jsonb;
 begin
  r:=case when TG_OP='DELETE' then to_jsonb(old) else to_jsonb(new) end;
@@ -29,11 +31,14 @@ begin
  values(r->>'page_key',TG_TABLE_NAME||':'||TG_OP,auth.uid(),jsonb_build_object('version',r->'version','status',r->'status','item_id',r->'id','draft_version',r->'draft_version'));
  if TG_OP='DELETE' then return old; end if; return new;
 end $$;
+drop trigger if exists editor_draft_audit on public.page_editor_drafts;
 create trigger editor_draft_audit after insert or update or delete on public.page_editor_drafts for each row execute function public.page_editor_audit_event();
+drop trigger if exists editor_publication_audit on public.page_editor_publications;
 create trigger editor_publication_audit after insert or update or delete on public.page_editor_publications for each row execute function public.page_editor_audit_event();
+drop trigger if exists editor_work_audit on public.page_editor_work_items;
 create trigger editor_work_audit after insert or update or delete on public.page_editor_work_items for each row execute function public.page_editor_audit_event();
 
-create function public.page_editor_workflow(p_action text,p_payload jsonb default '{}'::jsonb) returns jsonb
+create or replace function public.page_editor_workflow(p_action text,p_payload jsonb default '{}'::jsonb) returns jsonb
 language plpgsql security definer set search_path='' as $$
 declare k text:=p_payload->>'page_key'; d public.page_editor_drafts; w public.page_editor_work_items;
  p public.page_editor_publications; token text; start_time timestamptz; end_time timestamptz; hours integer;
@@ -108,7 +113,7 @@ begin
  update public.page_editor_work_items set status='published' where id=r.id;return p;
 end $$;
 
-create function public.page_editor_review_get(p_token text) returns jsonb language plpgsql security definer set search_path='' as $$
+create or replace function public.page_editor_review_get(p_token text) returns jsonb language plpgsql security definer set search_path='' as $$
 declare w public.page_editor_work_items;
 begin
  if p_token is null or p_token !~ '^[0-9a-f]{64}$' then raise exception 'Review link unavailable' using errcode='42501';end if;
@@ -117,7 +122,7 @@ begin
  return jsonb_build_object('page_key',w.page_key,'document',w.snapshot,'common',w.previous_document,'version',w.draft_version,'expires_at',w.expires_at);
 end $$;
 
-create function public.page_editor_run_schedules() returns void language plpgsql security definer set search_path='' as $$
+create or replace function public.page_editor_run_schedules() returns void language plpgsql security definer set search_path='' as $$
 declare s public.page_editor_work_items;p public.page_editor_publications;v bigint;
 begin
  for s in select * from public.page_editor_work_items where kind='schedule' and ((status='scheduled' and starts_at<=now()) or(status='active' and ends_at<=now())) order by starts_at for update skip locked loop

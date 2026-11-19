@@ -11,14 +11,15 @@
   const relative=url.pathname.slice(base.pathname.length),code=key.slice(5);let matches=false;
   if(key==='main')matches=['','index.html'].includes(relative);
   else if(['notice.html','child.html','program.html'].includes(relative))matches=decodeURIComponent(url.hash.slice(1))===code;
-  else if(relative==='page.html')matches=url.searchParams.get('id')===code;
+  else if(relative==='page.html')matches=(url.searchParams.get('id')||url.searchParams.get('c'))===code;
   else matches=['order','proposal'].includes(code)&&relative===code+'.html';
   if(!matches)throw new Error('편집 대상과 공개 주소가 일치하지 않습니다.');
-  const id=relative==='page.html'?url.searchParams.get('id'):null;url.search='';if(id)url.searchParams.set('id',id);url.searchParams.set('nk_verify',String(nonce));return url;
+  const id=relative==='page.html'?url.searchParams.get('id'):null,legacy=relative==='page.html'&&!id?url.searchParams.get('c'):null;
+  url.search='';if(id)url.searchParams.set('id',id);else if(legacy)url.searchParams.set('c',legacy);url.searchParams.set('nk_verify',String(nonce));return url;
  }
  function expected(row,common,key,width,baseHref){
   const doc=row?.document;if(!doc||typeof doc.title!=='string'||typeof doc.description!=='string')throw new Error('공개본 문서 형식을 확인하세요.');
-  const mobile=width<=768,hero=doc.inherit?(common?.hero||{}):(doc.hero||{}),raw=Number(hero[mobile?'mobileHeight':'desktopHeight']);
+  const mobile=width<=768,hero=doc.inherit?(common?.hero||{}):(doc.hero||{}),rawValue=hero[mobile?'mobileHeight':'desktopHeight'],raw=rawValue===''||rawValue===null||rawValue===undefined?NaN:Number(rawValue);
   const minHeight=Number.isFinite(raw)?Math.max(mobile?100:120,Math.min(mobile?700:900,raw)):(key==='main'?(mobile?440:560):(mobile?180:220));
   const result={viewportWidth:width,title:normalize(doc.title),description:normalize(doc.description),minHeight};
   if(key==='main'&&doc.button){const url=new URL(doc.button.url,new URL('.',baseHref));if(!['http:','https:','tel:','mailto:'].includes(url.protocol))throw new Error('공개본 버튼 주소 형식이 안전하지 않습니다.');result.buttonText=normalize(doc.button.text);result.buttonUrl=url.href;}
@@ -28,10 +29,11 @@
  if(typeof module==='object'&&module.exports){module.exports={normalize,signature,publicURL,expected,compare};return;}
  const $=id=>document.getElementById(id),page=$('page'),host=document.querySelector('.preview-column');if(!page||!host)return;
  const make=(tag,text)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;return node;};
- const card=make('section');card.id='nk-render-check';card.className='editor-card';card.append(make('h2','공개 후 실제 화면 확인'),make('p','DB 공개본을 기준으로 PC 1280px·모바일 390px의 제목·설명·배너 최소 높이·메인 버튼을 비교합니다. HTTP 성공과 별개입니다. 로그인 저장소를 공유하는 동일 브라우저 검사이며 비로그인·전체 접근성·화면 잘림 검증은 아닙니다.'));
- const runButton=make('button','공개 화면 확인'),cancel=make('button','검사 취소');runButton.type=cancel.type='button';runButton.id='nk-render-run';cancel.id='nk-render-cancel';card.append(runButton,cancel);
- const autoLabel=make('label'),auto=make('input');auto.type='checkbox';auto.id='nk-render-auto';autoLabel.append(auto,document.createTextNode(' 공개 성공 후 자동 확인'));card.append(autoLabel);
- const status=make('p','아직 검사하지 않았습니다.');status.id='nk-render-status';status.setAttribute('role','status');const metadata=make('p');metadata.id='nk-render-version';const results=make('ul');results.id='nk-render-results';card.append(status,metadata,results);host.prepend(card);
+ const card=make('section');card.id='nk-render-check';card.className='editor-card';const desc=make('p','DB 공개본을 기준으로 PC 1280px·모바일 390px의 제목·설명·배너 최소 높이·메인 버튼을 비교합니다. HTTP 성공과 별개입니다. 로그인 저장소를 공유하는 동일 브라우저 검사이며 비로그인·전체 접근성·화면 잘림 검증은 아닙니다.');desc.className='muted';card.append(make('h2','공개 후 실제 화면 확인'),desc);
+ const controls=make('div');controls.className='actions';
+ const runButton=make('button','공개 화면 확인'),cancel=make('button','검사 취소');runButton.type=cancel.type='button';runButton.id='nk-render-run';cancel.id='nk-render-cancel';controls.append(runButton,cancel);card.append(controls);
+ const autoLabel=make('label'),auto=make('input');autoLabel.className='check';auto.type='checkbox';auto.id='nk-render-auto';autoLabel.append(auto,document.createTextNode('공개 성공 후 자동 확인'));card.append(autoLabel);
+ const status=make('p','아직 검사하지 않았습니다.');status.id='nk-render-status';status.setAttribute('role','status');const metadata=make('p');metadata.id='nk-render-version';metadata.className='muted';const results=make('ul');results.id='nk-render-results';card.append(status,metadata,results);host.append(card);
  const base=new URL('.',location.href);let running=null;
  const available=()=>!$('workspace').hidden&&!$('save').disabled&&Boolean(page.value);
  function sync(){runButton.disabled=!available()||Boolean(running);cancel.disabled=!running;}
@@ -48,7 +50,7 @@
   let mismatches=null;try{
    frame.src=url.href;document.body.append(frame);const deadline=Date.now()+10000;
    while(Date.now()<deadline){if(op.controller.signal.aborted)throw new Error('검사를 취소했습니다.');
-    try{const doc=frame.contentDocument,hero=doc?.querySelector('#view-hero[data-nk-published-hero],.hero[data-nk-published-hero]');if(hero){publicURL(frame.contentWindow.location.href,base.href,op.key,0);const link=hero.querySelector('.hero-v2-actions .btn'),domText=node=>node?String(node.textContent).replace(/\r\n/g,'\n'):undefined;const actual={viewportWidth:frame.contentWindow.innerWidth,title:domText(hero.querySelector('h1')),description:domText(hero.querySelector('p')),minHeight:parseFloat(frame.contentWindow.getComputedStyle(hero).minHeight),buttonText:domText(link),buttonUrl:link?.href};mismatches=compare(wanted,actual);if(!mismatches.length)return {width,mismatches:[]};}}catch(error){throw new Error('공개 프레임 접근 실패: '+error.message);}
+    try{const doc=frame.contentDocument,hero=doc?.querySelector('#view-hero[data-nk-published-hero],#page-hero[data-nk-published-hero],.hero[data-nk-published-hero]');if(hero){publicURL(frame.contentWindow.location.href,base.href,op.key,0);const link=hero.querySelector('.hero-v2-actions .btn'),domText=node=>node?String(node.textContent).replace(/\r\n/g,'\n'):undefined;const actual={viewportWidth:frame.contentWindow.innerWidth,title:domText(hero.querySelector('h1')),description:domText(hero.querySelector('p')),minHeight:parseFloat(frame.contentWindow.getComputedStyle(hero).minHeight),buttonText:domText(link),buttonUrl:link?.href};mismatches=compare(wanted,actual);if(!mismatches.length)return {width,mismatches:[]};}}catch(error){throw new Error('공개 프레임 접근 실패: '+error.message);}
     await new Promise(resolve=>setTimeout(resolve,75));
    }
    return {width,mismatches:mismatches||[{label:'렌더러',expected:'공개본 적용',actual:'10초 내 확인하지 못함'}]};

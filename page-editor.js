@@ -7,13 +7,15 @@
  const sectionNames={'quick-links':'바로가기·주문 앱 안내',events:'행사 프로그램',curriculum:'교육 프로그램',contact:'상담 안내'};
  const presets={small:[220,180,40,32],normal:[320,240,64,44],large:[560,440,80,56]};
  const base=new URL('.',location.href);
- const tokenKey='sb-jmdyqdckclgfyimqpqce-auth-token';
+ const tokenKey=(()=>{try{return 'sb-'+new URL(CONFIG.SUPABASE_URL).hostname.split('.')[0]+'-auth-token';}catch(_){return 'sb-jmdyqdckclgfyimqpqce-auth-token';}})();
  let storage=sessionStorage;try{if(!sessionStorage.getItem(tokenKey)&&localStorage.getItem(tokenKey))storage=localStorage;}catch(_){}
  const sb=supabase.createClient(CONFIG.SUPABASE_URL,CONFIG.SUPABASE_KEY,{auth:{persistSession:true,storage}});
- let options=[],key='main',doc={},saved={},published={},common={},version=0,dirty=false,busy=false,allowed=false;
+ window.__nkEditorSb=sb;
+ const diffLabels={title:'제목',description:'설명',inherit:'공통 설정 사용','hero.preset':'배너 프리셋','hero.desktopHeight':'PC 최소 높이','hero.mobileHeight':'모바일 최소 높이','hero.desktopPadding':'PC 상하 여백','hero.mobilePadding':'모바일 상하 여백','hero.titleColor':'제목 색','hero.descriptionColor':'설명 색','hero.background':'배경색','hero.decoration':'장식 표시','button.text':'메인 버튼 문구','button.url':'메인 버튼 주소',sections:'메인 섹션 구성'};
+ let options=[],key='main',doc={},saved={},published={},common={},version=0,dirty=false,busy=false,allowed=false,pageLoaded=false;
  const clone=value=>JSON.parse(JSON.stringify(value));
  const status=text=>{$('status').textContent=text;};
- function lock(value){busy=value;$('fields').disabled=value;$('page').disabled=value;['save','publish','compare','cancel'].forEach(id=>$(id).disabled=value||!allowed);document.querySelectorAll('#history button').forEach(b=>b.disabled=value);}
+ function lock(value){busy=value;$('fields').disabled=value||!allowed||!pageLoaded;$('page').disabled=value||!allowed;['save','publish','compare','cancel'].forEach(id=>$(id).disabled=value||!allowed||!pageLoaded);document.querySelectorAll('#history button').forEach(b=>b.disabled=value||!allowed||!pageLoaded);}
  function baseline(option){
   const main=option.key==='main';const row=option.row||{};
   return {schemaVersion:1,title:main?'우리 원에 필요한 모든 즐거움\n뉴키즈 (New Kids)':(row.hero_title||row.name||'공통 배너 설정'),description:main?'검증된 영유아 교재부터 특별한 원어민 행사까지,\n선생님과 아이들이 모두 행복한 교육 파트너':(row.hero_desc||''),inherit:false,hero:{preset:main?'large':'small',desktopHeight:main?560:220,mobileHeight:main?440:180,desktopPadding:main?80:40,mobilePadding:main?56:32,titleColor:'#172451',descriptionColor:'#545b6e',background:'#f7f0e4',decoration:true},button:{text:'제안서 / 견적 요청하기',url:'proposal.html'},sections:Object.keys(sectionNames).map(id=>({id,visible:true}))};
@@ -41,21 +43,23 @@
  async function readHistory(){
   const {data,error}=await sb.from('page_editor_revisions').select('id,publication_version,created_at').eq('page_key',key).order('created_at',{ascending:false}).limit(30);
   if(error)throw error;$('history').replaceChildren();
-  (data||[]).forEach(item=>{const row=document.createElement('div');row.className='history-row';row.textContent='공개 v'+item.publication_version+' · '+new Date(item.created_at).toLocaleString('ko-KR');const b=document.createElement('button');b.textContent='초안으로 복구';b.addEventListener('click',async()=>{if(busy||!confirm('이 버전을 초안으로 가져올까요? 저장하지 않은 수정은 사라집니다. 공개본은 바뀌지 않습니다.'))return;lock(true);try{const {data,error}=await sb.rpc('page_editor_restore_draft',{p_revision_id:item.id,p_expected_draft_version:version});if(error)throw error;const r=Array.isArray(data)?data[0]:data;version=r.version;doc=r.document;saved=clone(doc);dirty=false;fill();preview();status('이전 버전을 초안으로 복구했습니다. 공개하려면 공개 반영을 누르세요.');}catch(error){status('복구 실패: '+error.message);}finally{lock(false);fill();}});row.append(b);$('history').append(row);});
+  if(!data||!data.length){const empty=document.createElement('p');empty.className='muted';empty.textContent='아직 기록된 공개 이력이 없습니다.';$('history').append(empty);return;}
+  data.forEach(item=>{const row=document.createElement('div');row.className='history-row';row.textContent='공개 v'+item.publication_version+' · '+new Date(item.created_at).toLocaleString('ko-KR');const b=document.createElement('button');b.textContent='초안으로 복구';b.addEventListener('click',async()=>{if(busy||!confirm('이 버전을 초안으로 가져올까요? 저장하지 않은 수정은 사라집니다. 공개본은 바뀌지 않습니다.'))return;lock(true);try{const {data,error}=await sb.rpc('page_editor_restore_draft',{p_revision_id:item.id,p_expected_draft_version:version});if(error)throw error;const r=Array.isArray(data)?data[0]:data;version=r.version;doc=r.document;saved=clone(doc);dirty=false;fill();preview();status('이전 버전을 초안으로 복구했습니다. 공개하려면 공개 반영을 누르세요.');}catch(error){status('복구 실패: '+error.message);}finally{lock(false);fill();}});row.append(b);$('history').append(row);});
  }
  function route(option){if(option.key==='main')return 'index.html';if(option.key==='page:defaults')return 'notice.html#reference';const r=option.row;if(r.type==='EDU')return 'child.html#'+encodeURIComponent(r.code);if(r.type==='EVENT')return 'program.html#'+encodeURIComponent(r.code);if(r.type==='BOARD')return 'notice.html#'+encodeURIComponent(r.code);return ['order','proposal'].includes(r.code)?r.code+'.html':'page.html?id='+encodeURIComponent(r.code);}
  async function select(){
   lock(true);try{
    key=$('page').value;const option=options.find(o=>o.key===key);
+   $('diff').textContent='';
    const [draftResult,pubResult,commonResult]=await Promise.all([sb.from('page_editor_drafts').select('*').eq('page_key',key).maybeSingle(),sb.from('page_editor_publications').select('*').eq('page_key',key).maybeSingle(),sb.from('page_editor_publications').select('document').eq('page_key','page:defaults').maybeSingle()]);
    for(const result of [draftResult,pubResult,commonResult])if(result.error)throw result.error;
    common=commonResult.data?.document||{};published=pubResult.data?.document||baseline(option);
    if(key==='main'&&!pubResult.data){const result=await sb.from('site_config').select('main_hero_title,main_hero_desc').eq('id',1).maybeSingle();if(!result.error&&result.data){if(result.data.main_hero_title)published.title=result.data.main_hero_title;if(result.data.main_hero_desc)published.description=result.data.main_hero_desc;}}
    doc=clone(draftResult.data?.document||published);doc.hero={...baseline(option).hero,...doc.hero};doc.sections=doc.sections||baseline(option).sections;doc.button=doc.button||baseline(option).button;
-   version=draftResult.data?.version||0;saved=clone(doc);dirty=false;fill();
-   const url=new URL(route(option),base);$('open-page').href=url.href;url.searchParams.set('nkpreview','1');url.searchParams.set('editor_v','1');$('preview-status').textContent='미리보기 로딩 중';$('preview').src=url.href;
+   version=draftResult.data?.version||0;saved=clone(doc);dirty=false;pageLoaded=true;fill();
+   const url=new URL(route(option),base);$('open-page').href=url.href;url.searchParams.set('nkpreview','1');url.searchParams.set('editor_v','1');url.searchParams.set('nk_page',key);$('preview-status').textContent='미리보기 로딩 중';$('preview').src=url.href;
    await readHistory();status('초안 v'+version+' · '+(pubResult.data?'새 편집기 공개본 있음':'새 공개본 없음: 현재 홈페이지는 기존 설정 유지'));
-  }catch(error){allowed=false;status('불러오기 실패: '+error.message);}finally{lock(false);fill();}
+  }catch(error){pageLoaded=false;status('불러오기 실패: '+error.message+' (다른 페이지를 선택하거나 새로고침해 다시 시도하세요.)');}finally{lock(false);fill();}
  }
  async function save(){
   const {data,error}=await sb.rpc('page_editor_save_draft',{p_page_key:key,p_document:doc,p_expected_version:version});if(error)throw error;const row=Array.isArray(data)?data[0]:data;version=row.version;saved=clone(doc);dirty=false;
@@ -65,15 +69,16 @@
   if(id==='title'||id==='description')doc[id]=$(id).value;
   else if(id==='inherit'){doc.inherit=$(id).checked;fill();}
   else if(id==='buttonText'||id==='buttonUrl'){doc.button=doc.button||{};doc.button[id==='buttonText'?'text':'url']=$(id).value;}
-  else {doc.hero=doc.hero||{};doc.hero[id]=id==='decoration'?$(id).checked:numeric.includes(id)?Number($(id).value):$(id).value;if(id==='preset'){const p=presets[$(id).value];numeric.forEach((name,i)=>doc.hero[name]=p[i]);fill();}}
+  else {doc.hero=doc.hero||{};doc.hero[id]=id==='decoration'?$(id).checked:numeric.includes(id)?($(id).value===''?'':Number($(id).value)):$(id).value;if(id==='preset'){const p=presets[$(id).value];if(p)numeric.forEach((name,i)=>doc.hero[name]=p[i]);fill();}}
   changed();
  }));
  $('page').addEventListener('change',()=>{if(dirty&&!confirm('저장하지 않은 변경을 버리고 이동할까요?')){$('page').value=key;return;}select();});
  $('cancel').addEventListener('click',()=>{if(busy||!confirm('저장된 초안으로 되돌릴까요?'))return;doc=clone(saved);dirty=false;fill();preview();status('저장된 초안을 불러왔습니다.');});
  $('save').addEventListener('click',async()=>{lock(true);try{await save();status('초안 v'+version+' 저장 완료. 공개 사이트는 변경되지 않았습니다.');}catch(error){status('저장 실패: '+error.message);}finally{lock(false);fill();}});
  $('publish').addEventListener('click',async()=>{if(busy||!confirm('현재 수정본을 저장하고 공개 홈페이지에 반영할까요? 공통 설정은 이를 사용하는 모든 페이지에 영향을 줍니다.'))return;lock(true);try{await save();const {data,error}=await sb.rpc('page_editor_publish',{p_page_key:key,p_expected_draft_version:version});if(error)throw error;const row=Array.isArray(data)?data[0]:data;published=clone(row.document);if(key==='page:defaults')common=clone(row.document);await readHistory();status('공개본 v'+row.version+' 저장 완료. 공개 페이지를 새로 열어 결과를 확인하세요.');}catch(error){status('공개 처리 실패: '+error.message);}finally{lock(false);fill();}});
- $('compare').addEventListener('click',()=>{const changes=[];function walk(a,b,path){if(JSON.stringify(a)===JSON.stringify(b))return;if(a&&b&&typeof a==='object'&&typeof b==='object'&&!Array.isArray(a)&&!Array.isArray(b)){new Set([...Object.keys(a),...Object.keys(b)]).forEach(k=>walk(a[k],b[k],path?path+'.'+k:k));}else changes.push(path+': '+JSON.stringify(a)+' → '+JSON.stringify(b));}walk(published,doc,'');$('diff').textContent=changes.join('\n')||'공개본과 차이가 없습니다.';$('diff-dialog').showModal();});
+ $('compare').addEventListener('click',()=>{const changes=[];const fmt=v=>v===undefined||v===null?'없음':typeof v==='boolean'?(v?'사용':'미사용'):typeof v==='string'?v:JSON.stringify(v);function walk(a,b,path){if(JSON.stringify(a)===JSON.stringify(b))return;if(a&&b&&typeof a==='object'&&typeof b==='object'&&!Array.isArray(a)&&!Array.isArray(b)){new Set([...Object.keys(a),...Object.keys(b)]).forEach(k=>walk(a[k],b[k],path?path+'.'+k:k));}else changes.push((diffLabels[path]||path)+': '+fmt(a)+' → '+fmt(b));}walk(published,doc,'');$('diff').textContent=changes.join('\n')||'공개본과 차이가 없습니다.';$('diff-dialog').showModal();});
  $('close-diff').addEventListener('click',()=>$('diff-dialog').close());
+ $('diff-dialog').addEventListener('click',event=>{if(event.target===$('diff-dialog'))$('diff-dialog').close();});
  document.querySelectorAll('[data-width]').forEach(button=>button.addEventListener('click',()=>{$('preview').style.width=button.dataset.width+'px';}));
  window.addEventListener('beforeunload',event=>{if(dirty){event.preventDefault();event.returnValue='';}});
  window.addEventListener('message',event=>{if(event.source!==$('preview').contentWindow||event.origin!==location.origin)return;if(event.data?.type==='nk-page-editor-preview-ready')preview();if(event.data?.type==='nk-page-editor-preview-applied')$('preview-status').textContent='초안 미리보기 반영됨 · 읽기 전용';});

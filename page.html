@@ -38,7 +38,7 @@
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             const urlParams = new URLSearchParams(window.location.search);
-            const categoryCode = urlParams.get('c');
+            const categoryCode = urlParams.get('c') || urlParams.get('id');
             // 카카오 메시지(2026-11)에 걸린 옛 과목 주소 page.html?c=과목 → 그 과목 프로그램 목록(child.html#과목)으로 보냄
             if (['korean','reading','english','math','science','art','environment','nuri','infant','special'].includes(categoryCode)) {
                 location.replace('child.html#' + categoryCode);

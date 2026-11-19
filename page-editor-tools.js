@@ -29,6 +29,7 @@
  const fingerprint=()=>JSON.stringify({key:$('page').value,document:current()});
  let client;
  function db(){
+  if(window.__nkEditorSb)return window.__nkEditorSb;
   if(client)return client;
   const token='sb-'+new URL(CONFIG.SUPABASE_URL).hostname.split('.')[0]+'-auth-token';let storage=sessionStorage;
   try{if(!sessionStorage.getItem(token)&&localStorage.getItem(token))storage=localStorage;}catch(_){}
@@ -42,19 +43,22 @@
  function displaySections(doc){if(!doc)return {};const names={'quick-links':'바로가기·주문 앱 안내',events:'행사 프로그램',curriculum:'교육 프로그램',contact:'상담 안내'};return {...doc,sections:(doc.sections||[]).map(s=>({label:names[s.id]||s.label||s.id,visible:s.visible!==false}))};}
  function imageWarnings(){try{const frame=$('preview').contentDocument;if(!frame)return ['미리보기 로드 후 이미지 설명을 다시 확인하세요.'];const count=[...frame.images].filter(img=>!img.hasAttribute('alt')).length;return count?['대체 설명 속성이 없는 이미지 '+count+'개. 장식용 이미지 여부도 확인하세요.']:[];}catch(_){return ['이미지 설명을 자동 확인하지 못했습니다.'];}}
  const card=element('section');card.className='editor-card';card.id='nk-editor-tools';
- card.append(element('h2','복사·품질 점검'),element('p','복사는 현재 초안만 수정합니다. 저장·공개는 별도로 진행하세요.'));
+ const intro=element('p','복사는 현재 초안만 수정합니다. 저장·공개는 별도로 진행하세요.');intro.className='muted';
+ card.append(element('h2','복사·품질 점검'),intro);
  const sourceLabel=element('label','복사할 원본 페이지');const source=element('select');source.id='nk-copy-source';sourceLabel.append(source);card.append(sourceLabel);
- const textLabel=element('label');const includeText=element('input');includeText.type='checkbox';includeText.id='nk-copy-text';textLabel.append(includeText,document.createTextNode(' 제목·설명도 복사'));card.append(textLabel);
+ const textLabel=element('label');textLabel.className='check';const includeText=element('input');includeText.type='checkbox';includeText.id='nk-copy-text';textLabel.append(includeText,document.createTextNode('제목·설명도 복사'));card.append(textLabel);
+ const controls=element('div');controls.className='actions';
  const copy=element('button','디자인을 현재 초안으로 복사');copy.type='button';copy.id='nk-copy-design';
  const check=element('button','콘텐츠 품질 점검');check.type='button';check.id='nk-quality-check';
- const feedback=element('p');feedback.id='nk-tools-status';feedback.setAttribute('role','status');const warnings=element('ul');warnings.id='nk-quality-results';card.append(copy,check,feedback,warnings);document.querySelector('.settings').append(card);
+ controls.append(copy,check);
+ const feedback=element('p');feedback.id='nk-tools-status';feedback.setAttribute('role','status');const warnings=element('ul');warnings.id='nk-quality-results';card.append(controls,feedback,warnings);document.querySelector('.settings').append(card);
  let copying=false;
  function sync(){const selected=source.value;source.replaceChildren();for(const option of $('page').options){if(option.value===$('page').value)continue;const item=element('option',option.textContent);item.value=option.value;source.append(item);}if([...source.options].some(option=>option.value===selected))source.value=selected;copy.disabled=copying||$('fields').disabled||!source.options.length;source.disabled=copying||$('fields').disabled;includeText.disabled=copying||$('fields').disabled;check.disabled=$('fields').disabled;}
  new MutationObserver(sync).observe($('page'),{childList:true,attributes:true,attributeFilter:['disabled']});
  new MutationObserver(sync).observe($('fields'),{attributes:true,attributeFilter:['disabled']});$('page').addEventListener('change',sync);sync();
  copy.addEventListener('click',async()=>{
   if(copy.disabled||!confirm('선택한 페이지의 디자인으로 현재 초안을 수정할까요? 저장·공개는 하지 않습니다.'))return;
-  const before=fingerprint(),key=source.value,withText=includeText.checked;copying=true;sync();feedback.textContent='원본 조회 중...';
+  const before=fingerprint(),key=source.value,withText=includeText.checked;copying=true;sync();feedback.dataset.state='loading';feedback.textContent='원본 조회 중...';
   try{
    const draft=await read('page_editor_drafts',key);let document=draft||await read('page_editor_publications',key);
    if(document?.inherit){const common=await read('page_editor_publications','page:defaults');if(!common?.hero)throw new Error('공통 공개 디자인이 없습니다.');document={...document,hero:common.hero};}
@@ -63,10 +67,10 @@
    const updates=[['inherit',false],...heroKeys.filter(key=>document.hero[key]!==undefined).map(key=>[key,document.hero[key]])];
    if(withText)updates.push(['title',document.title||''],['description',document.description||'']);
    for(const [id,value] of updates){const input=$(id);if(input.type==='checkbox')input.checked=Boolean(value);else input.value=String(value);input.dispatchEvent(new Event('input',{bubbles:true}));}
-   feedback.textContent='현재 초안에 복사했습니다. 아직 저장하거나 공개하지 않았습니다.';
-  }catch(error){feedback.textContent='복사 실패: '+error.message;}finally{copying=false;sync();}
+   feedback.dataset.state='ok';feedback.textContent='현재 초안에 복사했습니다. 아직 저장하거나 공개하지 않았습니다.';
+  }catch(error){feedback.dataset.state='error';feedback.textContent='복사 실패: '+error.message;}finally{copying=false;sync();}
  });
- check.addEventListener('click',()=>{list(warnings,[...quality(current()),...imageWarnings()]);feedback.textContent=warnings.children.length?'주의 항목을 확인하세요. 자동 점검은 접근성·화면 검증을 대체하지 않습니다.':'자동 점검에서 주의 항목이 없습니다. 실제 PC·모바일 화면도 확인하세요.';});
+ check.addEventListener('click',()=>{list(warnings,[...quality(current()),...imageWarnings()]);feedback.dataset.state=warnings.children.length?'warn':'ok';feedback.textContent=warnings.children.length?'주의 항목을 확인하세요. 자동 점검은 접근성·화면 검증을 대체하지 않습니다.':'자동 점검에서 주의 항목이 없습니다. 실제 PC·모바일 화면도 확인하세요.';});
  const dialog=$('nk-preflight-dialog'),confirmButton=$('nk-preflight-confirm');const summary=element('section');summary.id='nk-change-summary';const heading=element('h3','공개 전 변경 요약');const note=element('p');const details=element('ul');summary.append(heading,note,details);dialog.insertBefore(summary,$('nk-preflight-summary'));
  let generation=0,pending=false,summaryFingerprint='';
  async function summarize(){

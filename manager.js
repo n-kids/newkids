@@ -253,7 +253,7 @@ window.applySubPageHero = function () {
     else if (pathname.includes('proposal.html')) currentCode = 'proposal';
     else if (pathname.includes('order.html')) currentCode = 'order';
     else if (pathname.includes('page.html')) {
-        currentCode = new URLSearchParams(window.location.search).get('id');
+        currentCode = new URLSearchParams(window.location.search).get('id') || new URLSearchParams(window.location.search).get('c');
     } else {
         currentCode = pathname.split('/').pop().replace('.html', '');
     }

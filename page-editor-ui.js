@@ -13,7 +13,7 @@
   if(page.value&&!main)lastSub=page.value;
   tabs.forEach(button=>{const active=(button.dataset.pageKind==='main')===main;button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));button.disabled=page.disabled||!page.options.length;});
   pills.forEach(button=>{button.setAttribute('aria-pressed',String(button.dataset.preset===preset.value));button.disabled=preset.disabled||document.getElementById('fields').disabled;});
-  document.getElementById('theme-status').textContent=inherit.checked?'공통 테마 사용 중':'개별 테마 설정';
+  document.getElementById('theme-status').textContent=page.value==='page:defaults'?'공통 배너 기본값 편집 중':inherit.checked?'공통 테마 사용 중':'개별 테마 설정';
   document.getElementById('compare-panel').disabled=document.getElementById('compare').disabled;
  }
  tabs.forEach(button=>button.addEventListener('click',()=>{
@@ -24,15 +24,19 @@
  pills.forEach(button=>button.addEventListener('click',()=>{if(button.disabled)return;preset.value=button.dataset.preset;preset.dispatchEvent(new Event('input',{bubbles:true}));sync();}));
  document.getElementById('compare-panel').addEventListener('click',()=>document.getElementById('compare').click());
  const diff=document.getElementById('diff');
- new MutationObserver(()=>{document.getElementById('inline-diff').textContent=diff.textContent;}).observe(diff,{childList:true,subtree:true,characterData:true});
+ new MutationObserver(()=>{document.getElementById('inline-diff').textContent=diff.textContent||'변경 비교를 누르면 상세 변경 내역이 표시됩니다.';}).observe(diff,{childList:true,subtree:true,characterData:true});
  const status=document.getElementById('status');
- new MutationObserver(()=>{
-  const text=status.textContent;const badge=document.getElementById('publication-status');
+ function syncBadge(){
+  const text=status.textContent,badge=document.getElementById('publication-status');
+  if(!badge)return;
   if(text.includes('새 공개본 없음'))badge.textContent='미공개';
   else if(text.includes('새 편집기 공개본 있음'))badge.textContent='공개본 있음';
   else if(text.startsWith('공개본 v'))badge.textContent=text.split(' 저장')[0];
+  else if(text.startsWith('불러오기 실패'))badge.textContent='확인 불가';
   sync();
- }).observe(status,{childList:true,subtree:true,characterData:true});
+ }
+ new MutationObserver(syncBadge).observe(status,{childList:true,subtree:true,characterData:true});
+ syncBadge();
  new MutationObserver(sync).observe(page,{childList:true,attributes:true,attributeFilter:['disabled']});
  new MutationObserver(sync).observe(preset,{attributes:true,attributeFilter:['disabled']});
  page.addEventListener('change',sync);inherit.addEventListener('input',sync);preset.addEventListener('input',sync);
@@ -55,7 +59,7 @@
  const publish=$('publish');
  if(!publish||$('nk-preflight-dialog'))return;
  const dialog=document.createElement('dialog');dialog.id='nk-preflight-dialog';dialog.setAttribute('aria-labelledby','nk-preflight-title');
- const title=document.createElement('h2');title.id='nk-preflight-title';title.textContent='公開前の確認'.replace('公開前の確認','공개 전 확인');
+ const title=document.createElement('h2');title.id='nk-preflight-title';title.textContent='공개 전 확인';
  const intro=document.createElement('p');intro.textContent='점검표 확인 후에도 기존 공개 확인 절차를 거칩니다. 이 창을 여는 것만으로 저장하거나 공개하지 않습니다.';
  const results=document.createElement('ul');results.id='nk-preflight-results';
  const summary=document.createElement('p');summary.id='nk-preflight-summary';summary.setAttribute('role','status');
@@ -103,6 +107,7 @@
   snapshot=fingerprint();check();if(!dialog.open)dialog.showModal();cancel.focus();
  },true);
  cancel.addEventListener('click',()=>dialog.close());
+ dialog.addEventListener('click',event=>{if(event.target===dialog)dialog.close();});
  dialog.addEventListener('close',()=>publish.focus());
  confirm.addEventListener('click',()=>{
   if(publish.disabled){summary.textContent='다른 작업이 진행 중입니다. 작업이 끝난 뒤 다시 시도하세요.';return;}

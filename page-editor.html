@@ -15,15 +15,17 @@
 <div id="workspace" class="workspace" hidden>
 <section class="settings" aria-label="페이지 설정">
 <div class="editor-card page-picker"><div class="segmented page-tabs" role="group" aria-label="페이지 유형"><button type="button" data-page-kind="main" aria-pressed="true">메인 페이지</button><button type="button" data-page-kind="sub" aria-pressed="false">서브 페이지</button></div><label class="sr-only" for="page">편집 대상</label><select id="page"></select>
-<div id="nk-editor-nav-pills" class="nk-view-pills" role="group" aria-label="편집 영역 필터">
-<button type="button" class="active" data-editor-view="all" aria-pressed="true">전체 통합</button>
-<button type="button" data-editor-view="design" aria-pressed="false">디자인 편집</button>
-<button type="button" data-editor-view="subpages" aria-pressed="false">서브 페이지 관리</button>
-<button type="button" data-editor-view="env" aria-pressed="false">환경 설정 · 팝업</button>
+<div id="nk-editor-nav-pills" class="nk-view-pills nk-editor-tabs" role="group" aria-label="편집 영역 탭">
+<button type="button" class="active" data-editor-view="banner" aria-pressed="true">🖼 배너</button>
+<button type="button" data-editor-view="body" aria-pressed="false">🧩 본문 섹션</button>
+<button type="button" data-editor-view="layout" aria-pressed="false">🧭 헤더·푸터</button>
+<button type="button" data-editor-view="subpages" aria-pressed="false">📄 서브 페이지</button>
+<button type="button" data-editor-view="env" aria-pressed="false">⚙️ 환경·팝업</button>
+<button type="button" data-editor-view="all" aria-pressed="false">전체 보기</button>
 </div></div>
-<div class="editor-card" data-view-group="design"><h2><svg class="ic"><use href="#pe-list"/></svg>적용 상태</h2><div class="apply-status"><div><span class="status-dot">✓</span><span id="theme-status">개별 테마 설정</span></div><div><span class="status-dot">✓</span><span>제목·설명·전체 섹션</span><small>실시간 편집 가능</small></div><div><span class="status-dot">✓</span><span>배경 이미지·색상·레이아웃</span><small>모든 페이지 지원</small></div></div><p class="muted status-help">새 공개본이 있으면 기존 편집기의 같은 항목보다 우선합니다.</p></div>
-<fieldset id="fields" data-view-group="design"><legend class="sr-only">내용과 디자인</legend>
-<div class="editor-card banner-card"><h2><svg class="ic"><use href="#pe-screen"/></svg>배너 설정 (상단 히어로)</h2><label class="form-row"><span>제목</span><textarea id="title" rows="2" maxlength="200"></textarea></label><label class="form-row"><span>설명</span><textarea id="description" rows="3" maxlength="1000"></textarea></label>
+<div class="editor-card" data-view-group="banner"><h2><svg class="ic"><use href="#pe-list"/></svg>적용 상태</h2><div class="apply-status"><div><span class="status-dot">✓</span><span id="theme-status">개별 테마 설정</span></div><div><span class="status-dot">✓</span><span>제목·설명·전체 섹션</span><small>실시간 편집 가능</small></div><div><span class="status-dot">✓</span><span>배경 이미지·색상·레이아웃</span><small>모든 페이지 지원</small></div></div><p class="muted status-help">새 공개본이 있으면 기존 편집기의 같은 항목보다 우선합니다.</p></div>
+<fieldset id="fields" data-view-group="banner body layout"><legend class="sr-only">내용과 디자인</legend>
+<div class="editor-card banner-card" data-view-group="banner"><h2><svg class="ic"><use href="#pe-screen"/></svg>배너 설정 (상단 히어로)</h2><label class="form-row"><span>제목</span><textarea id="title" rows="2" maxlength="200"></textarea></label><label class="form-row"><span>설명</span><textarea id="description" rows="3" maxlength="1000"></textarea></label>
 <label class="sr-only" for="preset">배너 프리셋</label><select id="preset" class="sr-only"><option value="small">작게</option><option value="normal">기본</option><option value="large">크게</option></select>
 <div class="form-row"><span>프리셋</span><div class="preset-pills" role="group" aria-label="배너 프리셋"><button type="button" data-preset="small">작게</button><button type="button" data-preset="normal">기본</button><button type="button" data-preset="large">크게</button></div></div>
 <div class="nk-theme-bar" role="group" aria-label="원클릭 배너 색상 테마">
@@ -41,7 +43,7 @@
 <div class="nk-inline-file-row"><input id="heroImageFile" type="file" accept="image/*"><button type="button" id="heroImageClear">이미지 비우기</button></div>
 <label>배경 이미지 오버레이 투명도 (0 ~ 1)<input id="overlayOpacity" type="number" min="0" max="1" step="0.05" placeholder="0.4"></label>
 <label class="check"><input id="decoration" type="checkbox">장식 표시</label></details></div></div>
-<div id="main-settings" class="editor-card main-card" hidden><h2><svg class="ic"><use href="#pe-list"/></svg>메인 영역 관리</h2><div id="sections"></div><details class="advanced"><summary>메인 버튼 · 배지 · 태그 · 일러스트 설정</summary>
+<div id="main-settings" class="editor-card main-card" data-view-group="banner" hidden><h2><svg class="ic"><use href="#pe-list"/></svg>메인 영역 관리</h2><div id="sections"></div><details class="advanced"><summary>메인 버튼 · 배지 · 태그 · 일러스트 설정</summary>
 <div class="pair"><label>버튼 문구<input id="buttonText" maxlength="80"></label><label>버튼 연결 주소<input id="buttonUrl" placeholder="proposal.html"></label></div>
 <div class="pair"><label>버튼 배경/테두리 색<input id="btnBgColor" type="color"></label><label>버튼 글자 색<input id="btnTextColor" type="color"></label></div>
 <label class="check"><input id="ghostButtonVisible" type="checkbox">보조 버튼(두 번째 버튼) 표시</label>
@@ -56,7 +58,7 @@
 <label class="check"><input id="showArt" type="checkbox">우측 일러스트 그래픽 표시</label>
 <div class="nk-color-sync-row"><label style="flex:1;margin:0">우측 일러스트 원 배경색<input id="circleColor" type="color"></label><button type="button" id="syncCircleColor">배경색 맞춤</button></div>
 </details></div>
-<div id="main-sections-design" class="editor-card" hidden>
+<div id="main-sections-design" class="editor-card" data-view-group="body" hidden>
 <h2><svg class="ic"><use href="#pe-edit"/></svg>메인 본문 섹션별 상세 편집</h2>
 <p class="muted">메인 페이지의 각 섹션 문구, 전화번호, 배경색, 카드 색상을 자유롭게 변경할 수 있습니다.</p>
 <details class="advanced" open><summary>① 바로가기 · 주문 앱 안내 섹션</summary>
@@ -99,7 +101,7 @@
 <label>전화 버튼 글자색<input id="ctCardTextColor" type="color"></label>
 </details>
 </div>
-<div id="subpage-design-card" class="editor-card" hidden>
+<div id="subpage-design-card" class="editor-card" data-view-group="body" hidden>
 <h2><svg class="ic"><use href="#pe-edit"/></svg>서브 페이지 본문 · 카드 · 양식 디자인</h2>
 <p class="muted">서브 페이지(교육·행사·게시판·발주·견적·고정 페이지)의 본문 배경, 카드, 버튼 색상 및 제목·문구를 편집합니다.</p>
 <div class="nk-theme-bar" role="group" aria-label="서브 페이지 본문 색상 테마">
@@ -120,7 +122,7 @@
 <label class="check"><input id="subShowHelpPanel" type="checkbox">게시판 하단 자료 다운로드 안내 박스 표시</label>
 </details>
 </div>
-<div id="global-layout-card" class="editor-card">
+<div id="global-layout-card" class="editor-card" data-view-group="layout">
 <h2><svg class="ic"><use href="#pe-home"/></svg>상단 헤더 · 네비게이션 · 하단 푸터 디자인</h2>
 <p class="muted">페이지 상단 로고·메뉴바와 하단 푸터, 전체 페이지 기본 배경·글자 색상을 설정합니다.</p>
 <details class="advanced"><summary>헤더 · 메뉴 · 푸터 색상 및 로고 문구 상세 설정</summary>
@@ -133,7 +135,7 @@
 <div class="pair"><label>브랜드 메인 컬러<input id="layPrimaryColor" type="color"></label><label>브랜드 강조 컬러<input id="layAccentColor" type="color"></label></div>
 </details>
 </div>
-</fieldset><button id="cancel" class="cancel-button" data-view-group="design">저장된 초안으로 되돌리기</button>
+</fieldset><button id="cancel" class="cancel-button" data-view-group="banner body layout">저장된 초안으로 되돌리기</button>
 <section id="nk-subpage-manager-card" class="editor-card" data-view-group="subpages">
 <h2><svg class="ic"><use href="#pe-file"/></svg>서브 페이지 · 메뉴 통합 관리</h2>
 <p class="muted">교육(EDU)·행사(EVENT)·게시판(BOARD)·고정 페이지(PAGE)를 추가하거나 메뉴 이름, 색상, 노출 순서, 배너 정보를 한곳에서 관리하고 바로 디자인을 편집할 수 있습니다.</p>

@@ -462,7 +462,7 @@
   if(!$('page')||!options.some(o=>o.key===targetKey))return;
   if(dirty&&!confirm('저장하지 않은 변경을 버리고 선택한 페이지 디자인 편집으로 이동할까요?'))return;
   dirty=false;$('page').value=targetKey;$('page').dispatchEvent(new Event('change',{bubbles:true}));
-  if(typeof window.__nkSetEditorView==='function')window.__nkSetEditorView('all');
+  if(typeof window.__nkSetEditorView==='function')window.__nkSetEditorView('body');
  }
  function renderSubpageManager(){
   const box=$('nk-cat-list');if(!box)return;

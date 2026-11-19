@@ -268,6 +268,8 @@ test('integrated full-page design controls, subpage manager, and environment set
   await expect(page.locator('#background')).toHaveValue('#eef6ff');
   await expect(page.locator('#titleColor')).toHaveValue('#1e3a8a');
 
+  await page.locator('[data-editor-view="body"]').click();
+  await expect(page.locator('#title')).toBeHidden();
   await page.locator('#main-sections-design summary').nth(1).click();
   await page.locator('#evTitle').fill('맞춤형 특별 행사');
   await expect(page.frameLocator('#preview').locator('#events h2')).toHaveText('맞춤형 특별 행사');
@@ -276,6 +278,8 @@ test('integrated full-page design controls, subpage manager, and environment set
   await page.locator('#ctPhone1').fill('010-9999-8888');
   await expect(page.frameLocator('#preview').locator('#contact .contact-link').first()).toContainText('010-9999-8888');
 
+  await page.locator('[data-editor-view="layout"]').click();
+  await expect(page.locator('#main-sections-design')).toBeHidden();
   await page.locator('#global-layout-card summary').click();
   await page.locator('#layLogoTitle').fill('뉴키즈 에듀');
   await expect(page.frameLocator('#preview').locator('header .logo-text strong')).toHaveText('뉴키즈 에듀');
@@ -317,3 +321,49 @@ test('integrated full-page design controls, subpage manager, and environment set
   await expect(page.locator('#nk-popup-list')).toContainText('신학기 안내 팝업');
 });
 
+
+test('editor tabs, preview size presets, sticky preview, and mid-check overlay reduce scrolling', async ({ page, context }) => {
+  await setupRoutes(context);
+  page.on('dialog', d => d.accept());
+  await page.goto('/page-editor.html');
+  await expect(page.locator('#save')).toBeEnabled();
+
+  // Default tab shows only banner editing; other areas are hidden
+  await expect(page.locator('[data-editor-view="banner"]')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('#title')).toBeVisible();
+  await expect(page.locator('#global-layout-card')).toBeHidden();
+  await expect(page.locator('#nk-subpage-manager-card')).toBeHidden();
+  await expect(page.locator('#nk-env-settings-card')).toBeHidden();
+
+  await page.locator('[data-editor-view="all"]').click();
+  await expect(page.locator('#global-layout-card')).toBeVisible();
+  await expect(page.locator('#nk-env-settings-card')).toBeVisible();
+  await page.locator('[data-editor-view="banner"]').click();
+
+  // Preview size presets shrink the preview frame
+  await page.locator('[data-preview-size="normal"]').click();
+  const normalH = await page.locator('.frame-scroll').evaluate(el => el.getBoundingClientRect().height);
+  await page.locator('[data-preview-size="compact"]').click();
+  await expect(page.locator('[data-preview-size="compact"]')).toHaveAttribute('aria-pressed', 'true');
+  const compactH = await page.locator('.frame-scroll').evaluate(el => el.getBoundingClientRect().height);
+  expect(compactH).toBeLessThan(normalH);
+  expect(compactH).toBeLessThanOrEqual(310);
+
+  // Sticky preview stays in view after scrolling the editor column
+  await page.evaluate(() => window.scrollTo(0, 1500));
+  const box = await page.locator('.frame-scroll').boundingBox();
+  expect(box.y).toBeLessThan(page.viewportSize().height);
+  expect(box.y + box.height).toBeGreaterThan(0);
+
+  // Mid-check button opens a large overlay of the same live preview and closes with Esc
+  await page.locator('#title').fill('중간 점검 제목');
+  await page.locator('#nk-check-fab').click();
+  await expect(page.locator('body')).toHaveClass(/nk-preview-open/);
+  await expect(page.locator('#nk-preview-close')).toBeVisible();
+  const openH = await page.locator('.frame-scroll').evaluate(el => el.getBoundingClientRect().height);
+  expect(openH).toBeGreaterThan(compactH * 1.5);
+  await expect(page.frameLocator('#preview').locator('.hero h1')).toHaveText('중간 점검 제목');
+  await page.keyboard.press('Escape');
+  await expect(page.locator('body')).not.toHaveClass(/nk-preview-open/);
+  await expect(page.locator('#nk-check-fab')).toBeVisible();
+});

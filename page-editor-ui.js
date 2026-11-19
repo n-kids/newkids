@@ -8,13 +8,16 @@
  const pills=[...document.querySelectorAll('[data-preset]')];
  const widths=[...document.querySelectorAll('[data-width]')];
  const viewBtns=[...document.querySelectorAll('[data-editor-view]')];
- let lastSub='',currentView='all';
+ let lastSub='',currentView='banner';
  function syncView(mode){
+  const changedView=mode&&mode!==currentView;
   currentView=mode||currentView;
   viewBtns.forEach(btn=>{const on=btn.dataset.editorView===currentView;btn.classList.toggle('active',on);btn.setAttribute('aria-pressed',String(on));});
   document.querySelectorAll('[data-view-group]').forEach(el=>{
-   el.hidden=currentView!=='all'&&el.dataset.viewGroup!==currentView;
+   const groups=String(el.dataset.viewGroup||'').split(/\s+/);
+   el.classList.toggle('nk-tab-hidden',currentView!=='all'&&!groups.includes(currentView));
   });
+  if(changedView){const s=document.querySelector('.settings');if(s&&s.getBoundingClientRect().top<0)s.scrollIntoView({block:'start'});}
  }
  viewBtns.forEach(btn=>btn.addEventListener('click',()=>syncView(btn.dataset.editorView)));
  window.__nkSetEditorView=syncView;
@@ -51,15 +54,83 @@
  new MutationObserver(sync).observe(preset,{attributes:true,attributeFilter:['disabled']});
  page.addEventListener('change',sync);inherit.addEventListener('input',sync);preset.addEventListener('input',sync);
  const viewport=frame.parentElement;
+ const previewBox=document.querySelector('.preview');
+ const toolbar=document.querySelector('.preview-toolbar');
+ const sizeCaps={compact:300,normal:460,large:0};
+ let previewSize='normal';
+ try{const s=localStorage.getItem('nk_editor_preview_size');if(s&&s in sizeCaps)previewSize=s;}catch(_){}
+ const isOpen=()=>document.body.classList.contains('nk-preview-open');
  function fit(){
-  if(!viewport.clientWidth)return;const width=parseInt(frame.style.width,10)||1280;const scale=Math.min(1,Math.max(.1,(viewport.clientWidth-24)/width));
+  if(!viewport.clientWidth)return;const width=parseInt(frame.style.width,10)||1280;
+  let scale=Math.min(1,Math.max(.1,(viewport.clientWidth-24)/width));
+  const cap=sizeCaps[previewSize];
+  if(!isOpen()&&cap)scale=Math.min(scale,Math.max(.1,(cap-24)/760));
   const transform='scale('+scale+')';if(frame.style.transform!==transform)frame.style.transform=transform;
-  const height=Math.max(260,Math.ceil(760*scale)+24)+'px';if(viewport.style.height!==height)viewport.style.height=height;
+  if(isOpen()){
+   const h=Math.max(760,Math.ceil((viewport.clientHeight-24)/scale))+'px';if(frame.style.height!==h)frame.style.height=h;
+  }else{
+   if(frame.style.height)frame.style.height='';
+   const height=Math.max(200,Math.ceil(760*scale)+24)+'px';if(viewport.style.height!==height)viewport.style.height=height;
+  }
  }
+ /* Preview size presets (작게 / 보통 / 크게) */
+ const sizeGroup=document.createElement('div');sizeGroup.className='nk-preview-size';sizeGroup.setAttribute('role','group');sizeGroup.setAttribute('aria-label','미리보기 크기');
+ const sizeLabel=document.createElement('span');sizeLabel.textContent='크기';sizeGroup.append(sizeLabel);
+ const sizeBtns=[['compact','작게'],['normal','보통'],['large','크게']].map(([v,t])=>{const b=document.createElement('button');b.type='button';b.dataset.previewSize=v;b.textContent=t;b.addEventListener('click',()=>{previewSize=v;try{localStorage.setItem('nk_editor_preview_size',v);}catch(_){}syncSize();fit();});sizeGroup.append(b);return b;});
+ function syncSize(){sizeBtns.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.previewSize===previewSize)));}
+ const closeBtn=document.createElement('button');closeBtn.type='button';closeBtn.id='nk-preview-close';closeBtn.className='nk-preview-close primary';closeBtn.textContent='점검 닫기 (Esc)';
+ if(toolbar){const label=toolbar.querySelector(':scope>span');toolbar.insertBefore(sizeGroup,label||null);toolbar.append(closeBtn);}
+ syncSize();
+ /* Mid-check overlay: enlarges the same iframe (no reload) above the editor */
+ const backdrop=document.createElement('div');backdrop.id='nk-preview-backdrop';backdrop.hidden=true;document.body.append(backdrop);
+ const fab=document.createElement('button');fab.type='button';fab.id='nk-check-fab';fab.textContent='🔍 중간 점검 (미리보기 크게 보기)';fab.setAttribute('aria-label','현재 수정 내용을 큰 미리보기로 중간 점검');document.body.append(fab);
+ function setOpen(on){
+  document.body.classList.toggle('nk-preview-open',on);backdrop.hidden=!on;
+  if(previewBox){if(on){previewBox.setAttribute('role','dialog');previewBox.setAttribute('aria-modal','true');previewBox.setAttribute('aria-label','중간 점검 미리보기');}else{previewBox.removeAttribute('role');previewBox.removeAttribute('aria-modal');previewBox.removeAttribute('aria-label');}}
+  requestAnimationFrame(fit);if(on)closeBtn.focus();else fab.focus();
+ }
+ window.__nkSetPreviewOpen=setOpen;
+ fab.addEventListener('click',()=>setOpen(true));
+ closeBtn.addEventListener('click',()=>setOpen(false));
+ backdrop.addEventListener('click',()=>setOpen(false));
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&isOpen()&&!document.querySelector('dialog[open]'))setOpen(false);});
+ const workspace=document.getElementById('workspace');
+ const syncFab=()=>{fab.hidden=!workspace||workspace.hidden;};
+ if(workspace)new MutationObserver(syncFab).observe(workspace,{attributes:true,attributeFilter:['hidden']});
+ syncFab();
+ /* Quick collapse / expand of every detailed settings block */
+ const picker=document.querySelector('.page-picker');
+ if(picker){
+  const tools=document.createElement('div');tools.className='nk-quick-tools';
+  const collapse=document.createElement('button');collapse.type='button';collapse.id='nk-collapse-all';collapse.textContent='상세 설정 모두 접기';
+  const expand=document.createElement('button');expand.type='button';expand.id='nk-expand-all';expand.textContent='모두 펼치기';
+  collapse.addEventListener('click',()=>document.querySelectorAll('.settings details').forEach(d=>{d.open=false;}));
+  expand.addEventListener('click',()=>document.querySelectorAll('.settings details').forEach(d=>{d.open=true;}));
+  tools.append(collapse,expand);picker.append(tools);
+ }
+ /* Scroll the preview to the section that is being edited */
+ function targetFor(el){
+  const id=el.id||'';
+  if(/^ql/.test(id))return '#quick-links';if(/^ev/.test(id))return '#events';if(/^cu/.test(id))return '#curriculum';if(/^ct/.test(id))return '#contact';
+  if(/^layFooter/.test(id))return 'footer';
+  if(el.closest('#subpage-design-card'))return '@body';
+  return '@top';
+ }
+ function scrollPreview(target){
+  try{
+   const w=frame.contentWindow,d=frame.contentDocument;if(!w||!d||!d.body)return;
+   let top=0;
+   if(target==='@body'){const h=d.querySelector('#view-hero,#page-hero,.hero,.ai-hero');top=h?h.offsetTop+h.offsetHeight-40:0;}
+   else if(target!=='@top'){const el=d.querySelector(target);if(!el)return;top=el.getBoundingClientRect().top+w.scrollY-20;}
+   w.scrollTo({top:Math.max(0,top),behavior:'smooth'});
+  }catch(_){}
+ }
+ const fieldsEl=document.getElementById('fields');
+ if(fieldsEl)fieldsEl.addEventListener('focusin',e=>{if(e.target.matches('input,textarea,select'))scrollPreview(targetFor(e.target));});
  widths.forEach(button=>button.addEventListener('click',()=>{widths.forEach(other=>{other.classList.toggle('active',other===button);other.setAttribute('aria-pressed',String(other===button));});fit();}));
  if(window.ResizeObserver)new ResizeObserver(fit).observe(viewport);
- else window.addEventListener('resize',fit);
- frame.addEventListener('load',fit);sync();fit();
+ window.addEventListener('resize',fit);
+ frame.addEventListener('load',fit);sync();syncView('banner');fit();
 })();
 
 /* Publication preflight. This module never calls a database API. */

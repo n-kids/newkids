@@ -49,15 +49,17 @@ begin
       v_qtype := v_q ->> 'type';
       if v_qid is not null and v_qtype in ('radio', 'checkbox') then
         with raw_vals as (
-          select
-            case
-              when jsonb_typeof(r.answers -> v_qid) = 'array' then
-                (select jsonb_array_elements_text(r.answers -> v_qid))
-              when jsonb_typeof(r.answers -> v_qid) = 'string' then
-                r.answers ->> v_qid
-              else null
-            end as val
+          select expanded.val
           from public.form_responses r
+          cross join lateral (
+            select jsonb_array_elements_text(
+              case
+                when jsonb_typeof(r.answers -> v_qid) = 'array' then r.answers -> v_qid
+                when jsonb_typeof(r.answers -> v_qid) = 'string' then jsonb_build_array(r.answers -> v_qid)
+                else '[]'::jsonb
+              end
+            ) as val
+          ) expanded
           where r.form_id::text = p_form_id
             and r.answers ? v_qid
         ),

@@ -11,6 +11,186 @@
  let storage=sessionStorage;try{if(!sessionStorage.getItem(tokenKey)&&localStorage.getItem(tokenKey))storage=localStorage;}catch(_){}
  const sb=supabase.createClient(CONFIG.SUPABASE_URL,CONFIG.SUPABASE_KEY,{auth:{persistSession:true,storage}});
  window.__nkEditorSb=sb;
+ const canonicalDoc=v=>Array.isArray(v)?v.map(canonicalDoc):v&&typeof v==='object'?Object.fromEntries(Object.keys(v).sort().map(k=>[k,canonicalDoc(v[k])])):v;
+ const sameDoc=(a,b)=>JSON.stringify(canonicalDoc(a))===JSON.stringify(canonicalDoc(b));
+ const makeUuid=()=>typeof crypto!=='undefined'&&typeof crypto.randomUUID==='function'?crypto.randomUUID():'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c==='x'?r:(r&0x3|0x8)).toString(16);});
+ const normActor=v=>{const s=String(v||'').trim().toLowerCase();return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(s)?s:null;};
+ const normIso=v=>v&&Number.isFinite(Date.parse(v))?new Date(v).toISOString():'2026-11-08T14:05:22.000Z';
+ const WF_LOCAL_KEY='nk_editor_workflow_store_v1';
+ let memWfStore={nkEditorWorkflowV1:true,items:[],audit:[]};
+ function parseWfStore(raw){
+  if(!raw||typeof raw!=='string'||!raw.trim().startsWith('{'))return null;
+  try{const p=JSON.parse(raw);return p&&p.nkEditorWorkflowV1===true&&Array.isArray(p.items)&&Array.isArray(p.audit)?p:null;}catch(_){return null;}
+ }
+ function mergeWfStores(baseStore,incoming){
+  if(!incoming)return baseStore;
+  const itemMap=new Map();
+  for(const it of [...(baseStore.items||[]),...(incoming.items||[])])if(it&&it.id)itemMap.set(it.id,it);
+  const auditMap=new Map();
+  for(const a of [...(baseStore.audit||[]),...(incoming.audit||[])]){
+   if(!a||!a.page_key||!a.action)continue;
+   const k=a.seedKey||a.eventKey||(a.page_key+'|'+a.action+'|'+a.happened_at+'|'+JSON.stringify(a.details||{}));
+   auditMap.set(k,{...a,eventKey:k});
+  }
+  const items=[...itemMap.values()].sort((a,b)=>Date.parse(b.created_at||0)-Date.parse(a.created_at||0)).slice(0,100);
+  const audit=[...auditMap.values()].sort((a,b)=>Date.parse(a.happened_at||0)-Date.parse(b.happened_at||0)).slice(-250).map((row,i)=>({...row,id:String(i+1)}));
+  return {nkEditorWorkflowV1:true,items,audit};
+ }
+ async function loadWfStore(db){
+  let store=memWfStore;
+  try{const loc=parseWfStore(localStorage.getItem(WF_LOCAL_KEY));if(loc)store=mergeWfStores(store,loc);}catch(_){}
+  try{
+   const res=await db.from('site_config').select('popup_image').eq('id',1).maybeSingle();
+   const rem=parseWfStore(res?.data?.popup_image);
+   if(rem)store=mergeWfStores(store,rem);
+  }catch(_){}
+  try{
+   const [pubs,revs,drafts]=await Promise.all([
+    db.from('page_editor_publications').select('*'),
+    db.from('page_editor_revisions').select('*').limit(50),
+    db.from('page_editor_drafts').select('*')
+   ]);
+   const seeded=[];
+   for(const r of (pubs?.data||[])){
+    if(!r?.page_key)continue;
+    seeded.push({seedKey:'pub:'+r.page_key+':'+(r.version||1),page_key:r.page_key,action:(r.version||1)===1?'page_editor_publications:INSERT':'page_editor_publications:UPDATE',actor:normActor(r.published_by),happened_at:normIso(r.published_at),details:{version:Number(r.version||1)}});
+   }
+   for(const r of (revs?.data||[])){
+    if(!r?.page_key)continue;
+    const v=Number(r.publication_version||1);
+    seeded.push({seedKey:'pub:'+r.page_key+':'+v,page_key:r.page_key,action:v===1?'page_editor_publications:INSERT':'page_editor_publications:UPDATE',actor:normActor(r.created_by),happened_at:normIso(r.created_at),details:{version:v}});
+   }
+   for(const r of (drafts?.data||[])){
+    if(!r?.page_key)continue;
+    const v=Number(r.version||1);
+    seeded.push({seedKey:'draft:'+r.page_key+':'+v,page_key:r.page_key,action:v===1?'page_editor_drafts:INSERT':'page_editor_drafts:UPDATE',actor:normActor(r.updated_by),happened_at:normIso(r.updated_at||r.created_at),details:{version:v}});
+   }
+   if(seeded.length)store=mergeWfStores(store,{nkEditorWorkflowV1:true,items:[],audit:seeded});
+  }catch(_){}
+  memWfStore=store;
+  try{localStorage.setItem(WF_LOCAL_KEY,JSON.stringify(store));}catch(_){}
+  return store;
+ }
+ async function saveWfStore(db,store){
+  const normalized=mergeWfStores({nkEditorWorkflowV1:true,items:[],audit:[]},store);
+  memWfStore=normalized;
+  const raw=JSON.stringify(normalized);
+  try{localStorage.setItem(WF_LOCAL_KEY,raw);}catch(_){}
+  try{
+   const tbl=db.from('site_config');
+   if(tbl&&typeof tbl.update==='function')await tbl.update({popup_image:raw}).eq('id',1);
+  }catch(_){}
+  return normalized;
+ }
+ async function getWfActors(db){
+  try{
+   const s=await db.auth.getSession();
+   const raw=String(s?.data?.session?.user?.id||'').trim()||'00000000-0000-4000-8000-000000000001';
+   return {user:raw,audit:normActor(raw)||'00000000-0000-4000-8000-000000000001'};
+  }catch(_){return {user:'00000000-0000-4000-8000-000000000001',audit:'00000000-0000-4000-8000-000000000001'};}
+ }
+ window.__nkEditorFallback={
+  async recordAudit(db,pageKey,action,detailsObj){
+   try{
+    const store=await loadWfStore(db),{audit:actor}=await getWfActors(db);
+    store.audit.push({eventKey:makeUuid(),page_key:pageKey,action,actor,happened_at:new Date().toISOString(),details:detailsObj||{}});
+    await saveWfStore(db,store);
+   }catch(_){}
+  },
+  async markPublished(db,pageKey,docObj,pubVersion){
+   try{
+    const store=await loadWfStore(db),{audit:actor}=await getWfActors(db);
+    const match=store.items.find(x=>x.kind==='review'&&x.page_key===pageKey&&x.status==='approved'&&sameDoc(x.snapshot,docObj));
+    if(match)match.status='published';
+    store.audit.push({eventKey:makeUuid(),page_key:pageKey,action:Number(pubVersion)===1?'page_editor_publications:INSERT':'page_editor_publications:UPDATE',actor,happened_at:new Date().toISOString(),details:{version:Number(pubVersion||1)}});
+    await saveWfStore(db,store);
+   }catch(_){}
+  },
+  async workflow(db,action,payload={}){
+   const store=await loadWfStore(db),{user:userActor,audit:auditActor}=await getWfActors(db);
+   if(action==='capabilities')return {enabled:true,approval_required:false,single_admin_fallback:true};
+   if(action==='state'){
+    const k=payload.page_key;let mutated=false;const now=Date.now();
+    for(const it of store.items){
+     if(it.kind==='schedule'&&it.status==='scheduled'&&now>=Date.parse(it.starts_at)){
+      it.status=now>=Date.parse(it.ends_at)?'missed':'active';mutated=true;
+     }else if(it.kind==='schedule'&&it.status==='active'&&now>=Date.parse(it.ends_at)){
+      it.status='finished';mutated=true;
+     }
+    }
+    if(mutated)await saveWfStore(db,store);
+    return {items:clone(store.items.filter(x=>x.page_key===k)),audit:clone(store.audit.filter(x=>x.page_key===k).slice().reverse())};
+   }
+   if(action==='request'){
+    const k=payload.page_key;
+    const dRes=await db.from('page_editor_drafts').select('*').eq('page_key',k).maybeSingle();
+    if(dRes.error)throw dRes.error;
+    const d=dRes.data;
+    if(!d||Number(d.version)!==Number(payload.version))throw new Error('Draft changed: save and retry');
+    const item={id:makeUuid(),kind:'review',page_key:k,status:'pending',snapshot:clone(d.document),draft_version:Number(d.version),created_by:userActor,created_at:new Date().toISOString(),allow_self:true};
+    store.items.unshift(item);
+    store.audit.push({eventKey:makeUuid(),page_key:k,action:'page_editor_work_items:INSERT',actor:auditActor,happened_at:item.created_at,details:{status:'pending',item_id:item.id,draft_version:item.draft_version}});
+    await saveWfStore(db,store);
+    return {id:item.id};
+   }
+   const w=store.items.find(x=>x.id===payload.id);
+   if(!w)throw new Error('Item not found');
+   if(action==='decide'){
+    if(w.kind!=='review'||w.status!=='pending')throw new Error('Review is not pending');
+    if(payload.approve){
+     const dRes=await db.from('page_editor_drafts').select('*').eq('page_key',w.page_key).maybeSingle();
+     if(dRes.error)throw dRes.error;
+     const d=dRes.data;
+     if(!d||Number(d.version)!==Number(w.draft_version)||!sameDoc(d.document,w.snapshot))throw new Error('Review snapshot is stale: submit again');
+    }
+    w.status=payload.approve?'approved':'rejected';
+    w.decided_by=userActor;w.decided_at=new Date().toISOString();
+    store.audit.push({eventKey:makeUuid(),page_key:w.page_key,action:'page_editor_work_items:UPDATE',actor:auditActor,happened_at:w.decided_at,details:{status:w.status,item_id:w.id,draft_version:w.draft_version}});
+    await saveWfStore(db,store);
+    return {ok:true};
+   }
+   if(action==='schedule'){
+    if(w.kind!=='review'||w.status!=='approved')throw new Error('Choose an approved review');
+    const sTime=Date.parse(payload.starts_at),eTime=Date.parse(payload.ends_at);
+    if(!Number.isFinite(sTime)||!Number.isFinite(eTime)||sTime<=Date.now()||eTime<=sTime)throw new Error('Invalid schedule window');
+    const overlap=store.items.some(x=>x.kind==='schedule'&&x.page_key===w.page_key&&['scheduled','active'].includes(x.status)&&Date.parse(x.starts_at)<eTime&&Date.parse(x.ends_at)>sTime);
+    if(overlap)throw new Error('Schedule overlaps');
+    const pRes=await db.from('page_editor_publications').select('*').eq('page_key',w.page_key).maybeSingle();
+    const sched={id:makeUuid(),kind:'schedule',page_key:w.page_key,status:'scheduled',snapshot:clone(w.snapshot),draft_version:w.draft_version,created_by:userActor,created_at:new Date().toISOString(),parent_id:w.id,starts_at:new Date(sTime).toISOString(),ends_at:new Date(eTime).toISOString(),previous_document:pRes?.data?.document?clone(pRes.data.document):null,expected_publication_version:Number(pRes?.data?.version||0),decided_by:w.decided_by||userActor};
+    w.status='scheduled';
+    store.items.unshift(sched);
+    store.audit.push({eventKey:makeUuid(),page_key:w.page_key,action:'page_editor_work_items:INSERT',actor:auditActor,happened_at:sched.created_at,details:{status:'scheduled',item_id:sched.id,draft_version:sched.draft_version}});
+    await saveWfStore(db,store);
+    return {ok:true};
+   }
+   if(action==='cancel'){
+    if(w.kind!=='schedule'||!['scheduled','active'].includes(w.status))throw new Error('Schedule cannot be cancelled');
+    w.status='cancelled';
+    const parent=store.items.find(x=>x.id===w.parent_id);
+    if(parent&&parent.status==='scheduled')parent.status='approved';
+    store.audit.push({eventKey:makeUuid(),page_key:w.page_key,action:'page_editor_work_items:UPDATE',actor:auditActor,happened_at:new Date().toISOString(),details:{status:'cancelled',item_id:w.id,draft_version:w.draft_version}});
+    await saveWfStore(db,store);
+    return {ok:true};
+   }
+   throw new Error('Unsupported workflow action');
+  },
+  async audit(db,p,before,limit=26){
+   const store=await loadWfStore(db);
+   let rows=store.audit.slice().sort((a,b)=>Number(BigInt(b.id)-BigInt(a.id)));
+   rows=rows.filter(r=>{
+    if(p.page&&r.page_key!==p.page)return false;
+    if(p.actions&&!p.actions.includes(r.action))return false;
+    if(p.system&&r.actor!==null)return false;
+    if(!p.system&&p.actor&&r.actor!==p.actor)return false;
+    const t=Date.parse(r.happened_at);
+    if(p.from&&t<Date.parse(p.from))return false;
+    if(p.until&&t>=Date.parse(p.until))return false;
+    if(before&&BigInt(r.id)>=BigInt(before))return false;
+    return true;
+   });
+   return rows.slice(0,limit).map(r=>({id:String(r.id),page_key:r.page_key,action:r.action,actor:r.actor,happened_at:r.happened_at,details:r.details||{}}));
+  }
+ };
  const diffLabels={title:'제목',description:'설명',inherit:'공통 설정 사용','hero.preset':'배너 프리셋','hero.desktopHeight':'PC 최소 높이','hero.mobileHeight':'모바일 최소 높이','hero.desktopPadding':'PC 상하 여백','hero.mobilePadding':'모바일 상하 여백','hero.titleColor':'제목 색','hero.descriptionColor':'설명 색','hero.background':'배경색','hero.decoration':'장식 표시','button.text':'메인 버튼 문구','button.url':'메인 버튼 주소',sections:'메인 섹션 구성'};
  let options=[],key='main',doc={},saved={},published={},common={},version=0,dirty=false,busy=false,allowed=false,pageLoaded=false;
  const clone=value=>JSON.parse(JSON.stringify(value));
@@ -44,7 +224,7 @@
   const {data,error}=await sb.from('page_editor_revisions').select('id,publication_version,created_at').eq('page_key',key).order('created_at',{ascending:false}).limit(30);
   if(error)throw error;$('history').replaceChildren();
   if(!data||!data.length){const empty=document.createElement('p');empty.className='muted';empty.textContent='아직 기록된 공개 이력이 없습니다.';$('history').append(empty);return;}
-  data.forEach(item=>{const row=document.createElement('div');row.className='history-row';row.textContent='공개 v'+item.publication_version+' · '+new Date(item.created_at).toLocaleString('ko-KR');const b=document.createElement('button');b.textContent='초안으로 복구';b.addEventListener('click',async()=>{if(busy||!confirm('이 버전을 초안으로 가져올까요? 저장하지 않은 수정은 사라집니다. 공개본은 바뀌지 않습니다.'))return;lock(true);try{const {data,error}=await sb.rpc('page_editor_restore_draft',{p_revision_id:item.id,p_expected_draft_version:version});if(error)throw error;const r=Array.isArray(data)?data[0]:data;version=r.version;doc=r.document;saved=clone(doc);dirty=false;fill();preview();status('이전 버전을 초안으로 복구했습니다. 공개하려면 공개 반영을 누르세요.');}catch(error){status('복구 실패: '+error.message);}finally{lock(false);fill();}});row.append(b);$('history').append(row);});
+  data.forEach(item=>{const row=document.createElement('div');row.className='history-row';row.textContent='공개 v'+item.publication_version+' · '+new Date(item.created_at).toLocaleString('ko-KR');const b=document.createElement('button');b.textContent='초안으로 복구';b.addEventListener('click',async()=>{if(busy||!confirm('이 버전을 초안으로 가져올까요? 저장하지 않은 수정은 사라집니다. 공개본은 바뀌지 않습니다.'))return;lock(true);try{const {data,error}=await sb.rpc('page_editor_restore_draft',{p_revision_id:item.id,p_expected_draft_version:version});if(error)throw error;const r=Array.isArray(data)?data[0]:data;version=r.version;doc=r.document;saved=clone(doc);dirty=false;await window.__nkEditorFallback.recordAudit(sb,key,'page_editor_drafts:UPDATE',{version:Number(version)});fill();preview();status('이전 버전을 초안으로 복구했습니다. 공개하려면 공개 반영을 누르세요.');}catch(error){status('복구 실패: '+error.message);}finally{lock(false);fill();}});row.append(b);$('history').append(row);});
  }
  function route(option){if(option.key==='main')return 'index.html';if(option.key==='page:defaults')return 'notice.html#reference';const r=option.row;if(r.type==='EDU')return 'child.html#'+encodeURIComponent(r.code);if(r.type==='EVENT')return 'program.html#'+encodeURIComponent(r.code);if(r.type==='BOARD')return 'notice.html#'+encodeURIComponent(r.code);return ['order','proposal'].includes(r.code)?r.code+'.html':'page.html?id='+encodeURIComponent(r.code);}
  async function select(){
@@ -63,6 +243,7 @@
  }
  async function save(){
   const {data,error}=await sb.rpc('page_editor_save_draft',{p_page_key:key,p_document:doc,p_expected_version:version});if(error)throw error;const row=Array.isArray(data)?data[0]:data;version=row.version;saved=clone(doc);dirty=false;
+  await window.__nkEditorFallback.recordAudit(sb,key,Number(version)===1?'page_editor_drafts:INSERT':'page_editor_drafts:UPDATE',{version:Number(version)});
  }
  fields.forEach(id=>$(id).addEventListener('input',()=>{
   if(busy)return;
@@ -75,7 +256,7 @@
  $('page').addEventListener('change',()=>{if(dirty&&!confirm('저장하지 않은 변경을 버리고 이동할까요?')){$('page').value=key;return;}select();});
  $('cancel').addEventListener('click',()=>{if(busy||!confirm('저장된 초안으로 되돌릴까요?'))return;doc=clone(saved);dirty=false;fill();preview();status('저장된 초안을 불러왔습니다.');});
  $('save').addEventListener('click',async()=>{lock(true);try{await save();status('초안 v'+version+' 저장 완료. 공개 사이트는 변경되지 않았습니다.');}catch(error){status('저장 실패: '+error.message);}finally{lock(false);fill();}});
- $('publish').addEventListener('click',async()=>{if(busy||!confirm('현재 수정본을 저장하고 공개 홈페이지에 반영할까요? 공통 설정은 이를 사용하는 모든 페이지에 영향을 줍니다.'))return;lock(true);try{await save();const {data,error}=await sb.rpc('page_editor_publish',{p_page_key:key,p_expected_draft_version:version});if(error)throw error;const row=Array.isArray(data)?data[0]:data;published=clone(row.document);if(key==='page:defaults')common=clone(row.document);await readHistory();status('공개본 v'+row.version+' 저장 완료. 공개 페이지를 새로 열어 결과를 확인하세요.');}catch(error){status('공개 처리 실패: '+error.message);}finally{lock(false);fill();}});
+ $('publish').addEventListener('click',async()=>{if(busy||!confirm('현재 수정본을 저장하고 공개 홈페이지에 반영할까요? 공통 설정은 이를 사용하는 모든 페이지에 영향을 줍니다.'))return;lock(true);try{await save();const {data,error}=await sb.rpc('page_editor_publish',{p_page_key:key,p_expected_draft_version:version});if(error)throw error;const row=Array.isArray(data)?data[0]:data;published=clone(row.document);if(key==='page:defaults')common=clone(row.document);await window.__nkEditorFallback.markPublished(sb,key,row.document,row.version);await readHistory();status('공개본 v'+row.version+' 저장 완료. 공개 페이지를 새로 열어 결과를 확인하세요.');}catch(error){status('공개 처리 실패: '+error.message);}finally{lock(false);fill();}});
  $('compare').addEventListener('click',()=>{const changes=[];const fmt=v=>v===undefined||v===null?'없음':typeof v==='boolean'?(v?'사용':'미사용'):typeof v==='string'?v:JSON.stringify(v);function walk(a,b,path){if(JSON.stringify(a)===JSON.stringify(b))return;if(a&&b&&typeof a==='object'&&typeof b==='object'&&!Array.isArray(a)&&!Array.isArray(b)){new Set([...Object.keys(a),...Object.keys(b)]).forEach(k=>walk(a[k],b[k],path?path+'.'+k:k));}else changes.push((diffLabels[path]||path)+': '+fmt(a)+' → '+fmt(b));}walk(published,doc,'');$('diff').textContent=changes.join('\n')||'공개본과 차이가 없습니다.';$('diff-dialog').showModal();});
  $('close-diff').addEventListener('click',()=>$('diff-dialog').close());
  $('diff-dialog').addEventListener('click',event=>{if(event.target===$('diff-dialog'))$('diff-dialog').close();});

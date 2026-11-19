@@ -194,7 +194,7 @@ test('transient load error does not permanently lock page switching and recovery
   await expect(page.locator('#status')).toContainText('초안 v0');
 });
 
-test('missing workflow schema cache shows clear Korean notices without blocking draft saves', async ({ page, context }) => {
+test('missing workflow schema cache transparently uses built-in fallback for review, single-admin approval, schedule, and audit history', async ({ page, context }) => {
   const extra = `(() => {
     const client = window.supabase.createClient();
     const origRpc = client.rpc.bind(client);
@@ -217,23 +217,43 @@ test('missing workflow schema cache shows clear Korean notices without blocking 
     };
   })();`;
   await setupRoutes(context, extra);
+  page.on('dialog', d => d.accept());
   await page.goto('/page-editor.html');
   await expect(page.locator('#save')).toBeEnabled();
 
-  await expect(page.locator('#nk-schedule-status')).toHaveAttribute('data-state', 'warn');
-  await expect(page.locator('#nk-schedule-status')).toContainText('예약 DB 연결 불가');
-  await expect(page.locator('#nk-schedule-status')).toContainText('20261109000000_editor_workflow_suite.sql');
-  await expect(page.locator('#nk-schedule-status')).not.toContainText('schema cache');
+  // Panels connect cleanly without warning or error banners
+  await expect(page.locator('#nk-schedule-status')).toHaveAttribute('data-state', 'ok');
+  await expect(page.locator('#nk-review-status')).toHaveAttribute('data-state', 'ok');
+  await expect(page.locator('#nk-audit-status')).toHaveAttribute('data-state', 'loaded');
 
-  await expect(page.locator('#nk-review-status')).toHaveAttribute('data-state', 'warn');
-  await expect(page.locator('#nk-review-status')).toContainText('검토 DB 연결 불가');
-  await expect(page.locator('#nk-review-status')).toContainText('20261109000000_editor_workflow_suite.sql');
+  // 1) Save draft & request review -> single admin can self-approve
+  await page.locator('#title').fill('폴백 워크플로 초안 제목');
+  await page.locator('#nk-review-request').click();
+  await expect(page.locator('#nk-review-status')).toContainText('검토를 요청했습니다');
+  await expect(page.locator('#nk-review-info')).toContainText('1인 관리자 본인 승인 가능');
 
-  await expect(page.locator('#nk-audit-status')).toHaveAttribute('data-state', 'error');
-  await expect(page.locator('#nk-audit-status')).toContainText('작업 기록 DB 미연결');
-  await expect(page.locator('#nk-audit-table tbody tr')).toHaveCount(0);
+  await page.locator('#nk-review-ack').check();
+  await expect(page.locator('#nk-review-approve')).toBeEnabled();
+  await page.locator('#nk-review-approve').click();
+  await expect(page.locator('#nk-review-status')).toContainText('승인했습니다');
 
-  await page.locator('#title').fill('일반 초안 저장 확인');
-  await page.locator('#save').click();
-  await expect(page.locator('#status')).toContainText('초안 v1 저장 완료');
+  // 2) Approved review is immediately available in schedule panel and can be scheduled
+  const range = await page.evaluate(() => {
+    const pad = n => String(n).padStart(2, '0');
+    const local = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+    return { start: local(new Date(Date.now() + 3600000)), end: local(new Date(Date.now() + 7200000)) };
+  });
+  await page.locator('#nk-schedule-start').fill(range.start);
+  await page.locator('#nk-schedule-end').fill(range.end);
+  await expect(page.locator('#nk-schedule-create')).toBeEnabled();
+  await page.locator('#nk-schedule-create').click();
+  await expect(page.locator('#nk-schedule-status')).toContainText('예약 등록을 확인했습니다');
+  await expect(page.locator('#nk-schedule-list')).toContainText('예약 대기');
+
+  // 3) Audit history records the draft save, review request, approval, and schedule creation
+  await page.locator('#nk-audit-refresh').click();
+  await expect(page.locator('#nk-audit-status')).toHaveAttribute('data-state', 'loaded');
+  await expect(page.locator('#nk-audit-table tbody tr').first()).toBeVisible();
+  expect(await page.locator('#nk-audit-table tbody tr').count()).toBeGreaterThanOrEqual(4);
 });
+

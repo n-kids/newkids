@@ -131,25 +131,63 @@
 
   async function loadDashboardTasks() {
     const box = document.getElementById('dashboard-tasks');
-    if (!box) return;
+    const client = window.sb || sb;
+    if (!box || !client) return;
     const [postsResult, commentsResult] = await Promise.all([
-      sb.from('total_posts').select('id,title,category,link_url,is_draft,is_visible,publish_at'),
-      sb.from('post_comments').select('post_id')
+      client.from('total_posts').select('id,title,category,link_url,is_draft,is_visible,publish_at'),
+      client.from('post_comments').select('post_id')
     ]);
     if (postsResult.error) { box.innerHTML = '<div style="color:#a33">운영 알림을 불러오지 못했습니다: ' + esc(postsResult.error.message) + '</div>'; return; }
     const posts = postsResult.data || [], comments = commentsResult.data || [];
     const answered = new Set(comments.map(x => x.post_id));
-    const now = Date.now(), week = now + 7 * 86400000;
+    const now = Date.now(), week = now + 7 * 86400000, dayAgo = now - 86400000;
     const drafts = posts.filter(x => x.is_draft).length;
     const scheduled = posts.filter(x => !x.is_draft && x.publish_at && new Date(x.publish_at).getTime() > now && new Date(x.publish_at).getTime() <= week).length;
     const unanswered = posts.filter(x => !x.is_draft && !answered.has(x.id) && !window.nkIsAdminAuthoredPost(x)).length;
+
     const cards = [
-      ['draft','<svg class="ic"><use href="#i-save"/></svg>','저장된 초안',drafts,'#8e44ad'],
-      ['scheduled','<svg class="ic"><use href="#i-clock"/></svg>','7일 내 예약 발행',scheduled,'#d68910'],
-      ['unanswered','<svg class="ic"><use href="#i-message"/></svg>','답변 대기 게시글',unanswered,'#1a3c6e']
+      { onclick: "nkFilterTasks('draft')", icon: '<svg class="ic"><use href="#i-save"/></svg>', label: '저장된 초안', count: drafts, color: '#8e44ad', sub: '눌러서 목록 보기' },
+      { onclick: "nkFilterTasks('scheduled')", icon: '<svg class="ic"><use href="#i-clock"/></svg>', label: '7일 내 예약 발행', count: scheduled, color: '#d68910', sub: '눌러서 목록 보기' },
+      { onclick: "nkFilterTasks('unanswered')", icon: '<svg class="ic"><use href="#i-message"/></svg>', label: '답변 대기 게시글', count: unanswered, color: '#1a3c6e', sub: '눌러서 목록 보기' }
     ];
-    box.innerHTML = cards.map(([key,icon,label,count,color]) => '<button type="button" onclick="nkFilterTasks(\'' + key + '\')" style="text-align:left;background:#fff;border:1px solid #e4e8ef;border-left:5px solid ' + color + ';border-radius:9px;padding:15px;cursor:pointer;box-shadow:0 2px 8px #0000000a"><div style="font-weight:700;color:#667">' + icon + ' ' + label + '</div><strong style="display:block;font-size:1.7rem;color:' + color + ';margin-top:4px">' + count + '</strong><small style="color:#888">눌러서 목록 보기</small></button>').join('');
+
+    try {
+      const [formsRes, respRes] = await Promise.all([
+        client.from('custom_forms').select('id,title,is_active,max_participants,end_date'),
+        client.from('form_responses').select('id,form_id,created_at')
+      ]);
+      if (!formsRes.error && Array.isArray(formsRes.data)) {
+        const forms = formsRes.data;
+        const responses = (!respRes.error && Array.isArray(respRes.data)) ? respRes.data : [];
+        const countByForm = {};
+        let recent24h = 0;
+        responses.forEach(r => {
+          const fid = String(r.form_id);
+          countByForm[fid] = (countByForm[fid] || 0) + 1;
+          if (r.created_at && new Date(r.created_at).getTime() >= dayAgo) recent24h++;
+        });
+        let activeForms = 0;
+        let urgentForms = 0;
+        forms.forEach(f => {
+          if (window.NKForms && typeof window.NKForms.getFormStatus === 'function') {
+            const st = window.NKForms.getFormStatus(f, countByForm[String(f.id)] || 0);
+            if (st.canSubmit) activeForms++;
+            if (st.isUrgent) urgentForms++;
+          } else if (f.is_active) {
+            activeForms++;
+          }
+        });
+        cards.push(
+          { onclick: "nkOpenFormsFiltered('active')", icon: '<svg class="ic"><use href="#i-clipboard"/></svg>', label: '진행 중인 폼/투표', count: activeForms, color: '#15803d', sub: '폼/투표 관리로 이동' },
+          { onclick: "nkOpenFormsFiltered('all')", icon: '<svg class="ic"><use href="#i-chart"/></svg>', label: '최근 24시간 신규 응답', count: recent24h, color: '#0369a1', sub: '전체 응답 현황 보기' },
+          { onclick: "nkOpenFormsFiltered('urgent')", icon: '<svg class="ic"><use href="#i-bell"/></svg>', label: '마감·정원 임박 폼', count: urgentForms, color: '#b45309', sub: '임박 항목만 보기' }
+        );
+      }
+    } catch (_) {}
+
+    box.innerHTML = cards.map(c => '<button type="button" onclick="' + c.onclick + '" style="text-align:left;background:#fff;border:1px solid #e4e8ef;border-left:5px solid ' + c.color + ';border-radius:9px;padding:15px;cursor:pointer;box-shadow:0 2px 8px #0000000a"><div style="font-weight:700;color:#667">' + c.icon + ' ' + c.label + '</div><strong style="display:block;font-size:1.7rem;color:' + c.color + ';margin-top:4px">' + c.count + '</strong><small style="color:#888">' + c.sub + '</small></button>').join('');
   }
+  window.nkRefreshDashboardTasks = loadDashboardTasks;
 
   // 게시글 변경 전 스냅샷을 남겨 되돌릴 수 있게 함
   const originalUpload = window.uploadPost;

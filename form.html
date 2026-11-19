@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
@@ -20,26 +20,166 @@
             overflow: hidden !important;
         }
 
-            body.is-iframe section {
-                padding: 10px 0 !important;
-                background-color: transparent !important;
-            }
+        body.is-iframe section {
+            padding: 10px 0 !important;
+            background-color: transparent !important;
+        }
 
-            body.is-iframe .proposal-box {
-                box-shadow: none !important;
-                border: none !important;
-                padding: 10px !important;
-                background-color: transparent !important;
-            }
+        body.is-iframe .proposal-box {
+            box-shadow: none !important;
+            border: none !important;
+            padding: 10px !important;
+            background-color: transparent !important;
+        }
+
+        .nk-preview-banner {
+            margin-bottom: 16px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            background: #eef6ff;
+            border: 1px solid #bfdbfe;
+            color: #1a3c6e;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .nk-quota-banner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            background: #f4f7fa;
+            border: 1px solid #d9e2ec;
+            font-size: 0.92rem;
+            color: #1a3c6e;
+        }
+
+        .nk-quota-banner.is-urgent {
+            background: #fffbeb;
+            border-color: #fcd34d;
+            color: #92400e;
+        }
+
+        .nk-req-tag {
+            color: #c0392b;
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-left: 4px;
+        }
+
+        .nk-opt-tag {
+            color: #64748b;
+            font-size: 0.82rem;
+            font-weight: 500;
+            margin-left: 4px;
+        }
+
+        .nk-other-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 2px;
+        }
+
+        .nk-other-row input[type="text"] {
+            flex: 1;
+            padding: 8px 10px;
+            font-size: 0.92rem;
+        }
+
+        .nk-done-box {
+            text-align: center;
+            padding: 36px 20px;
+        }
+
+        .nk-done-icon {
+            width: 56px;
+            height: 56px;
+            margin: 0 auto 14px;
+            border-radius: 50%;
+            background: #dcfce7;
+            color: #15803d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: 800;
+        }
+
+        .nk-closed-icon {
+            width: 56px;
+            height: 56px;
+            margin: 0 auto 14px;
+            border-radius: 50%;
+            background: #fee2e2;
+            color: #b91c1c;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            font-weight: 800;
+        }
+
+        .nk-public-results {
+            margin-top: 28px;
+            padding-top: 24px;
+            border-top: 1px solid #e2e8f0;
+            text-align: left;
+        }
+
+        .nk-pub-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 14px;
+        }
+
+        .nk-pub-bar-row {
+            margin-bottom: 10px;
+        }
+
+        .nk-pub-bar-head {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+            color: #334155;
+        }
+
+        .nk-pub-bar-track {
+            width: 100%;
+            height: 10px;
+            background: #e2e8f0;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .nk-pub-bar-fill {
+            height: 100%;
+            background: #1a3c6e;
+            border-radius: 999px;
+            transition: width 0.35s ease;
+        }
     </style>
-<link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
 </head>
 <body>
     <script>
-        if (window !== window.parent) {
-            document.body.classList.add('is-iframe');
-        }
+        (function () {
+            const p = new URLSearchParams(window.location.search);
+            const forceEmbed = p.get('embed') === '1';
+            const forceStandalone = p.get('standalone') === '1';
+            if ((window !== window.parent && !forceStandalone) || forceEmbed) {
+                document.body.classList.add('is-iframe');
+            }
+        })();
     </script>
 
     <header></header>
@@ -55,36 +195,28 @@
         <div class="container">
             <div id="form-content-wrap" style="max-width: 800px; margin: 0 auto;">
                 <div id="form-container" class="proposal-box" style="padding: 20px;">
+                    <div id="preview-notice" class="nk-preview-banner" style="display:none;">
+                        발행 전 초안 미리보기 모드입니다. 제출 테스트 시 입력 검증만 수행하며 실제 DB에는 저장되지 않습니다.
+                    </div>
+
                     <!-- 게시글 안에 끼워 넣었을 때(상단 제목 영역이 숨겨짐) 제목·안내문을 여기서 보여 줌 -->
                     <div id="form-info" style="display:none; margin-bottom:24px; padding:20px; background:#fff; border:1px solid #e3e8f0; border-left:5px solid #1a3c6e; border-radius:8px;">
                         <h2 id="form-info-title" style="margin:0 0 10px; font-size:1.25rem; color:#1a3c6e; word-break:keep-all;"></h2>
                         <p id="form-info-desc" style="margin:0; white-space:pre-line; line-height:1.7; color:#333; word-break:keep-all; overflow-wrap:anywhere;"></p>
                         <p id="form-info-meta" style="margin:12px 0 0; font-size:0.95rem; color:#9a6b3c; font-weight:600;"></p>
                     </div>
+
                     <div id="form-status" style="text-align:center; padding:50px; color:#666;">데이터를 불러오는 중입니다...</div>
 
                     <form id="customForm" style="display:none;">
-                        <h2 class="form-section-title">👤 응답자 정보</h2>
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label class="form-label">이름 (필수)</label>
-                                <input type="text" id="res-name" class="form-input" placeholder="예: 홍길동" required>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">소속 (필수)</label>
-                                <input type="text" id="res-affiliation" class="form-input" placeholder="예: 해바라기 어린이집" required>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">연락처 (선택사항)</label>
-                            <input type="tel" id="res-contact" class="form-input" placeholder="숫자만 입력하세요" oninput="this.value = autoHyphenPhone(this.value)" maxlength="13">
-                        </div>
+                        <div id="quota-banner" class="nk-quota-banner" style="display:none;"></div>
+                        <div id="respondent-section"></div>
 
-                        <h2 class="form-section-title" style="margin-top:40px;">📝 응답 항목</h2>
+                        <h2 class="form-section-title" style="margin-top:32px;">📝 응답 항목</h2>
                         <div id="questions-area"></div>
 
-                        <div class="btn-center-wrap" style="margin-top: 40px; padding-top:20px; border-top: 1px solid #eee;">
-                            <button type="submit" class="btn-action" style="width: 200px; font-size:1.1rem;">제출하기</button>
+                        <div class="btn-center-wrap" style="margin-top: 36px; padding-top:20px; border-top: 1px solid #eee;">
+                            <button type="submit" class="btn-action" id="btn-form-submit" style="width: 220px; font-size:1.08rem;">제출하기</button>
                         </div>
                     </form>
                 </div>
@@ -97,39 +229,45 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js?v=20261026"></script>
     <script src="manager.js?v=20261102"></script>
+    <script src="form-shared.js?v=20261119"></script>
     <script>
         let currentFormId = null;
-        let currentSchema = null;
-        let lastSentHeight = 0; // 무한 확장 루프 방지를 위한 높이 캐시 변수
+        let currentFormData = null;
+        let currentParsed = null;
+        let currentPublicStats = { count: null, tallies: null };
+        let isPreviewDraft = false;
+        let lastSentHeight = 0;
 
-        document.addEventListener("DOMContentLoaded", () => {
+        document.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
+            isPreviewDraft = urlParams.get('preview') === '1';
             currentFormId = urlParams.get('id');
 
-            if (!currentFormId) {
-                document.getElementById('form-status').innerHTML = "<div style='color:#d33b3b; font-size:1.2rem;'>잘못된 접근입니다. 폼 ID가 없습니다.</div>";
+            if (isPreviewDraft) {
+                loadDraftPreview();
+            } else if (!currentFormId) {
+                document.getElementById('form-status').innerHTML = "<div style='color:#d33b3b; font-size:1.15rem;'>잘못된 접근입니다. 폼 ID가 없습니다.</div>";
                 return;
+            } else {
+                const checkReady = setInterval(() => {
+                    if (window.sb && window.NKForms) {
+                        clearInterval(checkReady);
+                        loadForm();
+                    }
+                }, 100);
             }
 
-            const checkReady = setInterval(() => {
-                if (window.sb) {
-                    clearInterval(checkReady);
-                    loadForm();
-                }
-            }, 100);
-
-            // 높이 감지 루프 실행 (변경 사항이 있을 때만 안전하게 반영)
             setInterval(sendHeightToParent, 300);
         });
 
-        // ★ 실제 콘텐츠 높이가 5px 이상 유의미하게 바뀔 때만 부모 창으로 전송하여 무한 루프 차단
+        // 실제 콘텐츠 높이가 5px 이상 유의미하게 바뀔 때만 부모 창으로 전송하여 무한 루프 차단
         function sendHeightToParent() {
             if (window !== window.parent) {
                 const wrap = document.getElementById('form-content-wrap');
                 if (wrap) {
                     const hero = document.getElementById('view-hero');
                     const heroH = (hero && getComputedStyle(hero).display !== 'none') ? hero.offsetHeight : 0;
-                    const height = wrap.scrollHeight + heroH + 50; // 여유 공간 50px (상단 영역이 보일 경우 포함)
+                    const height = wrap.scrollHeight + heroH + 50;
                     if (Math.abs(height - lastSentHeight) > 5) {
                         lastSentHeight = height;
                         window.parent.postMessage({ type: 'resizeIframe', formId: currentFormId, height: height }, '*');
@@ -139,93 +277,350 @@
         }
 
         function autoHyphenPhone(str) {
-            str = str.replace(/[^0-9]/g, '');
-            let tmp = '';
-            if (str.startsWith('02')) {
-                if (str.length < 3) return str;
-                else if (str.length < 6) tmp += str.substr(0, 2) + '-' + str.substr(2);
-                else if (str.length < 10) tmp += str.substr(0, 2) + '-' + str.substr(2, 3) + '-' + str.substr(5);
-                else tmp += str.substr(0, 2) + '-' + str.substr(2, 4) + '-' + str.substr(6, 4);
-            } else {
-                if (str.length < 4) return str;
-                else if (str.length < 7) tmp += str.substr(0, 3) + '-' + str.substr(3);
-                else if (str.length < 11) tmp += str.substr(0, 3) + '-' + str.substr(3, 3) + '-' + str.substr(6);
-                else tmp += str.substr(0, 3) + '-' + str.substr(3, 4) + '-' + str.substr(7, 4);
+            return window.NKForms ? window.NKForms.autoHyphenPhone(str) : str;
+        }
+
+        function getDuplicateStorageKey(formId) {
+            return 'nk_form_submitted_' + String(formId);
+        }
+
+        function hasSubmittedOnThisDevice(formId) {
+            try {
+                return Boolean(localStorage.getItem(getDuplicateStorageKey(formId)));
+            } catch (_) {
+                return false;
             }
-            return tmp;
+        }
+
+        function markSubmittedOnThisDevice(formId) {
+            try {
+                localStorage.setItem(getDuplicateStorageKey(formId), JSON.stringify({ at: new Date().toISOString() }));
+            } catch (_) {}
+        }
+
+        /**
+         * 정원 카운트 및 (공개 옵션 시) 선택지 집계 조회
+         * 1) 개인정보를 노출하지 않는 RPC(get_form_public_stats) 우선 사용
+         * 2) RPC 미적용 환경에서는 form_responses 직접 조회로 자동 폴백
+         */
+        async function fetchPublicStats(formId, needTallies) {
+            const sb = window.sb;
+            if (!sb || isPreviewDraft) return { count: 0, tallies: null };
+
+            try {
+                const { data, error } = await sb.rpc('get_form_public_stats', { p_form_id: String(formId) });
+                if (!error && data && typeof data === 'object') {
+                    return {
+                        count: Number.isFinite(Number(data.count)) ? Number(data.count) : 0,
+                        tallies: data.tallies || null
+                    };
+                }
+            } catch (_) {}
+
+            try {
+                if (needTallies) {
+                    const { data, error } = await sb.from('form_responses').select('answers').eq('form_id', formId);
+                    if (!error && Array.isArray(data)) {
+                        const tallies = {};
+                        (currentParsed ? currentParsed.questions : []).forEach(q => {
+                            if (q.type !== 'radio' && q.type !== 'checkbox') return;
+                            const counts = {};
+                            (q.options || []).forEach(o => { counts[o] = 0; });
+                            let otherCount = 0;
+                            data.forEach(row => {
+                                const ans = row.answers ? row.answers[q.id] : null;
+                                const list = Array.isArray(ans) ? ans : (ans ? [ans] : []);
+                                list.forEach(v => {
+                                    const s = String(v || '').trim();
+                                    if (!s) return;
+                                    if (Object.prototype.hasOwnProperty.call(counts, s)) counts[s]++;
+                                    else if (s.startsWith('기타:')) otherCount++;
+                                    else counts[s] = (counts[s] || 0) + 1;
+                                });
+                            });
+                            if (otherCount > 0) counts['기타(직접 입력)'] = otherCount;
+                            tallies[q.id] = counts;
+                        });
+                        return { count: data.length, tallies: tallies };
+                    }
+                } else {
+                    const { count, error } = await sb.from('form_responses').select('id', { count: 'exact', head: true }).eq('form_id', formId);
+                    if (!error && typeof count === 'number') {
+                        return { count: count, tallies: null };
+                    }
+                }
+            } catch (_) {}
+
+            return { count: null, tallies: null };
+        }
+
+        function loadDraftPreview() {
+            let draft = null;
+            try {
+                draft = JSON.parse(sessionStorage.getItem('nk_form_preview_draft') || 'null');
+            } catch (_) {}
+            if (!draft) {
+                document.getElementById('form-status').innerHTML = "<div style='color:#d33b3b;'>미리보기 초안 데이터가 없습니다. 관리자 화면에서 다시 열어 주세요.</div>";
+                return;
+            }
+            document.getElementById('preview-notice').style.display = 'block';
+            currentFormId = draft.id || 'preview_draft';
+            currentPublicStats = { count: 0, tallies: null };
+            renderLoadedForm(draft);
         }
 
         async function loadForm() {
             const { data, error } = await window.sb.from('custom_forms').select('*').eq('id', currentFormId).single();
-
             const statusDiv = document.getElementById('form-status');
-            const formEl = document.getElementById('customForm');
 
             if (error || !data) {
-                statusDiv.innerHTML = "<div style='color:#d33b3b; font-size:1.2rem;'>폼을 찾을 수 없거나 삭제되었습니다.</div>";
+                statusDiv.innerHTML = "<div style='color:#d33b3b; font-size:1.15rem;'>폼을 찾을 수 없거나 삭제되었습니다.</div>";
                 sendHeightToParent();
                 return;
             }
 
+            currentFormData = data;
+            currentParsed = window.NKForms.parseSchema(data.form_schema);
+
+            const needCount = Boolean(data.max_participants) || Boolean(currentParsed.settings.show_results_after_submit);
+            if (needCount) {
+                currentPublicStats = await fetchPublicStats(currentFormId, Boolean(currentParsed.settings.show_results_after_submit));
+            }
+
+            renderLoadedForm(data);
+        }
+
+        function buildPublicResultsHtml(tallies, totalCount) {
+            if (!currentParsed || !tallies) return '';
+            const choiceQs = currentParsed.questions.filter(q => q.type === 'radio' || q.type === 'checkbox');
+            if (!choiceQs.length) return '';
+
+            let html = `<div class="nk-public-results">`;
+            html += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">`;
+            html += `<h3 style="margin:0; font-size:1.05rem; color:#1a3c6e;">📊 실시간 투표 현황</h3>`;
+            if (typeof totalCount === 'number') {
+                html += `<span style="font-size:0.86rem; color:#64748b;">총 ${totalCount}명 참여</span>`;
+            }
+            html += `</div>`;
+
+            choiceQs.forEach((q, idx) => {
+                const counts = tallies[q.id] || {};
+                const orderedKeys = [...(q.options || [])];
+                Object.keys(counts).forEach(k => { if (!orderedKeys.includes(k)) orderedKeys.push(k); });
+                const totalVotes = orderedKeys.reduce((sum, k) => sum + (Number(counts[k]) || 0), 0);
+
+                html += `<div class="nk-pub-card">`;
+                html += `<div style="font-weight:700; color:#1a3c6e; margin-bottom:10px; font-size:0.95rem;">${idx + 1}. ${window.NKForms.escapeHtml(q.title)}</div>`;
+                orderedKeys.forEach(opt => {
+                    const c = Number(counts[opt]) || 0;
+                    const pct = totalVotes > 0 ? Math.round((c / totalVotes) * 100) : 0;
+                    html += `
+                        <div class="nk-pub-bar-row">
+                            <div class="nk-pub-bar-head">
+                                <span>${window.NKForms.escapeHtml(opt)}</span>
+                                <strong>${c}표 (${pct}%)</strong>
+                            </div>
+                            <div class="nk-pub-bar-track"><div class="nk-pub-bar-fill" style="width:${pct}%;"></div></div>
+                        </div>`;
+                });
+                html += `</div>`;
+            });
+            html += `</div>`;
+            return html;
+        }
+
+        function renderClosedScreen(title, message, showResults) {
+            const statusDiv = document.getElementById('form-status');
+            const formEl = document.getElementById('customForm');
+            formEl.style.display = 'none';
+            statusDiv.style.display = 'block';
+            statusDiv.style.padding = '24px 16px';
+            const resultsHtml = showResults ? buildPublicResultsHtml(currentPublicStats.tallies, currentPublicStats.count) : '';
+            statusDiv.innerHTML = `
+                <div class="nk-done-box">
+                    <div class="nk-closed-icon">!</div>
+                    <h2 style="color:#b91c1c; margin:0 0 8px; font-size:1.3rem;">${window.NKForms.escapeHtml(title)}</h2>
+                    <p style="color:#555; margin:0; line-height:1.6;">${window.NKForms.escapeHtml(message)}</p>
+                    ${resultsHtml}
+                </div>`;
+            sendHeightToParent();
+        }
+
+        function renderLoadedForm(data) {
+            currentFormData = data;
+            currentParsed = window.NKForms.parseSchema(data.form_schema);
+            const settings = currentParsed.settings;
+            const statusDiv = document.getElementById('form-status');
+            const formEl = document.getElementById('customForm');
+
             document.getElementById('form-title').innerText = data.title;
-            document.getElementById('form-desc').innerText = data.description || "아래 항목을 꼼꼼히 확인하고 작성해 주세요.";
-            document.title = "뉴키즈 - " + data.title;
+            document.getElementById('form-desc').innerText = data.description || '아래 항목을 꼼꼼히 확인하고 작성해 주세요.';
+            document.title = '뉴키즈 - ' + data.title;
             document.getElementById('form-desc').style.whiteSpace = 'pre-line';
+
+            const meta = [];
+            if (data.end_date) {
+                meta.push('신청 마감: ' + window.NKForms.formatDateShort(data.end_date));
+            }
+            if (data.max_participants) {
+                if (typeof currentPublicStats.count === 'number') {
+                    const left = Math.max(0, Number(data.max_participants) - currentPublicStats.count);
+                    meta.push(`정원 ${data.max_participants}명 (잔여 ${left}명)`);
+                } else {
+                    meta.push(`정원 ${data.max_participants}명`);
+                }
+            }
+            if (data.prevent_duplicate) meta.push('1인 1회 참여');
+
             if (document.body.classList.contains('is-iframe')) {
                 document.getElementById('form-info-title').innerText = data.title;
-                document.getElementById('form-info-desc').innerText = data.description || "";
-                const meta = [];
-                if (data.end_date) {
-                    const d = new Date(new Date(data.end_date).getTime() - 1000);
-                    meta.push(`신청 마감: ${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`);
-                }
-                if (data.max_participants) meta.push(`정원 ${data.max_participants}명`);
+                document.getElementById('form-info-desc').innerText = data.description || '';
                 document.getElementById('form-info-meta').innerText = meta.join(' · ');
                 document.getElementById('form-info').style.display = 'block';
             }
 
-            if (!data.is_active) {
-                statusDiv.innerHTML = "<div><h2 style='color:#d33b3b; margin-bottom:10px;'>마감된 폼입니다.</h3><p style='color:#666;'>현재 응답을 받고 있지 않습니다.</p></div>";
-                sendHeightToParent();
+            // 1. 수동 마감 / 마감 일시 경과 / 선착순 정원 마감 체크
+            const effectiveCount = typeof currentPublicStats.count === 'number' ? currentPublicStats.count : 0;
+            const st = window.NKForms.getFormStatus(data, effectiveCount);
+            if (!isPreviewDraft && !st.canSubmit) {
+                renderClosedScreen(`${st.label}된 폼입니다.`, st.reason, settings.show_results_after_submit);
                 return;
             }
 
-            currentSchema = data.form_schema;
+            // 2. 동일 기기 중복 응답 방지 체크
+            if (!isPreviewDraft && data.prevent_duplicate && hasSubmittedOnThisDevice(currentFormId)) {
+                renderClosedScreen(
+                    '이미 참여하신 폼입니다.',
+                    '동일 기기 중복 응답 방지 설정이 적용되어 있습니다. 참여해 주셔서 감사합니다.',
+                    settings.show_results_after_submit
+                );
+                return;
+            }
+
+            // 3. 정원 현황 배너 표시
+            const quotaBanner = document.getElementById('quota-banner');
+            if (data.max_participants && typeof currentPublicStats.count === 'number') {
+                const max = Number(data.max_participants);
+                const left = Math.max(0, max - currentPublicStats.count);
+                quotaBanner.style.display = 'flex';
+                quotaBanner.classList.toggle('is-urgent', left <= 3);
+                quotaBanner.innerHTML = `<span><strong>선착순 정원 현황</strong></span><span>현재 <strong>${currentPublicStats.count} / ${max}명</strong> (남은 자리 <strong>${left}명</strong>)</span>`;
+            } else {
+                quotaBanner.style.display = 'none';
+            }
+
+            renderRespondentSection(settings.respondent);
+            renderQuestions();
+
             statusDiv.style.display = 'none';
             formEl.style.display = 'block';
-
-            renderQuestions();
+            if (isPreviewDraft) {
+                document.getElementById('btn-form-submit').innerText = '미리보기 검증 테스트';
+            }
             sendHeightToParent();
+        }
+
+        function renderRespondentSection(respCfg) {
+            const box = document.getElementById('respondent-section');
+            if (!box) return;
+            if (respCfg.anonymous || (respCfg.name === 'hidden' && respCfg.affiliation === 'hidden' && respCfg.contact === 'hidden')) {
+                box.innerHTML = '<div style="padding:14px 16px; border-radius:8px; background:#f8fafc; border:1px solid #e2e8f0; color:#475569; font-size:0.9rem;">익명 참여 폼입니다. 별도의 개인정보를 입력하지 않아도 제출할 수 있습니다.</div>';
+                return;
+            }
+
+            const tag = (mode) => mode === 'required'
+                ? '<span class="nk-req-tag">(필수)</span>'
+                : '<span class="nk-opt-tag">(선택)</span>';
+
+            let html = '<h2 class="form-section-title">👤 응답자 정보</h2>';
+            const topFields = [];
+            if (respCfg.name !== 'hidden') {
+                topFields.push(`
+                    <div class="form-group">
+                        <label class="form-label" for="res-name">이름 ${tag(respCfg.name)}</label>
+                        <input type="text" id="res-name" class="form-input" placeholder="예: 홍길동" ${respCfg.name === 'required' ? 'required' : ''}>
+                    </div>`);
+            }
+            if (respCfg.affiliation !== 'hidden') {
+                topFields.push(`
+                    <div class="form-group">
+                        <label class="form-label" for="res-affiliation">소속 ${tag(respCfg.affiliation)}</label>
+                        <input type="text" id="res-affiliation" class="form-input" placeholder="예: 해바라기 어린이집" ${respCfg.affiliation === 'required' ? 'required' : ''}>
+                    </div>`);
+            }
+            if (topFields.length === 2) {
+                html += `<div class="form-grid">${topFields.join('')}</div>`;
+            } else if (topFields.length === 1) {
+                html += topFields[0];
+            }
+
+            if (respCfg.contact !== 'hidden') {
+                html += `
+                    <div class="form-group">
+                        <label class="form-label" for="res-contact">연락처 ${tag(respCfg.contact)}</label>
+                        <input type="tel" id="res-contact" class="form-input" placeholder="숫자만 입력하세요" oninput="this.value = autoHyphenPhone(this.value)" maxlength="13" ${respCfg.contact === 'required' ? 'required' : ''}>
+                    </div>`;
+            }
+            box.innerHTML = html;
         }
 
         function renderQuestions() {
             const container = document.getElementById('questions-area');
+            const esc = window.NKForms.escapeHtml;
             let html = '';
 
-            currentSchema.forEach((q, index) => {
-                html += `<div class="form-group" style="margin-bottom:25px; padding:20px; background:#fff; border:1px solid #eee; border-radius:8px;">`;
-                html += `<label class="form-label" style="font-size:1.1rem; color:#1a3c6e; margin-bottom:15px;">${index + 1}. ${window.escapeHtml(q.title)}</label>`;
+            currentParsed.questions.forEach((q, index) => {
+                const reqBadge = q.required
+                    ? '<span class="nk-req-tag">(필수)</span>'
+                    : '<span class="nk-opt-tag">(선택)</span>';
+                html += `<div class="form-group" style="margin-bottom:22px; padding:20px; background:#fff; border:1px solid #e5e7eb; border-radius:8px;">`;
+                html += `<label class="form-label" style="font-size:1.06rem; color:#1a3c6e; margin-bottom:14px;">${index + 1}. ${esc(q.title)} ${reqBadge}</label>`;
 
                 if (q.type === 'text') {
-                    html += `<input type="text" name="${q.id}" class="form-input" placeholder="답변을 입력하세요 (선택)">`;
+                    html += `<input type="text" name="${esc(q.id)}" class="form-input" placeholder="${esc(q.placeholder || '답변을 입력하세요')}" ${q.required ? 'required' : ''}>`;
+                } else if (q.type === 'textarea') {
+                    html += `<textarea name="${esc(q.id)}" class="form-input" rows="4" style="resize:vertical;" placeholder="${esc(q.placeholder || '내용을 자유롭게 입력하세요')}" ${q.required ? 'required' : ''}></textarea>`;
+                } else if (q.type === 'number') {
+                    html += `<div style="display:flex; align-items:center; gap:10px; max-width:280px;">`;
+                    html += `<input type="number" name="${esc(q.id)}" class="form-input" min="0" placeholder="${esc(q.placeholder || '숫자 입력')}" ${q.required ? 'required' : ''}>`;
+                    if (q.unit) html += `<span style="font-weight:700; color:#475569; white-space:nowrap;">${esc(q.unit)}</span>`;
+                    html += `</div>`;
+                } else if (q.type === 'date') {
+                    html += `<input type="date" name="${esc(q.id)}" class="form-input" style="max-width:260px;" ${q.required ? 'required' : ''}>`;
                 } else if (q.type === 'radio') {
                     html += `<div style="display:flex; flex-direction:column; gap:10px;">`;
-                    q.options.forEach((opt) => {
+                    (q.options || []).forEach((opt) => {
                         html += `<label style="cursor:pointer; display:flex; align-items:center; gap:8px;">
-                                        <input type="radio" name="${q.id}" value="${window.escapeHtml(opt)}" style="width:18px; height:18px;">
-                                        ${window.escapeHtml(opt)}
-                                     </label>`;
+                                    <input type="radio" name="${esc(q.id)}" value="${esc(opt)}" style="width:18px; height:18px;">
+                                    <span>${esc(opt)}</span>
+                                 </label>`;
                     });
+                    if (q.allowOther) {
+                        html += `<div class="nk-other-row">
+                                    <input type="radio" name="${esc(q.id)}" value="__other__" style="width:18px; height:18px;">
+                                    <span style="white-space:nowrap;">기타:</span>
+                                    <input type="text" class="form-input" data-other-for="${esc(q.id)}" placeholder="직접 입력"
+                                           onfocus="this.parentElement.querySelector('input[value=__other__]').checked = true">
+                                 </div>`;
+                    }
                     html += `</div>`;
                 } else if (q.type === 'checkbox') {
                     html += `<div style="display:flex; flex-direction:column; gap:10px;">`;
-                    q.options.forEach((opt) => {
+                    (q.options || []).forEach((opt) => {
                         html += `<label style="cursor:pointer; display:flex; align-items:center; gap:8px;">
-                                        <input type="checkbox" name="${q.id}" value="${window.escapeHtml(opt)}" style="width:18px; height:18px;">
-                                        ${window.escapeHtml(opt)}
-                                     </label>`;
+                                    <input type="checkbox" name="${esc(q.id)}" value="${esc(opt)}" style="width:18px; height:18px;">
+                                    <span>${esc(opt)}</span>
+                                 </label>`;
                     });
-                    html += `</div><p style="font-size:0.8rem; color:#888; margin-top:10px;">* 다중 선택 가능</p>`;
+                    if (q.allowOther) {
+                        html += `<div class="nk-other-row">
+                                    <input type="checkbox" name="${esc(q.id)}" value="__other__" style="width:18px; height:18px;">
+                                    <span style="white-space:nowrap;">기타:</span>
+                                    <input type="text" class="form-input" data-other-for="${esc(q.id)}" placeholder="직접 입력"
+                                           onfocus="this.parentElement.querySelector('input[value=__other__]').checked = true">
+                                 </div>`;
+                    }
+                    html += `</div><p style="font-size:0.82rem; color:#64748b; margin-top:10px; margin-bottom:0;">* 다중 선택 가능</p>`;
                 }
                 html += `</div>`;
             });
@@ -234,51 +629,155 @@
             sendHeightToParent();
         }
 
+        function fireWorksNotification(formData, respondentLabel, newCount, reachedFull) {
+            const settings = currentParsed ? currentParsed.settings : {};
+            if (!settings.notify_works_each && !(settings.notify_works_full && reachedFull)) return;
+            try {
+                const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+                if (controller) setTimeout(() => controller.abort(), 5000);
+                fetch(window.NKForms.WORKS_BOT_URL + '/app/forms/notify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        form_id: String(currentFormId),
+                        respondent_label: respondentLabel,
+                        count: typeof newCount === 'number' ? newCount : null,
+                        is_full: Boolean(reachedFull)
+                    }),
+                    keepalive: true,
+                    signal: controller ? controller.signal : undefined
+                }).catch(() => {});
+            } catch (_) {}
+        }
+
+        async function renderCompletionScreen(settings, updatedTallies, updatedCount) {
+            const statusDiv = document.getElementById('form-status');
+            const formEl = document.getElementById('customForm');
+            const esc = window.NKForms.escapeHtml;
+
+            formEl.style.display = 'none';
+            statusDiv.style.display = 'block';
+            statusDiv.style.padding = '24px 16px';
+
+            const safeLink = window.NKForms.safeExternalUrl(settings.completion_link);
+            const linkHtml = safeLink
+                ? `<div style="margin-top:18px;"><a href="${esc(safeLink)}" target="_blank" rel="noopener noreferrer" class="btn-action" style="display:inline-block; text-decoration:none; padding:10px 22px; font-size:0.95rem;">안내 페이지 바로가기</a></div>`
+                : '';
+
+            const resultsHtml = settings.show_results_after_submit
+                ? buildPublicResultsHtml(updatedTallies, updatedCount)
+                : '';
+
+            statusDiv.innerHTML = `
+                <div class="nk-done-box">
+                    <div class="nk-done-icon">✓</div>
+                    <h2 style="color:#1a3c6e; margin:0 0 10px; font-size:1.35rem;">응답이 성공적으로 제출되었습니다!</h2>
+                    <p style="color:#444; margin:0; white-space:pre-line; line-height:1.7;">${esc(settings.completion_message)}</p>
+                    ${linkHtml}
+                    ${resultsHtml}
+                </div>`;
+            sendHeightToParent();
+        }
+
         document.getElementById('customForm').addEventListener('submit', async function (e) {
             e.preventDefault();
+            if (!currentFormData || !currentParsed) return;
 
-            const resName = document.getElementById('res-name').value.trim();
-            const resAffiliation = document.getElementById('res-affiliation').value.trim();
-            const resContact = document.getElementById('res-contact').value.trim();
+            const settings = currentParsed.settings;
+            const respCfg = settings.respondent;
 
-            if (!resName || !resAffiliation) {
-                return alert("이름과 소속을 모두 입력해 주세요.");
+            let resName = '';
+            let resAffiliation = '';
+            let resContact = '';
+            if (!respCfg.anonymous) {
+                resName = (document.getElementById('res-name')?.value || '').trim();
+                resAffiliation = (document.getElementById('res-affiliation')?.value || '').trim();
+                resContact = (document.getElementById('res-contact')?.value || '').trim();
+
+                if (respCfg.name === 'required' && !resName) return alert('이름을 입력해 주세요.');
+                if (respCfg.affiliation === 'required' && !resAffiliation) return alert('소속을 입력해 주세요.');
+                if (respCfg.contact === 'required' && !resContact) return alert('연락처를 입력해 주세요.');
             }
 
-            let combinedInfo = `${resAffiliation} - ${resName}`;
-            if (resContact) {
-                combinedInfo += ` (${resContact})`;
+            let combinedInfo = '익명';
+            if (!respCfg.anonymous) {
+                const labelParts = [];
+                if (resAffiliation) labelParts.push(resAffiliation);
+                if (resName) labelParts.push(resName);
+                combinedInfo = labelParts.join(' - ') || '익명';
+                if (resContact) combinedInfo += ` (${resContact})`;
             }
 
-            let answers = {};
-            let isValid = true;
-
-            currentSchema.forEach(q => {
-                if (q.type === 'text') {
-                    const val = document.querySelector(`input[name="${q.id}"]`).value.trim();
-                    // 질문 답변은 선택 사항 (비워도 제출 가능)
-                    answers[q.id] = val;
-                } else if (q.type === 'radio') {
-                    const checked = document.querySelector(`input[name="${q.id}"]:checked`);
-                    if (!checked) answers[q.id] = "";
-                    else answers[q.id] = checked.value;
+            const answers = {};
+            for (const q of currentParsed.questions) {
+                const qSelector = CSS.escape ? CSS.escape(q.id) : q.id;
+                if (q.type === 'radio') {
+                    const checked = this.querySelector(`input[name="${qSelector}"]:checked`);
+                    if (!checked) {
+                        if (q.required) return alert(`"${q.title}" 항목을 선택해 주세요.`);
+                        answers[q.id] = '';
+                    } else if (checked.value === '__other__') {
+                        const otherTxt = (this.querySelector(`[data-other-for="${qSelector}"]`)?.value || '').trim();
+                        if (!otherTxt) return alert(`"${q.title}"의 기타 내용을 입력해 주세요.`);
+                        answers[q.id] = '기타: ' + otherTxt;
+                    } else {
+                        answers[q.id] = checked.value;
+                    }
                 } else if (q.type === 'checkbox') {
-                    const checkedNodes = document.querySelectorAll(`input[name="${q.id}"]:checked`);
-                    let checkedValues = [];
-                    checkedNodes.forEach(n => checkedValues.push(n.value));
-                    // 아무것도 고르지 않아도 제출 가능
-                    answers[q.id] = checkedValues;
+                    const nodes = Array.from(this.querySelectorAll(`input[name="${qSelector}"]:checked`));
+                    const vals = [];
+                    for (const n of nodes) {
+                        if (n.value === '__other__') {
+                            const otherTxt = (this.querySelector(`[data-other-for="${qSelector}"]`)?.value || '').trim();
+                            if (!otherTxt) return alert(`"${q.title}"의 기타 내용을 입력해 주세요.`);
+                            vals.push('기타: ' + otherTxt);
+                        } else {
+                            vals.push(n.value);
+                        }
+                    }
+                    if (q.required && !vals.length) return alert(`"${q.title}" 항목을 1개 이상 선택해 주세요.`);
+                    answers[q.id] = vals;
+                } else {
+                    const el = this.querySelector(`[name="${qSelector}"]`);
+                    const val = (el ? el.value : '').trim();
+                    if (q.required && !val) return alert(`"${q.title}" 항목을 입력해 주세요.`);
+                    answers[q.id] = val;
                 }
-            });
-
-            if (!isValid) {
-                return alert("모든 질문 항목에 빠짐없이 응답해 주세요.");
             }
 
-            const btn = this.querySelector('button[type="submit"]');
+            if (isPreviewDraft) {
+                alert('미리보기 입력 검증을 통과했습니다! (초안 모드라 실제 저장되지 않습니다)');
+                return;
+            }
+
+            // 제출 직전 중복·마감일·정원 재확인
+            if (currentFormData.prevent_duplicate && hasSubmittedOnThisDevice(currentFormId)) {
+                renderClosedScreen('이미 참여하신 폼입니다.', '동일 기기 중복 응답 방지 설정이 적용되어 있습니다.', settings.show_results_after_submit);
+                return;
+            }
+
+            const btn = document.getElementById('btn-form-submit');
             const origText = btn.innerText;
             btn.innerText = '제출 중...';
             btn.disabled = true;
+
+            if (currentFormData.max_participants || currentFormData.end_date) {
+                const latestStats = await fetchPublicStats(currentFormId, false);
+                const checkCount = typeof latestStats.count === 'number' ? latestStats.count : 0;
+                const liveSt = window.NKForms.getFormStatus(currentFormData, checkCount);
+                if (!liveSt.canSubmit) {
+                    renderClosedScreen(`${liveSt.label}된 폼입니다.`, liveSt.reason, settings.show_results_after_submit);
+                    return;
+                }
+            }
+
+            // 구조화된 응답자 정보 함께 저장 (구버전 호환 respondent_info 유지)
+            answers.__respondent = {
+                anonymous: Boolean(respCfg.anonymous),
+                affiliation: resAffiliation,
+                name: resName,
+                contact: resContact
+            };
 
             const { error } = await window.sb.from('form_responses').insert([{
                 form_id: currentFormId,
@@ -287,14 +786,28 @@
             }]);
 
             if (error) {
-                alert("제출 실패: " + error.message);
+                alert('제출 실패: ' + error.message);
                 btn.innerText = origText;
                 btn.disabled = false;
-            } else {
-                alert("응답이 성공적으로 제출되었습니다. 참여해 주셔서 감사합니다!");
-                location.reload();
+                return;
             }
+
+            if (currentFormData.prevent_duplicate) {
+                markSubmittedOnThisDevice(currentFormId);
+            }
+
+            const afterStats = (settings.show_results_after_submit || currentFormData.max_participants || settings.notify_works_each || settings.notify_works_full)
+                ? await fetchPublicStats(currentFormId, Boolean(settings.show_results_after_submit))
+                : { count: null, tallies: null };
+
+            const updatedCount = typeof afterStats.count === 'number'
+                ? afterStats.count
+                : (typeof currentPublicStats.count === 'number' ? currentPublicStats.count + 1 : null);
+            const reachedFull = Boolean(currentFormData.max_participants && typeof updatedCount === 'number' && updatedCount >= Number(currentFormData.max_participants));
+
+            fireWorksNotification(currentFormData, combinedInfo, updatedCount, reachedFull);
+            await renderCompletionScreen(settings, afterStats.tallies, updatedCount);
         });
     </script>
 </body>
-</html>
+</html>

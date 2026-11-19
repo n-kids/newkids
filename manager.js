@@ -178,6 +178,14 @@ function startSupabase() {
     }
 }
 
+function isValidHeroImageUrl(url) {
+    if (!url || typeof url !== 'string') return false;
+    const trimmed = url.trim();
+    if (!trimmed || /^data:image\/gif/i.test(trimmed) || /^blob:/i.test(trimmed)) return false;
+    if (/via\.placeholder\.com/i.test(trimmed)) return false;
+    return /^(https?:\/\/|\/|\.\/)/i.test(trimmed);
+}
+
 async function loadSiteConfig() {
     if (!window.sb) return;
     const mainHero = document.querySelector('.hero');
@@ -194,32 +202,36 @@ async function loadSiteConfig() {
             if (data.primary_color) root.style.setProperty('--primary-color', data.primary_color);
             if (data.accent_color) root.style.setProperty('--accent-color', data.accent_color);
 
-            // 고정 디자인 히어로(data-fixed-design)는 배경/글자색 설정을 덮어쓰지 않고 문구만 반영
-            const fixedHero = mainHero && mainHero.hasAttribute('data-fixed-design');
-            if (mainHero && fixedHero) {
+            if (mainHero && !mainHero.hasAttribute('data-nk-published-hero')) {
+                const fixedHero = mainHero.hasAttribute('data-fixed-design');
                 const titleEl = mainHero.querySelector('h1');
                 const descEl = mainHero.querySelector('p');
                 if (titleEl && data.main_hero_title) titleEl.innerHTML = window.sanitizeRichText(data.main_hero_title);
                 if (descEl && data.main_hero_desc) descEl.innerHTML = window.sanitizeRichText(data.main_hero_desc);
-            } else if (mainHero) {
-                if (data.main_hero_image) {
-                    const overlayColor = data.main_hero_overlay_color || '#1a3c6e';
-                    const overlayOpacity = data.main_hero_overlay_opacity !== undefined ? data.main_hero_overlay_opacity : 0.4;
-                    const rgba = hexToRgba(overlayColor, overlayOpacity);
-                    mainHero.style.backgroundImage = `linear-gradient(${rgba}, ${rgba}), url('${data.main_hero_image}')`;
-                    mainHero.style.backgroundColor = 'transparent';
-                } else {
-                    mainHero.style.backgroundImage = 'none';
-                    mainHero.style.backgroundColor = data.main_hero_bg_color || '#1a3c6e';
+
+                const hasHeroImage = isValidHeroImageUrl(data.main_hero_image);
+                const bg = String(data.main_hero_bg_color || '').trim().toLowerCase();
+                const tc = String(data.main_hero_title_color || '').trim().toLowerCase();
+                const dc = String(data.main_hero_desc_color || '').trim().toLowerCase();
+
+                // 레거시 v1 기본값(#1a3c6e / #ffffff / #ffffff)만 남아 있고 배경 이미지가 없는 경우에는 v2 크림 디자인을 유지하고,
+                // 관리자가 배경 이미지를 등록했거나 색상(배경/제목/설명)을 변경한 경우 실제 메인 배너에 즉시 반영합니다.
+                const isLegacyUntouchedV1 = !hasHeroImage && (!bg || bg === '#1a3c6e') && (!tc || tc === '#ffffff') && (!dc || dc === '#ffffff');
+                const shouldApplyCustomVisuals = !fixedHero || hasHeroImage || !isLegacyUntouchedV1;
+
+                if (shouldApplyCustomVisuals) {
+                    if (hasHeroImage) {
+                        const overlayColor = data.main_hero_overlay_color || '#1a3c6e';
+                        const overlayOpacity = data.main_hero_overlay_opacity !== undefined ? data.main_hero_overlay_opacity : 0.4;
+                        const rgba = hexToRgba(overlayColor, overlayOpacity);
+                        const bgValue = `linear-gradient(${rgba}, ${rgba}), url('${data.main_hero_image}') center / cover no-repeat`;
+                        mainHero.style.setProperty('background', bgValue, 'important');
+                    } else if (bg) {
+                        mainHero.style.setProperty('background', bg, 'important');
+                    }
+                    if (titleEl && tc) titleEl.style.setProperty('color', tc, 'important');
+                    if (descEl && dc) descEl.style.setProperty('color', dc, 'important');
                 }
-
-                if (data.main_hero_title_color) mainHero.querySelector('h1').style.color = data.main_hero_title_color;
-                if (data.main_hero_desc_color) mainHero.querySelector('p').style.color = data.main_hero_desc_color;
-
-                const titleEl = mainHero.querySelector('h1');
-                const descEl = mainHero.querySelector('p');
-                if (titleEl && data.main_hero_title) titleEl.innerHTML = window.sanitizeRichText(data.main_hero_title);
-                if (descEl && data.main_hero_desc) descEl.innerHTML = window.sanitizeRichText(data.main_hero_desc);
             }
             loadFooter();
         }

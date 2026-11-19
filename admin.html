@@ -52,6 +52,18 @@
         /* 실제 에디터 내 폰트 적용 스타일 (나머지 11종은 style.css에서 공통 로드) */
         .ql-font-nanum-gothic { font-family: 'Nanum Gothic', sans-serif; }
         .ql-font-nanum-myeongjo { font-family: 'Nanum Myeongjo', serif; }
+
+        /* 환경 설정 탭 보조 스타일 */
+        .nk-color-control { display: inline-flex; align-items: center; gap: 8px; background: #fff; padding: 6px 10px; border: 1px solid #d0d7de; border-radius: 8px; }
+        .nk-color-control input[type="color"] { width: 34px; height: 34px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0; cursor: pointer; background: none; }
+        .nk-color-hex-input { width: 86px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.85rem; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 6px; color: #1e293b; text-transform: lowercase; }
+        .nk-hero-mini-preview { margin-top: 22px; border-radius: 12px; padding: 26px 24px; border: 1px solid #dce3ec; background: #fbf6ee; transition: background 0.2s, color 0.2s; position: relative; overflow: hidden; }
+        .nk-hero-mini-preview-tag { display: inline-block; font-size: 0.75rem; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: rgba(255,255,255,0.88); color: #1a3c6e; margin-bottom: 10px; border: 1px solid rgba(26,60,110,0.15); }
+        .nk-hero-mini-preview h4 { margin: 0 0 8px 0; font-size: 1.35rem; font-weight: 800; line-height: 1.35; color: #172451; white-space: pre-line; word-break: keep-all; }
+        .nk-hero-mini-preview p { margin: 0; font-size: 0.95rem; line-height: 1.6; color: #545b6e; white-space: pre-line; word-break: keep-all; }
+        .nk-footer-mini-preview { margin-top: 18px; padding: 18px 20px; border-radius: 10px; background: #1e293b; color: #cbd5e1; font-size: 0.88rem; line-height: 1.65; border: 1px solid #334155; }
+        .nk-popup-inline-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 6px; }
+        .nk-popup-inline-row .form-input { flex: 1; min-width: 180px; padding: 7px 10px; font-size: 0.86rem; height: 36px; }
     </style>
 <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -518,60 +530,146 @@
             <div id="tab-settings" class="admin-section">
                 <h2 style="border-bottom:2px solid #1a3c6e; padding-bottom:15px;"><svg class="ic"><use href="#i-settings"/></svg> 환경 설정</h2>
                 <div class="panel-box">
-                    <h3 class="form-section-title"><svg class="ic"><use href="#i-home"/></svg> 메인 페이지(첫 화면) 관리</h3>
+                    <div id="main-hero-publication-banner" class="nk-post-banner is-edit" style="display:none; margin-bottom:20px;">
+                        <div class="nk-post-banner-info">
+                            <strong><svg class="ic"><use href="#i-info"/></svg> 페이지 편집(공개본) 연동 안내</strong>
+                            <span style="font-size:0.84rem;">현재 <b>페이지 편집</b>에서 발행된 메인 페이지 공개본이 활성화되어 있습니다. 설정 저장 시 페이지 편집 공개본에도 함께 반영할 수 있습니다.</span>
+                            <label style="display:inline-flex; align-items:center; gap:6px; margin-top:6px; font-size:0.84rem; font-weight:700; cursor:pointer;">
+                                <input type="checkbox" id="chk-sync-page-editor" checked style="width:16px; height:16px; accent-color:#1a3c6e;">
+                                설정 저장 시 페이지 편집(메인 공개본)의 제목·설명·배경/글자 색상도 함께 동기화
+                            </label>
+                        </div>
+                        <div class="nk-post-banner-actions">
+                            <a href="page-editor.html" class="adm-btn adm-btn-secondary adm-btn-sm" style="text-decoration:none;">페이지 편집 열기</a>
+                        </div>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:10px;">
+                        <h3 class="form-section-title" style="margin:0;"><svg class="ic"><use href="#i-home"/></svg> 메인 페이지(첫 화면) 관리</h3>
+                        <button type="button" onclick="resetMainHeroColors()" class="adm-btn adm-btn-secondary adm-btn-sm">기본 배너 색상 복원</button>
+                    </div>
                     <div style="background:#f9f9f9; padding:30px; border-radius:12px; border:1px solid #eee;">
-                        <div class="form-group"><label class="form-label">메인 큰 제목</label><input type="text" id="conf-main-title" class="form-input"></div>
-                        <div class="form-group"><label class="form-label">메인 설명글</label><textarea id="conf-main-desc" class="form-input"></textarea></div>
+                        <div class="form-group"><label class="form-label" for="conf-main-title">메인 큰 제목</label><input type="text" id="conf-main-title" class="form-input" placeholder="우리 원에 필요한 모든 즐거움 뉴키즈 (New Kids)"></div>
+                        <div class="form-group"><label class="form-label" for="conf-main-desc">메인 설명글</label><textarea id="conf-main-desc" class="form-input" placeholder="검증된 영유아 교재부터 특별한 원어민 행사까지, 선생님과 아이들이 모두 행복한 교육 파트너"></textarea></div>
                         <div class="form-group" style="margin-top:15px; border-top:1px dashed #ccc; padding-top:15px;">
                             <label class="form-label">텍스트 색상 설정</label>
-                            <div style="display:flex; gap:30px;" class="flex-row-to-col">
-                                <div class="color-picker-group"><span class="color-picker-label">큰 제목</span><input type="color" id="conf-main-title-color" style="cursor:pointer;"></div>
-                                <div class="color-picker-group"><span class="color-picker-label">설명글</span><input type="color" id="conf-main-desc-color" style="cursor:pointer;"></div>
+                            <div style="display:flex; gap:24px; flex-wrap:wrap;" class="flex-row-to-col">
+                                <div class="color-picker-group">
+                                    <span class="color-picker-label">큰 제목</span>
+                                    <span class="nk-color-control">
+                                        <input type="color" id="conf-main-title-color" value="#172451">
+                                        <input type="text" id="hex-main-title-color" class="nk-color-hex-input" value="#172451" maxlength="7" aria-label="큰 제목 색상 HEX">
+                                    </span>
+                                </div>
+                                <div class="color-picker-group">
+                                    <span class="color-picker-label">설명글</span>
+                                    <span class="nk-color-control">
+                                        <input type="color" id="conf-main-desc-color" value="#545b6e">
+                                        <input type="text" id="hex-main-desc-color" class="nk-color-hex-input" value="#545b6e" maxlength="7" aria-label="설명글 색상 HEX">
+                                    </span>
+                                </div>
                             </div>
                         </div>
                         <div style="display:flex; gap:30px; align-items:flex-start; margin-top:30px; border-top:1px dashed #ccc; padding-top:30px;" class="flex-row-to-col">
                             <div style="text-align:center;">
-                                <p style="font-size:0.9rem; margin-bottom:10px; color:#666; font-weight:bold;">현재 배경</p>
-                                <img id="preview-main-hero" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" style="width:300px; height:170px; object-fit:cover; border-radius:8px; border:1px solid #ccc; background:#e0e0e0;">
-                                <button onclick="deleteMainHeroImage()" class="btn-mini w-100-mob c-solid-danger" style="margin-top:10px; padding:10px;"><svg class="ic"><use href="#i-trash"/></svg> 이미지 삭제</button>
+                                <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:10px; flex-wrap:wrap;">
+                                    <p style="font-size:0.9rem; margin:0; color:#666; font-weight:bold;">현재 배경</p>
+                                    <span id="main-hero-status-badge" class="nk-thumb-badge">배경 이미지 없음</span>
+                                </div>
+                                <img id="preview-main-hero" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="메인 배너 배경 미리보기" style="width:300px; height:170px; object-fit:cover; border-radius:8px; border:1px solid #ccc; background:#e0e0e0;">
+                                <div style="display:flex; gap:8px; margin-top:10px; justify-content:center; flex-wrap:wrap;">
+                                    <button type="button" id="btn-clear-main-hero" onclick="clearSelectedMainHero()" class="adm-btn adm-btn-secondary adm-btn-sm" style="display:none;">새 선택 취소</button>
+                                    <button type="button" onclick="deleteMainHeroImage()" class="btn-mini w-100-mob c-solid-danger" style="padding:10px;"><svg class="ic"><use href="#i-trash"/></svg> 이미지 삭제</button>
+                                </div>
                             </div>
                             <div style="flex:1;">
-                                <label class="form-label">배경 이미지 변경 (편집 가능)</label>
+                                <label class="form-label" for="conf-main-hero">배경 이미지 변경 (편집 가능)</label>
                                 <input type="file" id="conf-main-hero" class="form-input" accept="image/*">
-                                <div style="display:flex; gap:30px; margin-top:20px;" class="flex-row-to-col">
-                                    <div><label class="form-label">배경 색상</label><input type="color" id="conf-main-bg-color" style="height:40px; cursor:pointer;" class="w-100-mob"></div>
-                                    <div><label class="form-label">오버레이 색상</label><input type="color" id="conf-main-overlay-color" style="height:40px; cursor:pointer;" class="w-100-mob"></div>
-                                    <div><label class="form-label">투명도</label><div style="display:flex; align-items:center; gap:10px;"><input type="range" id="conf-main-overlay-opacity" min="0" max="1" step="0.1" oninput="document.getElementById('op-val-main').innerText=this.value"><span id="op-val-main" class="opacity-val">0.4</span></div></div>
+                                <div style="display:flex; gap:24px; margin-top:20px; flex-wrap:wrap;" class="flex-row-to-col">
+                                    <div>
+                                        <label class="form-label">배경 색상</label>
+                                        <span class="nk-color-control">
+                                            <input type="color" id="conf-main-bg-color" value="#fbf6ee">
+                                            <input type="text" id="hex-main-bg-color" class="nk-color-hex-input" value="#fbf6ee" maxlength="7" aria-label="배경 색상 HEX">
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <label class="form-label">오버레이 색상</label>
+                                        <span class="nk-color-control">
+                                            <input type="color" id="conf-main-overlay-color" value="#1a3c6e">
+                                            <input type="text" id="hex-main-overlay-color" class="nk-color-hex-input" value="#1a3c6e" maxlength="7" aria-label="오버레이 색상 HEX">
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <label class="form-label" for="conf-main-overlay-opacity">투명도</label>
+                                        <div style="display:flex; align-items:center; gap:10px; height:48px;">
+                                            <input type="range" id="conf-main-overlay-opacity" min="0" max="1" step="0.1" value="0.4" oninput="document.getElementById('op-val-main').innerText=this.value; updateSettingsLivePreview();">
+                                            <span id="op-val-main" class="opacity-val">0.4</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+
+                        <div id="settings-hero-live-preview" class="nk-hero-mini-preview" aria-label="메인 배너 실시간 미리보기">
+                            <span class="nk-hero-mini-preview-tag">실시간 배너 미리보기</span>
+                            <h4 id="preview-hero-live-title">우리 원에 필요한 모든 즐거움 뉴키즈 (New Kids)</h4>
+                            <p id="preview-hero-live-desc">검증된 영유아 교재부터 특별한 원어민 행사까지, 선생님과 아이들이 모두 행복한 교육 파트너</p>
+                        </div>
                     </div>
 
-                    <h3 class="form-section-title" style="margin-top:40px;"><svg class="ic"><use href="#i-megaphone"/></svg> 팝업(공지) 목록 관리</h3>
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-top:40px; margin-bottom:10px;">
+                        <h3 class="form-section-title" style="margin:0;"><svg class="ic"><use href="#i-megaphone"/></svg> 팝업(공지) 목록 관리</h3>
+                        <button type="button" onclick="resetPopupHideToday()" class="adm-btn adm-btn-secondary adm-btn-sm">내 브라우저 '오늘 하루 열지 않기' 해제</button>
+                    </div>
                     <div style="background:#fffcf0; padding:20px; border-radius:12px; border:2px solid #ff9f43;">
                         <div class="form-group" style="border-bottom:1px dashed #ccc; padding-bottom:15px; margin-bottom:15px;">
                             <h4 style="margin:0 0 10px 0;"><svg class="ic"><use href="#i-plus"/></svg> 새 팝업 추가하기</h4>
                             <div style="display:flex; gap:10px; align-items:flex-end;" class="flex-row-to-col">
-                                <div style="flex:1;"><label class="form-label">이미지 파일</label><input type="file" id="new-popup-file" class="form-input" accept="image/*" style="background:#fff;"></div>
-                                <div style="flex:1;"><label class="form-label">링크 URL (선택)</label><input type="text" id="new-popup-link" class="form-input" placeholder="http://..."></div>
-                                <button onclick="addNewPopup()" class="btn-action w-100-mob" style="height:46px;">추가</button>
+                                <div style="flex:1;"><label class="form-label" for="new-popup-file">이미지 파일</label><input type="file" id="new-popup-file" class="form-input" accept="image/*" style="background:#fff;"></div>
+                                <div style="flex:1;"><label class="form-label" for="new-popup-link">링크 URL (선택)</label><input type="text" id="new-popup-link" class="form-input" placeholder="https://... 또는 notice.html#notice"></div>
+                                <button type="button" id="btn-add-popup" onclick="addNewPopup()" class="btn-action w-100-mob" style="height:46px;">추가</button>
+                            </div>
+                            <div id="new-popup-preview-wrap" style="display:none; align-items:center; gap:12px; margin-top:12px; padding:10px 12px; background:#fff; border:1px solid #fed7aa; border-radius:8px;">
+                                <img id="new-popup-preview-img" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="새 팝업 미리보기" style="width:72px; height:72px; object-fit:cover; border-radius:6px; border:1px solid #ddd;">
+                                <div style="flex:1; min-width:0;">
+                                    <div id="new-popup-preview-name" style="font-size:0.88rem; font-weight:700; color:#1e293b; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></div>
+                                    <div style="font-size:0.78rem; color:#64748b;">추가 버튼을 누르면 WebP로 자동 최적화되어 업로드됩니다.</div>
+                                </div>
+                                <button type="button" onclick="clearNewPopupFile()" class="adm-btn adm-btn-secondary adm-btn-sm">선택 취소</button>
                             </div>
                         </div>
                         <div id="popup-list-container"><div style="text-align:center; padding:20px; color:#616161;">등록된 팝업이 없습니다.</div></div>
                     </div>
 
-                    <h3 class="form-section-title" style="margin-top:40px;"><svg class="ic"><use href="#i-building"/></svg> 회사 정보 & <svg class="ic"><use href="#i-palette"/></svg> 디자인</h3>
-                    <div class="form-grid">
-                        <div class="form-group"><label class="form-label">회사명</label><input type="text" id="conf-name" class="form-input"></div>
-                        <div class="form-group"><label class="form-label">대표자</label><input type="text" id="conf-ceo" class="form-input"></div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-top:40px; margin-bottom:10px;">
+                        <h3 class="form-section-title" style="margin:0;"><svg class="ic"><use href="#i-building"/></svg> 회사 정보 & <svg class="ic"><use href="#i-palette"/></svg> 디자인</h3>
+                        <button type="button" onclick="resetBrandColors()" class="adm-btn adm-btn-secondary adm-btn-sm">기본 브랜드 컬러 복원</button>
                     </div>
-                    <div class="form-group"><label class="form-label">주소</label><input type="text" id="conf-addr" class="form-input"></div>
-                    <div class="form-group"><label class="form-label">연락처</label><input type="text" id="conf-phone" class="form-input"></div>
                     <div class="form-grid">
-                        <div class="form-group"><label class="form-label">메인 컬러</label><input type="color" id="conf-primary" class="form-input" style="height:50px;"></div>
-                        <div class="form-group"><label class="form-label">강조 컬러</label><input type="color" id="conf-accent" class="form-input" style="height:50px;"></div>
+                        <div class="form-group"><label class="form-label" for="conf-name">회사명</label><input type="text" id="conf-name" class="form-input" placeholder="뉴키즈"></div>
+                        <div class="form-group"><label class="form-label" for="conf-ceo">대표자</label><input type="text" id="conf-ceo" class="form-input" placeholder="홍길동"></div>
                     </div>
-                    <div class="btn-center-wrap"><button onclick="saveSiteConfig()" class="btn-action w-100-mob">설정 저장하기</button></div>
+                    <div class="form-group"><label class="form-label" for="conf-addr">주소</label><input type="text" id="conf-addr" class="form-input" placeholder="경기도 김포시 ..."></div>
+                    <div class="form-group"><label class="form-label" for="conf-phone">연락처</label><input type="text" id="conf-phone" class="form-input" placeholder="010-0000-0000"></div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label" for="conf-primary">메인 컬러</label>
+                            <div class="nk-color-control" style="width:100%; justify-content:space-between;">
+                                <input type="color" id="conf-primary" value="#1a3c6e" style="flex:1; height:40px;">
+                                <input type="text" id="hex-primary" class="nk-color-hex-input" value="#1a3c6e" maxlength="7" aria-label="메인 컬러 HEX">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="conf-accent">강조 컬러</label>
+                            <div class="nk-color-control" style="width:100%; justify-content:space-between;">
+                                <input type="color" id="conf-accent" value="#b85a17" style="flex:1; height:40px;">
+                                <input type="text" id="hex-accent" class="nk-color-hex-input" value="#b85a17" maxlength="7" aria-label="강조 컬러 HEX">
+                            </div>
+                        </div>
+                    </div>
+                    <div id="settings-footer-live-preview" class="nk-footer-mini-preview" aria-label="하단 푸터 및 컬러 미리보기"></div>
+                    <div class="btn-center-wrap"><button type="button" id="btn-save-site-config" onclick="saveSiteConfig()" class="btn-action w-100-mob">설정 저장하기</button></div>
                 </div>
             </div>
         </main>
@@ -707,6 +805,16 @@
         let editingPostIsDraft = false;
         let originalPublishAt = null;
         let thumbPreviewObjectUrl = null;
+        let mainHeroPreviewObjectUrl = null;
+        let newPopupPreviewObjectUrl = null;
+        const EMPTY_HERO_PLACEHOLDER = "data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='340' viewBox='0 0 600 340'%3E%3Crect width='600' height='340' fill='%23f8fafc'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%2394a3b8' font-family='sans-serif' font-size='20' font-weight='600'%3ENo Background Image%3C/text%3E%3C/svg%3E";
+        function isRealHeroImageUrl(url) {
+            const s = String(url || '').trim();
+            if (!s) return false;
+            if (s.startsWith('data:image/svg+xml')) return false;
+            if (s.includes('via.placeholder.com')) return false;
+            return /^https?:\/\//i.test(s) || /^blob:/i.test(s);
+        }
         let isPopulatingForm = false;
         let currentEditMeta = null;
         window.__nkPostSubmitting = false;
@@ -966,6 +1074,8 @@
                 if (filterWrapper && !filterWrapper.contains(e.target)) { const ddFilter = document.getElementById('filter-cat-dropdown'); if (ddFilter) ddFilter.style.display = 'none'; }
             });
 
+            if (typeof initSettingsTabEvents === 'function') initSettingsTabEvents();
+
             setTimeout(async () => {
                 const loader = document.getElementById('loading');
                 if (window.sb) {
@@ -1001,6 +1111,10 @@
             if (t === 'posts') loadManageList(1);
             if (t === 'forms' && typeof loadAdminForms === 'function') loadAdminForms();
             if (t === 'dashboard' && typeof window.nkRefreshDashboardTasks === 'function') window.nkRefreshDashboardTasks();
+            if (t === 'settings') {
+                if (typeof updateSettingsLivePreview === 'function') updateSettingsLivePreview();
+                if (typeof checkMainPageEditorPublication === 'function') checkMainPageEditorPublication();
+            }
         }
 
         window.toggleUnanswered = function () {
@@ -1373,6 +1487,11 @@
                     showToast("썸네일이 준비되었습니다.", 'success'); 
                 } else if (currentCropType === 'main-hero') { 
                     croppedMainHeroBlob = blob; 
+                    if (mainHeroPreviewObjectUrl) { try { URL.revokeObjectURL(mainHeroPreviewObjectUrl); } catch (_) { } }
+                    mainHeroPreviewObjectUrl = URL.createObjectURL(blob);
+                    isMainHeroDeleted = false;
+                    if (typeof updateMainHeroPreviewState === 'function') updateMainHeroPreviewState();
+                    if (typeof updateSettingsLivePreview === 'function') updateSettingsLivePreview();
                     showToast("메인 배경이 준비되었습니다.", 'success'); 
                 } else if (currentCropType === 'sub-hero-new') { 
                     croppedNewCatBlob = blob; 
@@ -2649,6 +2768,267 @@
             updateThumbPreview();
         };
 
+        const SETTINGS_COLOR_PAIRS = [
+            ['conf-main-title-color', 'hex-main-title-color'],
+            ['conf-main-desc-color', 'hex-main-desc-color'],
+            ['conf-main-bg-color', 'hex-main-bg-color'],
+            ['conf-main-overlay-color', 'hex-main-overlay-color'],
+            ['conf-primary', 'hex-primary'],
+            ['conf-accent', 'hex-accent']
+        ];
+
+        function normalizeHexColor(val, fallback) {
+            let s = String(val || '').trim().toLowerCase();
+            if (!s) return fallback;
+            if (!s.startsWith('#')) s = '#' + s;
+            if (/^#[0-9a-f]{3}$/i.test(s)) {
+                s = '#' + s[1] + s[1] + s[2] + s[2] + s[3] + s[3];
+            }
+            return /^#[0-9a-f]{6}$/i.test(s) ? s : fallback;
+        }
+
+        function syncHexInputsFromColorPickers() {
+            SETTINGS_COLOR_PAIRS.forEach(([colorId, hexId]) => {
+                const cEl = document.getElementById(colorId);
+                const hEl = document.getElementById(hexId);
+                if (cEl && hEl) hEl.value = (cEl.value || '').toLowerCase();
+            });
+        }
+
+        function updateMainHeroPreviewState() {
+            const imgEl = document.getElementById('preview-main-hero');
+            const badgeEl = document.getElementById('main-hero-status-badge');
+            const clearBtn = document.getElementById('btn-clear-main-hero');
+            if (!imgEl) return;
+
+            const rawFile = document.getElementById('conf-main-hero')?.files?.[0] || null;
+            const hasExisting = isRealHeroImageUrl(originalMainHero);
+
+            let previewSrc = EMPTY_HERO_PLACEHOLDER;
+            let badgeText = '배경 이미지 없음';
+            let badgeClass = 'nk-thumb-badge';
+            let showClear = false;
+
+            if (croppedMainHeroBlob && mainHeroPreviewObjectUrl) {
+                previewSrc = mainHeroPreviewObjectUrl;
+                badgeText = '새 배경 이미지 적용 예정';
+                badgeClass = 'nk-thumb-badge is-new';
+                showClear = true;
+            } else if (rawFile) {
+                if (mainHeroPreviewObjectUrl) { try { URL.revokeObjectURL(mainHeroPreviewObjectUrl); } catch (_) { } }
+                mainHeroPreviewObjectUrl = URL.createObjectURL(rawFile);
+                previewSrc = mainHeroPreviewObjectUrl;
+                badgeText = '새 배경 이미지 선택됨';
+                badgeClass = 'nk-thumb-badge is-new';
+                showClear = true;
+            } else if (hasExisting && !isMainHeroDeleted) {
+                previewSrc = originalMainHero;
+                badgeText = '기존 배경 유지';
+                badgeClass = 'nk-thumb-badge is-existing';
+            } else if (hasExisting && isMainHeroDeleted) {
+                previewSrc = EMPTY_HERO_PLACEHOLDER;
+                badgeText = '기존 배경 삭제 예정';
+                badgeClass = 'nk-thumb-badge is-auto';
+            }
+
+            imgEl.src = previewSrc;
+            if (badgeEl) {
+                badgeEl.className = badgeClass;
+                badgeEl.textContent = badgeText;
+            }
+            if (clearBtn) {
+                clearBtn.style.display = showClear ? 'inline-flex' : 'none';
+            }
+        }
+
+        window.clearSelectedMainHero = function () {
+            croppedMainHeroBlob = null;
+            if (mainHeroPreviewObjectUrl) {
+                try { URL.revokeObjectURL(mainHeroPreviewObjectUrl); } catch (_) { }
+                mainHeroPreviewObjectUrl = null;
+            }
+            const fileInput = document.getElementById('conf-main-hero');
+            if (fileInput) fileInput.value = '';
+            isMainHeroDeleted = !isRealHeroImageUrl(originalMainHero);
+            updateMainHeroPreviewState();
+            updateSettingsLivePreview();
+        };
+
+        window.resetMainHeroColors = function () {
+            const defaults = {
+                'conf-main-title-color': '#172451',
+                'conf-main-desc-color': '#545b6e',
+                'conf-main-bg-color': '#fbf6ee',
+                'conf-main-overlay-color': '#1a3c6e'
+            };
+            Object.entries(defaults).forEach(([id, val]) => {
+                const el = document.getElementById(id);
+                if (el) el.value = val;
+            });
+            const opEl = document.getElementById('conf-main-overlay-opacity');
+            const opValEl = document.getElementById('op-val-main');
+            if (opEl) opEl.value = 0.4;
+            if (opValEl) opValEl.innerText = '0.4';
+            syncHexInputsFromColorPickers();
+            updateSettingsLivePreview();
+            showToast('메인 배너 색상이 기본(크림/네이비) 값으로 복원되었습니다. [설정 저장하기]를 눌러 반영하세요.', 'info');
+        };
+
+        window.resetBrandColors = function () {
+            const pEl = document.getElementById('conf-primary');
+            const aEl = document.getElementById('conf-accent');
+            if (pEl) pEl.value = '#1a3c6e';
+            if (aEl) aEl.value = '#b85a17';
+            syncHexInputsFromColorPickers();
+            updateSettingsLivePreview();
+            showToast('브랜드 컬러가 기본값(#1a3c6e / #b85a17)으로 복원되었습니다.', 'info');
+        };
+
+        function updateSettingsLivePreview() {
+            const heroBox = document.getElementById('settings-hero-live-preview');
+            const titleEl = document.getElementById('preview-hero-live-title');
+            const descEl = document.getElementById('preview-hero-live-desc');
+            if (heroBox && titleEl && descEl) {
+                const rawTitle = (document.getElementById('conf-main-title')?.value || '').trim() || '우리 원에 필요한 모든 즐거움\n뉴키즈 (New Kids)';
+                const rawDesc = (document.getElementById('conf-main-desc')?.value || '').trim() || '검증된 영유아 교재부터 특별한 원어민 행사까지,\n선생님과 아이들이 모두 행복한 교육 파트너';
+                const tc = normalizeHexColor(document.getElementById('conf-main-title-color')?.value, '#172451');
+                const dc = normalizeHexColor(document.getElementById('conf-main-desc-color')?.value, '#545b6e');
+                const bg = normalizeHexColor(document.getElementById('conf-main-bg-color')?.value, '#fbf6ee');
+                const oc = normalizeHexColor(document.getElementById('conf-main-overlay-color')?.value, '#1a3c6e');
+                const opRaw = parseFloat(document.getElementById('conf-main-overlay-opacity')?.value);
+                const op = Number.isFinite(opRaw) ? opRaw : 0.4;
+
+                titleEl.textContent = rawTitle.replace(/<br\s*\/?>/gi, '\n');
+                descEl.textContent = rawDesc.replace(/<br\s*\/?>/gi, '\n');
+
+                const rawFile = document.getElementById('conf-main-hero')?.files?.[0] || null;
+                let activeImgUrl = null;
+                if ((croppedMainHeroBlob || rawFile) && mainHeroPreviewObjectUrl) {
+                    activeImgUrl = mainHeroPreviewObjectUrl;
+                } else if (!isMainHeroDeleted && isRealHeroImageUrl(originalMainHero)) {
+                    activeImgUrl = originalMainHero;
+                }
+
+                const isLegacyUntouchedV1 = !activeImgUrl && bg === '#1a3c6e' && tc === '#ffffff' && dc === '#ffffff';
+                if (activeImgUrl) {
+                    const rgba = typeof hexToRgba === 'function' ? hexToRgba(oc, op) : `rgba(26,60,110,${op})`;
+                    heroBox.style.background = `linear-gradient(${rgba}, ${rgba}), url('${activeImgUrl}') center / cover no-repeat`;
+                    titleEl.style.color = tc;
+                    descEl.style.color = dc;
+                } else if (isLegacyUntouchedV1) {
+                    heroBox.style.background = '#fbf6ee';
+                    titleEl.style.color = '#172451';
+                    descEl.style.color = '#545b6e';
+                } else {
+                    heroBox.style.background = bg;
+                    titleEl.style.color = tc;
+                    descEl.style.color = dc;
+                }
+            }
+
+            const footerBox = document.getElementById('settings-footer-live-preview');
+            if (footerBox) {
+                const esc = window.escapeHtml || (s => String(s ?? ''));
+                const name = (document.getElementById('conf-name')?.value || '').trim() || '뉴키즈';
+                const ceo = (document.getElementById('conf-ceo')?.value || '').trim() || '대표자 미입력';
+                const addr = (document.getElementById('conf-addr')?.value || '').trim() || '주소 미입력';
+                const phone = (document.getElementById('conf-phone')?.value || '').trim() || '연락처 미입력';
+                const primary = normalizeHexColor(document.getElementById('conf-primary')?.value, '#1a3c6e');
+                const accent = normalizeHexColor(document.getElementById('conf-accent')?.value, '#b85a17');
+
+                footerBox.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
+                        <span style="font-size:0.76rem; font-weight:700; color:#94a3b8;">하단 푸터 &amp; 브랜드 컬러 실시간 미리보기</span>
+                        <span style="display:inline-flex; gap:8px; align-items:center;">
+                            <span style="display:inline-flex; align-items:center; gap:5px; font-size:0.78rem; padding:2px 9px; border-radius:999px; background:${esc(primary)}; color:#fff; font-weight:700;">메인 ${esc(primary)}</span>
+                            <span style="display:inline-flex; align-items:center; gap:5px; font-size:0.78rem; padding:2px 9px; border-radius:999px; background:${esc(accent)}; color:#fff; font-weight:700;">강조 ${esc(accent)}</span>
+                        </span>
+                    </div>
+                    <div><strong>${esc(name)}</strong> | 대표: <span>${esc(ceo)}</span></div>
+                    <div>주소: <span>${esc(addr)}</span></div>
+                    <div>문의: <span>${esc(phone)}</span></div>
+                `;
+            }
+        }
+
+        function initSettingsTabEvents() {
+            SETTINGS_COLOR_PAIRS.forEach(([colorId, hexId]) => {
+                const cEl = document.getElementById(colorId);
+                const hEl = document.getElementById(hexId);
+                if (!cEl || !hEl) return;
+                const syncFromColor = () => {
+                    hEl.value = (cEl.value || '').toLowerCase();
+                    updateSettingsLivePreview();
+                };
+                cEl.addEventListener('input', syncFromColor);
+                cEl.addEventListener('change', syncFromColor);
+                hEl.addEventListener('input', () => {
+                    const normalized = normalizeHexColor(hEl.value, null);
+                    if (normalized) {
+                        cEl.value = normalized;
+                        updateSettingsLivePreview();
+                    }
+                });
+                hEl.addEventListener('blur', () => {
+                    const normalized = normalizeHexColor(hEl.value, (cEl.value || '#1a3c6e').toLowerCase());
+                    cEl.value = normalized;
+                    hEl.value = normalized;
+                    updateSettingsLivePreview();
+                });
+            });
+
+            ['conf-main-title', 'conf-main-desc', 'conf-name', 'conf-ceo', 'conf-addr', 'conf-phone', 'conf-main-overlay-opacity'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('input', updateSettingsLivePreview);
+                    el.addEventListener('change', updateSettingsLivePreview);
+                }
+            });
+
+            const popupFileInput = document.getElementById('new-popup-file');
+            if (popupFileInput) {
+                popupFileInput.addEventListener('change', function () {
+                    const file = this.files && this.files[0];
+                    const wrap = document.getElementById('new-popup-preview-wrap');
+                    const img = document.getElementById('new-popup-preview-img');
+                    const nameEl = document.getElementById('new-popup-preview-name');
+                    if (newPopupPreviewObjectUrl) {
+                        try { URL.revokeObjectURL(newPopupPreviewObjectUrl); } catch (_) { }
+                        newPopupPreviewObjectUrl = null;
+                    }
+                    if (file && wrap && img) {
+                        newPopupPreviewObjectUrl = URL.createObjectURL(file);
+                        img.src = newPopupPreviewObjectUrl;
+                        if (nameEl) nameEl.textContent = `${file.name} (${formatFileSize(file.size)})`;
+                        wrap.style.display = 'flex';
+                    } else if (wrap) {
+                        wrap.style.display = 'none';
+                    }
+                });
+            }
+
+            updateMainHeroPreviewState();
+            updateSettingsLivePreview();
+        }
+
+        async function checkMainPageEditorPublication() {
+            const banner = document.getElementById('main-hero-publication-banner');
+            if (!banner || !window.sb) return;
+            try {
+                const { data, error } = await window.sb.from('page_editor_publications').select('page_key,version,document').eq('page_key', 'main').maybeSingle();
+                if (!error && data && data.document) {
+                    mainPageEditorPublication = data;
+                    banner.style.display = 'flex';
+                } else {
+                    mainPageEditorPublication = null;
+                    banner.style.display = 'none';
+                }
+            } catch (_) {
+                mainPageEditorPublication = null;
+                banner.style.display = 'none';
+            }
+        }
+
         async function loadConfigToForm() {
             const { data } = await window.sb.from('site_config').select('*').eq('id', 1).single();
             if (data) {
@@ -2656,26 +3036,36 @@
                 document.getElementById('conf-ceo').value = data.ceo_name || ""; 
                 document.getElementById('conf-addr').value = data.address || ""; 
                 document.getElementById('conf-phone').value = data.phone || ""; 
-                document.getElementById('conf-primary').value = data.primary_color || "#1a3c6e"; 
-                document.getElementById('conf-accent').value = data.accent_color || "#b85a17"; 
+                document.getElementById('conf-primary').value = normalizeHexColor(data.primary_color, "#1a3c6e"); 
+                document.getElementById('conf-accent').value = normalizeHexColor(data.accent_color, "#b85a17"); 
                 document.getElementById('conf-main-title').value = data.main_hero_title || ""; 
                 document.getElementById('conf-main-desc').value = data.main_hero_desc || ""; 
-                document.getElementById('conf-main-title-color').value = data.main_hero_title_color || "#ffffff"; 
-                document.getElementById('conf-main-desc-color').value = data.main_hero_desc_color || "#ffffff"; 
-                document.getElementById('conf-main-bg-color').value = data.main_hero_bg_color || "#1a3c6e"; 
-                document.getElementById('conf-main-overlay-color').value = data.main_hero_overlay_color || "#1a3c6e"; 
-                const mop = data.main_hero_overlay_opacity !== undefined ? data.main_hero_overlay_opacity : 0.4; 
+                document.getElementById('conf-main-title-color').value = normalizeHexColor(data.main_hero_title_color, "#172451"); 
+                document.getElementById('conf-main-desc-color').value = normalizeHexColor(data.main_hero_desc_color, "#545b6e"); 
+                document.getElementById('conf-main-bg-color').value = normalizeHexColor(data.main_hero_bg_color, "#fbf6ee"); 
+                document.getElementById('conf-main-overlay-color').value = normalizeHexColor(data.main_hero_overlay_color, "#1a3c6e"); 
+                const mop = data.main_hero_overlay_opacity !== undefined && data.main_hero_overlay_opacity !== null ? data.main_hero_overlay_opacity : 0.4; 
                 document.getElementById('conf-main-overlay-opacity').value = mop; 
                 document.getElementById('op-val-main').innerText = mop;
-                
-                if (data.main_hero_image) { 
-                    document.getElementById('preview-main-hero').src = data.main_hero_image; 
-                    originalMainHero = data.main_hero_image; 
+
+                croppedMainHeroBlob = null;
+                if (mainHeroPreviewObjectUrl) {
+                    try { URL.revokeObjectURL(mainHeroPreviewObjectUrl); } catch (_) { }
+                    mainHeroPreviewObjectUrl = null;
+                }
+                const heroInput = document.getElementById('conf-main-hero');
+                if (heroInput) heroInput.value = '';
+
+                if (isRealHeroImageUrl(data.main_hero_image)) { 
+                    originalMainHero = data.main_hero_image.trim(); 
                     isMainHeroDeleted = false; 
                 } else { 
-                    document.getElementById('preview-main-hero').src = "https://via.placeholder.com/300x170?text=No+Image"; 
+                    originalMainHero = null;
                     isMainHeroDeleted = true; 
                 }
+                syncHexInputsFromColorPickers();
+                updateMainHeroPreviewState();
+                updateSettingsLivePreview();
 
                 const sheetInput = document.getElementById('sheet-url-input');
                 if (sheetInput) {
@@ -2685,69 +3075,130 @@
                     }
                 }
             }
+            checkMainPageEditorPublication();
         }
 
         async function saveSiteConfig() {
+            if (window.__nkSavingConfig) return;
             if (!confirm("저장하시겠습니까?")) return;
+
+            const saveBtn = document.getElementById('btn-save-site-config');
+            window.__nkSavingConfig = true;
+            if (saveBtn) saveBtn.disabled = true;
             showLoading(true);
 
-            const f = document.getElementById('conf-main-hero').files[0];
-            let u = document.getElementById('preview-main-hero').src;
-            if (isMainHeroDeleted) {
-                if (originalMainHero) await deleteStorageFileByUrl(originalMainHero);
-                u = null;
-            }
-            let uploadData = croppedMainHeroBlob ? croppedMainHeroBlob : f;
+            try {
+                const f = document.getElementById('conf-main-hero')?.files?.[0] || null;
+                const previousHero = isRealHeroImageUrl(originalMainHero) ? originalMainHero : null;
+                let u = isMainHeroDeleted ? null : previousHero;
+                let uploadData = croppedMainHeroBlob ? croppedMainHeroBlob : f;
 
-            if (uploadData) {
-                const { data } = await window.sb.storage.from('images').upload(`main_${Date.now()}.webp`, uploadData);
-                if (data) {
-                    if (originalMainHero) await deleteStorageFileByUrl(originalMainHero);
+                if (uploadData) {
+                    if (!croppedMainHeroBlob && typeof compressImageToWebP === 'function') {
+                        uploadData = await compressImageToWebP(uploadData, 1600, 0.85);
+                    }
+                    const { data, error: uploadError } = await window.sb.storage.from('images').upload(`main_${Date.now()}.webp`, uploadData);
+                    if (uploadError || !data) {
+                        showToast("배경 이미지 업로드 실패: " + (uploadError?.message || "알 수 없는 오류"), 'error');
+                        return;
+                    }
+                    if (previousHero) await deleteStorageFileByUrl(previousHero);
                     u = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl;
+                } else if (isMainHeroDeleted && previousHero) {
+                    await deleteStorageFileByUrl(previousHero);
+                    u = null;
                 }
-            }
 
-            const updateData = {
-                company_name: document.getElementById('conf-name').value, 
-                ceo_name: document.getElementById('conf-ceo').value, 
-                address: document.getElementById('conf-addr').value, 
-                phone: document.getElementById('conf-phone').value, 
-                primary_color: document.getElementById('conf-primary').value, 
-                accent_color: document.getElementById('conf-accent').value, 
-                main_hero_title: document.getElementById('conf-main-title').value, 
-                main_hero_desc: document.getElementById('conf-main-desc').value, 
-                main_hero_title_color: document.getElementById('conf-main-title-color').value, 
-                main_hero_desc_color: document.getElementById('conf-main-desc-color').value, 
-                main_hero_image: u, 
-                main_hero_bg_color: document.getElementById('conf-main-bg-color').value, 
-                main_hero_overlay_color: document.getElementById('conf-main-overlay-color').value, 
-                main_hero_overlay_opacity: parseFloat(document.getElementById('conf-main-overlay-opacity').value), 
-                updated_at: new Date()
-            };
+                const primaryColor = normalizeHexColor(document.getElementById('conf-primary').value, '#1a3c6e');
+                const accentColor = normalizeHexColor(document.getElementById('conf-accent').value, '#b85a17');
+                const titleColor = normalizeHexColor(document.getElementById('conf-main-title-color').value, '#172451');
+                const descColor = normalizeHexColor(document.getElementById('conf-main-desc-color').value, '#545b6e');
+                const bgColor = normalizeHexColor(document.getElementById('conf-main-bg-color').value, '#fbf6ee');
+                const overlayColor = normalizeHexColor(document.getElementById('conf-main-overlay-color').value, '#1a3c6e');
+                const opParsed = parseFloat(document.getElementById('conf-main-overlay-opacity').value);
+                const overlayOpacity = Number.isFinite(opParsed) ? opParsed : 0.4;
 
-            const { error } = await window.sb.from('site_config').update(updateData).eq('id', 1);
-            croppedMainHeroBlob = null;
-            showLoading(false);
+                const updateData = {
+                    company_name: document.getElementById('conf-name').value.trim(), 
+                    ceo_name: document.getElementById('conf-ceo').value.trim(), 
+                    address: document.getElementById('conf-addr').value.trim(), 
+                    phone: document.getElementById('conf-phone').value.trim(), 
+                    primary_color: primaryColor, 
+                    accent_color: accentColor, 
+                    main_hero_title: document.getElementById('conf-main-title').value.trim(), 
+                    main_hero_desc: document.getElementById('conf-main-desc').value.trim(), 
+                    main_hero_title_color: titleColor, 
+                    main_hero_desc_color: descColor, 
+                    main_hero_image: u, 
+                    main_hero_bg_color: bgColor, 
+                    main_hero_overlay_color: overlayColor, 
+                    main_hero_overlay_opacity: overlayOpacity, 
+                    updated_at: new Date()
+                };
 
-            if (error) { 
-                showToast(error.message, 'error'); 
-            } else { 
+                const { error } = await window.sb.from('site_config').update(updateData).eq('id', 1);
+                if (error) { 
+                    showToast("설정 저장 실패: " + error.message, 'error'); 
+                    return;
+                }
+
+                // 페이지 편집(page_editor_publications) 메인 공개본 연동 체크 시 동기화
+                const syncChk = document.getElementById('chk-sync-page-editor');
+                if (mainPageEditorPublication && mainPageEditorPublication.document && (!syncChk || syncChk.checked)) {
+                    try {
+                        const nextDoc = JSON.parse(JSON.stringify(mainPageEditorPublication.document));
+                        if (updateData.main_hero_title) nextDoc.title = updateData.main_hero_title;
+                        if (updateData.main_hero_desc) nextDoc.description = updateData.main_hero_desc;
+                        nextDoc.hero = Object.assign({}, nextDoc.hero || {}, {
+                            background: bgColor,
+                            titleColor: titleColor,
+                            descriptionColor: descColor
+                        });
+                        await window.sb.from('page_editor_publications').update({ document: nextDoc, updated_at: new Date().toISOString() }).eq('page_key', 'main');
+                        mainPageEditorPublication.document = nextDoc;
+                    } catch (_) { }
+                }
+
+                croppedMainHeroBlob = null;
+                if (mainHeroPreviewObjectUrl) {
+                    try { URL.revokeObjectURL(mainHeroPreviewObjectUrl); } catch (_) { }
+                    mainHeroPreviewObjectUrl = null;
+                }
+                const heroInput = document.getElementById('conf-main-hero');
+                if (heroInput) heroInput.value = '';
+                originalMainHero = u;
+                isMainHeroDeleted = !u;
+                syncHexInputsFromColorPickers();
+                updateMainHeroPreviewState();
+                updateSettingsLivePreview();
+
                 await logAdminActivity('UPDATE_SITE_CONFIG');
                 showToast("디자인 및 회사 정보가 성공적으로 저장되었습니다!", 'success'); 
-                if (u) originalMainHero = u; 
-                location.reload(); 
+            } finally {
+                window.__nkSavingConfig = false;
+                if (saveBtn) saveBtn.disabled = false;
+                showLoading(false);
             }
         }
 
         window.deleteMainHeroImage = function() {
             isMainHeroDeleted = true;
-            document.getElementById('preview-main-hero').src = "https://via.placeholder.com/300x170?text=No+Image";
+            croppedMainHeroBlob = null;
+            if (mainHeroPreviewObjectUrl) {
+                try { URL.revokeObjectURL(mainHeroPreviewObjectUrl); } catch (_) { }
+                mainHeroPreviewObjectUrl = null;
+            }
+            const heroInput = document.getElementById('conf-main-hero');
+            if (heroInput) heroInput.value = '';
+            updateMainHeroPreviewState();
+            updateSettingsLivePreview();
         };
 
         window.saveSheetUrl = async function () {
             const inputEl = document.getElementById('sheet-url-input');
             let url = inputEl.value.trim();
             if (!url) return showToast("주소를 입력해주세요.", 'error');
+            if (/^(?:javascript|data|vbscript):/i.test(url)) return showToast("안전하지 않은 주소 형식입니다.", 'error');
             if (!url.startsWith('http')) url = 'https://' + url;
 
             showLoading(true);
@@ -2762,6 +3213,7 @@
                     showToast("로컬 저장 권한 오류가 발생했습니다.", 'error');
                 }
             } else {
+                inputEl.value = url;
                 showToast("구글 시트 주소가 데이터베이스에 영구 저장되었습니다!", 'success');
             }
         };
@@ -2774,13 +3226,51 @@
                 window.open(url, '_blank');
             } else {
                 showToast("저장된 주소가 없습니다. [신청서 관리] 메뉴에서 주소를 먼저 입력하고 저장해주세요.", 'error');
-                switchTab('sheets', document.querySelectorAll('.nav-item')[3]);
+                const sheetNav = document.querySelector(".nav-item[onclick*=\"'sheets'\"]") || document.querySelectorAll('.nav-item')[4];
+                switchTab('sheets', sheetNav);
+            }
+        };
+
+        function normalizePopupLinkUrl(raw) {
+            const trimmed = String(raw || '').trim();
+            if (!trimmed) return { ok: true, value: '' };
+            if (/^(?:javascript|data|vbscript):/i.test(trimmed)) {
+                return { ok: false, error: '안전하지 않은 링크 형식입니다. http(s):// 또는 페이지 경로를 입력해주세요.' };
+            }
+            if (!/^(https?:\/\/|\/|\.\/|\.\.\/|#)/i.test(trimmed) && !trimmed.includes('.html')) {
+                return { ok: true, value: 'https://' + trimmed };
+            }
+            return { ok: true, value: trimmed };
+        }
+
+        window.clearNewPopupFile = function () {
+            const fileInput = document.getElementById('new-popup-file');
+            if (fileInput) fileInput.value = '';
+            if (newPopupPreviewObjectUrl) {
+                try { URL.revokeObjectURL(newPopupPreviewObjectUrl); } catch (_) { }
+                newPopupPreviewObjectUrl = null;
+            }
+            const wrap = document.getElementById('new-popup-preview-wrap');
+            if (wrap) wrap.style.display = 'none';
+        };
+
+        window.resetPopupHideToday = function () {
+            try {
+                localStorage.removeItem('hide_main_popup_date');
+                showToast("현재 브라우저의 '오늘 하루 열지 않기' 설정이 해제되었습니다. 메인 페이지에서 팝업을 바로 확인할 수 있습니다.", 'success');
+            } catch (e) {
+                showToast("브라우저 저장소 초기화 실패: " + e.message, 'error');
             }
         };
 
         async function loadPopups() { 
             const listDiv = document.getElementById('popup-list-container'); 
+            if (!listDiv) return;
             const { data, error } = await window.sb.from('site_popups').select('*').order('order_num', { ascending: true }).order('created_at', { ascending: false }); 
+            if (error) {
+                listDiv.innerHTML = "<div style='text-align:center; padding:20px; color:#b3261e;'>팝업 목록을 불러오지 못했습니다.</div>";
+                return;
+            }
             if (!data || data.length === 0) { 
                 listDiv.innerHTML = "<div style='text-align:center; padding:20px; color:#616161;'>등록된 팝업이 없습니다.</div>"; 
                 popupList = []; 
@@ -2788,11 +3278,57 @@
             } 
             popupList = data; 
             listDiv.innerHTML = ""; 
+            const esc = window.escapeHtml || (s => String(s ?? ''));
             data.forEach((p, index) => { 
-                const visBtn = p.is_visible ? `<button onclick="togglePopup('${p.id}', false)" class="btn-mini c-solid-success">노출 중</button>` : `<button onclick="togglePopup('${p.id}', true)" class="btn-mini c-solid-neutral">숨김</button>`; 
-                listDiv.innerHTML += ` <div class="popup-list-item" style="display:flex; gap:15px; align-items:center;"> <div style="display:flex; flex-direction:column; gap:5px;"><button onclick="movePopup(${index}, -1)" class="btn-mini" style="padding:2px 8px; font-size:10px;">▲</button><button onclick="movePopup(${index}, 1)" class="btn-mini" style="padding:2px 8px; font-size:10px;">▼</button></div><img src="${p.image_url}" class="popup-preview"> <div class="popup-info"> <div style="font-weight:bold; margin-bottom:5px;">링크: ${p.link_url || '(없음)'}</div> <div>상태: ${visBtn}</div> </div> <button onclick="deletePopup('${p.id}')" class="btn-mini c-solid-danger">삭제</button> </div>`; 
+                const safeId = esc(p.id);
+                const jsId = String(p.id ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+                const safeImg = esc(p.image_url || '');
+                const safeLink = esc(p.link_url || '');
+                const visBtn = p.is_visible
+                    ? `<button type="button" onclick="togglePopup('${jsId}', false)" class="btn-mini c-solid-success">노출 중</button>`
+                    : `<button type="button" onclick="togglePopup('${jsId}', true)" class="btn-mini c-solid-neutral">숨김</button>`; 
+                listDiv.innerHTML += `
+                    <div class="popup-list-item" data-popup-id="${safeId}" style="display:flex; gap:15px; align-items:center; flex-wrap:wrap;">
+                        <div style="display:flex; flex-direction:column; gap:5px;">
+                            <button type="button" onclick="movePopup(${index}, -1)" class="btn-mini" style="padding:2px 8px; font-size:10px;" ${index === 0 ? 'disabled' : ''}>▲</button>
+                            <button type="button" onclick="movePopup(${index}, 1)" class="btn-mini" style="padding:2px 8px; font-size:10px;" ${index === data.length - 1 ? 'disabled' : ''}>▼</button>
+                        </div>
+                        <img src="${safeImg}" alt="팝업 이미지 ${index + 1}" class="popup-preview">
+                        <div class="popup-info" style="flex:1; min-width:220px;">
+                            <div style="font-weight:bold; margin-bottom:4px; font-size:0.88rem; color:#1e293b;">링크: <span class="popup-link-display">${safeLink || '(없음)'}</span></div>
+                            <div class="nk-popup-inline-row">
+                                <input type="text" id="popup-link-input-${safeId}" class="form-input" value="${safeLink}" placeholder="클릭 시 이동할 링크 URL (비워두면 링크 없음)" aria-label="팝업 링크 수정">
+                                <button type="button" onclick="updatePopupLink('${jsId}')" class="adm-btn adm-btn-secondary adm-btn-sm">링크 저장</button>
+                            </div>
+                            <div style="margin-top:8px;">상태: ${visBtn}</div>
+                        </div>
+                        <button type="button" onclick="deletePopup('${jsId}')" class="btn-mini c-solid-danger">삭제</button>
+                    </div>`; 
             }); 
         }
+
+        window.updatePopupLink = async function (id) {
+            const input = document.getElementById('popup-link-input-' + id);
+            if (!input) return;
+            const check = normalizePopupLinkUrl(input.value);
+            if (!check.ok) {
+                showToast(check.error, 'error');
+                input.focus();
+                return;
+            }
+            showLoading(true);
+            try {
+                const { error } = await window.sb.from('site_popups').update({ link_url: check.value }).eq('id', id);
+                if (error) throw error;
+                await logAdminActivity('UPDATE_POPUP_LINK', { id, link_url: check.value });
+                await loadPopups();
+                showToast("팝업 링크가 수정되었습니다.", 'success');
+            } catch (e) {
+                showToast("링크 수정 실패: " + e.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        };
 
         window.movePopup = async function (index, direction) { 
             const targetIndex = index + direction; 
@@ -2802,42 +3338,84 @@
             popupList[targetIndex] = temp; 
             showLoading(true); 
             try { 
-                const updatePromises = popupList.map((item, idx) => { return window.sb.from('site_popups').update({ order_num: idx }).eq('id', item.id); }); 
-                await Promise.all(updatePromises); 
-                loadPopups(); 
+                const results = await Promise.all(popupList.map((item, idx) => window.sb.from('site_popups').update({ order_num: idx }).eq('id', item.id))); 
+                const failed = results.find(r => r && r.error);
+                if (failed) throw failed.error;
+                await loadPopups(); 
             } catch (e) { showToast("순서 변경 중 오류: " + e.message, 'error'); } 
             finally { showLoading(false); } 
         };
 
         async function addNewPopup() { 
+            if (window.__nkAddingPopup) return;
             const file = document.getElementById('new-popup-file').files[0]; 
-            const link = document.getElementById('new-popup-link').value; 
+            const rawLink = document.getElementById('new-popup-link').value; 
             if (!file) return showToast("이미지 파일을 선택해주세요.", 'error'); 
+            const linkCheck = normalizePopupLinkUrl(rawLink);
+            if (!linkCheck.ok) {
+                showToast(linkCheck.error, 'error');
+                document.getElementById('new-popup-link')?.focus();
+                return;
+            }
+
+            const addBtn = document.getElementById('btn-add-popup');
+            window.__nkAddingPopup = true;
+            if (addBtn) addBtn.disabled = true;
             showLoading(true); 
             try { 
                 const compressed = await compressImageToWebP(file, 1000, 0.8);
-                const { data: fileData } = await window.sb.storage.from('images').upload(`popup_${Date.now()}.webp`, compressed); 
+                const { data: fileData, error: uploadError } = await window.sb.storage.from('images').upload(`popup_${Date.now()}.webp`, compressed); 
+                if (uploadError || !fileData) throw new Error(uploadError?.message || '스토리지 업로드 실패');
                 const imgUrl = window.sb.storage.from('images').getPublicUrl(fileData.path).data.publicUrl; 
-                await window.sb.from('site_popups').insert([{ image_url: imgUrl, link_url: link, is_visible: true, order_num: 999 }]); 
-                document.getElementById('new-popup-file').value = ""; 
+                const nextOrder = popupList.length > 0
+                    ? Math.max(...popupList.map((p, i) => Number.isFinite(Number(p.order_num)) ? Number(p.order_num) : i)) + 1
+                    : 0;
+                const { error: insertError } = await window.sb.from('site_popups').insert([{ image_url: imgUrl, link_url: linkCheck.value, is_visible: true, order_num: nextOrder }]); 
+                if (insertError) throw insertError;
+                clearNewPopupFile();
                 document.getElementById('new-popup-link').value = ""; 
-                loadPopups(); 
+                await logAdminActivity('ADD_POPUP', { link_url: linkCheck.value });
+                await loadPopups(); 
                 showToast("팝업이 추가되었습니다.", 'success'); 
             } catch (e) { showToast("업로드 실패: " + e.message, 'error'); } 
-            finally { showLoading(false); } 
+            finally {
+                window.__nkAddingPopup = false;
+                if (addBtn) addBtn.disabled = false;
+                showLoading(false);
+            } 
         }
 
         async function deletePopup(id) { 
             if (!confirm("삭제하시겠습니까?")) return; 
-            const { data } = await window.sb.from('site_popups').select('image_url').eq('id', id).single();
-            if (data?.image_url) await deleteStorageFileByUrl(data.image_url);
-            await window.sb.from('site_popups').delete().eq('id', id); 
-            loadPopups(); 
+            showLoading(true);
+            try {
+                const { data } = await window.sb.from('site_popups').select('image_url').eq('id', id).single();
+                if (data?.image_url) await deleteStorageFileByUrl(data.image_url);
+                const { error } = await window.sb.from('site_popups').delete().eq('id', id); 
+                if (error) throw error;
+                await logAdminActivity('DELETE_POPUP', { id });
+                await loadPopups(); 
+                showToast("팝업이 삭제되었습니다.", 'success');
+            } catch (e) {
+                showToast("팝업 삭제 중 오류: " + e.message, 'error');
+            } finally {
+                showLoading(false);
+            }
         }
 
         async function togglePopup(id, status) { 
-            await window.sb.from('site_popups').update({ is_visible: status }).eq('id', id); 
-            loadPopups(); 
+            showLoading(true);
+            try {
+                const { error } = await window.sb.from('site_popups').update({ is_visible: status }).eq('id', id); 
+                if (error) throw error;
+                await logAdminActivity('TOGGLE_POPUP', { id, is_visible: status });
+                await loadPopups(); 
+                showToast(status ? "팝업이 노출 상태로 변경되었습니다." : "팝업이 숨김 상태로 변경되었습니다.", 'success');
+            } catch (e) {
+                showToast("상태 변경 실패: " + e.message, 'error');
+            } finally {
+                showLoading(false);
+            }
         }
 
         // 폼/투표 빌더 · 목록 · 공유/QR · 결과/CSV 기능은 admin-forms.js에서 로드됩니다.

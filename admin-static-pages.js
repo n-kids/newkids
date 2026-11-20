@@ -1,193 +1,320 @@
 /**
  * ============================================================================
- * 뉴키즈 관리자(admin.html) — 고정 페이지(PAGE) 확장 모듈
+ * 뉴키즈 관리자(admin.html) — 고정 페이지(PAGE) 확장 & 블록 디자인 에디터 v2
  * 파일명: admin-static-pages.js
- * 적용 방법: admin.html 하단 <script src="admin-forms.js..."> 아래에 아래 1줄 추가
- *   <script src="admin-static-pages.js?v=20261120"></script>
  *
- * 기능:
- * 1) 서브 페이지 관리(#tab-category)에서 고정 페이지(PAGE) 추가·편집 시
- *    - 폼/투표(custom_forms) 선택 또는 URL 직접 입력 (embed / redirect 선택)
- *    - Quill 1.3.6 모달 에디터로 본문 직접 디자인 (Supabase images 버킷 업로드 지원)
- *    - 기존 게시글 연동(post) 100% 유지
- * 2) 기존 addNewCategory(), saveAllCategories()를 안전하게 감싸 새 컬럼 4개를 함께 저장
+ * 주요 개선 사항 (v2):
+ * 1) Quill 1.3.6의 인라인 스타일/<div> 자동 삭제 오류 완전 해결 (독립 블록 빌더)
+ * 2) 10종 디자인 블록 + 드래그 정렬(Sortable.js) + PC/모바일(390px) 실시간 미리보기
+ * 3) 본문 중간에 등록된 폼/투표([투표:ID]) 1클릭 삽입 지원
+ * 4) 뉴키즈 맞춤 원클릭 템플릿 5종 + Supabase images 버킷 WebP 이미지 업로드
+ * 5) HTML 직접 편집 모드 + 기존 addNewCategory / saveAllCategories 안전 래핑 유지
  * ============================================================================
  */
-(function() {
+(function () {
   'use strict';
 
   const STATE = {
     forms: [],
     newCustomHtml: '',
-    rowDrafts: {}, // { [code]: { content_mode, target_url, url_display, custom_html } }
-    modalQuill: null,
+    rowDrafts: {},
     modalTarget: null, // { kind: 'new' } | { kind: 'row', code }
-    isHtmlMode: false
+    blocks: [],
+    rawHtmlMode: false,
+    rawHtmlBuffer: '',
+    previewDevice: 'pc', // 'pc' | 'mobile'
+    sortable: null
   };
 
   function esc(str) {
-    return String(str || '').replace(/[&<>"']/g, function(m) {
+    return String(str || '').replace(/[&<>"']/g, function (m) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
     });
   }
 
+  function uid() {
+    return 'blk_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 6);
+  }
+
+  function parseYoutubeEmbed(url) {
+    const s = String(url || '').trim();
+    if (!s) return '';
+    let m = s.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/|youtube\.com\/embed\/)([A-Za-z0-9_-]{6,})/);
+    return m ? 'https://www.youtube.com/embed/' + m[1] : '';
+  }
+
+  // ==========================================================================
+  // 1. 블록 → 안전한 HTML 직렬화 (manager.js sanitizeHtml 100% 호환)
+  // ==========================================================================
+  function renderBlockToHtml(b) {
+    if (!b || !b.type) return '';
+
+    if (b.type === 'heading') {
+      const align = b.align || 'left';
+      const color = b.color || '#1c355e';
+      const sub = b.sub ? `<p style="margin:6px 0 0; font-size:15px; color:#64748b; line-height:1.6;">${esc(b.sub)}</p>` : '';
+      return `<div style="text-align:${align}; margin:20px 0 14px; padding-bottom:10px; border-bottom:2px solid #e2e8f0;">
+  <h2 style="margin:0; font-size:24px; font-weight:800; color:${esc(color)}; line-height:1.35;">${esc(b.title || '제목을 입력하세요')}</h2>
+  ${sub}
+</div>`;
+    }
+
+    if (b.type === 'text') {
+      const align = b.align || 'left';
+      const size = b.fontSize || '15px';
+      const body = String(b.text || '').split('\n').map(function (line) {
+        return line.trim() ? `<p style="margin:0 0 10px; font-size:${size}; line-height:1.75; color:#334155;">${esc(line)}</p>` : '';
+      }).join('');
+      return `<div style="text-align:${align}; margin:14px 0;">${body || '<p style="margin:0; color:#94a3b8;">내용을 입력하세요.</p>'}</div>`;
+    }
+
+    if (b.type === 'callout') {
+      const themes = {
+        navy: { bg: '#eff6ff', border: '#1c355e', title: '#1c355e' },
+        green: { bg: '#ecfdf5', border: '#059669', title: '#065f46' },
+        amber: { bg: '#fffbeb', border: '#d97706', title: '#92400e' },
+        gray: { bg: '#f8fafc', border: '#64748b', title: '#334155' }
+      };
+      const t = themes[b.theme] || themes.navy;
+      const lines = String(b.body || '').split('\n').map(esc).join('<br>');
+      return `<div style="background-color:${t.bg}; border-left:4px solid ${t.border}; border-radius:8px; padding:16px 18px; margin:16px 0;">
+  ${b.title ? `<div style="font-size:15px; font-weight:700; color:${t.title}; margin-bottom:6px;">${esc(b.title)}</div>` : ''}
+  <div style="font-size:14px; line-height:1.7; color:#334155;">${lines}</div>
+</div>`;
+    }
+
+    if (b.type === 'cards') {
+      const items = Array.isArray(b.items) ? b.items : [];
+      const cols = b.cols === 3 ? 'repeat(auto-fit, minmax(180px, 1fr))' : 'repeat(auto-fit, minmax(230px, 1fr))';
+      const inner = items.map(function (it) {
+        return `<div style="background-color:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:18px; box-sizing:border-box;">
+    <div style="font-size:16px; font-weight:700; color:#1c355e; margin-bottom:8px;">${esc(it.title || '')}</div>
+    <p style="margin:0; font-size:14px; line-height:1.65; color:#475569;">${esc(it.body || '').replace(/\n/g, '<br>')}</p>
+  </div>`;
+      }).join('\n');
+      return `<div style="display:grid; grid-template-columns:${cols}; gap:14px; margin:18px 0;">${inner}</div>`;
+    }
+
+    if (b.type === 'image') {
+      if (!b.src) {
+        return `<div style="padding:28px; text-align:center; background-color:#f1f5f9; border:1px dashed #94a3b8; border-radius:10px; color:#64748b; font-size:13px; margin:16px 0;">이미지를 업로드하거나 이미지 URL을 입력해 주세요.</div>`;
+      }
+      const width = b.width || '100%';
+      const align = b.align || 'center';
+      const radius = b.rounded !== false ? '12px' : '0px';
+      const shadow = b.shadow ? '0 8px 24px rgba(15,23,42,0.12)' : 'none';
+      const caption = b.caption ? `<figcaption style="margin-top:8px; font-size:13px; color:#64748b; text-align:${align};">${esc(b.caption)}</figcaption>` : '';
+      return `<figure style="margin:18px 0; text-align:${align};">
+  <img src="${esc(b.src)}" alt="${esc(b.caption || '페이지 이미지')}" style="width:${width}; max-width:100%; height:auto; border-radius:${radius}; box-shadow:${shadow}; display:inline-block;">
+  ${caption}
+</figure>`;
+    }
+
+    if (b.type === 'split') {
+      const imgHtml = b.src
+        ? `<img src="${esc(b.src)}" alt="${esc(b.title || '')}" style="width:100%; max-width:100%; height:auto; border-radius:12px; display:block;">`
+        : `<div style="padding:40px 16px; text-align:center; background-color:#f1f5f9; border-radius:12px; color:#64748b; font-size:13px;">이미지 미등록</div>`;
+      const textHtml = `<div style="padding:4px 0;">
+  <h3 style="margin:0 0 10px; font-size:20px; font-weight:700; color:#1c355e; line-height:1.4;">${esc(b.title || '')}</h3>
+  <p style="margin:0; font-size:14px; line-height:1.75; color:#334155;">${esc(b.body || '').replace(/\n/g, '<br>')}</p>
+</div>`;
+      const first = b.reverse ? textHtml : imgHtml;
+      const second = b.reverse ? imgHtml : textHtml;
+      return `<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:20px; align-items:center; margin:20px 0;">
+  <div>${first}</div>
+  <div>${second}</div>
+</div>`;
+    }
+
+    if (b.type === 'table') {
+      const headers = Array.isArray(b.headers) ? b.headers : ['항목', '내용'];
+      const rows = Array.isArray(b.rows) ? b.rows : [];
+      const thHtml = headers.map(function (h) {
+        return `<th style="background-color:#1c355e; color:#ffffff; padding:10px 12px; text-align:left; font-size:13px; font-weight:700; border:1px solid #1c355e;">${esc(h)}</th>`;
+      }).join('');
+      const trHtml = rows.map(function (r) {
+        const tds = headers.map(function (_, idx) {
+          return `<td style="padding:10px 12px; font-size:13px; color:#334155; border:1px solid #e2e8f0; background-color:#ffffff;">${esc(r[idx] || '')}</td>`;
+        }).join('');
+        return `<tr>${tds}</tr>`;
+      }).join('');
+      return `<div style="overflow-x:auto; margin:18px 0;">
+  <table style="width:100%; border-collapse:collapse;">
+    <thead><tr>${thHtml}</tr></thead>
+    <tbody>${trHtml}</tbody>
+  </table>
+</div>`;
+    }
+
+    if (b.type === 'button') {
+      const align = b.align || 'center';
+      const bg = b.bg || '#1c355e';
+      const targetAttr = b.newTab ? ' target="_blank" rel="noopener noreferrer"' : '';
+      const href = b.url || '#';
+      return `<div style="text-align:${align}; margin:20px 0;">
+  <a href="${esc(href)}"${targetAttr} style="display:inline-block; background-color:${esc(bg)}; color:#ffffff; padding:12px 26px; border-radius:8px; font-size:15px; font-weight:700; text-decoration:none;">${esc(b.label || '바로가기')}</a>
+</div>`;
+    }
+
+    if (b.type === 'form') {
+      if (!b.formId) {
+        return `<div style="padding:20px; text-align:center; background-color:#eff6ff; border:1px dashed #1c355e; border-radius:10px; color:#1c355e; font-size:13px; margin:16px 0;">삽입할 폼/투표를 선택해 주세요.</div>`;
+      }
+      return `<div style="margin:20px 0;">[투표:${esc(b.formId)}]</div>`;
+    }
+
+    if (b.type === 'youtube') {
+      const embed = parseYoutubeEmbed(b.url);
+      if (!embed) {
+        return `<div style="padding:24px; text-align:center; background-color:#f8fafc; border:1px dashed #94a3b8; border-radius:10px; color:#64748b; font-size:13px; margin:16px 0;">유튜브 영상 주소를 입력해 주세요.</div>`;
+      }
+      return `<div style="margin:20px 0; text-align:center;">
+  <iframe src="${esc(embed)}" title="유튜브 영상" style="width:100%; max-width:720px; height:400px; border:none; border-radius:12px;" allowfullscreen></iframe>
+</div>`;
+    }
+
+    if (b.type === 'divider') {
+      return `<hr style="border:none; border-top:1px solid #e2e8f0; margin:24px 0;">`;
+    }
+
+    if (b.type === 'raw') {
+      return String(b.html || '');
+    }
+
+    return '';
+  }
+
+  function serializeBlocks(blocks) {
+    const html = blocks.map(renderBlockToHtml).join('\n');
+    const meta = encodeURIComponent(JSON.stringify(blocks));
+    return `<!-- NK_BLOCKS_V2:${meta} -->\n${html}`;
+  }
+
+  function deserializeHtmlToBlocks(html) {
+    const str = String(html || '').trim();
+    if (!str) return [];
+    const m = str.match(/<!--\s*NK_BLOCKS_V2:([A-Za-z0-9%_.~+-]+)\s*-->/);
+    if (m) {
+      try {
+        const parsed = JSON.parse(decodeURIComponent(m[1]));
+        if (Array.isArray(parsed)) return parsed;
+      } catch (_) {}
+    }
+    return [{ id: uid(), type: 'raw', html: str }];
+  }
+
+  // ==========================================================================
+  // 2. 뉴키즈 맞춤 원클릭 템플릿 5종
+  // ==========================================================================
+  const TEMPLATES = {
+    event: function () {
+      return [
+        { id: uid(), type: 'heading', title: '2026 봄 학부모 설명회 · 원어민 체험 안내', sub: '김포·고양·파주 어린이집 및 유치원 원장님·선생님을 초대합니다.', align: 'center', color: '#1c355e' },
+        { id: uid(), type: 'callout', theme: 'navy', title: '행사 일시 및 장소', body: '일시: 2026년 3월 14일 (토) 오전 10:30\n장소: 뉴키즈 본사 세미나실 (경기도 김포시 태장로 765 금광테크노밸리 627호)\n문의: 010-2333-2563 / 010-5522-8109' },
+        { id: uid(), type: 'cards', cols: 2, items: [
+          { title: '01. 신학기 교재 시연', body: '한글·독서·영어·코딩 등 연령별 핵심 교재 커리큘럼을 직접 확인하세요.' },
+          { title: '02. 원어민 · 시즌 행사 소개', body: '아이들이 가장 좋아하는 시즌 테마 행사와 부모 참여 행사 사례를 공유합니다.' }
+        ] },
+        { id: uid(), type: 'form', formId: STATE.forms[0] ? STATE.forms[0].id : '' }
+      ];
+    },
+    partner: function () {
+      return [
+        { id: uid(), type: 'heading', title: '국민서관 공식 제휴 프로그램', sub: '영아부터 누리과정 유아까지 발달 단계에 맞춘 그림책 독서 솔루션', align: 'left', color: '#1c355e' },
+        { id: uid(), type: 'text', text: '뉴키즈와 국민서관이 함께하는 영유아 독서 프로그램은 아이들의 상상력과 어휘력을 자연스럽게 키워줍니다.\n원 내 수업에 바로 활용할 수 있는 연간계획안과 교사용 활동지를 함께 제공합니다.', align: 'left', fontSize: '15px' },
+        { id: uid(), type: 'cards', cols: 3, items: [
+          { title: '연령별 필독 그림책', body: '만 0~5세 발달 단계에 맞춘 엄선된 도서 구성' },
+          { title: '교사용 지도서 · OT자료', body: '선생님의 수업 준비 부담을 줄여주는 체계적 자료' },
+          { title: '가정 연계 독후활동', body: '학부모 만족도를 높이는 가정통신문 및 워크북' }
+        ] },
+        { id: uid(), type: 'button', label: '도입 제안서 · 견적 요청하기', url: 'proposal.html', bg: '#1c355e', align: 'center', newTab: false }
+      ];
+    },
+    steps: function () {
+      return [
+        { id: uid(), type: 'heading', title: '교재 도입 및 신청 절차 안내', sub: '간단한 3단계로 우리 원에 꼭 맞는 교육 프로그램을 시작하세요.', align: 'center', color: '#1c355e' },
+        { id: uid(), type: 'cards', cols: 3, items: [
+          { title: 'STEP 01. 상담 및 제안서', body: '전화 또는 온라인 견적 요청으로 희망 과목과 원아 수를 알려주세요.' },
+          { title: 'STEP 02. 샘플 교재 확인', body: '담당자가 원으로 직접 방문하거나 샘플 교재를 발송해 드립니다.' },
+          { title: 'STEP 03. 정기 발주 및 지원', body: '매월 정해진 일정에 맞춰 교재 배송과 행사 일정을 함께 관리합니다.' }
+        ] },
+        { id: uid(), type: 'table', headers: ['구분', '지원 내용', '비고'], rows: [
+          ['영유아 교재', '한글, 독서, 영어, 수학, 과학, 미술, 코딩, 환경 등 11개 영역', '누리과정 연계'],
+          ['방문 행사', '시즌 테마 행사, 원어민 문화체험, 부모 참여 행사', '사전 예약제'],
+          ['전용 주문 앱', '교재 발주, 추가 주문, A/S 간편 신청', '거래처 무료 제공']
+        ] }
+      ];
+    },
+    poster: function () {
+      return [
+        { id: uid(), type: 'heading', title: '특별 안내 포스터', sub: '아래 이미지를 클릭해 안내 포스터를 업로드해 주세요.', align: 'center', color: '#1c355e' },
+        { id: uid(), type: 'image', src: '', width: '100%', align: 'center', rounded: true, shadow: true, caption: '포스터 설명을 입력하세요' },
+        { id: uid(), type: 'button', label: '신청서 작성하기', url: 'proposal.html', bg: '#059669', align: 'center', newTab: false }
+      ];
+    },
+    contact: function () {
+      return [
+        { id: uid(), type: 'heading', title: '문의 및 오시는 길', sub: '궁금하신 점이 있으시면 언제든 편하게 연락해 주세요.', align: 'left', color: '#1c355e' },
+        { id: uid(), type: 'table', headers: ['항목', '상세 정보'], rows: [
+          ['회사명 / 대표', '(주)뉴키즈 / 대표 박홍기'],
+          ['상담 전화', '010-2333-2563 / 010-5522-8109'],
+          ['주소', '경기도 김포시 태장로 765 금광테크노밸리 627호'],
+          ['운영 시간', '평일 09:00 ~ 18:00 (점심시간 12:00 ~ 13:00)']
+        ] },
+        { id: uid(), type: 'callout', theme: 'green', title: '빠른 전화 상담', body: '모바일에서는 아래 버튼을 누르면 바로 전화 연결이 가능합니다.' },
+        { id: uid(), type: 'button', label: '전화 상담 연결 (010-2333-2563)', url: 'tel:010-2333-2563', bg: '#059669', align: 'center', newTab: false }
+      ];
+    }
+  };
+
+  // ==========================================================================
+  // 3. 스타일 주입
+  // ==========================================================================
   function injectStyles() {
     if (document.getElementById('nk-static-page-ext-style')) return;
     const style = document.createElement('style');
     style.id = 'nk-static-page-ext-style';
     style.textContent = `
-      .nk-sp-box {
-        margin-top: 14px;
-        padding: 14px 16px;
-        background: #f8fafc;
-        border: 1px solid #cbd5e1;
-        border-radius: 10px;
-      }
-      .nk-sp-title {
-        font-size: 13px;
-        font-weight: 700;
-        color: #1c355e;
-        margin-bottom: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        flex-wrap: wrap;
-        gap: 8px;
-      }
-      .nk-sp-modes {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-bottom: 12px;
-      }
-      .nk-sp-mode-btn {
-        padding: 6px 12px;
-        font-size: 12px;
-        font-weight: 600;
-        border-radius: 6px;
-        border: 1px solid #cbd5e1;
-        background: #ffffff;
-        color: #475569;
-        cursor: pointer;
-      }
-      .nk-sp-mode-btn.active {
-        background: #1c355e;
-        color: #ffffff;
-        border-color: #1c355e;
-      }
-      .nk-sp-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-        gap: 10px;
-        align-items: end;
-      }
-      .nk-sp-field label {
-        display: block;
-        font-size: 11px;
-        font-weight: 700;
-        color: #475569;
-        margin-bottom: 4px;
-      }
-      .nk-sp-field input,
-      .nk-sp-field select {
-        width: 100%;
-        padding: 7px 10px;
-        font-size: 13px;
-        border: 1px solid #cbd5e1;
-        border-radius: 6px;
-        background: #fff;
-        box-sizing: border-box;
-      }
-      .nk-sp-btn {
-        padding: 7px 13px;
-        font-size: 12px;
-        font-weight: 600;
-        border-radius: 6px;
-        border: none;
-        cursor: pointer;
-        background: #059669;
-        color: #fff;
-      }
+      .nk-sp-box { margin-top: 14px; padding: 14px 16px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; box-sizing: border-box; }
+      .nk-sp-title { font-size: 13px; font-weight: 700; color: #1c355e; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+      .nk-sp-modes { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+      .nk-sp-mode-btn { padding: 6px 12px; font-size: 12px; font-weight: 600; border-radius: 6px; border: 1px solid #cbd5e1; background: #fff; color: #475569; cursor: pointer; }
+      .nk-sp-mode-btn.active { background: #1c355e; color: #fff; border-color: #1c355e; }
+      .nk-sp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; align-items: end; }
+      .nk-sp-field label { display: block; font-size: 11px; font-weight: 700; color: #475569; margin-bottom: 4px; }
+      .nk-sp-field input, .nk-sp-field select, .nk-sp-field textarea { width: 100%; padding: 7px 10px; font-size: 13px; border: 1px solid #cbd5e1; border-radius: 6px; background: #fff; box-sizing: border-box; font-family: inherit; }
+      .nk-sp-btn { padding: 7px 13px; font-size: 12px; font-weight: 600; border-radius: 6px; border: none; cursor: pointer; background: #059669; color: #fff; }
       .nk-sp-btn:hover { background: #047857; }
-      .nk-sp-btn-outline {
-        padding: 6px 11px;
-        font-size: 12px;
-        font-weight: 600;
-        border-radius: 6px;
-        border: 1px solid #1c355e;
-        background: #fff;
-        color: #1c355e;
-        text-decoration: none;
-        cursor: pointer;
-      }
-      .nk-sp-modal-backdrop {
-        position: fixed;
-        inset: 0;
-        z-index: 9999;
-        background: rgba(15, 23, 42, 0.65);
-        display: none;
-        align-items: center;
-        justify-content: center;
-        padding: 16px;
-      }
+      .nk-sp-btn-navy { padding: 7px 13px; font-size: 12px; font-weight: 600; border-radius: 6px; border: none; cursor: pointer; background: #1c355e; color: #fff; }
+      .nk-sp-btn-outline { padding: 6px 11px; font-size: 12px; font-weight: 600; border-radius: 6px; border: 1px solid #cbd5e1; background: #fff; color: #334155; text-decoration: none; cursor: pointer; }
+      .nk-sp-btn-outline:hover { background: #f1f5f9; }
+      .nk-sp-btn-outline.active { background: #1c355e; color: #fff; border-color: #1c355e; }
+      .cm-row:has(.nk-sp-row-ext) { flex-wrap: wrap !important; }
+      .nk-sp-row-ext { grid-column: 1 / -1; flex: 1 0 100%; width: 100%; min-width: 0; box-sizing: border-box; margin-top: 10px; padding: 12px 14px; background: #f8fafc; border: 1px dashed #94a3b8; border-radius: 8px; }
+
+      /* 블록 디자인 에디터 모달 v2 */
+      .nk-sp-modal-backdrop { position: fixed; inset: 0; z-index: 10000; background: rgba(15, 23, 42, 0.72); display: none; align-items: center; justify-content: center; padding: 12px; box-sizing: border-box; }
       .nk-sp-modal-backdrop.open { display: flex; }
-      .nk-sp-modal {
-        background: #fff;
-        border-radius: 14px;
-        width: 100%;
-        max-width: 900px;
-        max-height: 90vh;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
-      }
-      .nk-sp-modal-head {
-        background: #1c355e;
-        color: #fff;
-        padding: 14px 20px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-      }
-      .nk-sp-modal-tools {
-        padding: 10px 16px;
-        background: #f8fafc;
-        border-bottom: 1px solid #e2e8f0;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        align-items: center;
-      }
-      .nk-sp-modal-body {
-        padding: 16px;
-        overflow-y: auto;
-        flex: 1;
-      }
-      .nk-sp-modal-body .ql-container { min-height: 300px; font-size: 15px; }
-      .nk-sp-modal-foot {
-        padding: 12px 20px;
-        background: #f8fafc;
-        border-top: 1px solid #e2e8f0;
-        display: flex;
-        justify-content: flex-end;
-        gap: 8px;
-      }
-      .cm-row:has(.nk-sp-row-ext) {
-        flex-wrap: wrap !important;
-      }
-      .nk-sp-row-ext {
-        grid-column: 1 / -1;
-        flex: 1 0 100%;
-        width: 100%;
-        min-width: 0;
-        box-sizing: border-box;
-        margin-top: 10px;
-        padding: 12px 14px;
-        background: #f8fafc;
-        border: 1px dashed #94a3b8;
-        border-radius: 8px;
-      }
+      .nk-sp-modal { background: #f8fafc; border-radius: 14px; width: 100%; max-width: 1240px; height: 92vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35); }
+      .nk-sp-modal-head { background: #1c355e; color: #fff; padding: 12px 18px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-shrink: 0; }
+      .nk-sp-modal-toolbar { padding: 10px 14px; background: #fff; border-bottom: 1px solid #e2e8f0; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; flex-shrink: 0; }
+      .nk-sp-chip { padding: 5px 10px; font-size: 12px; font-weight: 600; border-radius: 6px; border: 1px solid #cbd5e1; background: #f8fafc; color: #1e293b; cursor: pointer; }
+      .nk-sp-chip:hover { background: #eff6ff; border-color: #1c355e; color: #1c355e; }
+      .nk-sp-workspace { flex: 1; display: grid; grid-template-columns: 1fr 1fr; min-height: 0; overflow: hidden; }
+      @media (max-width: 900px) { .nk-sp-workspace { grid-template-columns: 1fr; } .nk-sp-preview-pane { display: none; } }
+      .nk-sp-editor-pane { overflow-y: auto; padding: 14px; border-right: 1px solid #e2e8f0; background: #f1f5f9; }
+      .nk-sp-preview-pane { overflow-y: auto; padding: 16px; background: #e2e8f0; display: flex; flex-direction: column; align-items: center; }
+      .nk-sp-preview-frame { background: #fff; width: 100%; max-width: 100%; border-radius: 12px; padding: 24px; box-shadow: 0 4px 20px rgba(15,23,42,0.08); box-sizing: border-box; transition: max-width 0.2s ease; }
+      .nk-sp-preview-frame.mobile { max-width: 390px; padding: 16px; }
+      .nk-blk-card { background: #fff; border: 1px solid #cbd5e1; border-radius: 10px; margin-bottom: 10px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+      .nk-blk-head { background: #f8fafc; padding: 8px 12px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 12px; font-weight: 700; color: #1c355e; }
+      .nk-blk-drag { cursor: grab; color: #94a3b8; margin-right: 6px; user-select: none; }
+      .nk-blk-body { padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+      .nk-blk-actions { display: flex; gap: 4px; }
+      .nk-blk-mini { padding: 3px 7px; font-size: 11px; border: 1px solid #cbd5e1; background: #fff; border-radius: 4px; cursor: pointer; color: #475569; }
+      .nk-blk-mini:hover { background: #f1f5f9; }
+      .nk-blk-mini.danger { color: #dc2626; border-color: #fecaca; }
+      .nk-sp-modal-foot { padding: 12px 18px; background: #fff; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-shrink: 0; }
     `;
     document.head.appendChild(style);
   }
@@ -195,29 +322,43 @@
   async function loadCustomForms() {
     if (!window.sb) return;
     try {
-      const { data, error } = await window.sb
-        .from('custom_forms')
-        .select('id, title')
-        .order('created_at', { ascending: false });
-      if (!error && Array.isArray(data)) {
-        STATE.forms = data;
-      }
+      const { data, error } = await window.sb.from('custom_forms').select('id, title').order('created_at', { ascending: false });
+      if (!error && Array.isArray(data)) STATE.forms = data;
     } catch (e) {
       console.warn('[admin-static-pages] custom_forms 로드 실패:', e);
     }
   }
 
-  function buildFormOptionsHtml(selectedUrl) {
-    const match = String(selectedUrl || '').match(/id=([a-zA-Z0-9_-]+)/);
-    const currentId = match ? match[1] : '';
-    let html = '<option value="">-- 등록된 폼/투표에서 선택 (URL 자동 입력) --</option>';
-    STATE.forms.forEach(function(f) {
+  function buildFormOptionsHtml(selectedVal, isDirectId) {
+    let currentId = '';
+    if (isDirectId) {
+      currentId = String(selectedVal || '');
+    } else {
+      const m = String(selectedVal || '').match(/id=([a-zA-Z0-9_-]+)/);
+      currentId = m ? m[1] : '';
+    }
+    let html = '<option value="">-- 등록된 폼/투표 선택 --</option>';
+    STATE.forms.forEach(function (f) {
       const sel = currentId === f.id ? 'selected' : '';
       html += `<option value="${esc(f.id)}" ${sel}>${esc(f.title || f.id)} (${esc(f.id)})</option>`;
     });
     return html;
   }
 
+  async function uploadImageToSupabase(file) {
+    if (!window.sb || !file) throw new Error('Supabase 또는 파일이 없습니다.');
+    const uploadFile = typeof window.compressImageToWebP === 'function'
+      ? await window.compressImageToWebP(file, 1600, 0.82)
+      : file;
+    const key = `static_${Date.now()}_${Math.random().toString(36).slice(2, 5)}.webp`;
+    const { data, error } = await window.sb.storage.from('images').upload(key, uploadFile);
+    if (error) throw error;
+    return window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl;
+  }
+
+  // ==========================================================================
+  // 4. 블록 에디터 모달 UI 생성 및 렌더링
+  // ==========================================================================
   function ensureEditorModal() {
     if (document.getElementById('nk-sp-editor-modal')) return;
     const wrap = document.createElement('div');
@@ -226,98 +367,117 @@
     wrap.innerHTML = `
       <div class="nk-sp-modal">
         <div class="nk-sp-modal-head">
-          <strong id="nk-sp-modal-title" style="font-size:15px;">고정 페이지 본문 직접 디자인</strong>
-          <button type="button" id="nk-sp-modal-close" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer;">&times;</button>
+          <div>
+            <strong id="nk-sp-modal-title" style="font-size:15px;">고정 페이지 블록 디자인 에디터</strong>
+            <span style="font-size:11px; color:#bfdbfe; margin-left:8px;">블록 조합 · 드래그 정렬 · 실시간 PC/모바일 미리보기</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <button type="button" id="nk-sp-dev-pc" class="nk-sp-btn-outline active" style="padding:4px 9px;">PC</button>
+            <button type="button" id="nk-sp-dev-mob" class="nk-sp-btn-outline" style="padding:4px 9px;">모바일</button>
+            <button type="button" id="nk-sp-toggle-raw" class="nk-sp-btn-outline" style="padding:4px 9px;">HTML 직접편집</button>
+            <button type="button" id="nk-sp-modal-close" style="background:none;border:none;color:#fff;font-size:22px;cursor:pointer;margin-left:6px;">&times;</button>
+          </div>
         </div>
-        <div class="nk-sp-modal-tools">
-          <button type="button" id="nk-sp-insert-callout" class="nk-sp-btn-outline">+ 안내 박스</button>
-          <button type="button" id="nk-sp-insert-cta" class="nk-sp-btn-outline">+ 강조 버튼</button>
-          <button type="button" id="nk-sp-toggle-html" class="nk-sp-btn-outline" style="margin-left:auto;">HTML 소스 보기</button>
+
+        <div id="nk-sp-block-toolbar" class="nk-sp-modal-toolbar">
+          <span style="font-size:11px;font-weight:700;color:#64748b;margin-right:2px;">+ 블록 추가:</span>
+          <button type="button" class="nk-sp-chip" data-add-blk="heading">제목</button>
+          <button type="button" class="nk-sp-chip" data-add-blk="text">본문 글</button>
+          <button type="button" class="nk-sp-chip" data-add-blk="callout">안내 박스</button>
+          <button type="button" class="nk-sp-chip" data-add-blk="cards">2~3단 카드</button>
+          <button type="button" class="nk-sp-chip" data-add-blk="image">이미지</button>
+          <button type="button" class="nk-sp-chip" data-add-blk="split">이미지+글</button>
+          <button type="button" class="nk-sp-chip" data-add-blk="table">표(Table)</button>
+          <button type="button" class="nk-sp-chip" data-add-blk="button">강조 버튼</button>
+          <button type="button" class="nk-sp-chip" data-add-blk="form" style="border-color:#1c355e;color:#1c355e;">폼/투표 삽입</button>
+          <button type="button" class="nk-sp-chip" data-add-blk="youtube">유튜브</button>
+          <button type="button" class="nk-sp-chip" data-add-blk="divider">구분선</button>
+
+          <select id="nk-sp-template-sel" style="margin-left:auto;padding:5px 8px;font-size:12px;border:1px solid #cbd5e1;border-radius:6px;background:#fff;">
+            <option value="">뉴키즈 템플릿 불러오기...</option>
+            <option value="event">행사 · 설명회 안내 (폼 포함)</option>
+            <option value="partner">국민서관 · 제휴 소개</option>
+            <option value="steps">도입 절차(STEP 1~3) + 표</option>
+            <option value="poster">포스터형 안내 페이지</option>
+            <option value="contact">문의 · 오시는 길</option>
+          </select>
         </div>
-        <div class="nk-sp-modal-body">
-          <div id="nk-sp-quill-wrap"><div id="nk-sp-quill-editor"></div></div>
-          <textarea id="nk-sp-html-source" style="display:none;width:100%;min-height:320px;font-family:monospace;font-size:13px;padding:12px;border:1px solid #cbd5e1;border-radius:8px;box-sizing:border-box;"></textarea>
-          <input type="file" id="nk-sp-quill-image-input" accept="image/*" style="display:none;">
+
+        <div class="nk-sp-workspace">
+          <div class="nk-sp-editor-pane">
+            <div id="nk-sp-blocks-list"></div>
+            <textarea id="nk-sp-raw-textarea" style="display:none;width:100%;height:100%;min-height:420px;font-family:monospace;font-size:13px;padding:12px;border:1px solid #cbd5e1;border-radius:8px;box-sizing:border-box;background:#0f172a;color:#86efac;"></textarea>
+          </div>
+          <div class="nk-sp-preview-pane">
+            <div style="font-size:11px;font-weight:700;color:#475569;margin-bottom:8px;">실제 page.html 본문 미리보기</div>
+            <div id="nk-sp-preview-frame" class="nk-sp-preview-frame"></div>
+          </div>
         </div>
+
         <div class="nk-sp-modal-foot">
-          <button type="button" id="nk-sp-modal-cancel" class="nk-sp-btn-outline">취소</button>
-          <button type="button" id="nk-sp-modal-apply" class="nk-sp-btn">본문 적용</button>
+          <span style="font-size:12px;color:#64748b;">적용 후 <b>변경사항 일괄 저장</b>(또는 카테고리 생성)을 누르면 DB에 저장됩니다.</span>
+          <div style="display:flex;gap:8px;">
+            <button type="button" id="nk-sp-modal-cancel" class="nk-sp-btn-outline">취소</button>
+            <button type="button" id="nk-sp-modal-apply" class="nk-sp-btn">본문 디자인 적용</button>
+          </div>
         </div>
       </div>
     `;
     document.body.appendChild(wrap);
 
-    if (typeof window.Quill === 'function') {
-      STATE.modalQuill = new window.Quill('#nk-sp-quill-editor', {
-        theme: 'snow',
-        placeholder: '고정 페이지 본문 내용을 직접 작성하고 디자인하세요...',
-        modules: {
-          toolbar: {
-            container: [
-              [{ header: [1, 2, 3, false] }],
-              ['bold', 'italic', 'underline', 'strike'],
-              [{ color: [] }, { background: [] }],
-              [{ align: [] }],
-              [{ list: 'ordered' }, { list: 'bullet' }],
-              ['link', 'image', 'clean']
-            ],
-            handlers: {
-              image: function() {
-                document.getElementById('nk-sp-quill-image-input').click();
-              }
-            }
-          }
-        }
+    wrap.querySelectorAll('[data-add-blk]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (STATE.rawHtmlMode) return;
+        addBlock(btn.dataset.addBlk);
       });
-    }
+    });
 
-    document.getElementById('nk-sp-quill-image-input').addEventListener('change', async function(e) {
-      const file = e.target.files && e.target.files[0];
-      if (!file || !window.sb || !STATE.modalQuill) return;
-      try {
-        const uploadFile = typeof window.compressImageToWebP === 'function'
-          ? await window.compressImageToWebP(file, 1600, 0.8)
-          : file;
-        const fileName = `static_${Date.now()}.webp`;
-        const { data, error } = await window.sb.storage.from('images').upload(fileName, uploadFile);
-        if (error) throw error;
-        const pub = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl;
-        const range = STATE.modalQuill.getSelection(true);
-        STATE.modalQuill.insertEmbed(range.index, 'image', pub);
-        STATE.modalQuill.setSelection(range.index + 1);
-      } catch (err) {
-        alert('이미지 업로드 중 오류가 발생했습니다: ' + (err.message || err));
-      } finally {
+    document.getElementById('nk-sp-template-sel').addEventListener('change', function (e) {
+      const key = e.target.value;
+      if (!key || !TEMPLATES[key]) return;
+      if (STATE.blocks.length > 0 && !confirm('현재 작성 중인 블록을 선택한 템플릿으로 교체할까요?')) {
         e.target.value = '';
+        return;
       }
+      STATE.rawHtmlMode = false;
+      STATE.blocks = TEMPLATES[key]();
+      syncEditorModeUI();
+      renderBlockEditor();
+      e.target.value = '';
     });
 
-    document.getElementById('nk-sp-insert-callout').addEventListener('click', function() {
-      const snippet = '<div style="background:#eff6ff;border-left:4px solid #1c355e;border-radius:8px;padding:14px 16px;margin:12px 0;"><strong>안내 사항:</strong> 여기에 주요 내용을 입력하세요.</div><p><br></p>';
-      appendHtmlToEditor(snippet);
+    document.getElementById('nk-sp-dev-pc').addEventListener('click', function () {
+      STATE.previewDevice = 'pc';
+      document.getElementById('nk-sp-dev-pc').classList.add('active');
+      document.getElementById('nk-sp-dev-mob').classList.remove('active');
+      document.getElementById('nk-sp-preview-frame').classList.remove('mobile');
     });
 
-    document.getElementById('nk-sp-insert-cta').addEventListener('click', function() {
-      const snippet = '<p style="margin:16px 0;"><a href="https://n-kids.github.io/newkids/form.html" target="_blank" style="display:inline-block;background:#1c355e;color:#ffffff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:700;">바로 신청하기</a></p>';
-      appendHtmlToEditor(snippet);
+    document.getElementById('nk-sp-dev-mob').addEventListener('click', function () {
+      STATE.previewDevice = 'mobile';
+      document.getElementById('nk-sp-dev-mob').classList.add('active');
+      document.getElementById('nk-sp-dev-pc').classList.remove('active');
+      document.getElementById('nk-sp-preview-frame').classList.add('mobile');
     });
 
-    document.getElementById('nk-sp-toggle-html').addEventListener('click', function() {
-      const qWrap = document.getElementById('nk-sp-quill-wrap');
-      const raw = document.getElementById('nk-sp-html-source');
-      const btn = document.getElementById('nk-sp-toggle-html');
-      STATE.isHtmlMode = !STATE.isHtmlMode;
-      if (STATE.isHtmlMode) {
-        raw.value = STATE.modalQuill ? STATE.modalQuill.root.innerHTML : raw.value;
-        qWrap.style.display = 'none';
-        raw.style.display = 'block';
-        btn.textContent = '에디터로 돌아가기';
+    document.getElementById('nk-sp-toggle-raw').addEventListener('click', function () {
+      const ta = document.getElementById('nk-sp-raw-textarea');
+      if (!STATE.rawHtmlMode) {
+        STATE.rawHtmlBuffer = serializeBlocks(STATE.blocks);
+        ta.value = STATE.rawHtmlBuffer;
+        STATE.rawHtmlMode = true;
       } else {
-        if (STATE.modalQuill) STATE.modalQuill.root.innerHTML = raw.value;
-        raw.style.display = 'none';
-        qWrap.style.display = 'block';
-        btn.textContent = 'HTML 소스 보기';
+        STATE.rawHtmlBuffer = ta.value;
+        STATE.blocks = deserializeHtmlToBlocks(ta.value);
+        STATE.rawHtmlMode = false;
       }
+      syncEditorModeUI();
+      renderBlockEditor();
+    });
+
+    document.getElementById('nk-sp-raw-textarea').addEventListener('input', function (e) {
+      STATE.rawHtmlBuffer = e.target.value;
+      updateLivePreview();
     });
 
     function closeModal() {
@@ -327,53 +487,366 @@
 
     document.getElementById('nk-sp-modal-close').addEventListener('click', closeModal);
     document.getElementById('nk-sp-modal-cancel').addEventListener('click', closeModal);
-    document.getElementById('nk-sp-modal-apply').addEventListener('click', function() {
-      const html = STATE.isHtmlMode
-        ? document.getElementById('nk-sp-html-source').value
-        : (STATE.modalQuill ? STATE.modalQuill.root.innerHTML : document.getElementById('nk-sp-html-source').value);
+    document.getElementById('nk-sp-modal-apply').addEventListener('click', function () {
+      const finalHtml = STATE.rawHtmlMode
+        ? document.getElementById('nk-sp-raw-textarea').value
+        : serializeBlocks(STATE.blocks);
 
       if (STATE.modalTarget && STATE.modalTarget.kind === 'new') {
-        STATE.newCustomHtml = html;
+        STATE.newCustomHtml = finalHtml;
         const summary = document.getElementById('nk-sp-new-custom-status');
-        if (summary) summary.textContent = '직접 디자인 본문이 작성되었습니다. [카테고리 생성] 시 함께 저장됩니다.';
+        if (summary) summary.textContent = `본문 디자인 완료 (${STATE.blocks.length}개 블록) — [카테고리 생성] 시 함께 저장됩니다.`;
       } else if (STATE.modalTarget && STATE.modalTarget.kind === 'row') {
         const code = STATE.modalTarget.code;
         if (!STATE.rowDrafts[code]) STATE.rowDrafts[code] = { content_mode: 'custom', target_url: '', url_display: 'embed', custom_html: '' };
-        STATE.rowDrafts[code].custom_html = html;
+        STATE.rowDrafts[code].custom_html = finalHtml;
         const badge = document.getElementById('nk-sp-row-custom-status-' + code);
-        if (badge) badge.textContent = '본문 수정됨 (일괄 저장 버튼을 눌러 반영하세요)';
+        if (badge) badge.textContent = '본문 수정됨 — 상단/하단 [변경사항 일괄 저장]을 눌러 반영하세요.';
       }
       closeModal();
     });
   }
 
-  function appendHtmlToEditor(snippet) {
-    if (STATE.isHtmlMode || !STATE.modalQuill) {
-      document.getElementById('nk-sp-html-source').value += '\n' + snippet;
+  function syncEditorModeUI() {
+    const listEl = document.getElementById('nk-sp-blocks-list');
+    const ta = document.getElementById('nk-sp-raw-textarea');
+    const bar = document.getElementById('nk-sp-block-toolbar');
+    const btn = document.getElementById('nk-sp-toggle-raw');
+    if (STATE.rawHtmlMode) {
+      listEl.style.display = 'none';
+      ta.style.display = 'block';
+      bar.style.opacity = '0.45';
+      bar.style.pointerEvents = 'none';
+      btn.textContent = '블록 편집으로';
+      btn.classList.add('active');
     } else {
-      STATE.modalQuill.root.innerHTML += snippet;
+      listEl.style.display = 'block';
+      ta.style.display = 'none';
+      bar.style.opacity = '1';
+      bar.style.pointerEvents = 'auto';
+      btn.textContent = 'HTML 직접편집';
+      btn.classList.remove('active');
+    }
+  }
+
+  function addBlock(type) {
+    const defaults = {
+      heading: { type: 'heading', title: '새 섹션 제목', sub: '짧은 부제목을 입력하세요', align: 'left', color: '#1c355e' },
+      text: { type: 'text', text: '여기에 본문 내용을 자유롭게 작성하세요.', align: 'left', fontSize: '15px' },
+      callout: { type: 'callout', theme: 'navy', title: '안내 사항', body: '일정, 장소, 준비물 등 강조하고 싶은 내용을 입력하세요.' },
+      cards: { type: 'cards', cols: 2, items: [{ title: '특징 1', body: '내용을 입력하세요.' }, { title: '특징 2', body: '내용을 입력하세요.' }] },
+      image: { type: 'image', src: '', width: '100%', align: 'center', rounded: true, shadow: true, caption: '' },
+      split: { type: 'split', src: '', title: '이미지 옆 제목', body: '이미지와 함께 보여줄 설명 문구를 입력하세요.', reverse: false },
+      table: { type: 'table', headers: ['항목', '내용', '비고'], rows: [['예시 1', '상세 설명', '-'], ['예시 2', '상세 설명', '-']] },
+      button: { type: 'button', label: '자세히 보기', url: 'https://n-kids.github.io/newkids/', bg: '#1c355e', align: 'center', newTab: false },
+      form: { type: 'form', formId: STATE.forms[0] ? STATE.forms[0].id : '' },
+      youtube: { type: 'youtube', url: '' },
+      divider: { type: 'divider' }
+    };
+    const item = Object.assign({ id: uid() }, JSON.parse(JSON.stringify(defaults[type] || defaults.text)));
+    STATE.blocks.push(item);
+    renderBlockEditor();
+  }
+
+  function updateLivePreview() {
+    const frame = document.getElementById('nk-sp-preview-frame');
+    if (!frame) return;
+    const raw = STATE.rawHtmlMode
+      ? STATE.rawHtmlBuffer
+      : STATE.blocks.map(renderBlockToHtml).join('\n');
+    const previewHtml = raw.replace(/\[투표:([a-zA-Z0-9_-]+)\]/g, function (_, fid) {
+      const f = STATE.forms.find(function (x) { return x.id === fid; });
+      return `<div style="padding:18px;border:2px dashed #1c355e;border-radius:10px;background:#eff6ff;text-align:center;color:#1c355e;font-size:13px;font-weight:700;">폼/투표 자동 삽입 영역: ${esc(f ? f.title : fid)} ([투표:${esc(fid)}])</div>`;
+    });
+    frame.innerHTML = previewHtml || '<p style="text-align:center;color:#94a3b8;padding:40px 0;">상단에서 블록이나 템플릿을 추가하면 여기에 실시간으로 표시됩니다.</p>';
+  }
+
+  function renderBlockEditor() {
+    const listEl = document.getElementById('nk-sp-blocks-list');
+    if (!listEl) return;
+
+    if (!STATE.blocks.length) {
+      listEl.innerHTML = `<div style="background:#fff;border:1px dashed #94a3b8;border-radius:10px;padding:32px;text-align:center;color:#64748b;font-size:13px;">상단의 <b>+ 블록 추가</b> 버튼이나 <b>뉴키즈 템플릿</b>을 선택해 페이지 디자인을 시작하세요.</div>`;
+      updateLivePreview();
+      return;
+    }
+
+    const labels = {
+      heading: '제목 배너', text: '본문 글', callout: '안내 박스', cards: '2~3단 카드',
+      image: '이미지', split: '이미지 + 글', table: '표(Table)', button: '강조 버튼',
+      form: '폼/투표 삽입', youtube: '유튜브 영상', divider: '구분선', raw: '직접 HTML'
+    };
+
+    listEl.innerHTML = STATE.blocks.map(function (b, idx) {
+      return `<div class="nk-blk-card" data-blk-id="${b.id}">
+        <div class="nk-blk-head">
+          <div><span class="nk-blk-drag" title="드래그해 순서 변경">⋮⋮</span>${labels[b.type] || b.type}</div>
+          <div class="nk-blk-actions">
+            <button type="button" class="nk-blk-mini" data-move-up="${idx}">▲</button>
+            <button type="button" class="nk-blk-mini" data-move-down="${idx}">▼</button>
+            <button type="button" class="nk-blk-mini" data-dup="${idx}">복제</button>
+            <button type="button" class="nk-blk-mini danger" data-del="${idx}">삭제</button>
+          </div>
+        </div>
+        <div class="nk-blk-body">${renderBlockFields(b, idx)}</div>
+      </div>`;
+    }).join('');
+
+    bindBlockEditorEvents(listEl);
+    initBlockSortable(listEl);
+    updateLivePreview();
+  }
+
+  function renderBlockFields(b, idx) {
+    if (b.type === 'heading') {
+      return `
+        <div class="nk-sp-grid">
+          <div class="nk-sp-field"><label>제목</label><input type="text" data-k="title" data-i="${idx}" value="${esc(b.title)}"></div>
+          <div class="nk-sp-field"><label>정렬</label><select data-k="align" data-i="${idx}"><option value="left" ${b.align === 'left' ? 'selected' : ''}>왼쪽</option><option value="center" ${b.align === 'center' ? 'selected' : ''}>가운데</option></select></div>
+          <div class="nk-sp-field"><label>제목 색상</label><input type="color" data-k="color" data-i="${idx}" value="${esc(b.color || '#1c355e')}" style="height:34px;padding:2px;"></div>
+        </div>
+        <div class="nk-sp-field"><label>부제목 (선택)</label><input type="text" data-k="sub" data-i="${idx}" value="${esc(b.sub)}"></div>`;
+    }
+    if (b.type === 'text') {
+      return `
+        <div class="nk-sp-grid">
+          <div class="nk-sp-field"><label>글자 크기</label><select data-k="fontSize" data-i="${idx}"><option value="14px" ${b.fontSize === '14px' ? 'selected' : ''}>작게 (14px)</option><option value="15px" ${b.fontSize === '15px' ? 'selected' : ''}>보통 (15px)</option><option value="17px" ${b.fontSize === '17px' ? 'selected' : ''}>크게 (17px)</option></select></div>
+          <div class="nk-sp-field"><label>정렬</label><select data-k="align" data-i="${idx}"><option value="left" ${b.align === 'left' ? 'selected' : ''}>왼쪽</option><option value="center" ${b.align === 'center' ? 'selected' : ''}>가운데</option></select></div>
+        </div>
+        <div class="nk-sp-field"><label>본문 내용 (줄바꿈 지원)</label><textarea rows="4" data-k="text" data-i="${idx}">${esc(b.text)}</textarea></div>`;
+    }
+    if (b.type === 'callout') {
+      return `
+        <div class="nk-sp-grid">
+          <div class="nk-sp-field"><label>제목</label><input type="text" data-k="title" data-i="${idx}" value="${esc(b.title)}"></div>
+          <div class="nk-sp-field"><label>박스 테마</label><select data-k="theme" data-i="${idx}"><option value="navy" ${b.theme === 'navy' ? 'selected' : ''}>네이비</option><option value="green" ${b.theme === 'green' ? 'selected' : ''}>그린</option><option value="amber" ${b.theme === 'amber' ? 'selected' : ''}>앰버(강조)</option><option value="gray" ${b.theme === 'gray' ? 'selected' : ''}>그레이</option></select></div>
+        </div>
+        <div class="nk-sp-field"><label>내용</label><textarea rows="3" data-k="body" data-i="${idx}">${esc(b.body)}</textarea></div>`;
+    }
+    if (b.type === 'cards') {
+      const cardEditors = (b.items || []).map(function (it, ci) {
+        return `<div style="padding:8px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;display:grid;gap:6px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:700;color:#475569;">
+            <span>카드 ${ci + 1}</span>
+            <button type="button" class="nk-blk-mini danger" data-card-del="${idx}:${ci}">제거</button>
+          </div>
+          <input type="text" placeholder="카드 제목" data-card-k="title" data-i="${idx}" data-ci="${ci}" value="${esc(it.title)}" style="padding:6px 8px;font-size:12px;border:1px solid #cbd5e1;border-radius:5px;">
+          <textarea rows="2" placeholder="카드 설명" data-card-k="body" data-i="${idx}" data-ci="${ci}" style="padding:6px 8px;font-size:12px;border:1px solid #cbd5e1;border-radius:5px;">${esc(it.body)}</textarea>
+        </div>`;
+      }).join('');
+      return `
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+          <select data-k="cols" data-i="${idx}" style="padding:5px 8px;font-size:12px;border:1px solid #cbd5e1;border-radius:6px;">
+            <option value="2" ${Number(b.cols) !== 3 ? 'selected' : ''}>2단 배치</option>
+            <option value="3" ${Number(b.cols) === 3 ? 'selected' : ''}>3단 배치</option>
+          </select>
+          <button type="button" class="nk-blk-mini" data-card-add="${idx}">+ 카드 추가</button>
+        </div>
+        ${cardEditors}`;
+    }
+    if (b.type === 'image') {
+      return `
+        <div class="nk-sp-grid">
+          <div class="nk-sp-field"><label>이미지 업로드 (WebP 자동 압축)</label><input type="file" accept="image/*" data-img-upload="${idx}"></div>
+          <div class="nk-sp-field"><label>또는 이미지 URL</label><input type="text" data-k="src" data-i="${idx}" value="${esc(b.src)}" placeholder="https://..."></div>
+        </div>
+        <div class="nk-sp-grid">
+          <div class="nk-sp-field"><label>가로 크기</label><select data-k="width" data-i="${idx}"><option value="100%" ${b.width === '100%' ? 'selected' : ''}>100% (전체)</option><option value="75%" ${b.width === '75%' ? 'selected' : ''}>75%</option><option value="50%" ${b.width === '50%' ? 'selected' : ''}>50%</option></select></div>
+          <div class="nk-sp-field"><label>정렬</label><select data-k="align" data-i="${idx}"><option value="center" ${b.align === 'center' ? 'selected' : ''}>가운데</option><option value="left" ${b.align === 'left' ? 'selected' : ''}>왼쪽</option><option value="right" ${b.align === 'right' ? 'selected' : ''}>오른쪽</option></select></div>
+          <div class="nk-sp-field"><label>캡션 (선택)</label><input type="text" data-k="caption" data-i="${idx}" value="${esc(b.caption)}"></div>
+        </div>`;
+    }
+    if (b.type === 'split') {
+      return `
+        <div class="nk-sp-grid">
+          <div class="nk-sp-field"><label>이미지 업로드</label><input type="file" accept="image/*" data-img-upload="${idx}"></div>
+          <div class="nk-sp-field"><label>배치 방향</label><select data-k="reverse" data-i="${idx}"><option value="false" ${!b.reverse ? 'selected' : ''}>이미지 왼쪽 · 글 오른쪽</option><option value="true" ${b.reverse ? 'selected' : ''}>글 왼쪽 · 이미지 오른쪽</option></select></div>
+        </div>
+        <div class="nk-sp-field"><label>제목</label><input type="text" data-k="title" data-i="${idx}" value="${esc(b.title)}"></div>
+        <div class="nk-sp-field"><label>설명 내용</label><textarea rows="3" data-k="body" data-i="${idx}">${esc(b.body)}</textarea></div>`;
+    }
+    if (b.type === 'table') {
+      const headers = b.headers || ['항목', '내용'];
+      const rows = b.rows || [];
+      return `
+        <div class="nk-sp-field"><label>열 제목 (쉼표로 구분)</label><input type="text" data-tbl-headers="${idx}" value="${esc(headers.join(', '))}"></div>
+        <div class="nk-sp-field"><label>표 행 데이터 (한 줄에 한 행, | 기호로 열 구분)</label><textarea rows="4" data-tbl-rows="${idx}">${esc(rows.map(function (r) { return r.join(' | '); }).join('\n'))}</textarea></div>`;
+    }
+    if (b.type === 'button') {
+      return `
+        <div class="nk-sp-grid">
+          <div class="nk-sp-field"><label>버튼 문구</label><input type="text" data-k="label" data-i="${idx}" value="${esc(b.label)}"></div>
+          <div class="nk-sp-field"><label>이동 URL</label><input type="text" data-k="url" data-i="${idx}" value="${esc(b.url)}" placeholder="https://... 또는 proposal.html"></div>
+        </div>
+        <div class="nk-sp-grid">
+          <div class="nk-sp-field"><label>버튼 색상</label><input type="color" data-k="bg" data-i="${idx}" value="${esc(b.bg || '#1c355e')}" style="height:34px;padding:2px;"></div>
+          <div class="nk-sp-field"><label>정렬</label><select data-k="align" data-i="${idx}"><option value="center" ${b.align === 'center' ? 'selected' : ''}>가운데</option><option value="left" ${b.align === 'left' ? 'selected' : ''}>왼쪽</option><option value="right" ${b.align === 'right' ? 'selected' : ''}>오른쪽</option></select></div>
+          <div class="nk-sp-field"><label>열기 방식</label><select data-k="newTab" data-i="${idx}"><option value="false" ${!b.newTab ? 'selected' : ''}>현재 창</option><option value="true" ${b.newTab ? 'selected' : ''}>새 탭</option></select></div>
+        </div>`;
+    }
+    if (b.type === 'form') {
+      return `<div class="nk-sp-field"><label>본문 중간에 삽입할 폼/투표 선택</label><select data-k="formId" data-i="${idx}">${buildFormOptionsHtml(b.formId, true)}</select></div>`;
+    }
+    if (b.type === 'youtube') {
+      return `<div class="nk-sp-field"><label>유튜브 영상 주소</label><input type="text" data-k="url" data-i="${idx}" value="${esc(b.url)}" placeholder="https://www.youtube.com/watch?v=..."></div>`;
+    }
+    if (b.type === 'divider') {
+      return `<div style="font-size:12px;color:#64748b;">섹션 사이를 깔끔하게 나누는 가로 구분선입니다.</div>`;
+    }
+    return `<div class="nk-sp-field"><label>직접 HTML 코드</label><textarea rows="5" data-k="html" data-i="${idx}" style="font-family:monospace;font-size:12px;">${esc(b.html)}</textarea></div>`;
+  }
+
+  function bindBlockEditorEvents(listEl) {
+    listEl.querySelectorAll('[data-k]').forEach(function (el) {
+      const evt = el.tagName === 'SELECT' || el.type === 'color' ? 'change' : 'input';
+      el.addEventListener(evt, function () {
+        const i = Number(el.dataset.i);
+        const k = el.dataset.k;
+        let v = el.value;
+        if (k === 'cols') v = Number(v);
+        if (k === 'reverse' || k === 'newTab') v = v === 'true';
+        if (STATE.blocks[i]) STATE.blocks[i][k] = v;
+        updateLivePreview();
+      });
+    });
+
+    listEl.querySelectorAll('[data-card-k]').forEach(function (el) {
+      el.addEventListener('input', function () {
+        const i = Number(el.dataset.i);
+        const ci = Number(el.dataset.ci);
+        if (STATE.blocks[i] && STATE.blocks[i].items[ci]) {
+          STATE.blocks[i].items[ci][el.dataset.cardK] = el.value;
+          updateLivePreview();
+        }
+      });
+    });
+
+    listEl.querySelectorAll('[data-card-add]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const i = Number(btn.dataset.cardAdd);
+        STATE.blocks[i].items.push({ title: '새 카드', body: '내용을 입력하세요.' });
+        renderBlockEditor();
+      });
+    });
+
+    listEl.querySelectorAll('[data-card-del]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const parts = btn.dataset.cardDel.split(':').map(Number);
+        STATE.blocks[parts[0]].items.splice(parts[1], 1);
+        renderBlockEditor();
+      });
+    });
+
+    listEl.querySelectorAll('[data-tbl-headers]').forEach(function (inp) {
+      inp.addEventListener('input', function () {
+        const i = Number(inp.dataset.tblHeaders);
+        STATE.blocks[i].headers = inp.value.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+        updateLivePreview();
+      });
+    });
+
+    listEl.querySelectorAll('[data-tbl-rows]').forEach(function (ta) {
+      ta.addEventListener('input', function () {
+        const i = Number(ta.dataset.tblRows);
+        STATE.blocks[i].rows = ta.value.split('\n').filter(function (l) { return l.trim(); }).map(function (l) {
+          return l.split('|').map(function (c) { return c.trim(); });
+        });
+        updateLivePreview();
+      });
+    });
+
+    listEl.querySelectorAll('[data-img-upload]').forEach(function (inp) {
+      inp.addEventListener('change', async function () {
+        const file = inp.files && inp.files[0];
+        if (!file) return;
+        const i = Number(inp.dataset.imgUpload);
+        try {
+          const url = await uploadImageToSupabase(file);
+          STATE.blocks[i].src = url;
+          renderBlockEditor();
+        } catch (err) {
+          alert('이미지 업로드 오류: ' + (err.message || err));
+        } finally {
+          inp.value = '';
+        }
+      });
+    });
+
+    listEl.querySelectorAll('[data-move-up]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const i = Number(btn.dataset.moveUp);
+        if (i <= 0) return;
+        const tmp = STATE.blocks[i - 1];
+        STATE.blocks[i - 1] = STATE.blocks[i];
+        STATE.blocks[i] = tmp;
+        renderBlockEditor();
+      });
+    });
+
+    listEl.querySelectorAll('[data-move-down]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const i = Number(btn.dataset.moveDown);
+        if (i >= STATE.blocks.length - 1) return;
+        const tmp = STATE.blocks[i + 1];
+        STATE.blocks[i + 1] = STATE.blocks[i];
+        STATE.blocks[i] = tmp;
+        renderBlockEditor();
+      });
+    });
+
+    listEl.querySelectorAll('[data-dup]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const i = Number(btn.dataset.dup);
+        const clone = JSON.parse(JSON.stringify(STATE.blocks[i]));
+        clone.id = uid();
+        STATE.blocks.splice(i + 1, 0, clone);
+        renderBlockEditor();
+      });
+    });
+
+    listEl.querySelectorAll('[data-del]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const i = Number(btn.dataset.del);
+        STATE.blocks.splice(i, 1);
+        renderBlockEditor();
+      });
+    });
+  }
+
+  function initBlockSortable(listEl) {
+    if (STATE.sortable) {
+      try { STATE.sortable.destroy(); } catch (_) {}
+      STATE.sortable = null;
+    }
+    if (typeof window.Sortable === 'function') {
+      STATE.sortable = new window.Sortable(listEl, {
+        handle: '.nk-blk-drag',
+        animation: 150,
+        onEnd: function (evt) {
+          if (evt.oldIndex === evt.newIndex) return;
+          const moved = STATE.blocks.splice(evt.oldIndex, 1)[0];
+          STATE.blocks.splice(evt.newIndex, 0, moved);
+          renderBlockEditor();
+        }
+      });
     }
   }
 
   function openEditorModal(target, title, initialHtml) {
     ensureEditorModal();
     STATE.modalTarget = target;
-    STATE.isHtmlMode = false;
+    STATE.rawHtmlMode = false;
+    STATE.blocks = deserializeHtmlToBlocks(initialHtml);
+    STATE.rawHtmlBuffer = initialHtml || '';
     document.getElementById('nk-sp-modal-title').textContent = title;
-    document.getElementById('nk-sp-quill-wrap').style.display = 'block';
-    document.getElementById('nk-sp-html-source').style.display = 'none';
-    document.getElementById('nk-sp-toggle-html').textContent = 'HTML 소스 보기';
-    if (STATE.modalQuill) {
-      STATE.modalQuill.root.innerHTML = initialHtml || '';
-    } else {
-      document.getElementById('nk-sp-html-source').value = initialHtml || '';
-      document.getElementById('nk-sp-quill-wrap').style.display = 'none';
-      document.getElementById('nk-sp-html-source').style.display = 'block';
-    }
+    syncEditorModeUI();
+    renderBlockEditor();
     document.getElementById('nk-sp-editor-modal').classList.add('open');
   }
 
-  // 1) "새 카테고리(메뉴) 추가" 패널에 고정 페이지 확장 UI 삽입
+  // ==========================================================================
+  // 5. 서브 페이지 관리 UI 마운트 & 기존 저장 함수 안전 래핑
+  // ==========================================================================
   function mountNewCategoryPanel() {
     const typeSelect = document.getElementById('new-cat-type');
     if (!typeSelect || document.getElementById('nk-sp-new-box')) return;
@@ -387,7 +860,7 @@
     box.innerHTML = `
       <div class="nk-sp-title">
         <span>고정 페이지 콘텐츠 연결 방식</span>
-        <span style="font-size:11px;font-weight:400;color:#64748b;">게시글 관리로 이동하지 않고 바로 연결·작성할 수 있습니다</span>
+        <span style="font-size:11px;font-weight:400;color:#64748b;">게시글 관리로 이동하지 않고 바로 연결·디자인할 수 있습니다</span>
       </div>
       <div class="nk-sp-modes">
         <button type="button" class="nk-sp-mode-btn active" data-new-mode="url">폼/투표 · URL 연결</button>
@@ -399,7 +872,7 @@
       <div id="nk-sp-new-url-panel" class="nk-sp-grid">
         <div class="nk-sp-field">
           <label for="nk-sp-new-form-select">등록된 폼/투표 선택</label>
-          <select id="nk-sp-new-form-select">${buildFormOptionsHtml('')}</select>
+          <select id="nk-sp-new-form-select">${buildFormOptionsHtml('', false)}</select>
         </div>
         <div class="nk-sp-field">
           <label for="nk-sp-new-target-url">연결할 URL (직접 입력 가능)</label>
@@ -415,8 +888,8 @@
       </div>
 
       <div id="nk-sp-new-custom-panel" style="display:none;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
-        <span id="nk-sp-new-custom-status" style="font-size:12px;color:#475569;">아직 작성된 본문이 없습니다. 에디터를 열어 직접 작성해 주세요.</span>
-        <button type="button" id="nk-sp-new-open-editor" class="nk-sp-btn">본문 디자인 에디터 열기</button>
+        <span id="nk-sp-new-custom-status" style="font-size:12px;color:#475569;">아직 작성된 본문이 없습니다. 블록 디자인 에디터를 열어 작성해 주세요.</span>
+        <button type="button" id="nk-sp-new-open-editor" class="nk-sp-btn">블록 디자인 에디터 열기</button>
       </div>
 
       <div id="nk-sp-new-post-panel" style="display:none;font-size:12px;color:#475569;">
@@ -425,51 +898,43 @@
     `;
 
     const submitBtn = panelBox.querySelector('button[onclick*="addNewCategory"]');
-    if (submitBtn && submitBtn.parentNode) {
-      submitBtn.parentNode.insertBefore(box, submitBtn);
-    } else {
-      panelBox.appendChild(box);
-    }
+    if (submitBtn && submitBtn.parentNode) submitBtn.parentNode.insertBefore(box, submitBtn);
+    else panelBox.appendChild(box);
 
-    typeSelect.addEventListener('change', function() {
+    typeSelect.addEventListener('change', function () {
       box.style.display = typeSelect.value === 'PAGE' ? 'block' : 'none';
     });
 
-    box.querySelectorAll('[data-new-mode]').forEach(function(btn) {
-      btn.addEventListener('click', function() {
+    box.querySelectorAll('[data-new-mode]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
         const mode = btn.dataset.newMode;
         document.getElementById('nk-sp-new-mode').value = mode;
-        box.querySelectorAll('[data-new-mode]').forEach(function(b) {
-          b.classList.toggle('active', b === btn);
-        });
+        box.querySelectorAll('[data-new-mode]').forEach(function (b) { b.classList.toggle('active', b === btn); });
         document.getElementById('nk-sp-new-url-panel').style.display = mode === 'url' ? 'grid' : 'none';
         document.getElementById('nk-sp-new-custom-panel').style.display = mode === 'custom' ? 'flex' : 'none';
         document.getElementById('nk-sp-new-post-panel').style.display = mode === 'post' ? 'block' : 'none';
       });
     });
 
-    document.getElementById('nk-sp-new-form-select').addEventListener('change', function(e) {
-      if (e.target.value) {
-        document.getElementById('nk-sp-new-target-url').value = 'form.html?id=' + e.target.value;
-      }
+    document.getElementById('nk-sp-new-form-select').addEventListener('change', function (e) {
+      if (e.target.value) document.getElementById('nk-sp-new-target-url').value = 'form.html?id=' + e.target.value;
     });
 
-    document.getElementById('nk-sp-new-open-editor').addEventListener('click', function() {
-      openEditorModal({ kind: 'new' }, '새 고정 페이지 본문 작성', STATE.newCustomHtml);
+    document.getElementById('nk-sp-new-open-editor').addEventListener('click', function () {
+      openEditorModal({ kind: 'new' }, '새 고정 페이지 본문 디자인', STATE.newCustomHtml);
     });
   }
 
-  // 2) 기존 고정 페이지 목록(#sortable-list-PAGE)의 각 .cm-row에 편집 UI 자동 주입
   function enhanceStaticPageRows() {
     const pageList = document.getElementById('sortable-list-PAGE');
     if (!pageList) return;
     const catList = typeof window.categoryList !== 'undefined' ? window.categoryList : [];
 
-    pageList.querySelectorAll('.cm-row').forEach(function(row) {
+    pageList.querySelectorAll('.cm-row').forEach(function (row) {
       const code = row.dataset.code;
       if (!code || row.querySelector('.nk-sp-row-ext')) return;
 
-      const cat = catList.find(function(c) { return c.code === code; }) || {};
+      const cat = catList.find(function (c) { return c.code === code; }) || {};
       const draft = STATE.rowDrafts[code] || {
         content_mode: cat.content_mode || 'post',
         target_url: cat.target_url || '',
@@ -494,7 +959,7 @@
         <div class="nk-sp-row-url-panel nk-sp-grid" style="display:${draft.content_mode === 'url' ? 'grid' : 'none'};">
           <div class="nk-sp-field">
             <label>등록된 폼/투표 선택</label>
-            <select class="nk-sp-row-form-select">${buildFormOptionsHtml(draft.target_url)}</select>
+            <select class="nk-sp-row-form-select">${buildFormOptionsHtml(draft.target_url, false)}</select>
           </div>
           <div class="nk-sp-field">
             <label>연결할 URL</label>
@@ -513,7 +978,7 @@
           <span id="nk-sp-row-custom-status-${esc(code)}" style="font-size:12px;color:#475569;">
             ${draft.custom_html ? '직접 디자인한 본문이 저장되어 있습니다.' : '작성된 본문이 없습니다.'}
           </span>
-          <button type="button" class="nk-sp-btn nk-sp-row-edit-btn">본문 직접 편집</button>
+          <button type="button" class="nk-sp-btn nk-sp-row-edit-btn">블록 디자인 편집</button>
         </div>
 
         <div class="nk-sp-row-post-panel" style="display:${draft.content_mode === 'post' ? 'block' : 'none'};font-size:12px;color:#64748b;">
@@ -523,11 +988,11 @@
 
       row.appendChild(ext);
 
-      ext.querySelectorAll('[data-row-mode]').forEach(function(btn) {
-        btn.addEventListener('click', function() {
+      ext.querySelectorAll('[data-row-mode]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
           const mode = btn.dataset.rowMode;
           STATE.rowDrafts[code].content_mode = mode;
-          ext.querySelectorAll('[data-row-mode]').forEach(function(b) { b.classList.toggle('active', b === btn); });
+          ext.querySelectorAll('[data-row-mode]').forEach(function (b) { b.classList.toggle('active', b === btn); });
           ext.querySelector('.nk-sp-row-url-panel').style.display = mode === 'url' ? 'grid' : 'none';
           ext.querySelector('.nk-sp-row-custom-panel').style.display = mode === 'custom' ? 'flex' : 'none';
           ext.querySelector('.nk-sp-row-post-panel').style.display = mode === 'post' ? 'block' : 'none';
@@ -538,30 +1003,25 @@
       const urlInp = ext.querySelector('.nk-sp-row-target-url');
       const dispSel = ext.querySelector('.nk-sp-row-url-display');
 
-      formSel.addEventListener('change', function() {
+      formSel.addEventListener('change', function () {
         if (formSel.value) {
           const nextUrl = 'form.html?id=' + formSel.value;
           urlInp.value = nextUrl;
           STATE.rowDrafts[code].target_url = nextUrl;
         }
       });
-      urlInp.addEventListener('input', function() {
-        STATE.rowDrafts[code].target_url = urlInp.value.trim();
-      });
-      dispSel.addEventListener('change', function() {
-        STATE.rowDrafts[code].url_display = dispSel.value;
-      });
-      ext.querySelector('.nk-sp-row-edit-btn').addEventListener('click', function() {
-        openEditorModal({ kind: 'row', code: code }, `"${cat.name || code}" 본문 직접 편집`, STATE.rowDrafts[code].custom_html);
+      urlInp.addEventListener('input', function () { STATE.rowDrafts[code].target_url = urlInp.value.trim(); });
+      dispSel.addEventListener('change', function () { STATE.rowDrafts[code].url_display = dispSel.value; });
+      ext.querySelector('.nk-sp-row-edit-btn').addEventListener('click', function () {
+        openEditorModal({ kind: 'row', code: code }, `"${cat.name || code}" 본문 블록 디자인`, STATE.rowDrafts[code].custom_html);
       });
     });
   }
 
-  // 3) 기존 addNewCategory / saveAllCategories 안전 래핑
   function wrapAdminFunctions() {
     if (typeof window.addNewCategory === 'function' && !window.addNewCategory.__nkWrapped) {
       const origAdd = window.addNewCategory;
-      const wrappedAdd = async function() {
+      const wrappedAdd = async function () {
         const typeEl = document.getElementById('new-cat-type');
         const codeEl = document.getElementById('new-cat-code');
         const isPage = typeEl && typeEl.value === 'PAGE';
@@ -575,26 +1035,21 @@
 
         if (isPage && code && window.sb) {
           try {
-            await window.sb
-              .from('program_categories')
-              .update({
-                content_mode: mode,
-                target_url: targetUrl || null,
-                url_display: urlDisplay,
-                custom_html: customHtml || null
-              })
-              .eq('code', code);
+            await window.sb.from('program_categories').update({
+              content_mode: mode,
+              target_url: targetUrl || null,
+              url_display: urlDisplay,
+              custom_html: customHtml || null
+            }).eq('code', code);
 
             STATE.newCustomHtml = '';
             const urlField = document.getElementById('nk-sp-new-target-url');
             if (urlField) urlField.value = '';
             const statusEl = document.getElementById('nk-sp-new-custom-status');
-            if (statusEl) statusEl.textContent = '아직 작성된 본문이 없습니다. 에디터를 열어 직접 작성해 주세요.';
-            if (typeof window.loadAdminCategories === 'function') {
-              await window.loadAdminCategories();
-            }
+            if (statusEl) statusEl.textContent = '아직 작성된 본문이 없습니다. 블록 디자인 에디터를 열어 작성해 주세요.';
+            if (typeof window.loadAdminCategories === 'function') await window.loadAdminCategories();
           } catch (err) {
-            console.error('[admin-static-pages] 고정 페이지 확장 필드 저장 오류:', err);
+            console.error('[admin-static-pages] 저장 오류:', err);
           }
         }
         return res;
@@ -605,22 +1060,19 @@
 
     if (typeof window.saveAllCategories === 'function' && !window.saveAllCategories.__nkWrapped) {
       const origSave = window.saveAllCategories;
-      const wrappedSave = async function() {
+      const wrappedSave = async function () {
         const draftsCopy = JSON.parse(JSON.stringify(STATE.rowDrafts));
         const res = await origSave.apply(this, arguments);
         if (window.sb) {
           const codes = Object.keys(draftsCopy);
-          await Promise.all(codes.map(function(code) {
+          await Promise.all(codes.map(function (code) {
             const d = draftsCopy[code];
-            return window.sb
-              .from('program_categories')
-              .update({
-                content_mode: d.content_mode || 'post',
-                target_url: d.target_url || null,
-                url_display: d.url_display || 'embed',
-                custom_html: d.custom_html || null
-              })
-              .eq('code', code);
+            return window.sb.from('program_categories').update({
+              content_mode: d.content_mode || 'post',
+              target_url: d.target_url || null,
+              url_display: d.url_display || 'embed',
+              custom_html: d.custom_html || null
+            }).eq('code', code);
           }));
         }
         return res;
@@ -633,9 +1085,7 @@
   function observeCategoryContainer() {
     const container = document.getElementById('category-list-container');
     if (!container) return;
-    const observer = new MutationObserver(function() {
-      enhanceStaticPageRows();
-    });
+    const observer = new MutationObserver(function () { enhanceStaticPageRows(); });
     observer.observe(container, { childList: true, subtree: true });
     enhanceStaticPageRows();
   }
@@ -648,8 +1098,8 @@
     observeCategoryContainer();
   }
 
-  document.addEventListener('DOMContentLoaded', function() {
-    const timer = setInterval(function() {
+  document.addEventListener('DOMContentLoaded', function () {
+    const timer = setInterval(function () {
       if (window.sb && document.getElementById('new-cat-type')) {
         clearInterval(timer);
         init();

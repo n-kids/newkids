@@ -268,7 +268,8 @@ header {
     background: none;
     border: none;
     cursor: pointer;
-    color: var(--primary-color);
+    /* 사이트 설정 primary_color(예: #ffffff)와 무관하게 서브페이지와 동일한 네이비 색 사용 */
+    color: #172451;
 }
 
 @media (min-width: 769px) {

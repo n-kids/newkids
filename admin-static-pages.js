@@ -173,10 +173,17 @@
         justify-content: flex-end;
         gap: 8px;
       }
+      .cm-row:has(.nk-sp-row-ext) {
+        flex-wrap: wrap !important;
+      }
       .nk-sp-row-ext {
+        grid-column: 1 / -1;
+        flex: 1 0 100%;
         width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
         margin-top: 10px;
-        padding: 12px;
+        padding: 12px 14px;
         background: #f8fafc;
         border: 1px dashed #94a3b8;
         border-radius: 8px;

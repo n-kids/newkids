@@ -411,7 +411,7 @@
             prevent_duplicate: payload.prevent_duplicate
         };
 
-        loading(true);
+        loading(true); try {
         let res;
         if (isEdit) {
             res = await getSb().from('custom_forms').update(dbRow).eq('id', editingFormId);
@@ -419,7 +419,7 @@
             dbRow.is_active = true;
             res = await getSb().from('custom_forms').insert([dbRow]);
         }
-        loading(false);
+   
 
         if (res.error) {
             return toast('저장 실패: ' + res.error.message, 'error');
@@ -430,7 +430,7 @@
         resetFormBuilder(true);
         await loadAdminForms();
         if (typeof global.nkRefreshDashboardTasks === 'function') global.nkRefreshDashboardTasks();
-    }
+    } } catch (err) { toast('저장 중 오류가 발생했습니다: ' + (err && err.message ? err.message : String(err)), 'error'); } finally { loading(false); }
 
     function loadFormIntoBuilder(formId, isClone) {
         const form = formsCache.find(f => String(f.id) === String(formId));
@@ -542,10 +542,7 @@
         const sb = getSb();
         if (!sb) return;
 
-        const [formsRes, respRes] = await Promise.all([
-            sb.from('custom_forms').select('*').order('created_at', { ascending: false }),
-            sb.from('form_responses').select('id, form_id, created_at')
-        ]);
+       const formsRes = await sb.from('custom_forms').select('*').order('created_at', { ascending: false });
 
         if (formsRes.error) {
             listDiv.innerHTML = `<div style="color:#b3261e; padding:16px;">오류 발생: ${esc(formsRes.error.message)}</div>`;
@@ -554,12 +551,7 @@
 
         formsCache = formsRes.data || [];
         responseCountMap = {};
-        if (!respRes.error && Array.isArray(respRes.data)) {
-            respRes.data.forEach(r => {
-                const k = String(r.form_id);
-                responseCountMap[k] = (responseCountMap[k] || 0) + 1;
-            });
-        }
+       let offset = 0; const pageSize = 1000; let countError = null; while (true) { const { data, error } = await sb.from('form_responses').select('id, form_id, created_at').range(offset, offset + 999); if (error) { countError = error; break; } if (!Array.isArray(data) || data.length === 0) break; data.forEach(r => { const k = String(r.form_id); responseCountMap[k] = (responseCountMap[k] || 0) + 1; }); if (data.length < pageSize) break; offset += pageSize; } if (countError) toast('응답 수 집계 조회 오류: ' + countError.message, 'error');
 
         updateEditorFormInsertDropdown();
         renderFormsList();
@@ -718,14 +710,14 @@
 
     async function deleteForm(id) {
         if (!confirm('이 폼과 사용자들이 응답한 모든 결과 데이터가 함께 영구 삭제됩니다.\n정말 삭제하시겠습니까?')) return;
-        loading(true);
+        loading(true); try {
         const { error } = await getSb().from('custom_forms').delete().eq('id', id);
-        loading(false);
+   
         if (error) return toast('삭제 실패: ' + error.message, 'error');
         await logAct('DELETE_FORM', { id });
         toast('폼이 삭제되었습니다.', 'info');
         await loadAdminForms();
-        if (typeof global.nkRefreshDashboardTasks === 'function') global.nkRefreshDashboardTasks();
+        if (typeof global.nkRefreshDashboardTasks === 'function') global.nkRefreshDashboardTasks(); } catch (err) { toast('삭제 중 오류가 발생했습니다: ' + (err && err.message ? err.message : String(err)), 'error'); } finally { loading(false); }
     }
 
     // =========================================================================
@@ -1053,8 +1045,8 @@
                 }
                 questions.forEach(q => {
                     const ans = r.answers ? r.answers[q.id] : '';
-                    const txt = Array.isArray(ans) ? ans.join(', ') : String(ans || '');
-                    html += `<td>${txt ? esc(txt) : '<span style="color:#94a3b8;">-</span>'}</td>`;
+                    const txt = Array.isArray(ans) ? ans.join(', ') : (ans !== null && ans !== undefined ? String(ans) : '');
+                    html += `<td>${txt !== '' ? esc(txt) : '<span style="color:#94a3b8;">-</span>'}</td>`;
                 });
                 html += `<td style="text-align:center; white-space:nowrap;"><button type="button" class="btn-mini c-solid-danger" onclick="nkDeleteFormResponse('${rid}')">삭제</button></td></tr>`;
             });
@@ -1102,9 +1094,9 @@
 
     async function deleteSingleFormResponse(responseId) {
         if (!confirm('이 개별 응답 1건을 영구 삭제하시겠습니까?\n삭제 시 통계와 정원 현황이 즉시 재계산됩니다.')) return;
-        loading(true);
+        loading(true); try {
         const { data, error } = await getSb().from('form_responses').delete().eq('id', responseId).select('id');
-        loading(false);
+   
         if (error) {
             return toast('응답 삭제 실패: ' + error.message, 'error');
         }
@@ -1126,7 +1118,7 @@
         }
         renderResultsBody();
         await loadAdminForms();
-        if (typeof global.nkRefreshDashboardTasks === 'function') global.nkRefreshDashboardTasks();
+        if (typeof global.nkRefreshDashboardTasks === 'function') global.nkRefreshDashboardTasks(); } catch (err) { console.error(err); toast('응답 삭제 중 오류가 발생했습니다.', 'error'); } finally { loading(false); }
     }
 
     function copyResultsSummary() {
@@ -1173,7 +1165,7 @@
         copyToClipboard(lines.join('\n'), `필터된 명단 ${filtered.length}건을 복사했습니다.`);
     }
 
-    async function exportFormResultsToCSV(formId, formTitle) {
+    async function exportFormResultsToCSV(formId, formTitle) { try {
         const sb = getSb();
         let formData = (resState.form && String(resState.formId) === String(formId)) ? resState.form : null;
         let responses = (resState.form && String(resState.formId) === String(formId)) ? resState.responses : null;
@@ -1182,7 +1174,7 @@
             const [fRes, rRes] = await Promise.all([
                 sb.from('custom_forms').select('*').eq('id', formId).single(),
                 sb.from('form_responses').select('*').eq('form_id', formId).order('created_at', { ascending: false })
-            ]);
+            ]); if (fRes.error || !fRes.data) return toast('폼 정보를 불러오지 못해 CSV를 추출할 수 없습니다.', 'error');
             if (rRes.error || !rRes.data || !rRes.data.length) return toast('추출할 데이터가 없습니다.', 'error');
             formData = fRes.data;
             responses = rRes.data;
@@ -1219,7 +1211,7 @@
         link.click();
         link.remove();
         setTimeout(() => URL.revokeObjectURL(url), 1000);
-        toast('소속/이름/연락처 분리 및 수식 방지 적용 CSV를 다운로드했습니다.', 'success');
+        toast('소속/이름/연락처 분리 및 수식 방지 적용 CSV를 다운로드했습니다.', 'success'); } catch (err) { toast('CSV 추출 중 오류가 발생했습니다: ' + (err && err.message ? err.message : String(err)), 'error'); }
     }
 
     // =========================================================================

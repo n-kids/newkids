@@ -1,136 +1,240 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>뉴키즈 - 페이지</title>
-    <link rel="stylesheet" href="style.css?v=20261119">
-    <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Gugi&family=Jua&family=Poor+Story&family=Song+Myung&family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&family=Nanum+Gothic:wght@400;700;800&family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Sans+KR:wght@400;500;700;900&family=Noto+Serif+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
-<link rel="icon" type="image/x-icon" href="favicon.ico">
-    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>뉴키즈 - 페이지</title>
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Gowun+Batang&family=Gowun+Dodum&family=Gugi&family=Jua&family=Nanum+Gothic:wght@400;700;800&family=Nanum+Myeongjo:wght@400;700&family=Noto+Sans+KR:wght@300;400;500;700;900&family=Noto+Serif+KR:wght@400;700&family=Poor+Story&family=Song+Myung&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=20261119">
+  <style>
+    .nk-embed-wrap {
+      width: 100%;
+      margin: 0 auto;
+    }
+    .nk-embed-frame {
+      width: 100%;
+      min-height: 620px;
+      border: none;
+      display: block;
+      background: transparent;
+    }
+    .nk-embed-fallback {
+      margin-top: 12px;
+      text-align: right;
+      font-size: 13px;
+    }
+    .nk-embed-fallback a {
+      color: #64748b;
+      text-decoration: underline;
+    }
+  </style>
 </head>
 <body>
-    <header></header>
+  <header></header>
 
-    <section class="sub-hero" id="page-hero" style="background-color: #1a3c6e; display:none;">
-        <div class="container">
-            <h1 id="page-hero-title">불러오는 중...</h1>
-            <p id="page-hero-desc"></p>
-        </div>
-    </section>
+  <section class="sub-hero" id="page-hero" style="background-color: #1a3c6e; display:none;">
+    <div class="hero-content">
+      <h1 id="page-hero-title">불러오는 중...</h1>
+      <p id="page-hero-desc"></p>
+    </div>
+  </section>
 
-    <section style="background-color: #f8f9fa; padding: 50px 0;">
-        <div class="container">
-            <div class="proposal-box" style="max-width: 900px; margin: 0 auto; background: #fff; padding: 40px; border-radius: 12px;">
-                <h2 id="page-title" style="color:#1a3c6e; margin-bottom:20px; font-weight:bold;"></h2>
-                <div id="page-content" class="view-content" style="line-height: 1.6; color: #333;">
-                    데이터를 불러오는 중입니다...
-                </div>
+  <section style="background-color: #f8f9fa; padding: 50px 0;">
+    <div class="container">
+      <div class="proposal-box">
+        <h2 id="page-title" style="margin-bottom: 24px;"></h2>
+        <div id="page-content" class="view-content">데이터를 불러오는 중입니다...</div>
+      </div>
+    </div>
+  </section>
+
+  <footer></footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js?v=20261026"></script>
+  <script src="manager.js?v=20261119"></script>
+  <script>
+    function hexToRgb(hex) {
+      if (!hex || typeof hex !== 'string') return { r: 0, g: 0, b: 0 };
+      const clean = hex.replace('#', '').trim();
+      const full = clean.length === 3
+        ? clean.split('').map(c => c + c).join('')
+        : clean;
+      const num = parseInt(full, 16);
+      if (Number.isNaN(num)) return { r: 0, g: 0, b: 0 };
+      return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+    }
+
+    function isSafeUrl(rawUrl) {
+      if (!rawUrl || typeof rawUrl !== 'string') return false;
+      const trimmed = rawUrl.trim();
+      if (!trimmed) return false;
+      if (/^(javascript|data|vbscript):/i.test(trimmed)) return false;
+      return /^(https?:\/\/|\/|[a-zA-Z0-9._-]+\.html)/i.test(trimmed);
+    }
+
+    function renderFormTokens(htmlStr) {
+      return String(htmlStr || '').replace(/\[투표:([a-zA-Z0-9_-]+)\]/g, function(_, formId) {
+        return `<iframe title="투표 양식" loading="lazy" id="form-iframe-${formId}" src="form.html?id=${encodeURIComponent(formId)}" style="width:100%; min-height:520px; border:none; display:block; background:transparent;"></iframe>`;
+      });
+    }
+
+    function extractFormId(url) {
+      const m = String(url || '').match(/form\.html\?[^#]*id=([a-zA-Z0-9_-]+)/i);
+      return m ? m[1] : null;
+    }
+
+    async function loadPageContent(code) {
+      const contentEl = document.getElementById('page-content');
+      const titleEl = document.getElementById('page-title');
+      const heroEl = document.getElementById('page-hero');
+      const heroTitleEl = document.getElementById('page-hero-title');
+      const heroDescEl = document.getElementById('page-hero-desc');
+
+      try {
+        const { data: catData, error: catErr } = await window.sb
+          .from('program_categories')
+          .select('*')
+          .eq('code', code)
+          .single();
+
+        if (catErr || !catData) {
+          contentEl.innerHTML = '<p style="text-align:center; padding:40px 0; color:#666;">존재하지 않는 페이지입니다.</p>';
+          return;
+        }
+
+        const mode = catData.content_mode || 'post';
+        const targetUrl = (catData.target_url || '').trim();
+        const urlDisplay = catData.url_display || 'embed';
+
+        // 1) 바로 이동(redirect) 모드: 유효한 URL이면 즉시 이동
+        if (mode === 'url' && urlDisplay === 'redirect' && isSafeUrl(targetUrl)) {
+          window.location.replace(targetUrl);
+          return;
+        }
+
+        // 히어로 배너 및 제목 적용 (기존 page.html 동작 유지)
+        document.title = '뉴키즈 - ' + (catData.name || '페이지');
+        if (titleEl) titleEl.textContent = catData.name || '';
+        if (heroTitleEl) heroTitleEl.textContent = catData.hero_title || catData.name || '';
+        if (heroDescEl) heroDescEl.textContent = catData.hero_desc || '';
+
+        if (heroEl) {
+          if (catData.hero_image) {
+            heroEl.style.backgroundImage = `url('${catData.hero_image}')`;
+            heroEl.style.backgroundSize = 'cover';
+            heroEl.style.backgroundPosition = 'center';
+          }
+          const rgb = hexToRgb(catData.hero_overlay_color || '#000000');
+          const opacity = catData.hero_overlay_opacity !== null && catData.hero_overlay_opacity !== undefined
+            ? parseFloat(catData.hero_overlay_opacity)
+            : 0.4;
+          heroEl.style.boxShadow = `inset 0 0 0 2000px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${Number.isNaN(opacity) ? 0.4 : opacity})`;
+          if (catData.hero_title_color && heroTitleEl) heroTitleEl.style.color = catData.hero_title_color;
+          if (catData.hero_desc_color && heroDescEl) heroDescEl.style.color = catData.hero_desc_color;
+          heroEl.style.display = 'block';
+        }
+
+        // 2) URL / 폼·투표 본문 삽입(embed) 모드
+        if (mode === 'url') {
+          if (!isSafeUrl(targetUrl)) {
+            contentEl.innerHTML = '<p style="text-align:center; padding:40px 0; color:#666;">연결된 URL이 올바르지 않습니다. 관리자 페이지에서 URL을 확인해 주세요.</p>';
+            return;
+          }
+          const formId = extractFormId(targetUrl);
+          const safeSrc = window.escapeHtml ? window.escapeHtml(targetUrl) : targetUrl;
+          const safeTitle = window.escapeHtml ? window.escapeHtml(catData.name || '연결된 페이지') : (catData.name || '연결된 페이지');
+          const frameIdAttr = formId ? `id="form-iframe-${formId}"` : '';
+          const minHeight = formId ? '540px' : '760px';
+
+          contentEl.innerHTML = `
+            <div class="nk-embed-wrap">
+              <iframe ${frameIdAttr} title="${safeTitle}" src="${safeSrc}" loading="lazy" class="nk-embed-frame" style="min-height:${minHeight};"></iframe>
+              <div class="nk-embed-fallback">
+                <a href="${safeSrc}" target="_blank" rel="noopener noreferrer">화면이 보이지 않으면 새 창에서 열기 ↗</a>
+              </div>
             </div>
-        </div>
-    </section>
-
-    <footer></footer>
-
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="config.js?v=20261026"></script>
-    <script src="manager.js?v=20261119"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const categoryCode = urlParams.get('c') || urlParams.get('id');
-            // 카카오 메시지(2026-11)에 걸린 옛 과목 주소 page.html?c=과목 → 그 과목 프로그램 목록(child.html#과목)으로 보냄
-            if (['korean','reading','english','math','science','art','environment','nuri','infant','special'].includes(categoryCode)) {
-                location.replace('child.html#' + categoryCode);
-                return;
-            }
-
-            if (!categoryCode) {
-                alert("잘못된 접근입니다.");
-                location.href = 'index.html';
-                return;
-            }
-
-            const checkReady = setInterval(() => {
-                if (window.sb) {
-                    clearInterval(checkReady);
-                    loadPageContent(categoryCode);
-                }
-            }, 100);
-        });
-
-        async function loadPageContent(code) {
-            const { data: catData } = await window.sb.from('program_categories').select('*').eq('code', code).single();
-            if (catData) {
-                if (catData.hero_image) {
-                    const heroEl = document.getElementById('page-hero');
-                    heroEl.style.backgroundImage = `url('${catData.hero_image}')`;
-                    heroEl.style.display = 'block';
-
-                    document.getElementById('page-hero-title').innerText = catData.hero_title || catData.name;
-                    document.getElementById('page-hero-desc').innerText = catData.hero_desc || '';
-
-                    if (catData.hero_overlay_color) {
-                        const opacity = catData.hero_overlay_opacity !== undefined ? catData.hero_overlay_opacity : 0.8;
-                        const rgb = hexToRgb(catData.hero_overlay_color);
-                        if (rgb) {
-                            heroEl.style.boxShadow = `inset 0 0 0 2000px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${opacity})`;
-                        }
-                    }
-                    if (catData.hero_title_color) document.getElementById('page-hero-title').style.color = catData.hero_title_color;
-                    if (catData.hero_desc_color) document.getElementById('page-hero-desc').style.color = catData.hero_desc_color;
-                }
-                document.getElementById('page-title').innerText = catData.name;
-                document.title = "뉴키즈 - " + catData.name;
-            }
-
-            const nowIso = new Date().toISOString();
-            const { data, error } = await window.sb.from('total_posts')
-                .select('*')
-                .eq('category', code)
-                .neq('is_visible', false)
-                .neq('is_draft', true)
-                .or(`publish_at.is.null,publish_at.lte.${nowIso}`)
-                .order('created_at', { ascending: true })
-                .limit(1)
-                .single();
-
-            if (error || !data) {
-                document.getElementById('page-content').innerHTML = "<div style='text-align:center; padding:50px; color:#767676;'>아직 등록된 페이지 내용이 없습니다.</div>";
-            } else {
-                let finalContent = window.sanitizeHtml(data.content || '');
-                finalContent = finalContent.replace(/\[투표:([a-zA-Z0-9_-]+)\]/g, '<iframe title="투표 양식" loading="lazy" id="form-iframe-$1" src="form.html?id=$1" width="100%" frameborder="0" scrolling="no" style="border:1px solid #ddd; border-radius:12px; margin:30px 0; overflow:hidden; min-height:100px; transition:height 0.3s ease;"></iframe>');
-
-                document.getElementById('page-content').innerHTML = finalContent;
-            }
+          `;
+          return;
         }
 
-        function hexToRgb(hex) {
-            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-            return result ? {
-                r: parseInt(result[1], 16),
-                g: parseInt(result[2], 16),
-                b: parseInt(result[3], 16)
-            } : null;
+        // 3) 본문 직접 디자인(custom) 모드
+        if (mode === 'custom') {
+          const rawHtml = catData.custom_html || '';
+          if (!rawHtml.trim()) {
+            contentEl.innerHTML = '<p style="text-align:center; padding:40px 0; color:#666;">아직 작성된 페이지 본문이 없습니다.</p>';
+            return;
+          }
+          const sanitized = typeof window.sanitizeHtml === 'function' ? window.sanitizeHtml(rawHtml) : rawHtml;
+          contentEl.innerHTML = renderFormTokens(sanitized);
+          return;
         }
 
-        window.addEventListener('message', function (event) {
-            if (event.data && event.data.type === 'resizeIframe') {
-                let iframe = document.getElementById('form-iframe-' + event.data.formId);
-                if (!iframe) {
-                    const iframes = document.querySelectorAll('iframe');
-                    for (let f of iframes) {
-                        if (f.src && f.src.includes('id=' + event.data.formId)) {
-                            iframe = f;
-                            break;
-                        }
-                    }
-                }
-                if (iframe) {
-                    iframe.style.height = (event.data.height + 30) + 'px';
-                }
-            }
-        });
-    </script>
+        // 4) 기존 게시글 연동(post) 모드 — 기존 total_posts 조회 로직 100% 유지
+        const nowIso = new Date().toISOString();
+        const { data: postData } = await window.sb
+          .from('total_posts')
+          .select('*')
+          .eq('category', code)
+          .neq('is_visible', false)
+          .neq('is_draft', true)
+          .or(`publish_at.is.null,publish_at.lte.${nowIso}`)
+          .order('created_at', { ascending: true })
+          .limit(1)
+          .single();
+
+        if (!postData) {
+          contentEl.innerHTML = '<p style="text-align:center; padding:40px 0; color:#666;">아직 등록된 페이지 내용이 없습니다.</p>';
+          return;
+        }
+
+        const sanitizedPost = typeof window.sanitizeHtml === 'function'
+          ? window.sanitizeHtml(postData.content || '')
+          : (postData.content || '');
+        contentEl.innerHTML = renderFormTokens(sanitizedPost);
+      } catch (err) {
+        console.error('[page.html] 로드 오류:', err);
+        contentEl.innerHTML = '<p style="text-align:center; padding:40px 0; color:#c00;">페이지를 불러오는 중 오류가 발생했습니다.</p>';
+      }
+    }
+
+    // form.html(body.is-iframe) 높이 자동 조절 메시지 수신
+    window.addEventListener('message', function(event) {
+      if (event && event.data && event.data.type === 'resizeIframe' && event.data.formId) {
+        const frame = document.getElementById('form-iframe-' + event.data.formId);
+        if (frame && event.data.height) {
+          frame.style.height = (Number(event.data.height) + 30) + 'px';
+        }
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const params = new URLSearchParams(window.location.search);
+      const categoryCode = params.get('c') || params.get('id');
+      const eduCodes = ['korean', 'reading', 'english', 'math', 'science', 'art', 'environment', 'nuri', 'infant', 'special'];
+
+      if (categoryCode && eduCodes.includes(categoryCode)) {
+        window.location.replace('child.html#' + categoryCode);
+        return;
+      }
+
+      if (!categoryCode) {
+        alert('잘못된 접근입니다.');
+        window.location.href = 'index.html';
+        return;
+      }
+
+      const timer = setInterval(function() {
+        if (window.sb) {
+          clearInterval(timer);
+          loadPageContent(categoryCode);
+        }
+      }, 100);
+    });
+  </script>
 </body>
 </html>

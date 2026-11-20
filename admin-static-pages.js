@@ -190,14 +190,20 @@
     return `<!-- NK_BLOCKS_V2:${meta} -->\n${html}`;
   }
 
-  function deserializeHtmlToBlocks(html) {
+  function deserializeHtmlToBlocks(html, depth) {
     const str = String(html || '').trim();
-    if (!str) return [];
-    const m = str.match(/<!--\s*NK_BLOCKS_V2:([A-Za-z0-9%_.~+-]+)\s*-->/);
+    if (!str || (depth || 0) > 5) return [];
+    const m = str.match(/<!--\s*NK_BLOCKS_V2:([\s\S]*?)\s*-->/);
     if (m) {
       try {
-        const parsed = JSON.parse(decodeURIComponent(m[1]));
-        if (Array.isArray(parsed)) return parsed;
+        const parsed = JSON.parse(decodeURIComponent(m[1].trim()));
+        if (Array.isArray(parsed)) {
+          // 이전에 잘못 감싸진 raw 블록이 있으면 자동으로 원래 블록 배열로 복구
+          if (parsed.length === 1 && parsed[0] && parsed[0].type === 'raw' && /NK_BLOCKS_V2:/.test(parsed[0].html || '')) {
+            return deserializeHtmlToBlocks(parsed[0].html, (depth || 0) + 1);
+          }
+          return parsed;
+        }
       } catch (_) {}
     }
     return [{ id: uid(), type: 'raw', html: str }];
@@ -297,6 +303,8 @@
       .nk-sp-modal-backdrop.open { display: flex; }
       .nk-sp-modal { background: #f8fafc; border-radius: 14px; width: 100%; max-width: 1240px; height: 92vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35); }
       .nk-sp-modal-head { background: #1c355e; color: #fff; padding: 12px 18px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-shrink: 0; }
+      .nk-sp-modal-head .nk-sp-btn-outline { background: rgba(255,255,255,0.14); color: #fff; border-color: rgba(255,255,255,0.35); }
+      .nk-sp-modal-head .nk-sp-btn-outline.active { background: #fff; color: #1c355e; border-color: #fff; }
       .nk-sp-modal-toolbar { padding: 10px 14px; background: #fff; border-bottom: 1px solid #e2e8f0; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; flex-shrink: 0; }
       .nk-sp-chip { padding: 5px 10px; font-size: 12px; font-weight: 600; border-radius: 6px; border: 1px solid #cbd5e1; background: #f8fafc; color: #1e293b; cursor: pointer; }
       .nk-sp-chip:hover { background: #eff6ff; border-color: #1c355e; color: #1c355e; }

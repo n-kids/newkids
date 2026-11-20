@@ -551,9 +551,9 @@
         }
 
         formsCache = formsRes.data || [];
-        responseCountMap = {};
-       const firstRes = await sb.from('form_responses').select('id, form_id, created_at'); if (firstRes.error) { toast('응답 수 집계 조회 오류: ' + firstRes.error.message, 'error'); } else if (Array.isArray(firstRes.data)) { firstRes.data.forEach(r => { const k = String(r.form_id); responseCountMap[k] = (responseCountMap[k] || 0) + 1; }); if (firstRes.data.length === 1000) { let offset = 1000; const pageSize = 1000; while (true) { const { data, error } = await sb.from('form_responses').select('id, form_id, created_at').range(offset, offset + 999); if (error) { toast('응답 수 집계 조회 오류: ' + error.message, 'error'); break; } if (!Array.isArray(data) || data.length === 0) break; data.forEach(r => { const k = String(r.form_id); responseCountMap[k] = (responseCountMap[k] || 0) + 1; }); if (data.length < pageSize) break; offset += pageSize; } } }
-
+        const nextCounts = {};
+       const firstRes = await sb.from('form_responses').select('id, form_id, created_at'); if (firstRes.error) { toast('응답 수 집계 조회 오류: ' + firstRes.error.message, 'error'); } else if (Array.isArray(firstRes.data)) { firstRes.data.forEach(r => { const k = String(r.form_id); nextCounts[k] = (nextCounts[k] || 0) + 1; }); if (firstRes.data.length === 1000) { let offset = 1000; const pageSize = 1000; while (true) { const { data, error } = await sb.from('form_responses').select('id, form_id, created_at').range(offset, offset + 999); if (error) { toast('응답 수 집계 조회 오류: ' + error.message, 'error'); break; } if (!Array.isArray(data) || data.length === 0) break; data.forEach(r => { const k = String(r.form_id); nextCounts[k] = (nextCounts[k] || 0) + 1; }); if (data.length < pageSize) break; offset += pageSize; } } }
+    responseCountMap = nextCounts;
         updateEditorFormInsertDropdown();
         renderFormsList();
     }

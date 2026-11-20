@@ -109,7 +109,7 @@ window.sanitizeHtml = function (html) {
             if ((name === "href" || name === "src") && !safeUrl(value, name === "src")) return;
             if (name === "style") {
                 const declarations = value.split(";").map(x => x.trim()).filter(Boolean).filter(x =>
-                    /^(?:color|background-color|text-align|font-size|font-weight|font-style|text-decoration|margin(?:-top|-right|-bottom|-left)?|padding(?:-top|-right|-bottom|-left)?|width|max-width|height|border(?:-radius|-[a-z-]+)?|display|list-style-type)\s*:\s*[^;<>]+$/i.test(x) &&
+                    /^(?:color|background-color|text-align|font-size|font-weight|font-style|text-decoration|margin(?:-top|-right|-bottom|-left)?|padding(?:-top|-right|-bottom|-left)?|width|max-width|height|border(?:-radius|-[a-z-]+)?|display|list-style-type|background|line-height|letter-spacing|gap|row-gap|column-gap|grid-template-columns|grid-column|flex|flex-direction|flex-wrap|justify-content|align-items|box-shadow|overflow|overflow-x|object-fit|box-sizing|min-width|min-height|vertical-align|white-space|word-break|opacity|border-collapse)\s*:\s*[^;<>]+$/i.test(x) &&
                     !/(?:url\s*\(|expression\s*\(|javascript:|@import|behavior\s*:)/i.test(x));
                 if (declarations.length) out.setAttribute("style", declarations.join("; "));
                 return;

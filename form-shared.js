@@ -234,6 +234,7 @@
         }
 
         if (max && max > 0 && isCountUnavailable) { return { code: 'count_unavailable', label: '인원 확인 불가', canSubmit: false, count: null, max: max, seatsLeft: null, hoursLeft: (endTs && !isNaN(endTs)) ? Math.max(0, (endTs - now) / 3600000) : null, isUrgent: false, urgentNote: '', reason: '현재 참여 인원을 불러오지 못해 제출을 진행할 수 없습니다. 잠시 후 다시 시도해 주세요.' }; } if (max && max > 0 && count >= max) {
+        if (max && max > 0 && count >= max) {
             return {
                 code: 'full',
                 label: '정원 마감',

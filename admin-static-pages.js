@@ -16,6 +16,7 @@
 
   const STATE = {
     forms: [],
+    catMetaByCode: {},
     newCustomHtml: '',
     rowDrafts: {},
     modalTarget: null, // { kind: 'new' } | { kind: 'row', code }
@@ -334,6 +335,25 @@
       if (!error && Array.isArray(data)) STATE.forms = data;
     } catch (e) {
       console.warn('[admin-static-pages] custom_forms 로드 실패:', e);
+    }
+  }
+
+  async function loadCategoryMeta() {
+    if (!window.sb) return;
+    try {
+      const { data, error } = await window.sb
+        .from('program_categories')
+        .select('code, name, type, content_mode, target_url, url_display, custom_html')
+        .eq('type', 'PAGE');
+      if (!error && Array.isArray(data)) {
+        const nextMap = {};
+        data.forEach(function (row) {
+          nextMap[row.code] = row;
+        });
+        STATE.catMetaByCode = nextMap;
+      }
+    } catch (e) {
+      console.warn('[admin-static-pages] program_categories 메타 로드 실패:', e);
     }
   }
 
@@ -933,16 +953,20 @@
     });
   }
 
-  function enhanceStaticPageRows() {
+  function enhanceStaticPageRows(forceRebuild) {
     const pageList = document.getElementById('sortable-list-PAGE');
     if (!pageList) return;
-    const catList = typeof window.categoryList !== 'undefined' ? window.categoryList : [];
 
     pageList.querySelectorAll('.cm-row').forEach(function (row) {
       const code = row.dataset.code;
-      if (!code || row.querySelector('.nk-sp-row-ext')) return;
+      if (!code) return;
+      const existing = row.querySelector('.nk-sp-row-ext');
+      if (existing) {
+        if (!forceRebuild) return;
+        existing.remove();
+      }
 
-      const cat = catList.find(function (c) { return c.code === code; }) || {};
+      const cat = STATE.catMetaByCode[code] || {};
       const draft = STATE.rowDrafts[code] || {
         content_mode: cat.content_mode || 'post',
         target_url: cat.target_url || '',
@@ -1027,35 +1051,69 @@
   }
 
   function wrapAdminFunctions() {
+    if (typeof window.loadAdminCategories === 'function' && !window.loadAdminCategories.__nkWrapped) {
+      const origLoad = window.loadAdminCategories;
+      const wrappedLoad = async function () {
+        await loadCategoryMeta();
+        const res = await origLoad.apply(this, arguments);
+        enhanceStaticPageRows(true);
+        return res;
+      };
+      wrappedLoad.__nkWrapped = true;
+      window.loadAdminCategories = wrappedLoad;
+    }
+
     if (typeof window.addNewCategory === 'function' && !window.addNewCategory.__nkWrapped) {
       const origAdd = window.addNewCategory;
       const wrappedAdd = async function () {
         const typeEl = document.getElementById('new-cat-type');
         const codeEl = document.getElementById('new-cat-code');
+        const nameEl = document.getElementById('new-cat-name');
         const isPage = typeEl && typeEl.value === 'PAGE';
         const code = codeEl ? codeEl.value.trim().toLowerCase() : '';
+        const name = nameEl ? nameEl.value.trim() : '';
         const mode = document.getElementById('nk-sp-new-mode')?.value || 'post';
         const targetUrl = document.getElementById('nk-sp-new-target-url')?.value.trim() || '';
         const urlDisplay = document.getElementById('nk-sp-new-url-display')?.value || 'embed';
         const customHtml = mode === 'custom' ? STATE.newCustomHtml : '';
 
+        // origAdd 내부의 loadAdminCategories 호출 시에도 최신 draft가 유지되도록 미리 반영
+        if (isPage && code) {
+          const pendingMeta = {
+            code: code,
+            name: name,
+            type: 'PAGE',
+            content_mode: mode,
+            target_url: targetUrl || '',
+            url_display: urlDisplay,
+            custom_html: customHtml || ''
+          };
+          STATE.catMetaByCode[code] = pendingMeta;
+          STATE.rowDrafts[code] = Object.assign({}, pendingMeta);
+        }
+
         const res = await origAdd.apply(this, arguments);
 
         if (isPage && code && window.sb) {
           try {
-            await window.sb.from('program_categories').update({
+            const { error } = await window.sb.from('program_categories').update({
               content_mode: mode,
               target_url: targetUrl || null,
               url_display: urlDisplay,
               custom_html: customHtml || null
             }).eq('code', code);
 
-            STATE.newCustomHtml = '';
-            const urlField = document.getElementById('nk-sp-new-target-url');
-            if (urlField) urlField.value = '';
-            const statusEl = document.getElementById('nk-sp-new-custom-status');
-            if (statusEl) statusEl.textContent = '아직 작성된 본문이 없습니다. 블록 디자인 에디터를 열어 작성해 주세요.';
-            if (typeof window.loadAdminCategories === 'function') await window.loadAdminCategories();
+            if (error) {
+              alert('고정 페이지 디자인/URL 저장 오류 (Supabase 마이그레이션 SQL 적용 여부를 확인해 주세요): ' + error.message);
+            } else {
+              STATE.newCustomHtml = '';
+              const urlField = document.getElementById('nk-sp-new-target-url');
+              if (urlField) urlField.value = '';
+              const statusEl = document.getElementById('nk-sp-new-custom-status');
+              if (statusEl) statusEl.textContent = '아직 작성된 본문이 없습니다. 블록 디자인 에디터를 열어 작성해 주세요.';
+              await loadCategoryMeta();
+              enhanceStaticPageRows(true);
+            }
           } catch (err) {
             console.error('[admin-static-pages] 저장 오류:', err);
           }
@@ -1073,7 +1131,7 @@
         const res = await origSave.apply(this, arguments);
         if (window.sb) {
           const codes = Object.keys(draftsCopy);
-          await Promise.all(codes.map(function (code) {
+          const results = await Promise.all(codes.map(function (code) {
             const d = draftsCopy[code];
             return window.sb.from('program_categories').update({
               content_mode: d.content_mode || 'post',
@@ -1082,6 +1140,13 @@
               custom_html: d.custom_html || null
             }).eq('code', code);
           }));
+          const firstErr = results.find(function (r) { return r && r.error; });
+          if (firstErr) {
+            alert('고정 페이지 연결 설정 저장 오류: ' + firstErr.error.message);
+          } else {
+            await loadCategoryMeta();
+            enhanceStaticPageRows(true);
+          }
         }
         return res;
       };
@@ -1100,10 +1165,11 @@
 
   async function init() {
     injectStyles();
-    await loadCustomForms();
+    await Promise.all([loadCustomForms(), loadCategoryMeta()]);
     mountNewCategoryPanel();
     wrapAdminFunctions();
     observeCategoryContainer();
+    enhanceStaticPageRows(true);
   }
 
   document.addEventListener('DOMContentLoaded', function () {

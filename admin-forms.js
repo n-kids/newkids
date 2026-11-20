@@ -430,7 +430,7 @@
         resetFormBuilder(true);
         await loadAdminForms();
         if (typeof global.nkRefreshDashboardTasks === 'function') global.nkRefreshDashboardTasks();
-    } } catch (err) { toast('저장 중 오류가 발생했습니다: ' + (err && err.message ? err.message : String(err)), 'error'); } finally { loading(false); }
+    } catch (err) { toast('저장 중 오류가 발생했습니다: ' + (err && err.message ? err.message : String(err)), 'error'); } finally { loading(false); }
 
     function loadFormIntoBuilder(formId, isClone) {
         const form = formsCache.find(f => String(f.id) === String(formId));

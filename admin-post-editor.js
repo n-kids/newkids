@@ -397,7 +397,7 @@
       </div>
       <div class="nk-pe-right">
         <span id="nk-pe-autosave-label" style="color:#64748b;font-size:11px;"></span>
-        <button type="button" id="nk-pe-toggle-preview" class="nk-pe-mini active" style="display:none;">미리보기 ON</button>
+        <button type="button" id="nk-pe-toggle-preview" class="nk-pe-mini active" style="display:none;">화면 분할 ON</button>
         <button type="button" id="nk-pe-dev-pc" class="nk-pe-mini active" style="display:none;">PC</button>
         <button type="button" id="nk-pe-dev-mob" class="nk-pe-mini" style="display:none;">모바일</button>
         <button type="button" id="nk-pe-toggle-raw" class="nk-pe-mini" style="display:none;">HTML</button>
@@ -453,7 +453,7 @@
     document.getElementById('nk-pe-toggle-preview').addEventListener('click', function () {
       STATE.showPreview = !STATE.showPreview;
       const btn = document.getElementById('nk-pe-toggle-preview');
-      btn.textContent = STATE.showPreview ? '미리보기 ON' : '미리보기 OFF';
+      btn.textContent = STATE.showPreview ? '화면 분할 ON' : '화면 분할 OFF';
       btn.classList.toggle('active', STATE.showPreview);
       document.getElementById('nk-pe-right-pane').style.display = STATE.showPreview ? 'flex' : 'none';
       document.getElementById('nk-pe-workspace').classList.toggle('no-preview', !STATE.showPreview);

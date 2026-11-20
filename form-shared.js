@@ -198,7 +198,7 @@
      * 수동 마감 / 마감 일시 경과 / 선착순 정원 마감 / 임박 상태를 통합 판정합니다.
      */
     function getFormStatus(form, responseCount) {
-        const count = Number.isFinite(Number(responseCount)) ? Number(responseCount) : 0;
+        const hasCount = responseCount !== null && responseCount !== undefined && responseCount !== '' && Number.isFinite(Number(responseCount)); const count = hasCount ? Number(responseCount) : null;
         const max = form && form.max_participants ? Number(form.max_participants) : null;
         const endTs = form && form.end_date ? new Date(form.end_date).getTime() : null;
         const now = Date.now();
@@ -210,7 +210,7 @@
                 canSubmit: false,
                 count: count,
                 max: max,
-                seatsLeft: max ? Math.max(0, max - count) : null,
+                seatsLeft: (max && hasCount) ? Math.max(0, max - count) : null,
                 hoursLeft: null,
                 isUrgent: false,
                 urgentNote: '',
@@ -225,7 +225,7 @@
                 canSubmit: false,
                 count: count,
                 max: max,
-                seatsLeft: max ? Math.max(0, max - count) : null,
+                seatsLeft: (max && hasCount) ? Math.max(0, max - count) : null,
                 hoursLeft: 0,
                 isUrgent: false,
                 urgentNote: '',
@@ -233,7 +233,7 @@
             };
         }
 
-        if (max && max > 0 && count >= max) {
+        if (max && max > 0 && !hasCount) { return { code: 'count_unavailable', label: '인원 확인 불가', canSubmit: false, count: null, max: max, seatsLeft: null, hoursLeft: (endTs && !isNaN(endTs)) ? Math.max(0, (endTs - now) / 3600000) : null, isUrgent: false, urgentNote: '', reason: '현재 참여 인원을 불러오지 못해 제출을 진행할 수 없습니다. 잠시 후 다시 시도해 주세요.' }; } if (max && max > 0 && count >= max) {
             return {
                 code: 'full',
                 label: '정원 마감',
@@ -382,9 +382,9 @@
             const bytes = new TextEncoder().encode(String(text || ''));
             let ver = 1;
             while (ver <= 5 && bytes.length + 2 > SPECS[ver].dataCw) ver++;
-            if (ver > 5) ver = 5;
+            if (ver > 5) { throw new RangeError(`QR 코드로 인코딩할 URL이 너무 깁니다 (${bytes.length} bytes, 최대 ${SPECS[5].dataCw - 2} bytes).`); }
             const spec = SPECS[ver];
-            const payload = bytes.slice(0, spec.dataCw - 2);
+            const payload = bytes;
 
             const bits = [];
             const pushBits = (val, len) => {

@@ -43,6 +43,20 @@
     let m = s.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/|youtube\.com\/embed\/)([A-Za-z0-9_-]{6,})/);
     return m ? 'https://www.youtube.com/embed/' + m[1] : '';
   }
+  const CUSTOM_FONTS_KEY = 'nk_post_custom_fonts_v1';
+  const BUILTIN_FONTS = [{ label: '기본 (사이트 기본 폰트)', css: '', url: '' }, { label: 'Pretendard', css: "'Pretendard', sans-serif", url: 'https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css' }, { label: 'Noto Sans KR (본고딕)', css: "'Noto Sans KR', sans-serif", url: 'https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap' }, { label: 'Noto Serif KR (본명조)', css: "'Noto Serif KR', serif", url: 'https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;700;800&display=swap' }, { label: '나눔고딕 (Nanum Gothic)', css: "'Nanum Gothic', sans-serif", url: 'https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap' }, { label: '나눔명조 (Nanum Myeongjo)', css: "'Nanum Myeongjo', serif", url: 'https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&display=swap' }, { label: '나눔손글씨 펜 (Nanum Pen Script)', css: "'Nanum Pen Script', cursive", url: 'https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap' }, { label: '고운돋움 (Gowun Dodum)', css: "'Gowun Dodum', sans-serif", url: 'https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap' }, { label: '고운바탕 (Gowun Batang)', css: "'Gowun Batang', serif", url: 'https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap' }, { label: '주아체 (Jua)', css: "'Jua', sans-serif", url: 'https://fonts.googleapis.com/css2?family=Jua&display=swap' }, { label: '도현체 (Do Hyeon)', css: "'Do Hyeon', sans-serif", url: 'https://fonts.googleapis.com/css2?family=Do+Hyeon&display=swap' }, { label: '해바라기체 (Sunflower)', css: "'Sunflower', sans-serif", url: 'https://fonts.googleapis.com/css2?family=Sunflower:wght@500;700&display=swap' }, { label: '검은고딕 (Black Han Sans)', css: "'Black Han Sans', sans-serif", url: 'https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap' }];
+  function sanitizeFontFamily(v) { return String(v || '').replace(/["<>`;{}]/g, '').trim(); }
+  function loadCustomFonts() { try { const raw = localStorage.getItem(CUSTOM_FONTS_KEY); const arr = raw ? JSON.parse(raw) : []; return Array.isArray(arr) ? arr.filter(f => f && f.css) : []; } catch (e) { return []; } }
+  function saveCustomFonts(list) { try { localStorage.setItem(CUSTOM_FONTS_KEY, JSON.stringify(Array.isArray(list) ? list : [])); } catch (e) {} }
+  function injectFontAsset(fontUrl, fontFamily) { const u = String(fontUrl || '').trim(); if (!u || !/^https:\/\//i.test(u)) return; const key = u.replace(/"/g, ''); if (document.querySelector('link[data-nk-font-url="' + key + '"]')) return; const link = document.createElement('link'); link.rel = 'stylesheet'; link.href = u; link.setAttribute('data-nk-font-url', key); if (fontFamily) link.setAttribute('data-nk-font-family', sanitizeFontFamily(fontFamily)); document.head.appendChild(link); }
+  function getAllFonts() { return BUILTIN_FONTS.concat(loadCustomFonts()); }
+  function buildGoogleFontUrl(familyName) { const name = String(familyName || '').trim(); if (!name) return ''; return 'https://fonts.googleapis.com/css2?family=' + encodeURIComponent(name).replace(/%20/g, '+') + ':wght@400;500;700;800&display=swap'; }
+  function renderSizeSelectHtml(b, idx, defaultSize) { const cur = (b && b.fontSize) || defaultSize || '15px'; const sizes = ['12px', '13px', '14px', '15px', '16px', '17px', '18px', '20px', '22px', '24px', '26px', '28px', '30px', '32px', '36px', '40px']; return '<div class="nk-blk-field"><label>글자 크기</label><select data-k="fontSize" data-i="' + idx + '">' + sizes.map(s => '<option value="' + s + '"' + (cur === s ? ' selected' : '') + '>' + s + '</option>').join('') + '</select></div>'; }
+  function renderWeightSelectHtml(b, idx, defaultWeight) { const cur = String((b && b.fontWeight) || defaultWeight || '400'); const weights = [['400', '보통 (400)'], ['500', '중간 (500)'], ['700', '굵게 (700)'], ['800', '아주 굵게 (800)']]; return '<div class="nk-blk-field"><label>글자 두께</label><select data-k="fontWeight" data-i="' + idx + '">' + weights.map(w => '<option value="' + w[0] + '"' + (cur === w[0] ? ' selected' : '') + '>' + w[1] + '</option>').join('') + '</select></div>'; }
+  function renderFontSelectHtml(b, idx) { const cur = sanitizeFontFamily(b && b.fontFamily); const all = getAllFonts(); const hasCur = !cur || all.some(f => f.css === cur); const opts = all.map(f => '<option value="' + esc(f.css) + '"' + (cur === f.css ? ' selected' : '') + '>' + esc(f.label || f.css) + '</option>').join(''); const extra = !hasCur ? '<option value="' + esc(cur) + '" selected>' + esc(cur) + ' (포함된 폰트)</option>' : ''; return '<div class="nk-blk-field"><label>글꼴</label><select data-k="fontFamily" data-i="' + idx + '">' + opts + extra + '</select></div>'; }
+  function renderFontMgrHtml(idx) { const custom = loadCustomFonts(); const chips = custom.length ? '<div class="nk-font-chips">' + custom.map((f, ci) => '<span class="nk-font-chip">' + esc(f.label || f.css) + '<button type="button" data-sp-font-del="' + ci + '" title="삭제">×</button></span>').join('') + '</div>' : ''; return '<details class="nk-font-mgr"><summary>+ 폰트 추가 / 관리</summary><div class="nk-font-mgr-body"><div class="nk-blk-grid"><div class="nk-blk-field"><label>추가 방식</label><select data-sp-font-mode="' + idx + '"><option value="google">Google Fonts</option><option value="url">https:// 웹폰트 URL</option></select></div><div class="nk-blk-field"><label>표시 이름</label><input type="text" data-sp-font-label="' + idx + '" placeholder="예: 나눔스퀘어" /></div><div class="nk-blk-field"><label>CSS font-family</label><input type="text" data-sp-font-css="' + idx + '" placeholder="예: \'Nanum Square\', sans-serif" /></div><div class="nk-blk-field" data-sp-font-url-wrap="' + idx + '" style="display:none;"><label>웹폰트 CSS URL (https://)</label><input type="url" data-sp-font-url="' + idx + '" placeholder="https://..." /></div></div><div class="nk-font-mgr-actions"><button type="button" class="nk-btn nk-btn-sm" data-sp-font-add="' + idx + '">폰트 추가</button></div>' + chips + '</div></details>'; }
+  
+  
 
   // ==========================================================================
   // 1. 블록 → 안전한 HTML 직렬화 (manager.js sanitizeHtml 100% 호환)
@@ -50,39 +64,11 @@
   function renderBlockToHtml(b) {
     if (!b || !b.type) return '';
 
-    if (b.type === 'heading') {
-      const align = b.align || 'left';
-      const color = b.color || '#1c355e';
-      const sub = b.sub ? `<p style="margin:6px 0 0; font-size:15px; color:#64748b; line-height:1.6;">${esc(b.sub)}</p>` : '';
-      return `<div style="text-align:${align}; margin:20px 0 14px; padding-bottom:10px; border-bottom:2px solid #e2e8f0;">
-  <h2 style="margin:0; font-size:24px; font-weight:800; color:${esc(color)}; line-height:1.35;">${esc(b.title || '제목을 입력하세요')}</h2>
-  ${sub}
-</div>`;
-    }
+        if (b.type === 'heading') { const align = b.align || 'left'; const color = b.color || '#1c355e'; const size = b.fontSize || '24px'; const weight = b.fontWeight || '800'; const ff = sanitizeFontFamily(b.fontFamily); if (b.fontUrl && ff) injectFontAsset(b.fontUrl, ff); const ffCss = ff ? ' font-family:' + ff + ';' : ''; const sub = b.sub ? '<p style="margin:6px 0 0; font-size:15px; color:#64748b; line-height:1.6;' + ffCss + '">' + esc(b.sub) + '</p>' : ''; return '<div style="text-align:' + align + '; margin:20px 0 14px; padding-bottom:10px; border-bottom:2px solid #e2e8f0;"><h2 style="margin:0; font-size:' + esc(size) + '; font-weight:' + esc(weight) + '; color:' + esc(color) + '; line-height:1.35;' + ffCss + '">' + esc(b.title || '제목을 입력하세요') + '</h2>' + sub + '</div>'; }
 
-    if (b.type === 'text') {
-      const align = b.align || 'left';
-      const size = b.fontSize || '15px';
-      const body = String(b.text || '').split('\n').map(function (line) {
-        return line.trim() ? `<p style="margin:0 0 10px; font-size:${size}; line-height:1.75; color:#334155;">${esc(line)}</p>` : '';
-      }).join('');
-      return `<div style="text-align:${align}; margin:14px 0;">${body || '<p style="margin:0; color:#94a3b8;">내용을 입력하세요.</p>'}</div>`;
-    }
+    if (b.type === 'text') { const align = b.align || 'left'; const size = b.fontSize || '15px'; const weight = b.fontWeight || '400'; const color = b.color || '#334155'; const ff = sanitizeFontFamily(b.fontFamily); if (b.fontUrl && ff) injectFontAsset(b.fontUrl, ff); const ffCss = ff ? ' font-family:' + ff + ';' : ''; const body = String(b.text || '').split('\n').map(function (line) { return line.trim() ? '<p style="margin:0 0 10px; font-size:' + esc(size) + '; font-weight:' + esc(weight) + '; line-height:1.75; color:' + esc(color) + ';' + ffCss + '">' + esc(line) + '</p>' : ''; }).join(''); return '<div style="text-align:' + align + '; margin:14px 0;">' + (body || '<p style="margin:0; color:#94a3b8;' + ffCss + '">내용을 입력하세요.</p>') + '</div>'; }
 
-    if (b.type === 'callout') {
-      const themes = {
-        navy: { bg: '#eff6ff', border: '#1c355e', title: '#1c355e' },
-        green: { bg: '#ecfdf5', border: '#059669', title: '#065f46' },
-        amber: { bg: '#fffbeb', border: '#d97706', title: '#92400e' },
-        gray: { bg: '#f8fafc', border: '#64748b', title: '#334155' }
-      };
-      const t = themes[b.theme] || themes.navy;
-      const lines = String(b.body || '').split('\n').map(esc).join('<br>');
-      return `<div style="background-color:${t.bg}; border-left:4px solid ${t.border}; border-radius:8px; padding:16px 18px; margin:16px 0;">
-  ${b.title ? `<div style="font-size:15px; font-weight:700; color:${t.title}; margin-bottom:6px;">${esc(b.title)}</div>` : ''}
-  <div style="font-size:14px; line-height:1.7; color:#334155;">${lines}</div>
-</div>`;
-    }
+    if (b.type === 'callout') { const themes = { navy: { bg: '#eff6ff', border: '#1c355e', title: '#1c355e' }, green: { bg: '#ecfdf5', border: '#059669', title: '#065f46' }, amber: { bg: '#fffbeb', border: '#d97706', title: '#92400e' }, gray: { bg: '#f8fafc', border: '#64748b', title: '#334155' } }; const t = themes[b.theme] || themes.navy; const size = b.fontSize || '14px'; const weight = b.fontWeight || '400'; const ff = sanitizeFontFamily(b.fontFamily); if (b.fontUrl && ff) injectFontAsset(b.fontUrl, ff); const ffCss = ff ? ' font-family:' + ff + ';' : ''; const titleColor = b.color || t.title; const bodyColor = b.color || '#334155'; const lines = String(b.body || '').split('\n').map(esc).join('<br>'); return '<div style="background-color:' + t.bg + '; border-left:4px solid ' + t.border + '; border-radius:8px; padding:16px 18px; margin:16px 0;' + ffCss + '">' + (b.title ? '<div style="font-size:15px; font-weight:700; color:' + esc(titleColor) + '; margin-bottom:6px;' + ffCss + '">' + esc(b.title) + '</div>' : '') + '<div style="font-size:' + esc(size) + '; font-weight:' + esc(weight) + '; line-height:1.7; color:' + esc(bodyColor) + ';' + ffCss + '">' + lines + '</div></div>'; }
 
     if (b.type === 'cards') {
       const items = Array.isArray(b.items) ? b.items : [];
@@ -187,8 +173,7 @@
 
   function serializeBlocks(blocks) {
     const html = blocks.map(renderBlockToHtml).join('\n');
-    const meta = encodeURIComponent(JSON.stringify(blocks));
-    return `<!-- NK_BLOCKS_V2:${meta} -->\n${html}`;
+    const meta = encodeURIComponent(JSON.stringify(blocks)); const customFonts = []; const seenFonts = {}; blocks.forEach(function (b) { if (b && b.fontUrl && b.fontFamily) { const key = b.fontUrl + '|' + b.fontFamily; if (!seenFonts[key]) { seenFonts[key] = true; customFonts.push({ css: b.fontFamily, url: b.fontUrl }); } } }); const fontMeta = customFonts.length ? '<!-- NK_CUSTOM_FONTS_V1:' + encodeURIComponent(JSON.stringify(customFonts)) + ' -->\n' : ''; return fontMeta + '<!-- NK_BLOCKS_V2:' + meta + ' -->\n' + html;
   }
 
   function deserializeHtmlToBlocks(html, depth) {
@@ -203,7 +188,7 @@
           if (parsed.length === 1 && parsed[0] && parsed[0].type === 'raw' && /NK_BLOCKS_V2:/.test(parsed[0].html || '')) {
             return deserializeHtmlToBlocks(parsed[0].html, (depth || 0) + 1);
           }
-          return parsed;
+          parsed.forEach(function (b) { if (b && b.fontUrl && b.fontFamily) injectFontAsset(b.fontUrl, b.fontFamily); }); return parsed;
         }
       } catch (_) {}
     }
@@ -324,7 +309,8 @@
       .nk-blk-mini:hover { background: #f1f5f9; }
       .nk-blk-mini.danger { color: #dc2626; border-color: #fecaca; }
       .nk-sp-modal-foot { padding: 12px 18px; background: #fff; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-shrink: 0; }
-    `;
+          .nk-font-mgr { margin-top: 8px; border: 1px dashed #cbd5e1; border-radius: 8px; background: #f8fafc; } .nk-font-mgr summary { cursor: pointer; padding: 7px 10px; font-size: 12px; font-weight: 600; color: #334155; user-select: none; } .nk-font-mgr-body { padding: 8px 10px 10px; border-top: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 8px; } .nk-font-mgr-actions { display: flex; justify-content: flex-end; gap: 6px; } .nk-font-chips { display: flex; flex-wrap: wrap; gap: 6px; } .nk-font-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; font-size: 11px; border-radius: 999px; background: #e2e8f0; color: #1e293b; } .nk-font-chip button { border: none; background: transparent; cursor: pointer; color: #64748b; font-size: 12px; line-height: 1; padding: 0 2px; }
+   ` ;
     document.head.appendChild(style);
   }
 

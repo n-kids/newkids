@@ -216,11 +216,11 @@
 
     if (b.type === 'cards') {
       const items = Array.isArray(b.items) ? b.items : [];
-      const cols = Number(b.cols) === 3 ? 'repeat(auto-fit, minmax(180px, 1fr))' : 'repeat(auto-fit, minmax(230px, 1fr))';
+      const cols = Number(b.cols) === 3 ? 'repeat(auto-fit, minmax(180px, 1fr))' : 'repeat(auto-fit, minmax(230px, 1fr))'; const weight = b.fontWeight || '400'; const font = sanitizeFontFamily(b.fontFamily || ''); if (b.fontUrl && font) injectFontAsset({ family: font, url: b.fontUrl }); const fontCss = font ? ` font-family:${font};` : '';
       const inner = items.map(function (it) {
         return `<div style="background-color:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:18px; box-sizing:border-box;">
-    <div style="font-size:16px; font-weight:700; color:#1c355e; margin-bottom:8px;">${esc(it.title || '')}</div>
-    <p style="margin:0; font-size:14px; line-height:1.65; color:#475569;">${esc(it.body || '').replace(/\n/g, '<br>')}</p>
+    <div style="font-size:16px; font-weight:700;${fontCss} color:${b.color ? esc(b.color) : '#1c355e'}; margin-bottom:8px;">${esc(it.title || '')}</div>
+    <p style="margin:0; font-size:${b.fontSize || '14px'}; font-weight:${weight};${fontCss} line-height:1.65; color:${b.color ? esc(b.color) : '#475569'};">${esc(it.body || '').replace(/\n/g, '<br>')}</p>
   </div>`;
       }).join('\n');
       return `<div style="display:grid; grid-template-columns:${cols}; gap:14px; margin:18px 0;">${inner}</div>`;
@@ -728,7 +728,7 @@
       heading: { type: 'heading', fontSize: '24px', title: '섹션 제목', sub: '', align: 'left', color: '#1c355e', fontFamily: '', fontUrl: '', fontWeight: '800' },
       text: { type: 'text', text: '본문 내용을 입력하세요.', align: 'left', fontSize: '15px' , fontFamily: '', fontUrl: '', fontWeight: '400', color: '#334155'},
       callout: { type: 'callout', fontSize: '14px', theme: 'navy', title: '안내 사항', body: '강조할 내용을 입력하세요.', fontFamily: '', fontUrl: '', fontWeight: '400', color: '' },
-      cards: { type: 'cards', cols: 2, items: [{ title: '특징 1', body: '설명 입력' }, { title: '특징 2', body: '설명 입력' }] },
+      cards: { type: 'cards', cols: 2, fontSize: '14px', fontFamily: '', fontUrl: '', fontWeight: '400', color: '', items: [{ title: '특징 1', body: '설명 입력' }, { title: '특징 2', body: '설명 입력' }] },
       gallery: { type: 'gallery', cols: 2, photos: [] },
       image: { type: 'image', src: '', width: '100%', align: 'center', rounded: true, shadow: true, caption: '' },
       table: { type: 'table', headerColor: '#1c355e', headers: ['항목', '내용', '비고'], rows: [['예시 1', '상세 설명', '-']] },
@@ -850,7 +850,7 @@
       return `<div style="display:flex;justify-content:space-between;align-items:center;">
         <select data-pk="cols" data-pi="${idx}" style="padding:4px 8px;font-size:12px;border:1px solid #cbd5e1;border-radius:5px;"><option value="2" ${Number(b.cols) !== 3 ? 'selected' : ''}>2단</option><option value="3" ${Number(b.cols) === 3 ? 'selected' : ''}>3단</option></select>
         <button type="button" class="nk-pblk-act" data-p-cadd="${idx}">+ 카드 추가</button>
-      </div>${itemsHtml}`;
+      </div><div class="nk-pblk-grid" style="margin-bottom:6px;">${renderSizeSelectHtml(b, idx, '14px')}${renderWeightSelectHtml(b, idx, '400')}${renderFontSelectHtml(b, idx)}<div class="nk-pblk-field"><label>글씨 색</label><input type="color" data-pk="color" data-pi="${idx}" value="${esc(b.color || '#334155')}"></div>${renderFontMgrHtml(idx)}</div>${itemsHtml}`;
     }
     if (b.type === 'gallery') {
       const photosHtml = (b.photos || []).map(function (ph, pi) {

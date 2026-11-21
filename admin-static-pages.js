@@ -545,9 +545,9 @@
 
   function addBlock(type) {
     const defaults = {
-      heading: { type: 'heading', title: '새 섹션 제목', sub: '짧은 부제목을 입력하세요', align: 'left', color: '#1c355e' },
-      text: { type: 'text', text: '여기에 본문 내용을 자유롭게 작성하세요.', align: 'left', fontSize: '15px' },
-      callout: { type: 'callout', theme: 'navy', title: '안내 사항', body: '일정, 장소, 준비물 등 강조하고 싶은 내용을 입력하세요.' },
+      heading: { type: 'heading', title: '새 섹션 제목', sub: '짧은 부제목을 입력하세요', align: 'left', color: '#1c355e', fontSize: '24px', fontFamily: '', fontUrl: '', fontWeight: '800' },
+      text: { type: 'text', text: '여기에 본문 내용을 자유롭게 작성하세요.', align: 'left', fontSize: '15px', fontFamily: '', fontUrl: '', fontWeight: '400', color: '#334155' },
+      callout: { type: 'callout', theme: 'navy', title: '안내 사항', body: '일정, 장소, 준비물 등 강조하고 싶은 내용을 입력하세요.', fontSize: '14px', fontFamily: '', fontUrl: '', fontWeight: '400', color: '' },
       cards: { type: 'cards', cols: 2, items: [{ title: '특징 1', body: '내용을 입력하세요.' }, { title: '특징 2', body: '내용을 입력하세요.' }] },
       image: { type: 'image', src: '', width: '100%', align: 'center', rounded: true, shadow: true, caption: '' },
       split: { type: 'split', src: '', title: '이미지 옆 제목', body: '이미지와 함께 보여줄 설명 문구를 입력하세요.', reverse: false },
@@ -615,27 +615,27 @@
     if (b.type === 'heading') {
       return `
         <div class="nk-sp-grid">
-          <div class="nk-sp-field"><label>제목</label><input type="text" data-k="title" data-i="${idx}" value="${esc(b.title)}"></div>
+          <div class="nk-sp-field"><label>제목</label><input type="text" data-k="title" data-i="${idx}" value="${esc(b.title)}" style="${b.fontFamily ? 'font-family:' + esc(b.fontFamily) + ';' : ''}"></div>
           <div class="nk-sp-field"><label>정렬</label><select data-k="align" data-i="${idx}"><option value="left" ${b.align === 'left' ? 'selected' : ''}>왼쪽</option><option value="center" ${b.align === 'center' ? 'selected' : ''}>가운데</option></select></div>
-          <div class="nk-sp-field"><label>제목 색상</label><input type="color" data-k="color" data-i="${idx}" value="${esc(b.color || '#1c355e')}" style="height:34px;padding:2px;"></div>
+          <div class="nk-sp-field"><label>제목 색상</label><input type="color" data-k="color" data-i="${idx}" value="${esc(b.color || '#1c355e')}" style="height:34px;padding:2px;"></div>${renderSizeSelectHtml(b, idx, '24px')}${renderWeightSelectHtml(b, idx, '800')}${renderFontSelectHtml(b, idx)}
         </div>
-        <div class="nk-sp-field"><label>부제목 (선택)</label><input type="text" data-k="sub" data-i="${idx}" value="${esc(b.sub)}"></div>`;
+        <div class="nk-sp-field"><label>부제목 (선택)</label><input type="text" data-k="sub" data-i="${idx}" value="${esc(b.sub)}"></div>${renderFontMgrHtml(idx)}`;
     }
     if (b.type === 'text') {
       return `
         <div class="nk-sp-grid">
-          <div class="nk-sp-field"><label>글자 크기</label><select data-k="fontSize" data-i="${idx}"><option value="14px" ${b.fontSize === '14px' ? 'selected' : ''}>작게 (14px)</option><option value="15px" ${b.fontSize === '15px' ? 'selected' : ''}>보통 (15px)</option><option value="17px" ${b.fontSize === '17px' ? 'selected' : ''}>크게 (17px)</option></select></div>
+          ${renderSizeSelectHtml(b, idx, '15px')}${renderWeightSelectHtml(b, idx, '400')}${renderFontSelectHtml(b, idx)}<div class="nk-blk-field"><label>글씨 색</label><input type="color" data-k="color" data-i="${idx}" value="${esc(b.color || '#334155')}"></div>
           <div class="nk-sp-field"><label>정렬</label><select data-k="align" data-i="${idx}"><option value="left" ${b.align === 'left' ? 'selected' : ''}>왼쪽</option><option value="center" ${b.align === 'center' ? 'selected' : ''}>가운데</option></select></div>
         </div>
-        <div class="nk-sp-field"><label>본문 내용 (줄바꿈 지원)</label><textarea rows="4" data-k="text" data-i="${idx}">${esc(b.text)}</textarea></div>`;
+        <div class="nk-sp-field"><label>본문 내용 (줄바꿈 지원)</label><textarea rows="4" data-k="text" data-i="${idx}" style="${b.fontFamily ? 'font-family:' + esc(b.fontFamily) + ';' : ''}">${esc(b.text)}</textarea></div>${renderFontMgrHtml(idx)}`;
     }
     if (b.type === 'callout') {
       return `
         <div class="nk-sp-grid">
-          <div class="nk-sp-field"><label>제목</label><input type="text" data-k="title" data-i="${idx}" value="${esc(b.title)}"></div>
-          <div class="nk-sp-field"><label>박스 테마</label><select data-k="theme" data-i="${idx}"><option value="navy" ${b.theme === 'navy' ? 'selected' : ''}>네이비</option><option value="green" ${b.theme === 'green' ? 'selected' : ''}>그린</option><option value="amber" ${b.theme === 'amber' ? 'selected' : ''}>앰버(강조)</option><option value="gray" ${b.theme === 'gray' ? 'selected' : ''}>그레이</option></select></div>
+          <div class="nk-sp-field"><label>제목</label><input type="text" data-k="title" data-i="${idx}" value="${esc(b.title)}" style="${b.fontFamily ? 'font-family:' + esc(b.fontFamily) + ';' : ''}"></div>
+          <div class="nk-sp-field"><label>박스 테마</label><select data-k="theme" data-i="${idx}"><option value="navy" ${b.theme === 'navy' ? 'selected' : ''}>네이비</option><option value="green" ${b.theme === 'green' ? 'selected' : ''}>그린</option><option value="amber" ${b.theme === 'amber' ? 'selected' : ''}>앰버(강조)</option><option value="gray" ${b.theme === 'gray' ? 'selected' : ''}>그레이</option></select></div>${renderSizeSelectHtml(b, idx, '14px')}${renderWeightSelectHtml(b, idx, '400')}${renderFontSelectHtml(b, idx)}<div class="nk-blk-field"><label>글씨 색</label><input type="color" data-k="color" data-i="${idx}" value="${esc(b.color || '#1e293b')}"></div>
         </div>
-        <div class="nk-sp-field"><label>내용</label><textarea rows="3" data-k="body" data-i="${idx}">${esc(b.body)}</textarea></div>`;
+        <div class="nk-sp-field"><label>내용</label><textarea rows="3" data-k="body" data-i="${idx}" style="${b.fontFamily ? 'font-family:' + esc(b.fontFamily) + ';' : ''}">${esc(b.body)}</textarea></div>${renderFontMgrHtml(idx)}`;
     }
     if (b.type === 'cards') {
       const cardEditors = (b.items || []).map(function (it, ci) {
@@ -676,7 +676,7 @@
           <div class="nk-sp-field"><label>이미지 업로드</label><input type="file" accept="image/*" data-img-upload="${idx}"></div>
           <div class="nk-sp-field"><label>배치 방향</label><select data-k="reverse" data-i="${idx}"><option value="false" ${!b.reverse ? 'selected' : ''}>이미지 왼쪽 · 글 오른쪽</option><option value="true" ${b.reverse ? 'selected' : ''}>글 왼쪽 · 이미지 오른쪽</option></select></div>
         </div>
-        <div class="nk-sp-field"><label>제목</label><input type="text" data-k="title" data-i="${idx}" value="${esc(b.title)}"></div>
+        <div class="nk-sp-field"><label>제목</label><input type="text" data-k="title" data-i="${idx}" value="${esc(b.title)}" style="${b.fontFamily ? 'font-family:' + esc(b.fontFamily) + ';' : ''}"></div>
         <div class="nk-sp-field"><label>설명 내용</label><textarea rows="3" data-k="body" data-i="${idx}">${esc(b.body)}</textarea></div>`;
     }
     if (b.type === 'table') {
@@ -719,12 +719,12 @@
         let v = el.value;
         if (k === 'cols') v = Number(v);
         if (k === 'reverse' || k === 'newTab') v = v === 'true';
-        if (STATE.blocks[i]) STATE.blocks[i][k] = v;
+        if (STATE.blocks[i]) { STATE.blocks[i][k] = v; if (k === 'fontFamily') { const f = getAllFonts().find(x => x.css === v || x.family === v); STATE.blocks[i].fontUrl = f ? (f.url || '') : ''; STATE.blocks[i].fontLabel = f ? (f.label || '') : ''; if (STATE.blocks[i].fontUrl) injectFontAsset(STATE.blocks[i].fontUrl, v); listEl.querySelectorAll('input[data-k="title"][data-i="' + i + '"], textarea[data-k="text"][data-i="' + i + '"], textarea[data-k="body"][data-i="' + i + '"]').forEach(function (t) { t.style.fontFamily = v || ''; }); } }
         updateLivePreview();
       });
     });
 
-    listEl.querySelectorAll('[data-card-k]').forEach(function (el) {
+    listEl.querySelectorAll('[data-sp-font-mode]').forEach(function (sel) { sel.addEventListener('change', function () { const idx = sel.dataset.spFontMode; const wrap = listEl.querySelector('[data-sp-font-url-wrap="' + idx + '"]'); if (wrap) wrap.style.display = sel.value === 'url' ? '' : 'none'; }); }); listEl.querySelectorAll('[data-sp-font-add]').forEach(function (btn) { btn.addEventListener('click', function () { const idx = Number(btn.dataset.spFontAdd); const modeEl = listEl.querySelector('[data-sp-font-mode="' + idx + '"]'); const labelEl = listEl.querySelector('[data-sp-font-label="' + idx + '"]'); const cssEl = listEl.querySelector('[data-sp-font-css="' + idx + '"]'); const urlEl = listEl.querySelector('[data-sp-font-url="' + idx + '"]'); const mode = modeEl ? modeEl.value : 'google'; const label = labelEl ? labelEl.value.trim() : ''; const rawCss = cssEl ? sanitizeFontFamily(cssEl.value) : ''; let css = rawCss; let url = ''; if (mode === 'url') { url = urlEl ? urlEl.value.trim() : ''; if (!/^https:\/\/\S+/i.test(url)) { alert('https:// 로 시작하는 올바른 웹폰트 CSS URL을 입력하세요.'); return; } if (!css) { alert('CSS font-family 값을 입력하세요.'); return; } } else { const familyName = (label || rawCss.replace(/['",].*$/, '')).trim(); if (!familyName) { alert('Google Fonts 이름 또는 CSS font-family를 입력하세요.'); return; } url = buildGoogleFontUrl(familyName); if (!css) css = "'" + familyName + "', sans-serif"; } const custom = loadCustomFonts(); const fontLabel = label || css; if (!custom.some(f => f.css === css && f.url === url)) { custom.push({ label: fontLabel, css: css, url: url }); saveCustomFonts(custom); } injectFontAsset(url, css); if (STATE.blocks[idx]) { STATE.blocks[idx].fontFamily = css; STATE.blocks[idx].fontUrl = url; STATE.blocks[idx].fontLabel = fontLabel; } renderBlockEditor(); updateLivePreview(); }); }); listEl.querySelectorAll('[data-sp-font-del]').forEach(function (btn) { btn.addEventListener('click', function () { const ci = Number(btn.dataset.spFontDel); const custom = loadCustomFonts(); if (ci >= 0 && ci < custom.length) { custom.splice(ci, 1); saveCustomFonts(custom); renderBlockEditor(); } }); }); listEl.querySelectorAll('[data-card-k]').forEach(function (el) {
       el.addEventListener('input', function () {
         const i = Number(el.dataset.i);
         const ci = Number(el.dataset.ci);

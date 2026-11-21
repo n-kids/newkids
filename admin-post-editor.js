@@ -104,7 +104,7 @@
     const opts = [['400', '보통 (400)'], ['500', '중간 (500)'], ['700', '굵게 (700)'], ['800', '아주 굵게 (800)']].map(([val, label]) => `<option value="${val}" ${w === val ? 'selected' : ''}>${label}</option>`).join('');
     return `<div class="nk-pblk-field"><label>글씨 두께</label><select data-pk="fontWeight" data-pi="${idx}">${opts}</select></div>`;
   } 
-  function renderSizeSelectHtml(b, idx, defaultSize) { const s = String(b.fontSize || defaultSize || '15px'); const opts = ['12px', '13px', '14px', '15px', '16px', '17px', '18px', '20px', '22px', '24px'].map(val => `<option value="${val}" ${s === val ? 'selected' : ''}>${val}</option>`).join(''); return `<div class="nk-pblk-field"><label>크기</label><select data-pk="fontSize" data-pi="${idx}">${opts}</select></div>`; } function renderFontSelectHtml(b, idx) {
+  function renderSizeSelectHtml(b, idx, defaultSize) { const s = String(b.fontSize || defaultSize || '15px'); const opts = ['12px', '13px', '14px', '15px', '16px', '17px', '18px', '20px', '22px', '24px', '26px', '28px', '30px', '32px', '36px', '40px'].map(val => `<option value="${val}" ${s === val ? 'selected' : ''}>${val}</option>`).join(''); return `<div class="nk-pblk-field"><label>크기</label><select data-pk="fontSize" data-pi="${idx}">${opts}</select></div>`; } function renderFontSelectHtml(b, idx) {
       const customFonts = loadCustomFonts();
     customFonts.forEach(injectFontAsset);
     const currentFamily = sanitizeFontFamily(b.fontFamily || '');

@@ -440,20 +440,35 @@
       .nk-pblk-head { background: #f8fafc; padding: 7px 10px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 700; color: #1c355e; }
       .nk-pblk-drag { cursor: grab; color: #94a3b8; margin-right: 6px; user-select: none; }
       .nk-pblk-body { padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
-      .nk-pblk-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
-      .nk-pblk-field label { display: block; font-size: 11px; font-weight: 700; color: #475569; margin-bottom: 3px; }
-      .nk-pblk-field input, .nk-pblk-field select, .nk-pblk-field textarea { width: 100%; padding: 6px 8px; font-size: 12px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-family: inherit; background: #fff; }
-      .nk-pblk-act { padding: 2px 6px; font-size: 11px; border: 1px solid #cbd5e1; background: #fff; border-radius: 4px; cursor: pointer; color: #475569; }
+      .nk-pblk-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(108px, 1fr)); gap: 8px 10px; align-items: end; }
+.nk-pblk-field label { display: block; font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 4px; letter-spacing: -0.01em; }
+.nk-pblk-field input, .nk-pblk-field select, .nk-pblk-field textarea { width: 100%; padding: 6px 9px; font-size: 12px; border: 1px solid #dbe2ea; border-radius: 7px; box-sizing: border-box; font-family: inherit; background: #fff; color: #1e293b; transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease; }
+.nk-pblk-field select, .nk-pblk-field input[type="text"], .nk-pblk-field input[type="url"] { height: 32px; padding: 0 9px; }
+.nk-pblk-field input:hover, .nk-pblk-field select:hover, .nk-pblk-field textarea:hover { border-color: #94a3b8; }
+.nk-pblk-field input:focus, .nk-pblk-field select:focus, .nk-pblk-field textarea:focus { outline: none; border-color: #1c355e; box-shadow: 0 0 0 3px rgba(28, 53, 94, 0.12); }
+.nk-pblk-field input[type="color"] { height: 32px; padding: 3px; cursor: pointer; background: #fff; }
+.nk-pblk-field input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+.nk-pblk-field input[type="color"]::-webkit-color-swatch { border: none; border-radius: 4px; }
+           .nk-pblk-act { padding: 2px 6px; font-size: 11px; border: 1px solid #cbd5e1; background: #fff; border-radius: 4px; cursor: pointer; color: #475569; }
       .nk-pblk-act.danger { color: #dc2626; border-color: #fecaca; }
       .nk-pe-gal-item { display: flex; align-items: center; gap: 8px; padding: 6px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; }
       .nk-pe-gal-item img { width: 48px; height: 48px; object-fit: cover; border-radius: 4px; flex-shrink: 0; }
-      .nk-font-mgr { background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 6px; padding: 6px 8px; }
-      .nk-font-mgr summary { cursor: pointer; font-size: 11px; font-weight: 700; color: #1c355e; user-select: none; }
-      .nk-font-mgr-body { margin-top: 8px; display: flex; flex-direction: column; gap: 8px; }
-      .nk-font-mgr-actions { display: flex; justify-content: flex-end; }
-      .nk-font-chips { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 4px; border-top: 1px solid #e2e8f0; }
-      .nk-font-chip { display: inline-flex; align-items: center; gap: 4px; background: #fff; border: 1px solid #cbd5e1; border-radius: 999px; padding: 2px 8px; font-size: 11px; color: #334155; }
-      .nk-font-chip button { border: none; background: transparent; color: #dc2626; cursor: pointer; font-size: 12px; line-height: 1; padding: 0 2px; }
+         .nk-font-mgr { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0; overflow: hidden; transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease; }
+.nk-font-mgr:hover { border-color: #cbd5e1; }
+.nk-font-mgr[open] { background: #fff; border-color: #cbd5e1; box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06); }
+.nk-font-mgr summary { cursor: pointer; font-size: 11.5px; font-weight: 700; color: #1c355e; user-select: none; padding: 7px 10px; list-style: none; display: flex; align-items: center; justify-content: space-between; }
+.nk-font-mgr summary::-webkit-details-marker { display: none; }
+.nk-font-mgr summary::after { content: '열기'; font-size: 10.5px; font-weight: 600; color: #64748b; background: #eef2f7; padding: 2px 7px; border-radius: 999px; }
+.nk-font-mgr[open] summary { border-bottom: 1px solid #eef2f7; background: #f8fafc; }
+.nk-font-mgr[open] summary::after { content: '닫기'; color: #1c355e; background: #e2e8f0; }
+.nk-font-mgr-body { padding: 10px; display: flex; flex-direction: column; gap: 9px; }
+.nk-font-mgr-actions { display: flex; justify-content: flex-end; }
+.nk-font-mgr-actions button { background: #1c355e; color: #fff; border: 1px solid #1c355e; border-radius: 7px; padding: 6px 12px; font-size: 11.5px; font-weight: 700; cursor: pointer; transition: background-color .15s ease, transform .1s ease; }
+.nk-font-mgr-actions button:hover { background: #142646; }
+.nk-font-chips { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 8px; border-top: 1px solid #eef2f7; }
+.nk-font-chip { display: inline-flex; align-items: center; gap: 5px; background: #f1f5f9; border: 1px solid #dbe2ea; border-radius: 999px; padding: 3px 9px; font-size: 11px; font-weight: 600; color: #334155; }
+.nk-font-chip button { border: none; background: transparent; color: #94a3b8; cursor: pointer; font-size: 13px; line-height: 1; padding: 0 2px; border-radius: 50%; transition: color .15s ease, background-color .15s ease; }
+.nk-font-chip button:hover { color: #dc2626; background: #fee2e2; }
     `;
     document.head.appendChild(style);
   }

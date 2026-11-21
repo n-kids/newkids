@@ -65,7 +65,55 @@ window.escapeHtml = function (text) {
     if (text === null || text === undefined) return "";
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 };
+window.loadPostCustomFonts = function (html) {
+    const str = String(html || "");
+    const m = str.match(/<!--\s*NK_CUSTOM_FONTS_V1:([\s\S]*?)\s*-->/);
+    if (!m) return;
+    let list = [];
+    try {
+        const parsed = JSON.parse(decodeURIComponent(m[1].trim()));
+        if (Array.isArray(parsed)) list = parsed;
+    } catch (_) {
+        return;
+    }
+    const loaded = new Set(
+        Array.from(document.querySelectorAll("[data-nk-font-url]")).map(el => el.getAttribute("data-nk-font-url"))
+    );
+    list.forEach(item => {
+        if (!item || !item.url) return;
+        let parsedUrl;
+        try {
+            parsedUrl = new URL(String(item.url).trim());
+        } catch (_) {
+            return;
+        }
+        if (parsedUrl.protocol !== "https:") return;
+        const safeHref = parsedUrl.href;
+        if (loaded.has(safeHref)) return;
+        loaded.add(safeHref);
+
+        if (/\.(?:woff2|woff|ttf|otf)(?:[?#].*)?$/i.test(safeHref)) {
+            const rawName = String(item.cssName || item.family || "")
+                .split(",")[0]
+                .replace(/['"\\;{}<>\r\n]/g, "")
+                .trim();
+            if (!rawName) return;
+            const style = document.createElement("style");
+            style.setAttribute("data-nk-font-url", safeHref);
+            style.textContent = `@font-face { font-family: '${rawName}'; src: url('${safeHref}'); font-display: swap; }`;
+            document.head.appendChild(style);
+        } else {
+            const link = document.createElement("link");
+            link.rel = "stylesheet";
+            link.href = safeHref;
+            link.setAttribute("data-nk-font-url", safeHref);
+            document.head.appendChild(link);
+        }
+    });
+};
+
 window.sanitizeHtml = function (html) {
+    if (typeof window.loadPostCustomFonts === "function") { window.loadPostCustomFonts(html); }
     const allowedTags = new Set(["A","B","BLOCKQUOTE","BR","CODE","DIV","EM","H1","H2","H3","H4","H5","H6","HR","I","IFRAME","IMG","LI","OL","P","PRE","S","SPAN","STRONG","SUB","SUP","TABLE","TBODY","TD","TFOOT","TH","THEAD","TR","U","UL"]);
     const allowedAttrs = new Set(["alt","colspan","height","href","src","title","width","rowspan","class","style"]);
     const safeUrl = (value, image) => {
@@ -109,7 +157,7 @@ window.sanitizeHtml = function (html) {
             if ((name === "href" || name === "src") && !safeUrl(value, name === "src")) return;
             if (name === "style") {
                 const declarations = value.split(";").map(x => x.trim()).filter(Boolean).filter(x =>
-                    /^(?:color|background-color|text-align|font-size|font-weight|font-style|text-decoration|margin(?:-top|-right|-bottom|-left)?|padding(?:-top|-right|-bottom|-left)?|width|max-width|height|border(?:-radius|-[a-z-]+)?|display|list-style-type|background|line-height|letter-spacing|gap|row-gap|column-gap|grid-template-columns|grid-column|flex|flex-direction|flex-wrap|justify-content|align-items|box-shadow|overflow|overflow-x|object-fit|box-sizing|min-width|min-height|vertical-align|white-space|word-break|opacity|border-collapse)\s*:\s*[^;<>]+$/i.test(x) &&
+                    /^(?:color|background-color|text-align|font-size|font-family|font-weight|font-style|text-decoration|margin(?:-top|-right|-bottom|-left)?|padding(?:-top|-right|-bottom|-left)?|width|max-width|height|border(?:-radius|-[a-z-]+)?|display|list-style-type|background|line-height|letter-spacing|gap|row-gap|column-gap|grid-template-columns|grid-column|flex|flex-direction|flex-wrap|justify-content|align-items|box-shadow|overflow|overflow-x|object-fit|box-sizing|min-width|min-height|vertical-align|white-space|word-break|opacity|border-collapse)\s*:\s*[^;<>]+$/i.test(x) &&
                     !/(?:url\s*\(|expression\s*\(|javascript:|@import|behavior\s*:)/i.test(x));
                 if (declarations.length) out.setAttribute("style", declarations.join("; "));
                 return;

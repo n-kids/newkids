@@ -276,7 +276,21 @@
   function serializeBlocks(blocks) {
     const html = blocks.map(renderBlockToHtml).join('\n');
     const meta = encodeURIComponent(JSON.stringify(blocks));
-    return `<!-- NK_POST_BLOCKS_V1:${meta} -->\n${html}`;
+    const fontMap = new Map();
+    blocks.forEach(function (b) {
+      if (b && b.fontUrl && b.fontFamily) {
+        fontMap.set(b.fontUrl, {
+          label: b.fontLabel || b.fontFamily,
+          family: sanitizeFontFamily(b.fontFamily),
+          url: String(b.fontUrl).trim()
+        });
+      }
+    });
+    const customFonts = Array.from(fontMap.values());
+    const fontMeta = customFonts.length
+      ? `<!-- NK_CUSTOM_FONTS_V1:${encodeURIComponent(JSON.stringify(customFonts))} -->\n`
+      : '';
+    return `${fontMeta}<!-- NK_POST_BLOCKS_V1:${meta} -->\n${html}`;
   }
 
   function hasBlockMeta(html) {
@@ -294,6 +308,9 @@
           if (parsed.length === 1 && parsed[0] && parsed[0].type === 'raw' && /NK_POST_BLOCKS_V1:/.test(parsed[0].html || '')) {
             return deserializeBlocks(parsed[0].html, (depth || 0) + 1);
           }
+          parsed.forEach(function (b) {
+            if (b && b.fontUrl && b.fontFamily) injectFontAsset({ family: b.fontFamily, url: b.fontUrl });
+          });
           return parsed;
         }
       } catch (_) {}
@@ -343,7 +360,7 @@
       return [
         { id: uid(), type: 'heading', title: '공지사항 안내', sub: '뉴키즈에서 원장님·선생님께 전해드리는 소식입니다.', align: 'left', color: '#1c355e' },
         { id: uid(), type: 'callout', theme: 'amber', title: '핵심 요약', body: '중요 일정이나 변경 사항을 한눈에 볼 수 있게 정리해 주세요.' },
-        { id: uid(), type: 'text', text: '상세한 공지 본문 내용을 여기에 작성하세요.', align: 'left', fontSize: '15px' },
+        { id: uid(), type: 'text', text: '상세한 공지 본문 내용을 여기에 작성하세요.', align: 'left', fontSize: '15px' , fontFamily: '', fontUrl: ''},
         { id: uid(), type: 'button', label: '전화 문의 (010-2333-2563)', url: 'tel:010-2333-2563', bg: '#059669', align: 'center', newTab: false }
       ];
     }
@@ -388,6 +405,13 @@
       .nk-pblk-act.danger { color: #dc2626; border-color: #fecaca; }
       .nk-pe-gal-item { display: flex; align-items: center; gap: 8px; padding: 6px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; }
       .nk-pe-gal-item img { width: 48px; height: 48px; object-fit: cover; border-radius: 4px; flex-shrink: 0; }
+      .nk-font-mgr { background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 6px; padding: 6px 8px; }
+      .nk-font-mgr summary { cursor: pointer; font-size: 11px; font-weight: 700; color: #1c355e; user-select: none; }
+      .nk-font-mgr-body { margin-top: 8px; display: flex; flex-direction: column; gap: 8px; }
+      .nk-font-mgr-actions { display: flex; justify-content: flex-end; }
+      .nk-font-chips { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 4px; border-top: 1px solid #e2e8f0; }
+      .nk-font-chip { display: inline-flex; align-items: center; gap: 4px; background: #fff; border: 1px solid #cbd5e1; border-radius: 999px; padding: 2px 8px; font-size: 11px; color: #334155; }
+      .nk-font-chip button { border: none; background: transparent; color: #dc2626; cursor: pointer; font-size: 12px; line-height: 1; padding: 0 2px; }
     `;
     document.head.appendChild(style);
   }
@@ -642,7 +666,7 @@
       if (!STATE.blocks.length) {
         const qlEditor = editorContainer ? editorContainer.querySelector('.ql-editor') : null;
         const plain = qlEditor ? qlEditor.innerText.trim() : '';
-        if (plain) STATE.blocks = [{ id: uid(), type: 'text', text: plain, align: 'left', fontSize: '15px' }];
+        if (plain) STATE.blocks = [{ id: uid(), type: 'text', text: plain, align: 'left', fontSize: '15px' , fontFamily: '', fontUrl: ''}];
       }
       renderBlocks();
     }
@@ -660,7 +684,7 @@
   function addBlock(type) {
     const defaults = {
       heading: { type: 'heading', title: '섹션 제목', sub: '', align: 'left', color: '#1c355e' },
-      text: { type: 'text', text: '본문 내용을 입력하세요.', align: 'left', fontSize: '15px' },
+      text: { type: 'text', text: '본문 내용을 입력하세요.', align: 'left', fontSize: '15px' , fontFamily: '', fontUrl: ''},
       callout: { type: 'callout', theme: 'navy', title: '안내 사항', body: '강조할 내용을 입력하세요.' },
       cards: { type: 'cards', cols: 2, items: [{ title: '특징 1', body: '설명 입력' }, { title: '특징 2', body: '설명 입력' }] },
       gallery: { type: 'gallery', cols: 2, photos: [] },
@@ -732,11 +756,61 @@
       <div class="nk-pblk-field"><label>부제목</label><input type="text" data-pk="sub" data-pi="${idx}" value="${esc(b.sub)}"></div>`;
     }
     if (b.type === 'text') {
+       const customFonts = loadCustomFonts();
+      customFonts.forEach(injectFontAsset);
+      const currentFamily = sanitizeFontFamily(b.fontFamily || '');
+      const hasCurrent = BUILTIN_FONTS.concat(customFonts).some(f => f.family === currentFamily);
+
+      const builtinOpts = BUILTIN_FONTS.map(f =>
+        `<option value="${esc(f.family)}" ${currentFamily === f.family ? 'selected' : ''}>${esc(f.label)}</option>`
+      ).join('');
+
+      const customOpts = customFonts.map(f =>
+        `<option value="${esc(f.family)}" ${currentFamily === f.family ? 'selected' : ''}>${esc(f.label)}</option>`
+      ).join('');
+
+      const externalOpt = !hasCurrent && currentFamily
+        ? `<option value="${esc(currentFamily)}" selected>${esc(b.fontLabel || currentFamily)} (게시글 포함)</option>`
+        : '';
+
+      const customChips = customFonts.length
+        ? `<div class="nk-font-chips">${customFonts.map((f, ci) =>
+            `<span class="nk-font-chip">${esc(f.label)} <button type="button" data-font-del="${ci}" data-pi="${idx}" title="삭제">&times;</button></span>`
+          ).join('')}</div>`
+        : '';
+
       return `<div class="nk-pblk-grid">
         <div class="nk-pblk-field"><label>크기</label><select data-pk="fontSize" data-pi="${idx}"><option value="14px" ${b.fontSize === '14px' ? 'selected' : ''}>14px</option><option value="15px" ${b.fontSize === '15px' ? 'selected' : ''}>15px</option><option value="17px" ${b.fontSize === '17px' ? 'selected' : ''}>17px</option></select></div>
         <div class="nk-pblk-field"><label>정렬</label><select data-pk="align" data-pi="${idx}"><option value="left" ${b.align === 'left' ? 'selected' : ''}>왼쪽</option><option value="center" ${b.align === 'center' ? 'selected' : ''}>가운데</option></select></div>
+        <div class="nk-pblk-field"><label>폰트</label><select data-pk="fontFamily" data-pi="${idx}">
+          <optgroup label="기본 폰트">${builtinOpts}</optgroup>
+          ${customOpts ? `<optgroup label="추가한 폰트">${customOpts}</optgroup>` : ''}
+          ${externalOpt}
+        </select></div>
       </div>
-      <div class="nk-pblk-field"><label>본문</label><textarea rows="4" data-pk="text" data-pi="${idx}">${esc(b.text)}</textarea></div>`;
+      <details class="nk-font-mgr">
+        <summary>+ 폰트 추가 / 관리</summary>
+        <div class="nk-font-mgr-body" data-font-form="${idx}">
+          <div class="nk-pblk-grid">
+            <div class="nk-pblk-field"><label>추가 방식</label>
+              <select data-font-mode="${idx}">
+                <option value="google">Google Fonts (이름으로 간편 추가)</option>
+                <option value="url">웹폰트 URL 직접 입력 (눈누 / CDN)</option>
+              </select>
+            </div>
+            <div class="nk-pblk-field"><label>표시 이름</label><input type="text" data-font-label="${idx}" placeholder="예: 개구쟁이체 / 프리텐다드"></div>
+          </div>
+          <div class="nk-pblk-grid">
+            <div class="nk-pblk-field"><label>폰트 영문/CSS 이름</label><input type="text" data-font-css="${idx}" placeholder="예: Gaegu 또는 Pretendard"></div>
+            <div class="nk-pblk-field" data-font-url-wrap="${idx}" style="display:none;"><label>웹폰트 CSS 또는 .woff2 URL (https://)</label><input type="url" data-font-url="${idx}" placeholder="https://cdn.jsdelivr.net/.../font.css"></div>
+          </div>
+          <div class="nk-font-mgr-actions">
+            <button type="button" class="nk-pe-chip" data-font-add="${idx}">폰트 추가 및 적용</button>
+          </div>
+          ${customChips}
+        </div>
+      </details>
+      <div class="nk-pblk-field"><label>본문</label><textarea rows="4" data-pk="text" data-pi="${idx}" style="${currentFamily ? `font-family:${esc(currentFamily)};` : ''}">${esc(b.text)}</textarea></div>`;
     }
     if (b.type === 'callout') {
       return `<div class="nk-pblk-grid">
@@ -822,8 +896,81 @@
         let v = el.value;
         if (k === 'cols') v = Number(v);
         if (k === 'newTab') v = v === 'true';
-        if (STATE.blocks[i]) STATE.blocks[i][k] = v;
+             if (STATE.blocks[i]) {
+          STATE.blocks[i][k] = v;
+          if (k === 'fontFamily') {
+            const matched = getAllFonts().find(f => f.family === v);
+            STATE.blocks[i].fontUrl = matched && matched.url ? matched.url : '';
+            STATE.blocks[i].fontLabel = matched ? matched.label : '';
+            const ta = listEl.querySelector(`textarea[data-pk="text"][data-pi="${i}"]`);
+            if (ta) ta.style.fontFamily = v || '';
+          }
+        }
         updatePreview();
+        saveAutoDraft();
+      });
+    });
+
+    listEl.querySelectorAll('[data-font-mode]').forEach(function (sel) {
+      sel.addEventListener('change', function () {
+        const idx = sel.dataset.fontMode;
+        const wrap = listEl.querySelector(`[data-font-url-wrap="${idx}"]`);
+        if (wrap) wrap.style.display = sel.value === 'url' ? '' : 'none';
+      });
+    });
+
+    listEl.querySelectorAll('[data-font-add]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const idx = Number(btn.dataset.fontAdd);
+        const modeEl = listEl.querySelector(`[data-font-mode="${idx}"]`);
+        const labelEl = listEl.querySelector(`[data-font-label="${idx}"]`);
+        const cssEl = listEl.querySelector(`[data-font-css="${idx}"]`);
+        const urlEl = listEl.querySelector(`[data-font-url="${idx}"]`);
+
+        const mode = modeEl ? modeEl.value : 'google';
+        const cssName = sanitizeFontFamily(cssEl ? cssEl.value : '').replace(/'/g, '');
+        const label = String(labelEl ? labelEl.value : '').trim() || cssName;
+        if (!cssName) {
+          alert('폰트 영문/CSS 이름을 입력해주세요. (예: Gaegu, Pretendard)');
+          return;
+        }
+
+        let fontUrl = '';
+        if (mode === 'google') {
+          fontUrl = buildGoogleFontUrl(cssName);
+        } else {
+          fontUrl = String(urlEl ? urlEl.value : '').trim();
+          if (!/^https:\/\//i.test(fontUrl)) {
+            alert('웹폰트 URL은 https:// 로 시작하는 주소를 입력해주세요.');
+            return;
+          }
+        }
+
+        const family = `'${cssName}', sans-serif`;
+        const entry = { label: label, cssName: cssName, family: family, url: fontUrl };
+        const list = loadCustomFonts().filter(f => f.family !== family);
+        list.push(entry);
+        saveCustomFonts(list);
+        injectFontAsset(entry);
+
+        if (STATE.blocks[idx]) {
+          STATE.blocks[idx].fontFamily = entry.family;
+          STATE.blocks[idx].fontUrl = entry.url;
+          STATE.blocks[idx].fontLabel = entry.label;
+        }
+        renderBlocks();
+        updatePreview();
+        saveAutoDraft();
+      });
+    });
+
+    listEl.querySelectorAll('[data-font-del]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const ci = Number(btn.dataset.fontDel);
+        const list = loadCustomFonts();
+        list.splice(ci, 1);
+        saveCustomFonts(list);
+        renderBlocks();
       });
     });
 

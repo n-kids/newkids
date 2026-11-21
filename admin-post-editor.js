@@ -99,6 +99,48 @@
     const clean = String(googleFontName || '').trim().replace(/\s+/g, '+');
     return `https://fonts.googleapis.com/css2?family=${encodeURIComponent(clean).replace(/%2B/g, '+')}&display=swap`;
   }
+  function renderWeightSelectHtml(b, idx, defaultWeight) {
+    const w = String(b.fontWeight || defaultWeight || '400');
+    const opts = [['400', '보통 (400)'], ['500', '중간 (500)'], ['700', '굵게 (700)'], ['800', '아주 굵게 (800)']].map(([val, label]) => `<option value="${val}" ${w === val ? 'selected' : ''}>${label}</option>`).join('');
+    return `<div class="nk-pblk-field"><label>글씨 두께</label><select data-pk="fontWeight" data-pi="${idx}">${opts}</select></div>`;
+  } 
+  function renderFontSelectHtml(b, idx) {
+      const customFonts = loadCustomFonts();
+    customFonts.forEach(injectFontAsset);
+    const currentFamily = sanitizeFontFamily(b.fontFamily || '');
+    const hasCurrent = BUILTIN_FONTS.concat(customFonts).some(f => f.family === currentFamily);
+    const builtinOpts = BUILTIN_FONTS.map(f => `<option value="${esc(f.family)}" ${currentFamily === f.family ? 'selected' : ''}>${esc(f.label)}</option>`).join('');
+    const customOpts = customFonts.map(f => `<option value="${esc(f.family)}" ${currentFamily === f.family ? 'selected' : ''}>${esc(f.label)}</option>`).join('');
+    const externalOpt = !hasCurrent && currentFamily ? `<option value="${esc(currentFamily)}" selected>${esc(b.fontLabel || currentFamily)} (게시글 포함)</option>` : '';
+    return `<div class="nk-pblk-field"><label>폰트</label><select data-pk="fontFamily" data-pi="${idx}"><optgroup label="기본 폰트">${builtinOpts}</optgroup>${customOpts ? `<optgroup label="추가한 폰트">${customOpts}</optgroup>` : ''}${externalOpt}</select></div>`;
+  }
+  function renderFontMgrHtml(idx) {
+    const customFonts = loadCustomFonts();
+    const customChips = customFonts.length ? `<div class="nk-font-chips">${customFonts.map((f, ci) => `<span class="nk-font-chip">${esc(f.label)} <button type="button" data-font-del="${ci}" data-pi="${idx}" title="삭제">&times;</button></span>`).join('')}</div>` : '';
+      return `
+       <details class="nk-font-mgr">
+        <summary>+ 폰트 추가 / 관리</summary>
+        <div class="nk-font-mgr-body" data-font-form="${idx}">
+          <div class="nk-pblk-grid">
+            <div class="nk-pblk-field"><label>추가 방식</label>
+              <select data-font-mode="${idx}">
+                <option value="google">Google Fonts (이름으로 간편 추가)</option>
+                <option value="url">웹폰트 URL 직접 입력 (눈누 / CDN)</option>
+              </select>
+            </div>
+            <div class="nk-pblk-field"><label>표시 이름</label><input type="text" data-font-label="${idx}" placeholder="예: 개구쟁이체 / 프리텐다드"></div>
+          </div>
+          <div class="nk-pblk-grid">
+            <div class="nk-pblk-field"><label>폰트 영문/CSS 이름</label><input type="text" data-font-css="${idx}" placeholder="예: Gaegu 또는 Pretendard"></div>
+            <div class="nk-pblk-field" data-font-url-wrap="${idx}" style="display:none;"><label>웹폰트 CSS 또는 .woff2 URL (https://)</label><input type="url" data-font-url="${idx}" placeholder="https://cdn.jsdelivr.net/.../font.css"></div>
+          </div>
+          <div class="nk-font-mgr-actions">
+            <button type="button" class="nk-pe-chip" data-font-add="${idx}">폰트 추가 및 적용</button>
+          </div>
+          ${customChips}
+        </div>
+      </details>`;
+  }
   
   const STATE = {
     mode: 'quill', // 'quill' | 'blocks'
@@ -137,10 +179,10 @@
 
     if (b.type === 'heading') {
       const align = b.align || 'left';
-      const color = b.color || '#1c355e';
-      const sub = b.sub ? `<p style="margin:6px 0 0; font-size:15px; color:#64748b; line-height:1.6;">${esc(b.sub)}</p>` : '';
+      const color = b.color || '#1c355e'; const weight = b.fontWeight || '800'; const font = sanitizeFontFamily(b.fontFamily || ''); if (b.fontUrl && font) injectFontAsset({ family: font, url: b.fontUrl }); const fontCss = font ? ` font-family:${font};` : '';
+      const sub = b.sub ? `<p style="margin:6px 0 0; font-size:15px; color:#64748b; line-height:1.6;${fontCss}">${esc(b.sub)}</p>` : '';
       return `<div style="text-align:${align}; margin:20px 0 14px; padding-bottom:10px; border-bottom:2px solid #e2e8f0;">
-  <h2 style="margin:0; font-size:24px; font-weight:800; color:${esc(color)}; line-height:1.35;">${esc(b.title || '')}</h2>
+  <h2 style="margin:0; font-size:24px; font-weight:${weight};${fontCss} color:${esc(color)}; line-height:1.35;">${esc(b.title || '')}</h2>
   ${sub}
 </div>`;
     }
@@ -152,7 +194,7 @@
       if (b.fontUrl && font) injectFontAsset({ family: font, url: b.fontUrl });
       const fontCss = font ? ` font-family:${font};` : '';
       const body = String(b.text || '').split('\n').map(function (line) {
-        return line.trim() ? `<p style="margin:0 0 10px; font-size:${size}${fontCss}; line-height:1.75; color:#334155;">${esc(line)}</p>` : '';
+        return line.trim() ? `<p style="margin:0 0 10px; font-size:${size}; font-weight:${b.fontWeight || '400'};${fontCss} line-height:1.75; color:${b.color || '#334155'};">${esc(line)}</p>` : '';
       }).join('');
       return `<div style="text-align:${align}; margin:14px 0;">${body || '<p style="margin:0; color:#94a3b8;">내용을 입력하세요.</p>'}</div>`;
     }
@@ -164,11 +206,11 @@
         amber: { bg: '#fffbeb', border: '#d97706', title: '#92400e' },
         gray: { bg: '#f8fafc', border: '#64748b', title: '#334155' }
       };
-      const t = themes[b.theme] || themes.navy;
+      const t = themes[b.theme] || themes.navy; const weight = b.fontWeight || '400'; const font = sanitizeFontFamily(b.fontFamily || ''); if (b.fontUrl && font) injectFontAsset({ family: font, url: b.fontUrl }); const fontCss = font ? ` font-family:${font};` : '';
       const lines = String(b.body || '').split('\n').map(esc).join('<br>');
       return `<div style="background-color:${t.bg}; border-left:4px solid ${t.border}; border-radius:8px; padding:16px 18px; margin:16px 0;">
-  ${b.title ? `<div style="font-size:15px; font-weight:700; color:${t.title}; margin-bottom:6px;">${esc(b.title)}</div>` : ''}
-  <div style="font-size:14px; line-height:1.7; color:#334155;">${lines}</div>
+  ${b.title ? `<div style="font-size:15px; font-weight:700;${fontCss} color:${b.color ? esc(b.color) : t.title}; margin-bottom:6px;">${esc(b.title)}</div>` : ''}
+  <div style="font-size:14px; font-weight:${weight};${fontCss} line-height:1.7; color:${b.color ? esc(b.color) : '#334155'};">${lines}</div>
 </div>`;
     }
 
@@ -683,9 +725,9 @@
 
   function addBlock(type) {
     const defaults = {
-      heading: { type: 'heading', title: '섹션 제목', sub: '', align: 'left', color: '#1c355e' },
-      text: { type: 'text', text: '본문 내용을 입력하세요.', align: 'left', fontSize: '15px' , fontFamily: '', fontUrl: ''},
-      callout: { type: 'callout', theme: 'navy', title: '안내 사항', body: '강조할 내용을 입력하세요.' },
+      heading: { type: 'heading', title: '섹션 제목', sub: '', align: 'left', color: '#1c355e', fontFamily: '', fontUrl: '', fontWeight: '800' },
+      text: { type: 'text', text: '본문 내용을 입력하세요.', align: 'left', fontSize: '15px' , fontFamily: '', fontUrl: '', fontWeight: '400', color: '#334155'},
+      callout: { type: 'callout', theme: 'navy', title: '안내 사항', body: '강조할 내용을 입력하세요.', fontFamily: '', fontUrl: '', fontWeight: '400', color: '' },
       cards: { type: 'cards', cols: 2, items: [{ title: '특징 1', body: '설명 입력' }, { title: '특징 2', body: '설명 입력' }] },
       gallery: { type: 'gallery', cols: 2, photos: [] },
       image: { type: 'image', src: '', width: '100%', align: 'center', rounded: true, shadow: true, caption: '' },
@@ -752,8 +794,8 @@
         <div class="nk-pblk-field"><label>제목</label><input type="text" data-pk="title" data-pi="${idx}" value="${esc(b.title)}"></div>
         <div class="nk-pblk-field"><label>정렬</label><select data-pk="align" data-pi="${idx}"><option value="left" ${b.align === 'left' ? 'selected' : ''}>왼쪽</option><option value="center" ${b.align === 'center' ? 'selected' : ''}>가운데</option></select></div>
         <div class="nk-pblk-field"><label>색상</label><input type="color" data-pk="color" data-pi="${idx}" value="${esc(b.color || '#1c355e')}" style="height:30px;padding:2px;"></div>
-      </div>
-      <div class="nk-pblk-field"><label>부제목</label><input type="text" data-pk="sub" data-pi="${idx}" value="${esc(b.sub)}"></div>`;
+     ${renderFontSelectHtml(b, idx)}${renderWeightSelectHtml(b, idx, '800')} </div>
+     ${renderFontMgrHtml(idx)} <div class="nk-pblk-field"><label>부제목</label><input type="text" data-pk="sub" data-pi="${idx}" value="${esc(b.sub)}"></div>`;
     }
     if (b.type === 'text') {
        const customFonts = loadCustomFonts();
@@ -787,37 +829,16 @@
           ${customOpts ? `<optgroup label="추가한 폰트">${customOpts}</optgroup>` : ''}
           ${externalOpt}
         </select></div>
-      </div>
-      <details class="nk-font-mgr">
-        <summary>+ 폰트 추가 / 관리</summary>
-        <div class="nk-font-mgr-body" data-font-form="${idx}">
-          <div class="nk-pblk-grid">
-            <div class="nk-pblk-field"><label>추가 방식</label>
-              <select data-font-mode="${idx}">
-                <option value="google">Google Fonts (이름으로 간편 추가)</option>
-                <option value="url">웹폰트 URL 직접 입력 (눈누 / CDN)</option>
-              </select>
-            </div>
-            <div class="nk-pblk-field"><label>표시 이름</label><input type="text" data-font-label="${idx}" placeholder="예: 개구쟁이체 / 프리텐다드"></div>
-          </div>
-          <div class="nk-pblk-grid">
-            <div class="nk-pblk-field"><label>폰트 영문/CSS 이름</label><input type="text" data-font-css="${idx}" placeholder="예: Gaegu 또는 Pretendard"></div>
-            <div class="nk-pblk-field" data-font-url-wrap="${idx}" style="display:none;"><label>웹폰트 CSS 또는 .woff2 URL (https://)</label><input type="url" data-font-url="${idx}" placeholder="https://cdn.jsdelivr.net/.../font.css"></div>
-          </div>
-          <div class="nk-font-mgr-actions">
-            <button type="button" class="nk-pe-chip" data-font-add="${idx}">폰트 추가 및 적용</button>
-          </div>
-          ${customChips}
-        </div>
-      </details>
+     ${renderWeightSelectHtml(b, idx, '400')}<div class="nk-pblk-field"><label>글씨 색</label><input type="color" data-pk="color" data-pi="${idx}" value="${esc(b.color || '#334155')}" style="height:30px;padding:2px;"></div> </div>
+     ${renderFontMgrHtml(idx)}
       <div class="nk-pblk-field"><label>본문</label><textarea rows="4" data-pk="text" data-pi="${idx}" style="${currentFamily ? `font-family:${esc(currentFamily)};` : ''}">${esc(b.text)}</textarea></div>`;
     }
     if (b.type === 'callout') {
       return `<div class="nk-pblk-grid">
         <div class="nk-pblk-field"><label>제목</label><input type="text" data-pk="title" data-pi="${idx}" value="${esc(b.title)}"></div>
         <div class="nk-pblk-field"><label>테마</label><select data-pk="theme" data-pi="${idx}"><option value="navy" ${b.theme === 'navy' ? 'selected' : ''}>네이비</option><option value="green" ${b.theme === 'green' ? 'selected' : ''}>그린</option><option value="amber" ${b.theme === 'amber' ? 'selected' : ''}>앰버</option><option value="gray" ${b.theme === 'gray' ? 'selected' : ''}>그레이</option></select></div>
-      </div>
-      <div class="nk-pblk-field"><label>내용</label><textarea rows="3" data-pk="body" data-pi="${idx}">${esc(b.body)}</textarea></div>`;
+     ${renderFontSelectHtml(b, idx)}${renderWeightSelectHtml(b, idx, '400')}<div class="nk-pblk-field"><label>글씨 색</label><input type="color" data-pk="color" data-pi="${idx}" value="${esc(b.color || '#1e293b')}" style="height:30px;padding:2px;"></div> </div>
+     ${renderFontMgrHtml(idx)} <div class="nk-pblk-field"><label>내용</label><textarea rows="3" data-pk="body" data-pi="${idx}">${esc(b.body)}</textarea></div>`;
     }
     if (b.type === 'cards') {
       const itemsHtml = (b.items || []).map(function (it, ci) {
@@ -903,7 +924,7 @@
             STATE.blocks[i].fontUrl = matched && matched.url ? matched.url : '';
             STATE.blocks[i].fontLabel = matched ? matched.label : '';
             const ta = listEl.querySelector(`textarea[data-pk="text"][data-pi="${i}"]`);
-            if (ta) ta.style.fontFamily = v || '';
+            if (ta) ta.style.fontFamily = v || ''; const ti = listEl.querySelector(`input[data-pk="title"][data-pi="${i}"]`); if (ti) ti.style.fontFamily = v || '';
           }
         }
         updatePreview();

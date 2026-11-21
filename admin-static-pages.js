@@ -72,11 +72,11 @@
 
     if (b.type === 'cards') {
       const items = Array.isArray(b.items) ? b.items : [];
-      const cols = b.cols === 3 ? 'repeat(auto-fit, minmax(180px, 1fr))' : 'repeat(auto-fit, minmax(230px, 1fr))';
+      const size = b.fontSize || '14px'; const weight = b.fontWeight || '400'; const ff = sanitizeFontFamily(b.fontFamily); if (b.fontUrl && ff) injectFontAsset(b.fontUrl, ff); const ffCss = ff ? ' font-family:' + ff + ';' : ''; const titleColor = b.color || '#1c355e'; const bodyColor = b.color || '#475569'; const cols = b.cols === 3 ? 'repeat(auto-fit, minmax(180px, 1fr))' : 'repeat(auto-fit, minmax(230px, 1fr))';
       const inner = items.map(function (it) {
         return `<div style="background-color:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:18px; box-sizing:border-box;">
-    <div style="font-size:16px; font-weight:700; color:#1c355e; margin-bottom:8px;">${esc(it.title || '')}</div>
-    <p style="margin:0; font-size:14px; line-height:1.65; color:#475569;">${esc(it.body || '').replace(/\n/g, '<br>')}</p>
+    <div style="font-size:16px; font-weight:700; color:${esc(titleColor)}; margin-bottom:8px;${ffCss}">${esc(it.title || '')}</div>
+    <p style="margin:0; font-size:${esc(size)}; font-weight:${esc(weight)}; line-height:1.65; color:${esc(bodyColor)};${ffCss}">${esc(it.body || '').replace(/\n/g, '<br>')}</p>
   </div>`;
       }).join('\n');
       return `<div style="display:grid; grid-template-columns:${cols}; gap:14px; margin:18px 0;">${inner}</div>`;
@@ -101,9 +101,9 @@
       const imgHtml = b.src
         ? `<img src="${esc(b.src)}" alt="${esc(b.title || '')}" style="width:100%; max-width:100%; height:auto; border-radius:12px; display:block;">`
         : `<div style="padding:40px 16px; text-align:center; background-color:#f1f5f9; border-radius:12px; color:#64748b; font-size:13px;">이미지 미등록</div>`;
-      const textHtml = `<div style="padding:4px 0;">
-  <h3 style="margin:0 0 10px; font-size:20px; font-weight:700; color:#1c355e; line-height:1.4;">${esc(b.title || '')}</h3>
-  <p style="margin:0; font-size:14px; line-height:1.75; color:#334155;">${esc(b.body || '').replace(/\n/g, '<br>')}</p>
+      const size = b.fontSize || '14px'; const weight = b.fontWeight || '400'; const ff = sanitizeFontFamily(b.fontFamily); if (b.fontUrl && ff) injectFontAsset(b.fontUrl, ff); const ffCss = ff ? ' font-family:' + ff + ';' : ''; const titleColor = b.color || '#1c355e'; const bodyColor = b.color || '#334155'; const textHtml = `<div style="padding:4px 0;">
+  <h3 style="margin:0 0 10px; font-size:20px; font-weight:700; color:${esc(titleColor)}; line-height:1.4;${ffCss}">${esc(b.title || '')}</h3>
+  <p style="margin:0; font-size:${esc(size)}; font-weight:${esc(weight)}; line-height:1.75; color:${esc(bodyColor)};${ffCss}">${esc(b.body || '').replace(/\n/g, '<br>')}</p>
 </div>`;
       const first = b.reverse ? textHtml : imgHtml;
       const second = b.reverse ? imgHtml : textHtml;
@@ -548,9 +548,9 @@
       heading: { type: 'heading', title: '새 섹션 제목', sub: '짧은 부제목을 입력하세요', align: 'left', color: '#1c355e', fontSize: '24px', fontFamily: '', fontUrl: '', fontWeight: '800' },
       text: { type: 'text', text: '여기에 본문 내용을 자유롭게 작성하세요.', align: 'left', fontSize: '15px', fontFamily: '', fontUrl: '', fontWeight: '400', color: '#334155' },
       callout: { type: 'callout', theme: 'navy', title: '안내 사항', body: '일정, 장소, 준비물 등 강조하고 싶은 내용을 입력하세요.', fontSize: '14px', fontFamily: '', fontUrl: '', fontWeight: '400', color: '' },
-      cards: { type: 'cards', cols: 2, items: [{ title: '특징 1', body: '내용을 입력하세요.' }, { title: '특징 2', body: '내용을 입력하세요.' }] },
+      cards: { type: 'cards', cols: 2, fontSize: '14px', fontFamily: '', fontUrl: '', fontWeight: '400', color: '', items: [{ title: '특징 1', body: '내용을 입력하세요.' }, { title: '특징 2', body: '내용을 입력하세요.' }] },
       image: { type: 'image', src: '', width: '100%', align: 'center', rounded: true, shadow: true, caption: '' },
-      split: { type: 'split', src: '', title: '이미지 옆 제목', body: '이미지와 함께 보여줄 설명 문구를 입력하세요.', reverse: false },
+      split: { type: 'split', src: '', title: '이미지 옆 제목', body: '이미지와 함께 보여줄 설명 문구를 입력하세요.', reverse: false, fontSize: '15px', fontFamily: '', fontUrl: '', fontWeight: '400', color: '' },
       table: { type: 'table', headers: ['항목', '내용', '비고'], rows: [['예시 1', '상세 설명', '-'], ['예시 2', '상세 설명', '-']] },
       button: { type: 'button', label: '자세히 보기', url: 'https://n-kids.github.io/newkids/', bg: '#1c355e', align: 'center', newTab: false },
       form: { type: 'form', formId: STATE.forms[0] ? STATE.forms[0].id : '' },
@@ -649,7 +649,7 @@
         </div>`;
       }).join('');
       return `
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+        <div class="nk-sp-grid">${renderSizeSelectHtml(b, idx, '14px')}${renderWeightSelectHtml(b, idx, '400')}${renderFontSelectHtml(b, idx)}<div class="nk-blk-field"><label>글씨 색</label><input type="color" data-k="color" data-i="${idx}" value="${esc(b.color || '#334155')}"></div></div>${renderFontMgrHtml(idx)}<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
           <select data-k="cols" data-i="${idx}" style="padding:5px 8px;font-size:12px;border:1px solid #cbd5e1;border-radius:6px;">
             <option value="2" ${Number(b.cols) !== 3 ? 'selected' : ''}>2단 배치</option>
             <option value="3" ${Number(b.cols) === 3 ? 'selected' : ''}>3단 배치</option>
@@ -677,7 +677,7 @@
           <div class="nk-sp-field"><label>배치 방향</label><select data-k="reverse" data-i="${idx}"><option value="false" ${!b.reverse ? 'selected' : ''}>이미지 왼쪽 · 글 오른쪽</option><option value="true" ${b.reverse ? 'selected' : ''}>글 왼쪽 · 이미지 오른쪽</option></select></div>
         </div>
         <div class="nk-sp-field"><label>제목</label><input type="text" data-k="title" data-i="${idx}" value="${esc(b.title)}" style="${b.fontFamily ? 'font-family:' + esc(b.fontFamily) + ';' : ''}"></div>
-        <div class="nk-sp-field"><label>설명 내용</label><textarea rows="3" data-k="body" data-i="${idx}">${esc(b.body)}</textarea></div>`;
+        <div class="nk-sp-field"><label>설명 내용</label><textarea rows="3" data-k="body" data-i="${idx}" style="${b.fontFamily ? 'font-family:' + esc(b.fontFamily) + ';' : ''}">${esc(b.body)}</textarea></div><div class="nk-sp-grid">${renderSizeSelectHtml(b, idx, '15px')}${renderWeightSelectHtml(b, idx, '400')}${renderFontSelectHtml(b, idx)}<div class="nk-blk-field"><label>글씨 색</label><input type="color" data-k="color" data-i="${idx}" value="${esc(b.color || '#334155')}"></div></div>${renderFontMgrHtml(idx)}`;
     }
     if (b.type === 'table') {
       const headers = b.headers || ['항목', '내용'];

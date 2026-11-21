@@ -18,7 +18,88 @@
   'use strict';
 
   const AUTOSAVE_KEY = 'nk_post_block_draft_v1';
+  const CUSTOM_FONTS_KEY = 'nk_post_custom_fonts_v1';
+  const BUILTIN_FONTS = [
+    { label: '기본 폰트', family: '' },
+    { label: '나눔고딕', family: "'Nanum Gothic', sans-serif" },
+    { label: '나눔명조', family: "'Nanum Myeongjo', serif" },
+    { label: '고운돋움', family: "'Gowun Dodum', sans-serif" },
+    { label: '고운바탕', family: "'Gowun Batang', serif" },
+    { label: '본고딕', family: "'Noto Sans KR', sans-serif" },
+    { label: '본명조', family: "'Noto Serif KR', serif" },
+    { label: '블랙한산스', family: "'Black Han Sans', sans-serif" },
+    { label: '도현체', family: "'Do Hyeon', sans-serif" },
+    { label: '주아체', family: "'Jua', sans-serif" },
+    { label: '구기체', family: "'Gugi', sans-serif" },
+    { label: '서툰이야기', family: "'Poor Story', sans-serif" },
+    { label: '송명조', family: "'Song Myung', serif" }
+  ];
 
+  function sanitizeFontFamily(val) {
+    return String(val || '').replace(/["<>;{}\r\n]/g, '').trim();
+  }
+
+  function loadCustomFonts() {
+    try {
+      const raw = localStorage.getItem(CUSTOM_FONTS_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed.filter(f => f && f.label && f.family && f.url) : [];
+    } catch (_) {
+      return [];
+    }
+  }
+
+  function saveCustomFonts(list) {
+    try {
+      localStorage.setItem(CUSTOM_FONTS_KEY, JSON.stringify(list));
+    } catch (_) {}
+  }
+
+  function injectFontAsset(font) {
+    if (!font || !font.url) return;
+    let parsedUrl;
+    try {
+      parsedUrl = new URL(String(font.url).trim());
+    } catch (_) {
+      return;
+    }
+    if (parsedUrl.protocol !== 'https:') return;
+    const safeHref = parsedUrl.href;
+    const exists = Array.from(document.querySelectorAll('[data-nk-font-url]')).some(
+      el => el.getAttribute('data-nk-font-url') === safeHref
+    );
+    if (exists) return;
+
+    if (/\.(?:woff2|woff|ttf|otf)(?:[?#].*)?$/i.test(safeHref)) {
+      const rawName = String(font.cssName || font.family || '')
+        .split(',')[0]
+        .replace(/['"\\;{}<>\r\n]/g, '')
+        .trim();
+      if (!rawName) return;
+      const style = document.createElement('style');
+      style.setAttribute('data-nk-font-url', safeHref);
+      style.textContent = `@font-face { font-family: '${rawName}'; src: url('${safeHref}'); font-display: swap; }`;
+      document.head.appendChild(style);
+    } else {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = safeHref;
+      link.setAttribute('data-nk-font-url', safeHref);
+      document.head.appendChild(link);
+    }
+  }
+
+  function getAllFonts() {
+    const custom = loadCustomFonts();
+    custom.forEach(injectFontAsset);
+    return BUILTIN_FONTS.concat(custom);
+  }
+
+  function buildGoogleFontUrl(googleFontName) {
+    const clean = String(googleFontName || '').trim().replace(/\s+/g, '+');
+    return `https://fonts.googleapis.com/css2?family=${encodeURIComponent(clean).replace(/%2B/g, '+')}&display=swap`;
+  }
+  
   const STATE = {
     mode: 'quill', // 'quill' | 'blocks'
     blocks: [],
@@ -67,8 +148,11 @@
     if (b.type === 'text') {
       const align = b.align || 'left';
       const size = b.fontSize || '15px';
+      const font = sanitizeFontFamily(b.fontFamily || '');
+      if (b.fontUrl && font) injectFontAsset({ family: font, url: b.fontUrl });
+      const fontCss = font ? ` font-family:${font};` : '';
       const body = String(b.text || '').split('\n').map(function (line) {
-        return line.trim() ? `<p style="margin:0 0 10px; font-size:${size}; line-height:1.75; color:#334155;">${esc(line)}</p>` : '';
+        return line.trim() ? `<p style="margin:0 0 10px; font-size:${size}${fontCss}; line-height:1.75; color:#334155;">${esc(line)}</p>` : '';
       }).join('');
       return `<div style="text-align:${align}; margin:14px 0;">${body || '<p style="margin:0; color:#94a3b8;">내용을 입력하세요.</p>'}</div>`;
     }

@@ -273,6 +273,7 @@ test('integrated full-page design controls, subpage manager, and environment set
   await page.locator('#main-sections-design summary').nth(1).click();
   await page.locator('#evTitle').fill('맞춤형 특별 행사');
   await expect(page.frameLocator('#preview').locator('#events h2')).toHaveText('맞춤형 특별 행사');
+  await expect(page.frameLocator('#preview').locator('#m-events-sec h2')).toHaveText('맞춤형 특별 행사');
 
   await page.locator('#main-sections-design summary').nth(3).click();
   await page.locator('#ctPhone1').fill('010-9999-8888');
@@ -428,7 +429,7 @@ test('all 10 power-user features work end-to-end (undo/redo, split drag, click-t
   await expect(page.locator('body')).toHaveAttribute('data-nk-preview-size', 'custom');
 
   // 3) Click-to-Edit inside preview jumps to the corresponding tab & input
-  await page.frameLocator('#preview').locator('#events h2').click({ force: true });
+  await page.frameLocator('#preview').locator('#m-events-sec h2').click();
   await expect(page.locator('[data-editor-view="body"]')).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('#evTitle')).toBeVisible();
 

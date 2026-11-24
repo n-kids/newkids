@@ -128,9 +128,9 @@ test('saved draft survives a fresh context but unsaved changes and login do not'
   const visitor=await open();
   await visitor.page.goto('/index.html');
   await expect.poll(()=>db.reads.filter(read=>!read.signedIn&&read.table==='page_editor_publications').length).toBeGreaterThan(0);
-  await expect(visitor.page.locator('.hero h1')).toBeVisible();
-  await expect(visitor.page.locator('.hero h1')).not.toHaveText(savedTitle);
-  await expect(visitor.page.locator('.hero h1')).not.toHaveText(unsavedTitle);
+  await expect(visitor.page.locator('.m-hero h1')).toBeVisible();
+  await expect(visitor.page.locator('.m-hero h1')).not.toHaveText(savedTitle);
+  await expect(visitor.page.locator('.m-hero h1')).not.toHaveText(unsavedTitle);
   expect(Object.keys(db.state.publications)).toHaveLength(0);
   expect(db.violations).toEqual([]);
  }finally{await Promise.all(contexts.map(context=>context.close()));}
@@ -162,9 +162,12 @@ test('a fresh administrator sees the latest draft while a fresh visitor sees onl
 
   const visitor=await open();await visitor.page.goto('/index.html');
   await expect(visitor.page.locator('.hero[data-nk-published-hero] h1')).toHaveText(publicTitle);
-  await expect(visitor.page.locator('.hero h1')).not.toHaveText(privateTitle);
+  await expect(visitor.page.locator('.m-hero[data-nk-published-hero] h1')).toBeVisible();
+  await expect(visitor.page.locator('.m-hero[data-nk-published-hero] h1')).toHaveText(publicTitle);
+  await expect(visitor.page.locator('.m-hero h1')).not.toHaveText(privateTitle);
   await visitor.page.reload();
   await expect(visitor.page.locator('.hero[data-nk-published-hero] h1')).toHaveText(publicTitle);
+  await expect(visitor.page.locator('.m-hero[data-nk-published-hero] h1')).toHaveText(publicTitle);
   expect(db.state.publications.main.version).toBe(1);
   expect(db.state.publications.main.document.title).toBe(publicTitle);
   expect(db.state.drafts.main.version).toBe(2);

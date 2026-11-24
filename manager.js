@@ -334,6 +334,35 @@ window.applyNkHeroVisuals = function (mainHero, data) {
             circleEl.style.setProperty('fill', circleCol, 'important');
         }
     }
+
+    // 메인 A안(.m-hero) 히어로 카드도 site_config 설정과 동기화
+    const mHero = document.querySelector('#m-home .m-hero');
+    if (mHero) {
+        const mTitle = mHero.querySelector('.m-hero-body h1');
+        const mDesc = mHero.querySelector('.m-hero-body p');
+        const mEyebrow = mHero.querySelector('.m-hero-body > span');
+        const mImg = mHero.querySelector('img');
+        if (mTitle && data.main_hero_title) mTitle.innerHTML = window.sanitizeRichText(data.main_hero_title);
+        if (mDesc && data.main_hero_desc) mDesc.innerHTML = window.sanitizeRichText(data.main_hero_desc);
+        if (shouldApplyCustomVisuals) {
+            if (bg) mHero.style.setProperty('background', bg, 'important');
+            if (mTitle && tc) mTitle.style.setProperty('color', tc, 'important');
+            if (mDesc && dc) mDesc.style.setProperty('color', dc, 'important');
+        }
+        if (mEyebrow) {
+            if (badgeTxt) mEyebrow.style.setProperty('color', badgeTxt, 'important');
+            if (badgeBg) {
+                mEyebrow.style.setProperty('background', badgeBg, 'important');
+                mEyebrow.style.setProperty('padding', '3px 10px', 'important');
+                mEyebrow.style.setProperty('border-radius', '99px', 'important');
+                mEyebrow.style.setProperty('width', 'fit-content', 'important');
+            }
+        }
+        if (mImg && hasHeroImage) {
+            if (!mImg.dataset.origSrc) mImg.dataset.origSrc = mImg.getAttribute('src') || 'm-hero.jpg';
+            mImg.setAttribute('src', data.main_hero_image);
+        }
+    }
 };
 
 async function loadSiteConfig() {

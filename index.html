@@ -190,10 +190,63 @@
             }
         }
     </style>
+    <style>
+        /* =========================================
+           [2026.11] 휴대폰 메인 화면 (A안: 깔끔한 카드형) — 화면 폭 768px 이하에서만 보임
+           ========================================= */
+        .m-home, .m-tabbar { display: none; }
+        @media (max-width: 768px) {
+            body.nk-home-m { background: #f4f6fa; padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px)); }
+            .nk-home-m .hero-v2, .nk-home-m #quick-links, .nk-home-m #events, .nk-home-m #curriculum { display: none !important; }
+            .m-home { display: block; padding: 16px 16px 4px; color: #1b2433; text-align: left; }
+            .m-home img { margin: 0; display: block; max-width: none; }
+            .m-sec { margin: 0 0 24px; }
+            .m-home h2 { margin: 0 0 12px; padding: 0; font-size: 18px; font-weight: 700; color: #1b2a55; text-align: left; line-height: 1.4; }
+            .m-home h2::before, .m-home h2::after { content: none; display: none; }
+            .m-head { display: flex; align-items: baseline; justify-content: space-between; }
+            .m-head a { font-size: 14px; color: #4a5568; text-decoration: none; padding: 8px 0 8px 12px; }
+            .m-quick { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+            .m-quick a { height: 92px; border-radius: 16px; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 1px 4px rgba(27,42,85,.07); color: #1b2433; font-size: 14px; font-weight: 600; text-decoration: none; }
+            .m-quick a:active { background: #eef1f8; }
+            .m-quick svg { width: 26px; height: 26px; }
+            .m-app { border-radius: 16px; background: #1b2a55; color: #fff; padding: 16px 18px; display: flex; align-items: center; gap: 14px; text-decoration: none; }
+            .m-app-icon { width: 44px; height: 44px; border-radius: 12px; background: rgba(255,255,255,.14); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+            .m-app-text { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+            .m-app-text strong { font-size: 15px; font-weight: 700; color: #fff; }
+            .m-app-text small { font-size: 13px; color: #c9d2e8; }
+            .m-hero { border-radius: 20px; overflow: hidden; background: #fff; box-shadow: 0 2px 10px rgba(27,42,85,.08); }
+            .m-hero img { width: 100%; height: 150px; object-fit: cover; }
+            .m-hero-body { padding: 18px 18px 20px; display: flex; flex-direction: column; gap: 8px; }
+            .m-hero-body span { font-size: 13px; font-weight: 600; color: #b8520c; }
+            .m-hero-body h1 { margin: 0; font-size: 24px; line-height: 1.35; font-weight: 700; color: #1b2a55; text-align: left; }
+            .m-hero-body p { margin: 0; font-size: 15px; line-height: 1.6; color: #4a5568; }
+            .m-list { border-radius: 16px; background: #fff; box-shadow: 0 1px 4px rgba(27,42,85,.07); display: flex; flex-direction: column; overflow: hidden; }
+            .m-list a { padding: 15px 18px; display: flex; flex-direction: column; gap: 4px; border-bottom: 1px solid #eef0f5; text-decoration: none; color: #1b2433; }
+            .m-list a:last-child { border-bottom: 0; }
+            .m-list small { font-size: 13px; color: #5b6475; }
+            .m-list strong { font-size: 15px; font-weight: 600; line-height: 1.45; }
+            .m-list .m-empty { padding: 18px; font-size: 14px; color: #5b6475; }
+            .m-evs { display: flex; flex-direction: column; gap: 10px; }
+            .m-ev { border-radius: 16px; background: #fff; overflow: hidden; display: flex; box-shadow: 0 1px 4px rgba(27,42,85,.07); text-decoration: none; color: #1b2433; min-height: 96px; }
+            .m-ev img { width: 110px; height: auto; min-height: 96px; object-fit: cover; flex-shrink: 0; }
+            .m-ev-icon { width: 110px; flex-shrink: 0; background: #eef1f8; display: flex; align-items: center; justify-content: center; }
+            .m-ev-icon svg { width: 44px; height: 44px; }
+            .m-ev-body { padding: 14px 16px; display: flex; flex-direction: column; justify-content: center; gap: 4px; min-width: 0; }
+            .m-ev-body strong { font-size: 16px; font-weight: 700; color: #1b2a55; }
+            .m-ev-body small { font-size: 13px; color: #5b6475; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+            .m-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+            .m-chips a { min-height: 44px; padding: 0 18px; border-radius: 99px; background: #fff; border: 1px solid #dfe3ec; font-size: 15px; font-weight: 500; display: flex; align-items: center; color: #1b2433; text-decoration: none; }
+            .m-tabbar { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); position: fixed; left: 0; right: 0; bottom: 0; z-index: 900; height: calc(64px + env(safe-area-inset-bottom, 0px)); padding-bottom: env(safe-area-inset-bottom, 0px); background: #fff; border-top: 1px solid #e6e9f0; box-shadow: 0 -2px 10px rgba(27,42,85,.06); }
+            .m-tabbar a { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 12px; color: #5b6475; text-decoration: none; }
+            .m-tabbar a[aria-current="page"] { color: #1b2a55; font-weight: 700; }
+            .m-tabbar svg { width: 22px; height: 22px; }
+            .nk-home-m .scroll-btns { bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important; right: 16px !important; }
+        }
+    </style>
 <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
 </head>
-<body>
+<body class="nk-home-m">
     <header></header>
 
     <div id="popup-layer" role="region" aria-label="공지 팝업">
@@ -212,6 +265,53 @@
             </div>
         </div>
     </div>
+
+    <!-- [2026.11] 휴대폰 메인 화면 (A안) — 768px 이하에서만 보임 -->
+    <div id="m-home" class="m-home">
+        <div class="m-sec">
+            <h2>바로가기</h2>
+            <nav class="m-quick" aria-label="바로가기">
+                <a href="notice.html#notice"><svg viewBox="0 0 24 24" fill="none" stroke="#1b2a55" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>공지사항</a>
+                <a href="child.html"><svg viewBox="0 0 24 24" fill="none" stroke="#1b2a55" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></svg>교재소개</a>
+                <a href="program.html#culture"><svg viewBox="0 0 24 24" fill="none" stroke="#1b2a55" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>행사신청</a>
+                <a href="notice.html#reference"><svg viewBox="0 0 24 24" fill="none" stroke="#1b2a55" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>자료실</a>
+                <a href="notice.html#qna"><svg viewBox="0 0 24 24" fill="none" stroke="#1b2a55" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>문의사항</a>
+                <a href="proposal.html"><svg viewBox="0 0 24 24" fill="none" stroke="#1b2a55" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/><path d="M8 13h8M8 17h5"/></svg>견적요청</a>
+            </nav>
+        </div>
+        <a href="app-install.html" class="m-app m-sec">
+            <span class="m-app-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg></span>
+            <span class="m-app-text"><strong>뉴키즈 주문앱 설치하기</strong><small>교재 주문·견적서 요청을 휴대폰으로 간편하게</small></span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+        </a>
+        <div class="m-hero m-sec">
+            <img src="m-hero.jpg" alt="세계 여러 나라 옷을 입은 아이들이 손잡고 노는 그림" width="900" height="263">
+            <div class="m-hero-body">
+                <span>김포 · 고양 · 파주 어린이집·유치원 교육 파트너</span>
+                <h1>우리 원에 필요한<br>모든 즐거움, 뉴키즈</h1>
+                <p>교재부터 원어민·시즌 행사까지 한곳에서 고르고 주문하세요.</p>
+            </div>
+        </div>
+        <div class="m-sec" id="m-notice-sec">
+            <div class="m-head"><h2>공지사항</h2><a href="notice.html#notice">전체보기</a></div>
+            <div class="m-list" id="m-notices"><div class="m-empty">공지를 불러오는 중이에요…</div></div>
+        </div>
+        <div class="m-sec">
+            <h2>행사 프로그램</h2>
+            <div class="m-evs" id="m-events"></div>
+        </div>
+        <div class="m-sec">
+            <h2>교육 프로그램</h2>
+            <div class="m-chips" id="m-edu"></div>
+        </div>
+    </div>
+    <nav class="m-tabbar" aria-label="아래 메뉴">
+        <a href="index.html" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>홈</a>
+        <a href="child.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></svg>교재</a>
+        <a href="program.html#culture"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.6 6.6 19.5l1.2-6L3.3 9.3l6.1-.7z"/></svg>행사</a>
+        <a href="notice.html#reference"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>자료실</a>
+        <a href="notice.html#qna"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>문의</a>
+    </nav>
 
     <section class="hero hero-v2" data-fixed-design>
         <div class="hero-v2-inner">
@@ -345,6 +445,7 @@
                     clearInterval(checkSb);
                     console.log("System Ready: Supabase Loaded");
                     loadMainCategories();
+                    loadMobileHome();
                     initPopupSlider();
                 }
             }, 100);
@@ -541,6 +642,86 @@
 
         // 고정 영역(자료실 바로가기 등) 아이콘 채우기
         document.querySelectorAll('[data-icon]').forEach(el => { el.innerHTML = homeIcon(el.dataset.icon); });
+
+
+        // =========================================
+        // [2026.11] 휴대폰 메인 화면(A안): 공지·행사·교육 목록 채우기
+        // =========================================
+        const M_EVENT_IMG = { culture: 'm-ev-culture.jpg', season: 'm-ev-season.jpg', play: 'm-ev-play.jpg' };
+        async function loadMobileHome() {
+            if (!document.getElementById('m-home')) return;
+            try {
+                const { data: cats } = await window.sb.from('program_categories')
+                    .select('code,name,type,hero_desc')
+                    .eq('is_visible', true)
+                    .order('order_num');
+                const evWrap = document.getElementById('m-events');
+                const eduWrap = document.getElementById('m-edu');
+                (cats || []).forEach(cat => {
+                    const code = String(cat.code || '');
+                    if (!/^[a-z0-9_-]+$/i.test(code)) return;
+                    const name = String(cat.name || '').replace(/^[^\p{L}\p{N}]+/u, '').trim();
+                    if (cat.type === 'EVENT') {
+                        const card = document.createElement('a');
+                        card.href = `program.html#${code}`;
+                        card.className = 'm-ev';
+                        if (M_EVENT_IMG[code]) {
+                            const img = document.createElement('img');
+                            img.src = M_EVENT_IMG[code];
+                            img.alt = '';
+                            img.loading = 'lazy';
+                            card.appendChild(img);
+                        } else {
+                            const icon = document.createElement('span');
+                            icon.className = 'm-ev-icon';
+                            icon.innerHTML = homeIcon(code);
+                            card.appendChild(icon);
+                        }
+                        const body = document.createElement('span');
+                        body.className = 'm-ev-body';
+                        const title = document.createElement('strong');
+                        title.textContent = name;
+                        const desc = document.createElement('small');
+                        desc.textContent = String(cat.hero_desc || '');
+                        body.append(title, desc);
+                        card.appendChild(body);
+                        evWrap.appendChild(card);
+                    } else if (cat.type === 'EDU') {
+                        const chip = document.createElement('a');
+                        chip.href = `child.html#${code}`;
+                        chip.textContent = name;
+                        eduWrap.appendChild(chip);
+                    }
+                });
+
+                const nowIso = new Date().toISOString();
+                const { data: posts } = await window.sb.from('total_posts')
+                    .select('id,title,created_at,is_notice')
+                    .eq('category', 'notice')
+                    .eq('is_visible', true)
+                    .or(`publish_at.is.null,publish_at.lte.${nowIso}`)
+                    .order('is_notice', { ascending: false })
+                    .order('created_at', { ascending: false })
+                    .limit(3);
+                const list = document.getElementById('m-notices');
+                list.innerHTML = '';
+                if (!posts || !posts.length) {
+                    document.getElementById('m-notice-sec').style.display = 'none';
+                    return;
+                }
+                posts.forEach(post => {
+                    const item = document.createElement('a');
+                    item.href = `view.html?id=${encodeURIComponent(post.id)}`;
+                    const date = document.createElement('small');
+                    const d = new Date(post.created_at);
+                    date.textContent = `${d.getFullYear()}. ${String(d.getMonth() + 1).padStart(2, '0')}. ${String(d.getDate()).padStart(2, '0')}`;
+                    const title = document.createElement('strong');
+                    title.textContent = String(post.title || '');
+                    item.append(date, title);
+                    list.appendChild(item);
+                });
+            } catch (e) { console.error("휴대폰 메인 로드 실패:", e); }
+        }
 
         async function loadMainCategories() {
             try {

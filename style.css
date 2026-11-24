@@ -2974,3 +2974,77 @@ body {
         font-size: 1.12rem;
     }
 }
+
+/* =========================================================
+   [2026.11] A안 공통 디자인 (깔끔한 카드형)
+   - manager.js가 공개 페이지(메인·교재·행사·게시판·글보기·견적 등) body에 nk-a 클래스를 붙임
+   - 앞의 테마(subpage-theme.css)보다 우선하도록 선택자를 일부러 길게 씀
+   ========================================================= */
+html body:is(#main-body,.nk-a).nk-a.nk-a.nk-a {
+    --primary-color: #1b2a55; --accent-color: #1b2a55; --bg-light: #f4f6fa; --border-color: #e6e9f0;
+    --text-color: #1b2433; --text-sub: #5b6475;
+    background: #f4f6fa !important; color: #1b2433;
+}
+html body:is(#main-body,.nk-a).nk-a.nk-a.nk-a footer { background: #1b2a55; color: #c9d2e8; }
+html body:is(#main-body,.nk-a).nk-a.nk-a.nk-a footer a { color: #ffffff; }
+
+/* 페이지 맨 위 제목 영역: 크림색·동그라미 장식 대신 흰 바탕의 깔끔한 띠 */
+html body:is(#main-body,.nk-a).nk-a.nk-a.nk-a :is(.sub-hero,.board-header-section,#view-hero) {
+    background: #ffffff !important; background-image: none !important; color: #1b2a55 !important;
+    border-bottom: 1px solid #e6e9f0 !important; min-height: 0 !important; height: auto !important;
+    padding: 48px 24px 40px !important;
+}
+html body:is(#main-body,.nk-a).nk-a.nk-a.nk-a :is(.sub-hero,.board-header-section,#view-hero)::before,
+html body:is(#main-body,.nk-a).nk-a.nk-a.nk-a :is(.sub-hero,.board-header-section,#view-hero)::after { content: none !important; display: none !important; }
+html body:is(#main-body,.nk-a).nk-a.nk-a.nk-a :is(.sub-hero,.board-header-section,#view-hero) :is(h1,#board-title) {
+    color: #1b2a55 !important; text-shadow: none !important; font-size: clamp(1.6rem, 3vw, 2.2rem) !important;
+    font-weight: 700 !important; line-height: 1.35 !important; margin: 0 0 10px !important;
+}
+html body:is(#main-body,.nk-a).nk-a.nk-a.nk-a :is(.sub-hero,.board-header-section,#view-hero) :is(p,#board-desc) {
+    color: #5b6475 !important; text-shadow: none !important; font-size: 1rem !important; line-height: 1.7 !important; min-height: 0 !important;
+}
+
+/* 카드·상자: 흰 바탕, 둥근 모서리, 옅은 그림자 */
+html body:is(#main-body,.nk-a).nk-a.nk-a.nk-a :is(.card,.post-card,.proposal-box,.panel-box,.view-box,.post-detail-box,.intro-box) {
+    background: #ffffff; border: 1px solid #eef0f5; border-radius: 16px; box-shadow: 0 1px 4px rgba(27,42,85,.07);
+}
+html body:is(#main-body,.nk-a).nk-a.nk-a.nk-a :is(.card,.post-card):hover { border-color: #dfe3ec; box-shadow: 0 6px 16px rgba(27,42,85,.12); }
+html body:is(#main-body,.nk-a).nk-a.nk-a.nk-a :is(.card-img-wrap,.post-thumb) { background: #eef1f8; border-bottom-color: #eef0f5; }
+html body:is(#main-body,.nk-a).nk-a.nk-a.nk-a :is(.card-title,.post-title,.view-title) { color: #1b2a55; }
+html body:is(#main-body,.nk-a).nk-a.nk-a.nk-a :is(.card-text,.post-desc,.section-desc) { color: #5b6475; }
+html body:is(#main-body,.nk-a).nk-a.nk-a.nk-a :is(.bg-gray,.contact-section,.intro-summary,.catalog-gallery-section) { background: #f4f6fa; border-bottom-color: #e6e9f0; }
+html body:is(#main-body,.nk-a).nk-a.nk-a.nk-a .catalog-cta { background: #1b2a55; }
+
+/* 버튼·입력칸 */
+html body:is(#main-body,.nk-a).nk-a.nk-a.nk-a :is(.btn,.btn-action,.btn-submit,.btn-list,.link-btn-style) { background: #1b2a55; color: #ffffff; border-radius: 12px; }
+html body:is(#main-body,.nk-a).nk-a.nk-a.nk-a :is(.btn,.btn-action,.btn-submit,.btn-list,.link-btn-style):hover { background: #22356a; color: #ffffff; }
+html body:is(#main-body,.nk-a).nk-a.nk-a.nk-a .btn-white { background: #ffffff !important; color: #1b2a55 !important; border: 1px solid #dfe3ec; }
+html body:is(#main-body,.nk-a).nk-a.nk-a.nk-a :is(input:not([type]),input[type=text],input[type=email],input[type=tel],input[type=password],input[type=number],input[type=search],input[type=url],input[type=date],select,textarea) { border-color: #dfe3ec; border-radius: 12px; }
+
+/* 게시판 목록 */
+html body:is(#main-body,.nk-a).nk-a.nk-a.nk-a .board-list-head { background: #eef1f8; border-top-color: #1b2a55; color: #1b2a55; }
+html body:is(#main-body,.nk-a).nk-a.nk-a.nk-a .board-list-row { border-bottom-color: #eef0f5; }
+html body:is(#main-body,.nk-a).nk-a.nk-a.nk-a .board-list-row:hover { background: #f7f8fb; }
+html body:is(#main-body,.nk-a).nk-a.nk-a.nk-a .badge { background: #eef1f8; color: #1b2a55; }
+html body:is(#main-body,.nk-a).nk-a.nk-a.nk-a :is(.order-item-row,.proposal-item):hover { background: #f7f8fb; }
+html body:is(#main-body,.nk-a).nk-a.nk-a.nk-a :is(.order-item-row.active,.order-category-header.has-data,.sub-cat-header.has-checked) { background: #eef1f8 !important; color: #1b2a55 !important; border-color: #1b2a55 !important; }
+
+@media (max-width: 768px) {
+    html body:is(#main-body,.nk-a).nk-a.nk-a.nk-a :is(.sub-hero,.board-header-section,#view-hero) { padding: 28px 20px 24px !important; text-align: left; align-items: flex-start !important; }
+    html body:is(#main-body,.nk-a).nk-a.nk-a.nk-a :is(.sub-hero,.board-header-section,#view-hero) :is(h1,#board-title) { font-size: 1.5rem !important; margin-bottom: 6px !important; }
+    html body:is(#main-body,.nk-a).nk-a.nk-a.nk-a :is(.sub-hero,.board-header-section,#view-hero) :is(p,#board-desc) { font-size: .95rem !important; margin: 0 !important; }
+}
+
+/* 휴대폰 아래 메뉴 (manager.js가 교재·행사·게시판·견적 페이지에 붙임) */
+.m-tabbar { display: none; }
+@media (max-width: 768px) {
+    body.nk-has-tabbar { padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px)); }
+    body.nk-has-tabbar .m-tabbar { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); position: fixed; left: 0; right: 0; bottom: 0; z-index: 900; height: calc(64px + env(safe-area-inset-bottom, 0px)); padding-bottom: env(safe-area-inset-bottom, 0px); background: #ffffff; border-top: 1px solid #e6e9f0; box-shadow: 0 -2px 10px rgba(27,42,85,.06); }
+    body.nk-has-tabbar .m-tabbar a { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 12px; color: #5b6475; text-decoration: none; }
+    body.nk-has-tabbar .m-tabbar a[aria-current="page"] { color: #1b2a55; font-weight: 700; }
+    body.nk-has-tabbar .m-tabbar svg { width: 22px; height: 22px; }
+    body.nk-has-tabbar .scroll-btns { bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important; right: 16px !important; }
+    body.nk-has-tabbar.is-resource-board { padding-bottom: calc(132px + env(safe-area-inset-bottom, 0px)); }
+    body.nk-has-tabbar .mobile-resource-actions { bottom: calc(64px + env(safe-area-inset-bottom, 0px)) !important; padding-bottom: 9px !important; }
+    body.nk-has-tabbar.is-resource-board .scroll-btns { bottom: calc(144px + env(safe-area-inset-bottom, 0px)) !important; }
+}

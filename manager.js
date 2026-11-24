@@ -528,11 +528,53 @@ function addScrollButtons() {
 window.scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 window.scrollToBottom = () => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
 
+
+// 8. [2026.11] A안 공통 디자인: 공개 페이지 body에 nk-a 클래스 + 휴대폰 아래 메뉴
+const NK_A_PAGES = ['', 'index.html', 'child.html', 'program.html', 'notice.html', 'view.html', 'proposal.html', 'page.html', 'order.html', 'app-install.html'];
+const NK_TABBAR_PAGES = ['child.html', 'program.html', 'notice.html', 'proposal.html', 'page.html', 'order.html', 'app-install.html'];
+const NK_TAB_ICONS = {
+    home: '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+    edu: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/>',
+    event: '<path d="M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.6 6.6 19.5l1.2-6L3.3 9.3l6.1-.7z"/>',
+    ref: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+    qna: '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>'
+};
+function nkMarkTab() {
+    const page = location.pathname.split('/').pop();
+    const hash = location.hash.replace('#', '');
+    let current = '';
+    if (page === 'child.html') current = 'edu';
+    else if (page === 'program.html') current = 'event';
+    else if (page === 'notice.html' && hash === 'reference') current = 'ref';
+    else if (page === 'notice.html' && hash === 'qna') current = 'qna';
+    document.querySelectorAll('.m-tabbar a[data-tab]').forEach(a => {
+        if (a.dataset.tab === current) a.setAttribute('aria-current', 'page');
+        else a.removeAttribute('aria-current');
+    });
+}
+function applyThemeA() {
+    if (window !== window.parent) return; // 다른 글 안에 끼워 넣은 화면(투표 등)은 제외
+    const page = location.pathname.split('/').pop();
+    if (!NK_A_PAGES.includes(page)) return;
+    document.body.classList.add('nk-a');
+    if (!NK_TABBAR_PAGES.includes(page) || document.querySelector('.m-tabbar')) return;
+    const tabs = [
+        ['home', 'index.html', '홈'], ['edu', 'child.html', '교재'], ['event', 'program.html#culture', '행사'],
+        ['ref', 'notice.html#reference', '자료실'], ['qna', 'notice.html#qna', '문의']
+    ];
+    const links = tabs.map(([key, href, label]) => `<a href="${href}" data-tab="${key}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${NK_TAB_ICONS[key]}</svg>${label}</a>`).join('');
+    document.body.insertAdjacentHTML('beforeend', `<nav class="m-tabbar" aria-label="아래 메뉴">${links}</nav>`);
+    document.body.classList.add('nk-has-tabbar');
+    nkMarkTab();
+    window.addEventListener('hashchange', nkMarkTab);
+}
+
 // 7. 페이지 초기화 및 보안 이벤트
 document.addEventListener("DOMContentLoaded", function () {
     loadHeader();
     loadFooter();
     addScrollButtons();
+    applyThemeA();
 
     // 연락처 자동 하이픈 포맷팅 공통 적용
     document.querySelectorAll('input[name="phone"]').forEach(input => {

@@ -243,6 +243,7 @@
         /* PC (769px 이상): 넓은 화면에 맞게 */
         @media (min-width: 769px) {
             .m-home { max-width: 1080px; margin: 0 auto; padding: 40px 24px 24px; }
+            #m-quick-sec { display: none; }
             .m-sec { margin-bottom: 32px; }
             .m-home h2 { font-size: 21px; margin-bottom: 14px; }
             .m-quick { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 14px; }
@@ -308,7 +309,7 @@
 
     <!-- [2026.11] 메인 화면 A안 (휴대폰·PC 공통) -->
     <div id="m-home" class="m-home">
-        <div class="m-sec">
+        <div class="m-sec" id="m-quick-sec">
             <h2>바로가기</h2>
             <nav class="m-quick" aria-label="바로가기">
                 <a href="notice.html#notice"><svg viewBox="0 0 24 24" fill="none" stroke="#1b2a55" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>공지사항</a>

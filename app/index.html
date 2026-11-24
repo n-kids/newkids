@@ -369,13 +369,14 @@ function authView(){
   </div>`;
 }
 
-// 이번 달 국민서관 월별 추천 교구 (홈 홍보창)
-function recNow(){ const m = new Date().getMonth()+1; return (KP.rec||[]).find(r => parseInt(r[0]) === m); }
+// 국민서관 월별 추천 교구 (홈 홍보창) — 매달 15일부터 다음 달 추천을 보여 줌 (교재 다음 달 호 주문과 같은 날)
+function recMonth(){ const d = new Date(), m = d.getMonth()+1; return d.getDate() >= 15 ? m % 12 + 1 : m; }
+function recNow(){ const m = recMonth(); return (KP.rec||[]).find(r => parseInt(r[0]) === m); }
 function recThisMonth(){ const r = recNow(); return r ? r[0].replace(/^\d+월\s*/, '') : ''; }
 function recThumb(){ const r = recNow(); return r ? r[1].map(id => THUMBS[id]).find(Boolean) : ''; }
 function homeView(){
   return `
-    <button class="banner" id="goRec"><span><small>${new Date().getMonth()+1}월 추천 교구</small><b>${esc(recThisMonth() || '이달의 추천 교구')}</b><small>국민서관이 고른 이번 달 교구 보러 가기 ›</small></span>
+    <button class="banner" id="goRec"><span><small>${recMonth()}월 추천 교구</small><b>${esc(recThisMonth() || '이달의 추천 교구')}</b><small>국민서관이 고른 추천 교구 보러 가기 ›</small></span>
       ${recThumb()?`<img src="${recThumb()}" alt="" style="width:64px;height:64px;background:#fff;object-fit:contain">`:`<img src="logo-n.png" alt="" style="width:56px;height:56px">`}</button>
     ${gatherings.map(g=>`<button class="gpush" data-gather="${g.id}"><span class="ic">${ICON.party}</span>
       <span class="tx"><small>원장님 행사${g.deadline?` · ${esc(fmtDay(g.deadline))}까지 신청`:''}</small><b>${esc(g.title)}</b>${g.when_text||g.place?`<small>${esc([g.when_text,g.place].filter(Boolean).join(' · '))}</small>`:''}</span>
@@ -469,13 +470,13 @@ function goodsView(){
       <div><p class="h2">비품 및 교구</p><p class="sub">국민서관 키드팡 상품 <b class="num">${all.length.toLocaleString()}</b>개 · ${KP.at} 기준 할인가</p></div>
       <input class="search" id="gSearch" maxlength="20" autocomplete="off" placeholder="상품 이름으로 찾기" value="${esc(goods.q)}">${chips}`;
     if (goods.cat==='rec' && (KP.rec||[]).length){
-      // 이번 달 추천만 (달이 바뀌면 저절로 그달 것으로)
+      // 추천 달(recMonth: 15일부터 다음 달) 것만
       const r = recNow();
       const byId = KP.byId || (KP.byId = Object.fromEntries(KP.items.map(it=>[it[0], it])));
       const its = r ? r[1].map(id=>byId[id]).filter(it => it && matchQ(it[1], q)) : [];
       return `${head}
-        <span class="hint">국민서관이 고른 이번 달 추천 교구예요. 달이 바뀌면 그달 추천으로 바뀝니다.</span>
-        ${r ? `<p class="flabel" style="margin:8px 0 0;font-size:16px;line-height:24px">${esc(r[0])} <span class="tag sun">이번 달</span> <span class="hint num">${its.length}</span></p>` : ''}
+        <span class="hint">국민서관이 고른 월별 추천 교구예요. 매달 15일에 다음 달 추천으로 바뀝니다.</span>
+        ${r ? `<p class="flabel" style="margin:8px 0 0;font-size:16px;line-height:24px">${esc(r[0])} <span class="tag sun">${recMonth()}월 추천</span> <span class="hint num">${its.length}</span></p>` : ''}
         ${its.length ? `<div class="grid2">${its.map(card).join('')}</div>` : '<div class="card hint">찾는 상품이 없어요.</div>'}${bar}`;
     }
     const list = all.filter(it => (!goods.cat || it[4]===goods.cat) && matchQ(it[1], q));

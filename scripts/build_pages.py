@@ -25,6 +25,8 @@ for source in root.iterdir():
         shutil.copy2(source, target)
 if (root / 'app').is_dir():
     shutil.copytree(root / 'app', out / 'app', ignore=shutil.ignore_patterns('*.sql', '.DS_Store'))
+if (root / 'go').is_dir():
+    shutil.copytree(root / 'go', out / 'go')  # 카톡 미리보기용 바로가기 페이지
 (out / '.nojekyll').touch()
 (out / 'release.json').write_text(json.dumps({'commit': release, 'editor': 'page-editor.html'}, indent=2), encoding='utf-8')
 required = ['index.html', 'admin.html', 'form.html', 'form-shared.js', 'admin-forms.js', 'page-editor.html', 'page-editor.js', 'page-editor-audit.js', 'page-editor-review.js', 'page-editor-verify.js', 'page-editor-schedule.js', 'page-editor-tools.js', 'page-editor-status.js', 'page-editor-power.js', 'page-editor-ui.js', 'page-editor.css', 'page-design.js', 'config.js']

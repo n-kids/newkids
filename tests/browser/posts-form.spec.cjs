@@ -812,3 +812,74 @@ test('public pages filter draft/scheduled posts, sanitize links, and render alph
   await expect(page.locator('#product-list-area')).toContainText('기존 한글 교재');
   await expect(page.locator('#product-list-area')).not.toContainText('미래 예약 발주 교재');
 });
+
+test('block design mode renders live split preview and previewPost modal with figure/custom fonts/forms', async ({ context, page }) => {
+  await setupRoutes(context, makeSeedDb());
+  await openPostsTab(page);
+
+  await expect(page.locator('#nk-pe-bar')).toBeVisible();
+  await page.locator('#post-title').fill('블록 디자인 미리보기 테스트');
+
+  // 1) Switch to block design mode and load template
+  await page.locator('#nk-pe-mode-blocks').click();
+  await expect(page.locator('#nk-pe-wrap')).toHaveClass(/active/);
+  await expect(page.locator('#nk-pe-right-pane')).toBeVisible();
+
+  await page.locator('#nk-pe-tpl-sel').selectOption('textbook');
+  await expect(page.locator('#nk-pe-preview-box')).toContainText('신규 교재 프로그램 소개');
+  await expect(page.locator('#nk-pe-preview-box table')).toHaveCount(1);
+  await expect(page.locator('#editor-char-count')).not.toContainText('공백 포함 0자');
+
+  // 2) Add image block with URL & caption -> triggers auto thumbnail preview and preserves figure/figcaption
+  await page.locator('[data-p-add="image"]').click();
+  const imgIdx = await page.locator('#nk-pe-blocks-list .nk-pblk-card').count() - 1;
+  await page.locator(`#nk-pe-blocks-list input[data-pk="src"][data-pi="${imgIdx}"]`).fill('https://example.invalid/sample.webp');
+  await page.locator(`#nk-pe-blocks-list input[data-pk="caption"][data-pi="${imgIdx}"]`).fill('교재 사진 설명');
+  await expect(page.locator('#thumb-preview-badge')).toHaveText('본문 첫 이미지 자동 사용');
+
+  // 3) Add custom Google font on heading block and insert form block via top toolbar button
+  await page.locator('#nk-pe-blocks-list .nk-font-mgr summary').first().click();
+  await page.locator('#nk-pe-blocks-list [data-font-label="0"]').fill('개구쟁이체');
+  await page.locator('#nk-pe-blocks-list [data-font-css="0"]').fill('Gaegu');
+  await page.locator('#nk-pe-blocks-list [data-font-add="0"]').click();
+  await page.locator('#form-insert-select').selectOption('form_live');
+  await page.locator('#tab-posts button', { hasText: '본문에 넣기' }).click();
+  await expect(page.locator('#nk-pe-preview-box')).toContainText('2026 체험 신청 폼');
+
+  // 4) Main '미리보기' button (previewPost) renders block design content, figure/figcaption, custom font, and form card
+  await page.locator('#tab-posts button', { hasText: '미리보기' }).click();
+  await expect(page.locator('#nk-preview-modal')).toBeVisible();
+  const srcdoc = await page.locator('#nk-preview-modal iframe').getAttribute('srcdoc');
+  expect(srcdoc).toContain('신규 교재 프로그램 소개');
+  expect(srcdoc).toContain('<figure');
+  expect(srcdoc).toContain('<figcaption');
+  expect(srcdoc).toContain('교재 사진 설명');
+  expect(srcdoc).toContain('fonts.googleapis.com/css2?family=Gaegu');
+  expect(srcdoc).toContain('pv-poll-card');
+  expect(srcdoc).toContain('2026 체험 신청 폼');
+
+  await page.locator('#nk-preview-modal [data-modal-close]').click();
+  await expect(page.locator('#nk-preview-modal')).toBeHidden();
+
+  // 5) Raw HTML mode inside block design mode also updates previewPost and sanitizes unsafe tags
+  await page.locator('#nk-pe-toggle-raw').click();
+  await page.locator('#nk-pe-raw-ta').fill('<h2>직접 HTML 미리보기</h2><script>window.__xss=77</script>');
+  await expect(page.locator('#nk-pe-preview-box')).toContainText('직접 HTML 미리보기');
+  await page.locator('#tab-posts button', { hasText: '미리보기' }).click();
+  const rawSrcdoc = await page.locator('#nk-preview-modal iframe').getAttribute('srcdoc');
+  expect(rawSrcdoc).toContain('직접 HTML 미리보기');
+  expect(rawSrcdoc).not.toContain('<script>');
+  await page.locator('#nk-preview-modal [data-modal-close]').click();
+
+  // 6) Switching back to Quill mode restores Quill previewPost behavior
+  await page.locator('#nk-pe-mode-quill').click();
+  await page.evaluate(() => {
+    const editor = document.querySelector('#editor-container .ql-editor');
+    editor.innerHTML = '<p>일반 글쓰기 복귀 본문</p>';
+    editor.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  await page.locator('#tab-posts button', { hasText: '미리보기' }).click();
+  const quillSrcdoc = await page.locator('#nk-preview-modal iframe').getAttribute('srcdoc');
+  expect(quillSrcdoc).toContain('일반 글쓰기 복귀 본문');
+  expect(quillSrcdoc).not.toContain('직접 HTML 미리보기');
+});

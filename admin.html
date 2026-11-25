@@ -908,7 +908,7 @@
         try { window.ADMIN_PERSIST_SESSION = localStorage.getItem('newkids_admin_auto_login') === 'true'; }
         catch (_) { window.ADMIN_PERSIST_SESSION = false; }
     </script>
-    <script src="manager.js?v=20261121-2"></script>
+    <script src="manager.js?v=20261125-1"></script>
     <script src="form-shared.js?v=20261119"></script>
 
     <script>
@@ -1811,7 +1811,11 @@
                     badgeText = '유튜브 자동 추출 예정';
                     badgeClass = 'nk-thumb-badge is-auto';
                 } else {
-                    const firstImg = getFirstImageFromContent(quill ? quill.root.innerHTML : '');
+                    const isBlocksMode = !!(window.nkPostEditor && typeof window.nkPostEditor.isBlocksMode === 'function' && window.nkPostEditor.isBlocksMode());
+                    const contentHtml = isBlocksMode
+                        ? (window.nkPostEditor.getHtml() || '')
+                        : (quill ? quill.root.innerHTML : '');
+                    const firstImg = getFirstImageFromContent(contentHtml);
                     if (firstImg) {
                         previewUrl = firstImg;
                         badgeText = '본문 첫 이미지 자동 사용';
@@ -1849,9 +1853,16 @@
         function updateEditorCharCount() {
             const el = document.getElementById('editor-char-count');
             if (!el) return;
-            const text = (quill && typeof quill.getText === 'function')
-                ? quill.getText().replace(/\n$/, '')
-                : (quill && quill.root ? (quill.root.textContent || '') : '');
+            let text = '';
+            if (window.nkPostEditor && typeof window.nkPostEditor.isBlocksMode === 'function' && window.nkPostEditor.isBlocksMode()) {
+                const tmp = document.createElement('div');
+                tmp.innerHTML = window.nkPostEditor.getPreviewHtml() || '';
+                text = (tmp.textContent || '').trim();
+            } else {
+                text = (quill && typeof quill.getText === 'function')
+                    ? quill.getText().replace(/\n$/, '')
+                    : (quill && quill.root ? (quill.root.textContent || '') : '');
+            }
             const withSpaces = text.length;
             const withoutSpaces = text.replace(/\s/g, '').length;
             el.textContent = `공백 포함 ${withSpaces.toLocaleString()}자 · 공백 제외 ${withoutSpaces.toLocaleString()}자`;
@@ -2068,7 +2079,9 @@
             showLoading(true);
 
             try {
-                const rawContent = quill ? quill.root.innerHTML : '';
+                const rawContent = (window.nkPostEditor && typeof window.nkPostEditor.isBlocksMode === 'function' && window.nkPostEditor.isBlocksMode())
+                    ? (window.nkPostEditor.getHtml() || '')
+                    : (quill ? quill.root.innerHTML : '');
                 const cleanedContent = await replaceInlineDataImagesInHtml(rawContent);
 
                 // 썸네일 처리 (변경 이력 복구를 위해 기존 파일은 Storage에 보존)
@@ -3775,6 +3788,13 @@
             const formId = document.getElementById('form-insert-select').value;
             if (!formId) return showToast("삽입할 투표/신청서를 드롭다운에서 먼저 선택하세요.", 'error');
 
+            if (window.nkPostEditor && typeof window.nkPostEditor.isBlocksMode === 'function' && window.nkPostEditor.isBlocksMode()) {
+                window.nkPostEditor.insertFormBlock(formId);
+                isFormDirty = true;
+                showToast("블록 디자인 에디터에 폼/투표 블록이 추가되었습니다!", 'success');
+                return;
+            }
+
             const range = quill.getSelection(true);
             let idx = range ? range.index : quill.getLength();
 
@@ -3799,7 +3819,7 @@
     </script>
     <script src="admin-forms.js?v=20261119"></script>
     <script src="admin-static-pages.js?v=20261122-1"></script>
-    <script src="admin-post-editor.js?v=20261122-1"></script>
-    <script src="admin-convenience.js?v=20261119"></script>
+    <script src="admin-post-editor.js?v=20261125-1"></script>
+    <script src="admin-convenience.js?v=20261125-1"></script>
 </body>
 </html>

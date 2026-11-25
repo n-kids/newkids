@@ -167,7 +167,7 @@
   function parseYoutubeEmbed(url) {
     const s = String(url || '').trim();
     if (!s) return '';
-    const m = s.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/|youtube\.com\/embed\/)([A-Za-z0-9_-]{6,})/);
+    const m = s.match(/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/);
     return m ? 'https://www.youtube.com/embed/' + m[1] : '';
   }
 
@@ -385,7 +385,7 @@
         { id: uid(), type: 'heading', title: '2026 특별 행사 프로그램 안내', sub: '아이들에게 잊지 못할 하루를 선물하는 뉴키즈 방문 체험 행사', align: 'center', color: '#1c355e' },
         { id: uid(), type: 'callout', theme: 'navy', title: '행사 개요 및 신청 안내', body: '대상: 김포·고양·파주 어린이집 및 유치원\n진행 시간: 약 50분 ~ 90분 (원 일정에 맞춰 조율 가능)\n상담 문의: 010-2333-2563 / 010-5522-8109' },
         { id: uid(), type: 'gallery', cols: 3, photos: [] },
-        { id: uid(), type: 'form', formId: STATE.forms[0] ? STATE.forms[0].id : '' }
+        { id: uid(), type: 'form', formId: (getFormsList()[0] ? getFormsList()[0].id : '') }
       ];
     },
     archive: function () {
@@ -479,6 +479,15 @@
       const { data, error } = await window.sb.from('custom_forms').select('id, title').order('created_at', { ascending: false });
       if (!error && Array.isArray(data)) STATE.forms = data;
     } catch (_) {}
+  }
+
+  function getFormsList() {
+    if (Array.isArray(STATE.forms) && STATE.forms.length) return STATE.forms;
+    const sel = document.getElementById('form-insert-select');
+    if (!sel) return [];
+    return Array.from(sel.options)
+      .filter(function (opt) { return opt.value; })
+      .map(function (opt) { return { id: opt.value, title: opt.textContent || opt.value }; });
   }
 
   async function uploadImageToSupabase(file) {
@@ -726,6 +735,14 @@
         if (plain) STATE.blocks = [{ id: uid(), type: 'text', text: plain, align: 'left', fontSize: '15px' , fontFamily: '', fontUrl: ''}];
       }
       renderBlocks();
+      if (!STATE.forms.length) {
+        loadFormsList().then(function () {
+          if (STATE.mode === 'blocks' && STATE.forms.length) renderBlocks();
+        });
+      }
+    } else {
+      if (typeof window.updateThumbPreview === 'function') window.updateThumbPreview();
+      if (typeof window.updateEditorCharCount === 'function') window.updateEditorCharCount();
     }
   }
 
@@ -739,6 +756,7 @@
   }
 
   function addBlock(type) {
+    const forms = getFormsList();
     const defaults = {
       heading: { type: 'heading', fontSize: '24px', title: '섹션 제목', sub: '', align: 'left', color: '#1c355e', fontFamily: '', fontUrl: '', fontWeight: '800' },
       text: { type: 'text', text: '본문 내용을 입력하세요.', align: 'left', fontSize: '15px' , fontFamily: '', fontUrl: '', fontWeight: '400', color: '#334155'},
@@ -748,7 +766,7 @@
       image: { type: 'image', src: '', width: '100%', align: 'center', rounded: true, shadow: true, caption: '' },
       table: { type: 'table', headerColor: '#1c355e', headers: ['항목', '내용', '비고'], rows: [['예시 1', '상세 설명', '-']] },
       button: { type: 'button', label: '자세히 보기', url: 'proposal.html', bg: '#1c355e', align: 'center', newTab: false },
-      form: { type: 'form', formId: STATE.forms[0] ? STATE.forms[0].id : '' },
+      form: { type: 'form', formId: forms[0] ? forms[0].id : '' },
       youtube: { type: 'youtube', url: '' },
       divider: { type: 'divider' }
     };
@@ -759,13 +777,17 @@
 
   function updatePreview() {
     const box = document.getElementById('nk-pe-preview-box');
-    if (!box) return;
-    const raw = STATE.rawHtmlMode ? STATE.rawHtmlBuffer : STATE.blocks.map(renderBlockToHtml).join('\n');
-    const previewHtml = raw.replace(/\[투표:([a-zA-Z0-9_-]+)\]/g, function (_, fid) {
-      const f = STATE.forms.find(function (x) { return x.id === fid; });
-      return `<div style="padding:16px;border:2px dashed #1c355e;border-radius:10px;background:#eff6ff;text-align:center;color:#1c355e;font-size:13px;font-weight:700;">폼/투표 자동 삽입: ${esc(f ? f.title : fid)} ([투표:${esc(fid)}])</div>`;
-    });
-    box.innerHTML = previewHtml || '<p style="text-align:center;color:#94a3b8;padding:40px 0;">상단에서 블록이나 템플릿을 추가해 보세요.</p>';
+    const forms = getFormsList();
+    if (box) {
+      const raw = STATE.rawHtmlMode ? STATE.rawHtmlBuffer : STATE.blocks.map(renderBlockToHtml).join('\n');
+      const previewHtml = raw.replace(/\[투표:([a-zA-Z0-9_-]+)\]/g, function (_, fid) {
+        const f = forms.find(function (x) { return x.id === fid; });
+        return `<div style="padding:16px;border:2px dashed #1c355e;border-radius:10px;background:#eff6ff;text-align:center;color:#1c355e;font-size:13px;font-weight:700;">폼/투표 자동 삽입: ${esc(f ? f.title : fid)} ([투표:${esc(fid)}])</div>`;
+      });
+      box.innerHTML = previewHtml || '<p style="text-align:center;color:#94a3b8;padding:40px 0;">상단에서 블록이나 템플릿을 추가해 보세요.</p>';
+    }
+    if (typeof window.updateThumbPreview === 'function') window.updateThumbPreview();
+    if (typeof window.updateEditorCharCount === 'function') window.updateEditorCharCount();
   }
 
   function renderBlocks() {
@@ -910,7 +932,7 @@
       </div>`;
     }
     if (b.type === 'form') {
-      const opts = '<option value="">-- 폼/투표 선택 --</option>' + STATE.forms.map(function (f) {
+      const opts = '<option value="">-- 폼/투표 선택 --</option>' + getFormsList().map(function (f) {
         return `<option value="${esc(f.id)}" ${b.formId === f.id ? 'selected' : ''}>${esc(f.title || f.id)} (${esc(f.id)})</option>`;
       }).join('');
       return `<div class="nk-pblk-field"><label>삽입할 폼/투표</label><select data-pk="formId" data-pi="${idx}">${opts}</select></div>`;
@@ -1221,6 +1243,7 @@
       const origEdit = window.editPost;
       const wrappedEdit = function (item) {
         const res = origEdit.apply(this, arguments);
+        if (res === false) return false;
         const content = item && item.content ? item.content : '';
         if (hasBlockMeta(content)) {
           STATE.rawHtmlMode = false;
@@ -1242,6 +1265,7 @@
       const origCancel = window.cancelEdit;
       const wrappedCancel = function () {
         const res = origCancel.apply(this, arguments);
+        if (res === false) return false;
         STATE.blocks = [];
         STATE.rawHtmlMode = false;
         STATE.rawHtmlBuffer = '';
@@ -1253,19 +1277,70 @@
     }
   }
 
+  window.nkPostEditor = {
+    getMode: function () { return STATE.mode; },
+    isBlocksMode: function () { return STATE.mode === 'blocks'; },
+    getHtml: function () {
+      if (STATE.mode !== 'blocks') return null;
+      if (STATE.rawHtmlMode) {
+        const ta = document.getElementById('nk-pe-raw-ta');
+        return ta ? ta.value : STATE.rawHtmlBuffer;
+      }
+      return serializeBlocks(STATE.blocks);
+    },
+    getPreviewHtml: function () {
+      if (STATE.mode !== 'blocks') return null;
+      if (STATE.rawHtmlMode) {
+        const ta = document.getElementById('nk-pe-raw-ta');
+        return ta ? ta.value : STATE.rawHtmlBuffer;
+      }
+      return STATE.blocks.map(renderBlockToHtml).join('\n');
+    },
+    getCustomFonts: function () {
+      const fontMap = new Map();
+      STATE.blocks.forEach(function (b) {
+        if (b && b.fontUrl && b.fontFamily) {
+          fontMap.set(b.fontUrl, {
+            label: b.fontLabel || b.fontFamily,
+            family: sanitizeFontFamily(b.fontFamily),
+            url: String(b.fontUrl).trim()
+          });
+        }
+      });
+      return Array.from(fontMap.values());
+    },
+    getForms: getFormsList,
+    insertFormBlock: function (formId) {
+      if (!formId || STATE.mode !== 'blocks') return false;
+      STATE.rawHtmlMode = false;
+      syncRawModeUI();
+      STATE.blocks.push({ id: uid(), type: 'form', formId: String(formId) });
+      renderBlocks();
+      saveAutoDraft();
+      return true;
+    }
+  };
+
   async function init() {
     injectStyles();
-    await loadFormsList();
     mountPostEditor();
     wrapPostFunctions();
+    await loadFormsList();
+    if (STATE.mode === 'blocks') renderBlocks();
   }
 
-  document.addEventListener('DOMContentLoaded', function () {
+  function bootPostEditor() {
     const timer = setInterval(function () {
       if (window.sb && document.getElementById('editor-container') && typeof window.uploadPost === 'function') {
         clearInterval(timer);
         init();
       }
     }, 150);
-  });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootPostEditor);
+  } else {
+    bootPostEditor();
+  }
 })();

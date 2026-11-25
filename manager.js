@@ -114,7 +114,7 @@ window.loadPostCustomFonts = function (html) {
 
 window.sanitizeHtml = function (html) {
     if (typeof window.loadPostCustomFonts === "function") { window.loadPostCustomFonts(html); }
-    const allowedTags = new Set(["A","B","BLOCKQUOTE","BR","CODE","DIV","EM","H1","H2","H3","H4","H5","H6","HR","I","IFRAME","IMG","LI","OL","P","PRE","S","SPAN","STRONG","SUB","SUP","TABLE","TBODY","TD","TFOOT","TH","THEAD","TR","U","UL"]);
+    const allowedTags = new Set(["A","B","BLOCKQUOTE","BR","CODE","DIV","EM","FIGCAPTION","FIGURE","H1","H2","H3","H4","H5","H6","HR","I","IFRAME","IMG","LI","OL","P","PRE","S","SPAN","STRONG","SUB","SUP","TABLE","TBODY","TD","TFOOT","TH","THEAD","TR","U","UL"]);
     const allowedAttrs = new Set(["alt","colspan","height","href","src","title","width","rowspan","class","style"]);
     const safeUrl = (value, image) => {
         const v = String(value || "").trim();

@@ -25,6 +25,44 @@
     return modal;
   }
 
+  function buildPreviewCustomFontTags(html, extraFonts) {
+    const list = [];
+    const m = String(html || '').match(/<!--\s*NK_CUSTOM_FONTS_V1:([\s\S]*?)\s*-->/);
+    if (m) {
+      try {
+        const parsed = JSON.parse(decodeURIComponent(m[1].trim()));
+        if (Array.isArray(parsed)) list.push(...parsed);
+      } catch (_) {}
+    }
+    if (Array.isArray(extraFonts)) list.push(...extraFonts);
+    const seen = new Set();
+    const tags = [];
+    list.forEach(item => {
+      if (!item || !item.url) return;
+      let parsedUrl;
+      try {
+        parsedUrl = new URL(String(item.url).trim());
+      } catch (_) {
+        return;
+      }
+      if (parsedUrl.protocol !== 'https:') return;
+      const safeHref = parsedUrl.href;
+      if (seen.has(safeHref)) return;
+      seen.add(safeHref);
+      if (/\.(?:woff2|woff|ttf|otf)(?:[?#].*)?$/i.test(safeHref)) {
+        const rawName = String(item.cssName || item.family || '')
+          .split(',')[0]
+          .replace(/['"\\;{}<>\r\n]/g, '')
+          .trim();
+        if (!rawName || /['"\\<>\r\n]/.test(safeHref) || /<\/style/i.test(safeHref)) return;
+        tags.push("<style>@font-face { font-family: '" + rawName + "'; src: url('" + safeHref + "'); font-display: swap; }</style>");
+      } else {
+        tags.push('<link rel="stylesheet" href="' + esc(safeHref) + '">');
+      }
+    });
+    return tags.join('');
+  }
+
   window.previewPost = function () {
     const title = document.getElementById('post-title')?.value?.trim() || '(제목 없음)';
     const catCode = document.getElementById('post-category')?.value || '';
@@ -37,14 +75,31 @@
     const linkUrl = document.getElementById('post-link')?.value?.trim() || '';
     const dlPw = document.getElementById('post-dl-password')?.value?.trim() || '';
 
-    const rawContent = (typeof quill !== 'undefined' && quill && quill.root) ? quill.root.innerHTML : '<p>본문이 없습니다.</p>';
+    const isBlocksMode = !!(window.nkPostEditor && typeof window.nkPostEditor.isBlocksMode === 'function' && window.nkPostEditor.isBlocksMode());
+    const rawContent = isBlocksMode
+      ? (window.nkPostEditor.getHtml() || '')
+      : ((typeof quill !== 'undefined' && quill && quill.root) ? quill.root.innerHTML : '<p>본문이 없습니다.</p>');
+    const extraFonts = isBlocksMode && typeof window.nkPostEditor.getCustomFonts === 'function'
+      ? window.nkPostEditor.getCustomFonts()
+      : [];
+    const customFontTags = buildPreviewCustomFontTags(rawContent, extraFonts);
     let sanitized = typeof window.sanitizeHtml === 'function' ? window.sanitizeHtml(rawContent) : rawContent;
+    if (isBlocksMode && !String(sanitized || '').trim()) {
+      sanitized = '<p style="color:#94a3b8;">작성된 블록 본문이 없습니다.</p>';
+    }
 
     const formTitleMap = {};
     const formSelect = document.getElementById('form-insert-select');
     if (formSelect) {
       Array.from(formSelect.options).forEach(opt => {
         if (opt.value) formTitleMap[String(opt.value)] = opt.textContent || opt.value;
+      });
+    }
+    if (window.nkPostEditor && typeof window.nkPostEditor.getForms === 'function') {
+      (window.nkPostEditor.getForms() || []).forEach(f => {
+        if (f && f.id && !formTitleMap[String(f.id)]) {
+          formTitleMap[String(f.id)] = f.title || f.id;
+        }
       });
     }
     sanitized = sanitized.replace(/\[투표:([a-zA-Z0-9_-]+)\]/g, (_m, fid) => {
@@ -100,6 +155,7 @@
     const frame = modal.querySelector('iframe');
     frame.srcdoc = '<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
       + '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Gugi&family=Jua&family=Poor+Story&family=Song+Myung&family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&family=Nanum+Gothic:wght@400;700;800&family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Sans+KR:wght@400;500;700;900&family=Noto+Serif+KR:wght@400;500;700;900&display=swap">'
+      + customFontTags
       + '<style>'
       + 'body{font:16px/1.75 "Noto Sans KR",Arial,sans-serif;max-width:820px;margin:26px auto;padding:0 20px 40px;color:#222}'
       + '.pv-meta{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}'
@@ -117,11 +173,11 @@
       + '.pv-lock{font-size:12px;padding:2px 8px;border-radius:999px;background:#e0f2fe;color:#0369a1}'
       + '.pv-attach ul{margin:0;padding-left:20px;font-size:14px;color:#334155}'
       + '.ql-align-center{text-align:center}.ql-align-right{text-align:right}.ql-align-justify{text-align:justify}'
-      + '.ql-font-sans-serif{font-family:Arial,sans-serif}.ql-font-nanum-gothic{font-family:"Nanum Gothic","Malgun Gothic",sans-serif}.ql-font-nanum-myeongjo{font-family:"Nanum Myeongjo",serif}.ql-font-gowun-dodum{font-family:"Gowun Dodum",sans-serif}.ql-font-gowun-batang{font-family:"Gowun Batang",serif}.ql-font-noto-sans-kr{font-family:"Noto Sans KR",sans-serif}.ql-font-noto-serif-kr{font-family:"Noto Serif KR",serif}.ql-font-black-han-sans{font-family:"Black Han Sans",sans-serif}.ql-font-do-hyeon{font-family:"Do Hyeon",sans-serif}.ql-font-jua{font-family:"Jua",sans-serif}.ql-font-gugi{font-family:"Gugi",sans-serif}.ql-font-poor-story{font-family:"Poor Story",sans-serif}.ql-font-song-myung{font-family:"Song Myung",sans-serif}'
+      + '.ql-font-sans-serif{font-family:Arial,sans-serif}.ql-font-nanum-gothic{font-family:"Nanum Gothic","Malgun Gothic",sans-serif}.ql-font-nanum-myeongjo{font-family:"Nanum Myeongjo",serif}.ql-font-gowun-dodum{font-family:"Gowun Dodum",sans-serif}.ql-font-gowun-batang{font-family:"Gowun Batang",serif}.ql-font-noto-sans-kr{font-family:"Noto Sans KR",sans-serif}.ql-font-noto-serif-kr{font-family:"Noto Serif KR",sans-serif}.ql-font-black-han-sans{font-family:"Black Han Sans",sans-serif}.ql-font-do-hyeon{font-family:"Do Hyeon",sans-serif}.ql-font-jua{font-family:"Jua",sans-serif}.ql-font-gugi{font-family:"Gugi",sans-serif}.ql-font-poor-story{font-family:"Poor Story",sans-serif}.ql-font-song-myung{font-family:"Song Myung",sans-serif}'
       + '.ql-size-small{font-size:.75em}.ql-size-large{font-size:1.5em}.ql-size-huge{font-size:2.5em}'
       + '.ql-indent-1{padding-left:3em}.ql-indent-2{padding-left:6em}.ql-indent-3{padding-left:9em}.ql-indent-4{padding-left:12em}.ql-indent-5{padding-left:15em}.ql-indent-6{padding-left:18em}.ql-indent-7{padding-left:21em}.ql-indent-8{padding-left:24em}'
       + 'blockquote{border-left:4px solid #cbd5e1;margin:1em 0;padding:6px 14px;color:#475569;background:#f8fafc}'
-      + 'img,video{max-width:100%;height:auto}iframe.ql-video{display:block;width:100%;aspect-ratio:16/9;border:0;margin:1em auto}'
+      + 'figure{max-width:100%;box-sizing:border-box}img,video{max-width:100%;height:auto}iframe.ql-video{display:block;width:100%;aspect-ratio:16/9;border:0;margin:1em auto}'
       + 'table{border-collapse:collapse;max-width:100%}td,th{border:1px solid #ddd;padding:6px}'
       + '</style>'
       + '<div class="pv-meta">' + badges.join('') + '</div>'

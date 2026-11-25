@@ -103,10 +103,6 @@
         }
         const body = element('div', 'card-body catalog-card-body' + (isEvents ? '' : ' post-info'));
         body.appendChild(element(isEvents ? 'div' : 'h3', 'card-title catalog-card-title' + (isEvents ? '' : ' post-title'), String(item.title || '')));
-        if (!isEvents) {
-            const description = item.content ? String(item.content).replace(/<[^>]*>?/gm, '').substring(0, 50) + '...' : '';
-            body.appendChild(element('p', 'card-text post-desc', description));
-        }
         link.append(frame, body);
         return link;
     }
@@ -122,7 +118,7 @@
         try {
             const nowIso = new Date().toISOString();
             let query = window.sb.from('total_posts')
-                .select(isEvents ? '*' : 'id, title, thumbnail_url, content, created_at, video_url, publish_at, is_draft')
+                .select(isEvents ? '*' : 'id, title, thumbnail_url, created_at, video_url, publish_at, is_draft')
                 .eq('category', code).eq('is_visible', true).neq('is_draft', true);
             if (!isEvents) query = query.or('video_url.neq.ORDER_ITEM,video_url.is.null');
             else query = query.or(`publish_at.is.null,publish_at.lte.${nowIso}`);

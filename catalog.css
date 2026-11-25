@@ -13,6 +13,8 @@
 .catalog-page .catalog-card { position: relative; padding: 0; cursor: pointer; }
 .catalog-page.catalog-events .catalog-card-body { padding: 15px; text-align: center; }
 .catalog-page.catalog-events .catalog-card-title { margin: 0; font-weight: 600; font-size: 1.1rem; word-break: keep-all; }
+.catalog-page.catalog-education .catalog-card-body { justify-content: center; text-align: center; }
+.catalog-page.catalog-education .catalog-card-title { margin: 0; word-break: keep-all; }
 .catalog-page .catalog-play { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); color: #fff; font-size: 3rem; text-shadow: 0 0 10px rgba(0,0,0,.5); }
 .catalog-page .catalog-state { text-align: center; padding: 80px 20px; color: #596174; background: #faf8f3; border-radius: 12px; grid-column: 1 / -1; width: 100%; }
 .catalog-page .catalog-state-icon { font-size: 3rem; margin-bottom: 15px; }

@@ -811,6 +811,15 @@ test('public pages filter draft/scheduled posts, sanitize links, and render alph
   await page.goto('/order.html');
   await expect(page.locator('#product-list-area')).toContainText('기존 한글 교재');
   await expect(page.locator('#product-list-area')).not.toContainText('미래 예약 발주 교재');
+
+  // 7) child.html (교재 소개) displays only thumbnail and title (no body description)
+  await page.goto('/child.html#korean');
+  await expect(page.locator('#post-list .post-card')).toHaveCount(1);
+  await expect(page.locator('#post-list .post-card .post-thumb img')).toHaveCount(1);
+  await expect(page.locator('#post-list .post-card .post-thumb img')).toHaveAttribute('alt', '기존 한글 교재');
+  await expect(page.locator('#post-list .post-card .post-title')).toHaveText('기존 한글 교재');
+  await expect(page.locator('#post-list .post-desc, #post-list .card-text')).toHaveCount(0);
+  await expect(page.locator('#post-list .post-card')).not.toContainText('기존 본문');
 });
 
 test('block design mode renders live split preview and previewPost modal with figure/custom fonts/forms', async ({ context, page }) => {

@@ -98,10 +98,16 @@ async function boot(){
   render();
 }
 async function load(){
-  const [m, o] = await Promise.all([
+  const baseCols = 'id,member_id,kind,month,lines,quote_want,quote_email,quote_sent,pay,stmt_want,stmt_email,stmt_at,stmt_sent,state,done,as_info,memo,log,sheet_synced_at,sheet_note,created_at';
+  const extCols = baseCols + ',ec_synced_at,ec_delivered_at,ec_delivered_by';
+  const [m, oTry] = await Promise.all([
     sb.rpc('nk_admin_members'),   // 전화번호는 암호화돼 있어 관리자 전용 함수로 풀어서 받음
-    sb.from('nk_orders').select('id,member_id,kind,month,lines,quote_want,quote_email,quote_sent,pay,stmt_want,stmt_email,stmt_at,stmt_sent,state,done,as_info,memo,log,sheet_synced_at,sheet_note,created_at').order('created_at', {ascending:false}).limit(500),
+    sb.from('nk_orders').select(extCols).order('created_at', {ascending:false}).limit(500),
   ]);
+  let o = oTry;
+  if (o.error && /column|ec_delivered|ec_synced/i.test(o.error.message || '')) {
+    o = await sb.from('nk_orders').select(baseCols).order('created_at', {ascending:false}).limit(500);
+  }
   if (m.error || o.error){ toast((m.error || o.error).message); return; }
   members = m.data; orders = o.data;
   await loadGatherings();
@@ -217,7 +223,13 @@ function detail(o){
   const pics = (photoCache[o.id]||[]).map((s,i) => `<a href="${s}" target="_blank" rel="noopener"><img src="${s}" alt="사진 ${i+1}"></a>`).join('');
   if (o.kind === 'as') h += `<span>${esc(o.memo||'(내용 없음)')}</span><div class="as-ph">${pics || '<span class="hint">사진 불러오는 중…</span>'}</div>`;
   if (o.kind === 'return' && pics) h += `<div class="as-ph">${pics}</div>`;
-  if (o.kind === 'book') h += `<span class="hint">납품시트: ${o.sheet_synced_at ? '반영됨 ' + fmtDate(o.sheet_synced_at) : o.state >= 1 ? '반영 대기' : '확인을 누르면 반영돼요'}${o.sheet_note ? ' · ' + esc(o.sheet_note) : ''}</span>`;
+  if (o.kind === 'book') {
+    const delivLog = !o.ec_delivered_at && Array.isArray(o.log) ? [...o.log].reverse().find(l => /직납 완료(?! 취소)/.test(l.t || '')) : null;
+    const delivAt = o.ec_delivered_at || (delivLog && delivLog.at) || null;
+    h += `<span class="hint">납품시트: ${o.sheet_synced_at ? '반영됨 ' + fmtDate(o.sheet_synced_at) : o.state >= 1 ? '반영 대기' : '확인을 누르면 반영돼요'}${o.sheet_note ? ' · ' + esc(o.sheet_note) : ''}</span>`;
+    if (delivAt) h += `<span class="hint"><span class="tag ok">직납 완료</span> ${fmtDate(delivAt)}${o.ec_delivered_by ? ' · 담당 ' + esc(o.ec_delivered_by) : ''}</span>`;
+    else if (o.ec_synced_at) h += `<span class="hint">납품앱: 반영됨 ${fmtDate(o.ec_synced_at)} · 직납 대기</span>`;
+  }
   h += `<ul class="log">${(o.log||[]).map(l => `<li class="num">${fmtDate(l.at)} ${esc(l.t)}</li>`).join('')}</ul>`;
   return h;
 }

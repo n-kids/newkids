@@ -130,6 +130,82 @@ end $$;
 revoke all on function public.nk_ec_pickups(text), public.nk_ec_pickup_put(text,text,jsonb) from public;
 grant execute on function public.nk_ec_pickups(text), public.nk_ec_pickup_put(text,text,jsonb) to anon, authenticated;
 
+-- ===== 납품앱 완료 → 주문앱(nk_orders) 역방향 완료 반영 (2026-11-27) =====
+-- 납품앱에서 정규 납품을 완료(또는 취소)하면 봇 서버(/app/orders/delivered)가 이 함수를 호출해
+-- 연결된 교재 주문에 직납 완료 시각·담당자·이력을 자동 기록합니다.
+alter table public.nk_orders add column if not exists ec_delivered_at timestamptz; -- 납품앱에서 직납 완료된 시각
+alter table public.nk_orders add column if not exists ec_delivered_by text;        -- 직납 완료 처리 담당자(기사)
+
+create or replace function public.nk_ec_mark_delivered(
+  p_key text,
+  p_order_ids bigint[] default '{}',
+  p_school text default '',
+  p_delivered_at timestamptz default now(),
+  p_by text default '',
+  p_note text default '',
+  p_undone boolean default false
+)
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare
+  v_ids bigint[];
+  v_at timestamptz := coalesce(p_delivered_at, now());
+  v_by text := nullif(trim(coalesce(p_by, '')), '');
+  v_note text := nullif(trim(coalesce(p_note, '')), '');
+  v_tag text;
+  v_count int := 0;
+begin
+  if not public.nk_sheet_key_ok(p_key) then raise exception 'sheet key mismatch'; end if;
+
+  if coalesce(array_length(p_order_ids, 1), 0) > 0 then
+    v_ids := p_order_ids;
+  elsif coalesce(trim(p_school), '') <> '' then
+    select coalesce(array_agg(o.id), '{}') into v_ids
+      from public.nk_orders o
+      join public.nk_members m on m.id = o.member_id
+     where o.kind = 'book'
+       and o.ec_synced_at is not null
+       and o.created_at >= now() - interval '45 days'
+       and (
+         public.nk_ec_norm(m.kg) = public.nk_ec_norm(p_school)
+         or (coalesce(m.sheet_name, '') <> '' and public.nk_ec_norm(m.sheet_name) = public.nk_ec_norm(p_school))
+       );
+  else
+    return jsonb_build_object('updated', 0, 'ids', '[]'::jsonb);
+  end if;
+
+  if coalesce(array_length(v_ids, 1), 0) = 0 then
+    return jsonb_build_object('updated', 0, 'ids', '[]'::jsonb);
+  end if;
+
+  if p_undone then
+    v_tag := '직납 완료 취소' || coalesce(' (' || v_by || ')', '');
+    update public.nk_orders
+       set ec_delivered_at = null,
+           ec_delivered_by = null,
+           updated_at = now(),
+           log = coalesce(log, '[]'::jsonb) || jsonb_build_array(jsonb_build_object('at', now(), 't', v_tag))
+     where id = any(v_ids)
+       and ec_delivered_at is not null;
+    get diagnostics v_count = row_count;
+  else
+    v_tag := '직납 완료' || coalesce(' (' || v_by || ')', '') || coalesce(' · ' || v_note, '');
+    update public.nk_orders
+       set ec_delivered_at = v_at,
+           ec_delivered_by = coalesce(v_by, ec_delivered_by),
+           state = greatest(state, 3),
+           updated_at = now(),
+           log = coalesce(log, '[]'::jsonb) || jsonb_build_array(jsonb_build_object('at', v_at, 't', v_tag))
+     where id = any(v_ids)
+       and ec_delivered_at is null;
+    get diagnostics v_count = row_count;
+  end if;
+
+  return jsonb_build_object('updated', v_count, 'ids', to_jsonb(v_ids), 'undone', p_undone);
+end $$;
+
+revoke all on function public.nk_ec_mark_delivered(text,bigint[],text,timestamptz,text,text,boolean) from public;
+grant execute on function public.nk_ec_mark_delivered(text,bigint[],text,timestamptz,text,text,boolean) to anon, authenticated;
+
 -- ===== 납품시트 엔터코딩 칸 → 납품앱 원 카드 (2026-11-27) =====
 -- 메인 PC sync-delivery-sheet.ps1 이 15분마다 그 달(매달 15일부터 다음 달) 시트의 엔터코딩 1~4단계 수량을 보냄.
 -- 카드에 sheetMonth(예 '26.12')·sheetQ(마지막으로 반영한 시트 수량)를 남겨, 같은 달이면 차이만 더하고(손으로 고친 수량 보존),

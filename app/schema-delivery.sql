@@ -130,78 +130,82 @@ end $$;
 revoke all on function public.nk_ec_pickups(text), public.nk_ec_pickup_put(text,text,jsonb) from public;
 grant execute on function public.nk_ec_pickups(text), public.nk_ec_pickup_put(text,text,jsonb) to anon, authenticated;
 
--- ===== 납품앱 완료 → 주문앱(nk_orders) 역방향 완료 반영 (2026-11-27) =====
--- 납품앱에서 정규 납품을 완료(또는 취소)하면 봇 서버(/app/orders/delivered)가 이 함수를 호출해
--- 연결된 교재 주문에 직납 완료 시각·담당자·이력을 자동 기록합니다.
-alter table public.nk_orders add column if not exists ec_delivered_at timestamptz; -- 납품앱에서 직납 완료된 시각
-alter table public.nk_orders add column if not exists ec_delivered_by text;        -- 직납 완료 처리 담당자(기사)
-
-create or replace function public.nk_ec_mark_delivered(
-  p_key text,
-  p_order_ids bigint[] default '{}',
-  p_school text default '',
-  p_delivered_at timestamptz default now(),
-  p_by text default '',
-  p_note text default '',
-  p_undone boolean default false
-)
+-- ===== 납품시트 엔터코딩 칸 → 납품앱 원 카드 (2026-11-27) =====
+-- 메인 PC sync-delivery-sheet.ps1 이 15분마다 그 달(매달 15일부터 다음 달) 시트의 엔터코딩 1~4단계 수량을 보냄.
+-- 카드에 sheetMonth(예 '26.12')·sheetQ(마지막으로 반영한 시트 수량)를 남겨, 같은 달이면 차이만 더하고(손으로 고친 수량 보존),
+-- 달이 바뀌면 같은 카드를 새 달 수량으로 바꾸고 납품완료·품목 체크를 푼다. 새 달 시트에 없는 원 카드는 수량 0.
+-- p_rows: [{"name":"시립풍무어린이집","q":{"1":0,"2":60,"3":29,"4":0},"geo":{address,phone,url,lat,lng,regionGroup,subRegion}}]
+-- p_apply=false 면 바꿀 내용만 돌려줌.
+create or replace function public.nk_ec_sheet_apply(p_key text, p_month text, p_rows jsonb, p_apply boolean)
 returns jsonb language plpgsql security definer set search_path = public as $$
 declare
-  v_ids bigint[];
-  v_at timestamptz := coalesce(p_delivered_at, now());
-  v_by text := nullif(trim(coalesce(p_by, '')), '');
-  v_note text := nullif(trim(coalesce(p_note, '')), '');
-  v_tag text;
-  v_count int := 0;
+  row_ jsonb; rec record; v jsonb; sq jsonb; nq jsonb; rid_ text; n bigint; i int; d int; cur int;
+  changes jsonb := '[]'; seen text[] := '{}'; kind_ text; detail jsonb;
 begin
   if not public.nk_sheet_key_ok(p_key) then raise exception 'sheet key mismatch'; end if;
+  if p_month !~ '^\d\d\.\d\d$' then raise exception 'bad month'; end if;
 
-  if coalesce(array_length(p_order_ids, 1), 0) > 0 then
-    v_ids := p_order_ids;
-  elsif coalesce(trim(p_school), '') <> '' then
-    select coalesce(array_agg(o.id), '{}') into v_ids
-      from public.nk_orders o
-      join public.nk_members m on m.id = o.member_id
-     where o.kind = 'book'
-       and o.ec_synced_at is not null
-       and o.created_at >= now() - interval '45 days'
-       and (
-         public.nk_ec_norm(m.kg) = public.nk_ec_norm(p_school)
-         or (coalesce(m.sheet_name, '') <> '' and public.nk_ec_norm(m.sheet_name) = public.nk_ec_norm(p_school))
-       );
-  else
-    return jsonb_build_object('updated', 0, 'ids', '[]'::jsonb);
-  end if;
+  for row_ in select * from jsonb_array_elements(coalesce(p_rows, '[]')) loop
+    nq := jsonb_build_object('1', coalesce((row_->'q'->>'1')::int,0), '2', coalesce((row_->'q'->>'2')::int,0),
+                             '3', coalesce((row_->'q'->>'3')::int,0), '4', coalesce((row_->'q'->>'4')::int,0));
+    select r.rid, r.value into rec from public.ec_records r
+     where r.kind = 'school' and not r.deleted and r.value is not null
+       and r.value->>'product' = '엔터코딩' and public.nk_ec_norm(r.value->>'name') = public.nk_ec_norm(row_->>'name')
+     order by r.updated_at desc limit 1;
+    if not found then
+      select coalesce(max(nullif(regexp_replace(rid, '\D', '', 'g'), '')::bigint), 0) + 1 into n from public.ec_records where kind = 'school';
+      rid_ := n::text; kind_ := 'new';
+      v := coalesce(row_->'geo', '{}') || jsonb_build_object('id', n, 'order', n, 'name', row_->>'name', 'product', '엔터코딩',
+             'q1', nq->'1', 'q2', nq->'2', 'q3', nq->'3', 'q4', nq->'4', 't1', 0, 't2', 0, 't3', 0, 't4', 0,
+             'extras', '[]'::jsonb, 'cardYellow', true, 'sheetMonth', p_month, 'sheetQ', nq);
+      if not (v ? 'regionGroup') then v := v || '{"regionGroup":"기타","subRegion":"기타"}'; end if;
+      detail := nq;
+    else
+      rid_ := rec.rid; v := rec.value; seen := seen || rid_;
+      if v->>'sheetMonth' = p_month then
+        kind_ := 'delta'; sq := coalesce(v->'sheetQ', '{}'); detail := '{}';
+        for i in 1..4 loop
+          d := (nq->>i::text)::int - coalesce((sq->>i::text)::int, 0);
+          if d <> 0 then
+            cur := coalesce((v->>('q' || i))::int, 0);
+            v := jsonb_set(v, array['q' || i], to_jsonb(greatest(cur + d, 0)));
+            detail := detail || jsonb_build_object(i::text, d);
+          end if;
+        end loop;
+        if detail = '{}' then continue; end if;
+        v := v || jsonb_build_object('sheetQ', nq);
+      else
+        kind_ := 'month'; detail := nq;
+        v := v || jsonb_build_object('q1', nq->'1', 'q2', nq->'2', 'q3', nq->'3', 'q4', nq->'4', 'sheetMonth', p_month, 'sheetQ', nq);
+      end if;
+    end if;
+    changes := changes || jsonb_build_array(jsonb_build_object('rid', rid_, 'name', v->>'name', 'kind', kind_, 'q', detail));
+    if p_apply then
+      insert into public.ec_records (kind, rid, value, deleted, updated_by) values ('school', rid_, v, false, 'nk-sheet')
+        on conflict (kind, rid) do update set value = excluded.value, deleted = false, updated_by = excluded.updated_by;
+      if kind_ = 'new' then
+        insert into public.ec_records (kind, rid, value, deleted, updated_by)
+          values ('meta', 'order', coalesce((select r.value from public.ec_records r where r.kind = 'meta' and r.rid = 'order' and not r.deleted and jsonb_typeof(r.value) = 'array'), '[]') || to_jsonb(rid_::bigint), false, 'nk-sheet')
+          on conflict (kind, rid) do update set value = excluded.value, deleted = false, updated_by = excluded.updated_by;
+      elsif kind_ = 'month' then
+        update public.ec_records set value = null, deleted = true, updated_by = 'nk-sheet' where kind in ('done', 'check') and rid = rid_ and not deleted;
+      end if;
+    end if;
+  end loop;
 
-  if coalesce(array_length(v_ids, 1), 0) = 0 then
-    return jsonb_build_object('updated', 0, 'ids', '[]'::jsonb);
-  end if;
-
-  if p_undone then
-    v_tag := '직납 완료 취소' || coalesce(' (' || v_by || ')', '');
-    update public.nk_orders
-       set ec_delivered_at = null,
-           ec_delivered_by = null,
-           updated_at = now(),
-           log = coalesce(log, '[]'::jsonb) || jsonb_build_array(jsonb_build_object('at', now(), 't', v_tag))
-     where id = any(v_ids)
-       and ec_delivered_at is not null;
-    get diagnostics v_count = row_count;
-  else
-    v_tag := '직납 완료' || coalesce(' (' || v_by || ')', '') || coalesce(' · ' || v_note, '');
-    update public.nk_orders
-       set ec_delivered_at = v_at,
-           ec_delivered_by = coalesce(v_by, ec_delivered_by),
-           state = greatest(state, 3),
-           updated_at = now(),
-           log = coalesce(log, '[]'::jsonb) || jsonb_build_array(jsonb_build_object('at', v_at, 't', v_tag))
-     where id = any(v_ids)
-       and ec_delivered_at is null;
-    get diagnostics v_count = row_count;
-  end if;
-
-  return jsonb_build_object('updated', v_count, 'ids', to_jsonb(v_ids), 'undone', p_undone);
+  -- 지난달 시트에서 온 카드인데 이번 달 시트에 없는 원 → 수량 0 으로 새 달
+  for rec in select r.rid, r.value from public.ec_records r
+              where r.kind = 'school' and not r.deleted and r.value is not null and r.value->>'product' = '엔터코딩'
+                and r.value ? 'sheetMonth' and r.value->>'sheetMonth' <> p_month and not (r.rid = any(seen)) loop
+    v := rec.value || jsonb_build_object('q1', 0, 'q2', 0, 'q3', 0, 'q4', 0, 'sheetMonth', p_month, 'sheetQ', '{"1":0,"2":0,"3":0,"4":0}'::jsonb);
+    changes := changes || jsonb_build_array(jsonb_build_object('rid', rec.rid, 'name', v->>'name', 'kind', 'zero'));
+    if p_apply then
+      update public.ec_records set value = v, updated_by = 'nk-sheet' where kind = 'school' and rid = rec.rid;
+      update public.ec_records set value = null, deleted = true, updated_by = 'nk-sheet' where kind in ('done', 'check') and rid = rec.rid and not deleted;
+    end if;
+  end loop;
+  return changes;
 end $$;
 
-revoke all on function public.nk_ec_mark_delivered(text,bigint[],text,timestamptz,text,text,boolean) from public;
-grant execute on function public.nk_ec_mark_delivered(text,bigint[],text,timestamptz,text,text,boolean) to anon, authenticated;
+revoke all on function public.nk_ec_sheet_apply(text,text,jsonb,boolean) from public;
+grant execute on function public.nk_ec_sheet_apply(text,text,jsonb,boolean) to anon, authenticated;

@@ -20,7 +20,7 @@
 <meta property="og:url" content="https://n-kids.github.io/newkids/index.html">
     
     <title>뉴키즈 - 김포·고양·파주 어린이집/유치원 파트너</title>
-    <link rel="stylesheet" href="style.css?v=20261103">
+    <link rel="stylesheet" href="style.css?v=20261127-1">
     <style>
         /* =========================================
            [팝업 슬라이더 스타일]
@@ -175,18 +175,69 @@
         .popup-close { font-weight: bold; color: #fff; }
         .popup-footer button:focus-visible, .dot:focus-visible { outline: 3px solid #f2c14e; outline-offset: 2px; }
 
-        /* 모바일 대응 */
+        /* 모바일 대응: 하단 시트 슬라이더 (.m-tabbar 위 고정, 중앙 화면 침범 최소화) */
         @media (max-width: 768px) {
             #popup-layer {
-                top: 80px;
-                left: 50%;
-                transform: translateX(-50%);
-                width: 90%;
-                max-width: 450px;
+                top: auto;
+                left: 0;
+                right: 0;
+                bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+                transform: none;
+                width: 100%;
+                max-width: 100%;
+                padding: 0 8px 6px;
+                box-sizing: border-box;
             }
 
             .popup-slider-box {
                 width: 100%;
+                max-width: 520px;
+                margin: 0 auto;
+                border-radius: 18px 18px 12px 12px;
+                box-shadow: 0 -8px 28px rgba(15, 23, 42, 0.24);
+                animation: popupSheetUp 0.35s ease;
+            }
+
+            .popup-slider-box::before {
+                content: "";
+                display: block;
+                width: 40px;
+                height: 4px;
+                border-radius: 999px;
+                background: #d0d7e3;
+                margin: 8px auto 6px;
+            }
+
+            .slider-wrapper {
+                min-height: 150px;
+                max-height: 44vh;
+                overflow: hidden;
+                touch-action: pan-y;
+            }
+
+            .popup-slide img {
+                max-height: 44vh;
+                width: 100%;
+                object-fit: contain;
+                background: #f5f7fb;
+            }
+
+            .popup-footer {
+                padding: 10px 12px;
+                font-size: 0.84rem;
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+
+            @keyframes popupSheetUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(24px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
             }
         }
     </style>
@@ -463,8 +514,8 @@
     <footer></footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="config.js?v=20261026"></script>
-    <script src="manager.js?v=20261102"></script>
+    <script src="config.js?v=20261127-1"></script>
+    <script src="manager.js?v=20261127-1"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script>
         // 주문 앱 설치 배너: PC에서 휴대폰으로 찍을 QR코드 (설치 안내 페이지)
@@ -579,6 +630,23 @@
                     box.addEventListener('focusout', event => {
                         if (!autoSlidePaused && !box.contains(event.relatedTarget)) startAutoSlide();
                     });
+
+                    let touchStartX = 0;
+                    let touchStartY = 0;
+                    sliderContent.addEventListener('touchstart', e => {
+                        if (!e.touches || !e.touches.length) return;
+                        touchStartX = e.touches[0].clientX;
+                        touchStartY = e.touches[0].clientY;
+                    }, { passive: true });
+                    sliderContent.addEventListener('touchend', e => {
+                        if (!e.changedTouches || !e.changedTouches.length) return;
+                        const dx = e.changedTouches[0].clientX - touchStartX;
+                        const dy = e.changedTouches[0].clientY - touchStartY;
+                        if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+                            changeSlide(dx < 0 ? 1 : -1);
+                            if (!autoSlidePaused) startAutoSlide();
+                        }
+                    }, { passive: true });
                 }
 
                 document.getElementById('popup-layer').style.display = 'block';

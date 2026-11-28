@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>뉴키즈 - 상세 보기</title>
     <!-- 공통 스타일 시트 로드 -->
-    <link rel="stylesheet" href="style.css?v=20261102-editor-plus6">
+    <link rel="stylesheet" href="style.css?v=20261127-1">
     <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Gugi&family=Jua&family=Poor+Story&family=Song+Myung&family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&family=Nanum+Gothic:wght@400;700;800&family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Sans+KR:wght@400;500;700;900&family=Noto+Serif+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
     <style>
         body {
@@ -146,8 +146,8 @@
     <footer></footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="config.js?v=20261026"></script>
-    <script src="manager.js?v=20261125-1"></script>
+    <script src="config.js?v=20261127-1"></script>
+    <script src="manager.js?v=20261127-1"></script>
     <script>
         let currentPostId = null;
         let postDataCache = null;
@@ -467,21 +467,21 @@
                         const canPreview = ['pdf', 'jpg', 'jpeg', 'png', 'gif'].includes(ext);
 
                         const previewBtn = canPreview && !isLocked ? `
-                                <button onclick="event.stopPropagation(); openFilePreview('${safeUrl}', '${safeName}')" style="background:#b85a17; border:none; color:#fff; padding:6px 14px; border-radius:6px; font-size:0.85rem; font-weight:bold; cursor:pointer; margin-right:8px; box-shadow:0 2px 4px rgba(0, 0, 0, 0.15);">미리보기</button>
+                                <button type="button" class="nk-file-preview-btn" onclick="event.stopPropagation(); openFilePreview('${safeUrl}', '${safeName}')">미리보기</button>
                             ` : '';
 
                         const btnLabel = isLocked ? '🔒 제한됨' : '다운로드';
-                        const btnBg = isLocked ? 'background:#e67e22;' : 'background:#1a3c6e;';
+                        const dlClass = isLocked ? 'nk-file-dl-btn is-locked' : 'nk-file-dl-btn';
 
                         fileHtml += `
-                                <div onclick="attemptDownload('${safeUrl}', '${safeName}')" style="display:flex; justify-content:space-between; align-items:center; background:#f0f7ff; padding:15px; border-radius:10px; border:1px solid #cce5ff; cursor:pointer; transition: background 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
-                                    <div style="display:flex; align-items:center; gap:12px; flex: 1; min-width: 0;">
-                                        <span style="font-size:1.6rem;">${fileIcon}</span>
-                                        <span style="font-size:1.05rem; color:#1a3c6e; font-weight:bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${displayFileName}</span>
+                                <div class="nk-file-row" onclick="attemptDownload('${safeUrl}', '${safeName}')">
+                                    <div class="nk-file-main">
+                                        <span class="nk-file-icon" aria-hidden="true">${fileIcon}</span>
+                                        <span class="nk-file-name">${displayFileName}</span>
                                     </div>
-                                    <div style="display:flex; align-items:center; margin-left:15px;" onclick="event.stopPropagation()">
+                                    <div class="nk-file-actions" onclick="event.stopPropagation()">
                                         ${previewBtn}
-                                        <span onclick="attemptDownload('${safeUrl}', '${safeName}')" style="font-size:0.85rem; color:#fff; padding:6px 14px; border-radius:6px; white-space:nowrap; cursor:pointer; ${btnBg}">${btnLabel}</span>
+                                        <button type="button" class="${dlClass}" onclick="attemptDownload('${safeUrl}', '${safeName}')">${btnLabel}</button>
                                     </div>
                                 </div>
                             `;

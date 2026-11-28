@@ -40,11 +40,18 @@ body#main-body.board-page #search-input { width: 250px; min-width: 0; padding: 1
 body#main-body.board-page .board-search .btn-action { flex-shrink: 0; }
 body#main-body.board-page #download-guide-modal { display: flex; }
 @media (max-width: 768px) {
- body#main-body.board-page :is(.board-list-head,.board-list-row) { grid-template-columns: 40px minmax(0,1fr) 110px !important; }
- body#main-body.board-page .board-col-author { display: none; }
- body#main-body.board-page .board-list-head { font-size: .75rem; }
- body#main-body.board-page .board-post-link { font-size: 1rem; }
- body#main-body.board-page .board-col-title { padding-left: 4px; }
+ body#main-body.board-page #hashtag-area { display: flex; flex-wrap: nowrap !important; overflow-x: auto; -webkit-overflow-scrolling: touch; gap: 8px; padding-bottom: 6px; scrollbar-width: none; }
+ body#main-body.board-page #hashtag-area::-webkit-scrollbar { display: none; }
+ body#main-body.board-page #hashtag-area .hashtag-btn { flex: 0 0 auto; white-space: nowrap; }
+ body#main-body.board-page .board-list-head { display: none !important; }
+ body#main-body.board-page .board-list-row { grid-template-columns: auto auto minmax(0,1fr) !important; grid-template-areas: "num author meta" "title title title"; gap: 8px 10px; padding: 14px 12px; border: 1px solid #e6e9f0; border-radius: 12px; margin-bottom: 10px; background: #fff; box-shadow: 0 2px 8px rgba(27,42,85,.04); }
+ body#main-body.board-page .board-list-row.board-notice-row { background: #fffaf4; border-color: #f3d2b3; }
+ body#main-body.board-page .board-list-row .board-col-number { grid-area: num; text-align: left; font-size: .85rem; }
+ body#main-body.board-page .board-list-row .board-col-author { grid-area: author; display: flex !important; align-items: center; text-align: left; }
+ body#main-body.board-page .board-list-row .board-col-meta { grid-area: meta; flex-direction: row !important; flex-wrap: wrap; justify-content: flex-end !important; align-items: center; gap: 6px; text-align: right; }
+ body#main-body.board-page .board-list-row .board-col-title { grid-area: title; padding-left: 0; align-items: flex-start; gap: 8px; overflow: visible; }
+ body#main-body.board-page .board-post-link { font-size: 1rem; white-space: normal; line-height: 1.45; align-items: flex-start; flex-wrap: wrap; }
+ body#main-body.board-page .board-post-text { white-space: normal !important; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: keep-all; }
  body#main-body.board-page .board-search #search-input { width: 250px; max-width: 100%; flex: 1; }
 }
 

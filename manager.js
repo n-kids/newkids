@@ -508,13 +508,42 @@ function loadHeader() {
     headerEl.innerHTML = `
         <div class="header-inner">
             <a href="index.html" class="logo-link"><img src="${CONFIG.LOGO_URL}" alt="" class="logo-img logo-mark"><span class="logo-text"><strong>뉴키즈</strong><small>어린이집 · 유치원 파트너</small></span></a>
-            <button class="mobile-btn" onclick="window.toggleMenu()">☰</button>
+            <button type="button" class="mobile-btn" id="nkMobileMenuBtn" aria-label="전체 메뉴 열기" aria-expanded="false" aria-controls="navMenu" onclick="window.toggleMenu()">☰</button>
             <ul class="nav-menu" id="navMenu">
+                <li class="nk-drawer-head">
+                    <span class="nk-drawer-title">뉴키즈 메뉴</span>
+                    <button type="button" class="nk-drawer-close" aria-label="메뉴 닫기" onclick="window.closeMobileMenu()">✕</button>
+                </li>
                 ${navHtml}
-                <li><a href="https://www.kookminbooks.co.kr/" target="_blank">국민서관</a></li>
+                <li><a href="https://www.kookminbooks.co.kr/" target="_blank" rel="noopener noreferrer">국민서관</a></li>
             </ul>
-        </div>`;
+        </div>
+        <div id="nk-nav-backdrop" class="nk-nav-backdrop" aria-hidden="true" onclick="window.closeMobileMenu()"></div>`;
+    window.nkMarkHeaderNav();
 }
+
+window.nkMarkHeaderNav = function () {
+    const page = location.pathname.split('/').pop() || 'index.html';
+    const hash = location.hash || '';
+    document.querySelectorAll('#navMenu > li.has-sub').forEach(li => li.classList.remove('is-current-group'));
+    document.querySelectorAll('#navMenu a[href]').forEach(a => {
+        const rawHref = a.getAttribute('href') || '';
+        if (!rawHref || rawHref.startsWith('javascript:') || /^https?:/i.test(rawHref)) return;
+        try {
+            const url = new URL(rawHref, location.href);
+            const targetPage = url.pathname.split('/').pop() || 'index.html';
+            const targetHash = url.hash || '';
+            const match = targetPage === page && (!targetHash || targetHash === hash);
+            if (match) {
+                a.setAttribute('aria-current', 'page');
+                const parentGroup = a.closest('li.has-sub');
+                if (parentGroup) parentGroup.classList.add('is-current-group');
+            } else {
+                a.removeAttribute('aria-current');
+            }
+        } catch (_) {}
+    });
+};
 
 function loadFooter() {
     const footerEl = document.querySelector('footer');
@@ -531,9 +560,46 @@ function loadFooter() {
 }
 
 // 6. 전역 네비게이션 및 스크롤 헬퍼
+window.closeMobileMenu = function (restoreFocus) {
+    const navMenu = document.getElementById('navMenu');
+    const backdrop = document.getElementById('nk-nav-backdrop');
+    const mobileBtn = document.getElementById('nkMobileMenuBtn') || document.querySelector('.mobile-btn');
+    if (navMenu) navMenu.classList.remove('active');
+    if (backdrop) {
+        backdrop.classList.remove('active');
+        backdrop.setAttribute('aria-hidden', 'true');
+    }
+    document.body.classList.remove('nk-nav-open');
+    document.querySelectorAll('.nav-menu li.has-sub').forEach(li => li.classList.remove('sub-open'));
+    if (mobileBtn) {
+        mobileBtn.setAttribute('aria-expanded', 'false');
+        mobileBtn.setAttribute('aria-label', '전체 메뉴 열기');
+        if (restoreFocus) mobileBtn.focus();
+    }
+};
+
 window.toggleMenu = function () {
     const navMenu = document.getElementById('navMenu');
-    if (navMenu) navMenu.classList.toggle('active');
+    const backdrop = document.getElementById('nk-nav-backdrop');
+    const mobileBtn = document.getElementById('nkMobileMenuBtn') || document.querySelector('.mobile-btn');
+    if (!navMenu) return;
+    const willOpen = !navMenu.classList.contains('active');
+    if (!willOpen) {
+        window.closeMobileMenu(false);
+        return;
+    }
+    navMenu.classList.add('active');
+    if (backdrop) {
+        backdrop.classList.add('active');
+        backdrop.setAttribute('aria-hidden', 'false');
+    }
+    document.body.classList.add('nk-nav-open');
+    if (mobileBtn) {
+        mobileBtn.setAttribute('aria-expanded', 'true');
+        mobileBtn.setAttribute('aria-label', '전체 메뉴 닫기');
+    }
+    const closeBtn = navMenu.querySelector('.nk-drawer-close');
+    if (closeBtn) closeBtn.focus();
 };
 
 window.toggleSubMenu = function (el) {
@@ -626,26 +692,30 @@ document.addEventListener("DOMContentLoaded", function () {
     // ★ 모바일 환경에서 드롭다운(하위 메뉴) 링크를 클릭했을 때 메뉴 창 자동 닫기 처리 ★
     document.addEventListener('click', e => {
         const navMenu = document.getElementById('navMenu');
-        const mobileBtn = document.querySelector('.mobile-btn');
+        const mobileBtn = document.getElementById('nkMobileMenuBtn') || document.querySelector('.mobile-btn');
 
-        // 하위 메뉴 항목(dropdown 안의 a 태그)을 클릭한 경우
-        if (e.target.closest('.dropdown a')) {
-            if (navMenu && navMenu.classList.contains('active')) {
-                navMenu.classList.remove('active');
-            }
-            document.querySelectorAll('.nav-menu li.has-sub').forEach(li => {
-                li.classList.remove('sub-open');
-            });
+        if (e.target.closest('#navMenu .dropdown a') || (e.target.closest('#navMenu > li:not(.has-sub) > a') && window.innerWidth <= 768)) {
+            window.closeMobileMenu(false);
             return;
         }
 
         // 모바일 외부 영역 클릭 시 메뉴 닫기
         if (navMenu && navMenu.classList.contains('active') && !navMenu.contains(e.target) && (!mobileBtn || !mobileBtn.contains(e.target))) {
-            navMenu.classList.remove('active');
+            window.closeMobileMenu(false);
+        }
+    });
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+            const navMenu = document.getElementById('navMenu');
+            if (navMenu && navMenu.classList.contains('active')) {
+                window.closeMobileMenu(true);
+            }
         }
     });
 
     window.addEventListener('hashchange', () => {
+        if (typeof window.nkMarkHeaderNav === 'function') window.nkMarkHeaderNav();
         if (location.pathname.includes('child.html') || location.pathname.includes('program.html')) {
             window.applySubPageHero();
         }

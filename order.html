@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>뉴키즈 - 교재 발주 요청</title>
-    <link rel="stylesheet" href="style.css?v=20261026">
+    <link rel="stylesheet" href="style.css?v=20261127-1">
+    <link id="nk-subpage-theme" rel="stylesheet" href="subpage-theme.css?v=20261127-1">
 <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
 </head>
@@ -59,6 +60,22 @@
                     <textarea name="remarks" class="form-input" style="height: 80px;" placeholder="추가 전달 사항이 있다면 적어주세요."></textarea>
                 </div>
 
+                <div id="nk-order-summary" class="nk-sticky-summary" hidden aria-live="polite">
+                    <div class="nk-summary-bar">
+                        <div class="nk-summary-info">
+                            <span class="nk-summary-badge">주문 요약</span>
+                            <strong class="nk-summary-count" id="nk-order-summary-text">선택된 교재 없음</strong>
+                        </div>
+                        <div class="nk-summary-actions">
+                            <button type="button" class="nk-summary-toggle" id="nk-order-summary-toggle" aria-expanded="false" aria-controls="nk-order-summary-detail">내역 보기</button>
+                            <button type="button" class="nk-summary-submit" id="nk-order-summary-submit">발주하기</button>
+                        </div>
+                    </div>
+                    <div class="nk-summary-detail" id="nk-order-summary-detail" hidden>
+                        <ul class="nk-summary-list" id="nk-order-summary-list"></ul>
+                    </div>
+                </div>
+
                 <div class="btn-center-wrap">
                     <button type="submit" class="btn-action">발주하기</button>
                 </div>
@@ -69,8 +86,8 @@
     <footer></footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="config.js?v=20261026"></script>
-    <script src="manager.js?v=20261102"></script>
+    <script src="config.js?v=20261127-1"></script>
+    <script src="manager.js?v=20261127-1"></script>
 
     <script>
         let CATEGORY_NAMES = {};
@@ -169,7 +186,11 @@
                                             <option value="1">1세</option><option value="2">2세</option><option value="3">3세</option>
                                             <option value="4">4세</option><option value="5">5세</option><option value="6">6세</option><option value="7">7세</option>
                                         </select>
-                                        <input type="number" min="0" class="dynamic-qty-input" placeholder="수량" oninput="checkRowData(this)">
+                                        <div class="nk-qty-stepper">
+                                            <button type="button" class="nk-step-btn nk-step-minus" aria-label="수량 1 감소" onclick="stepOrderQty(this, -1)">−</button>
+                                            <input type="number" min="0" inputmode="numeric" class="dynamic-qty-input" placeholder="0" oninput="checkRowData(this)">
+                                            <button type="button" class="nk-step-btn nk-step-plus" aria-label="수량 1 증가" onclick="stepOrderQty(this, 1)">+</button>
+                                        </div>
                                     </div>
                                 </div>
                                 <button type="button" class="btn-add-row" onclick="addQtyRow(this)">+ 연령 추가하기</button>`;
@@ -207,23 +228,115 @@
             if (!active) r.classList.add('active');
         };
 
+        function updateOrderSummary() {
+            const summaryEl = document.getElementById('nk-order-summary');
+            const textEl = document.getElementById('nk-order-summary-text');
+            const listEl = document.getElementById('nk-order-summary-list');
+            const detailEl = document.getElementById('nk-order-summary-detail');
+            const toggleBtn = document.getElementById('nk-order-summary-toggle');
+            if (!summaryEl || !textEl || !listEl) return;
+
+            const rows = document.querySelectorAll('.order-item-row');
+            const itemTitles = new Set();
+            let totalQty = 0;
+            const summaryEntries = [];
+
+            rows.forEach(r => {
+                const title = r.getAttribute('data-title') || '';
+                r.querySelectorAll('.qty-row').forEach(qr => {
+                    const age = qr.querySelector('.age-select') ? qr.querySelector('.age-select').value : '';
+                    const input = qr.querySelector('.dynamic-qty-input');
+                    const q = input ? (parseInt(input.value, 10) || 0) : 0;
+                    if (q > 0) {
+                        itemTitles.add(title);
+                        totalQty += q;
+                        summaryEntries.push(`${title} (${age}세 · ${q}부)`);
+                    }
+                });
+            });
+
+            if (totalQty === 0) {
+                summaryEl.hidden = true;
+                if (detailEl) detailEl.hidden = true;
+                if (toggleBtn) toggleBtn.setAttribute('aria-expanded', 'false');
+                document.body.classList.remove('nk-has-summary');
+                listEl.replaceChildren();
+                return;
+            }
+
+            summaryEl.hidden = false;
+            document.body.classList.add('nk-has-summary');
+            textEl.textContent = `총 ${itemTitles.size}종 · ${totalQty}부`;
+
+            const frag = document.createDocumentFragment();
+            summaryEntries.forEach(entry => {
+                const li = document.createElement('li');
+                li.textContent = entry;
+                frag.appendChild(li);
+            });
+            listEl.replaceChildren(frag);
+        }
+
+        (function initOrderSummaryBar() {
+            const toggleBtn = document.getElementById('nk-order-summary-toggle');
+            const detailEl = document.getElementById('nk-order-summary-detail');
+            const submitBtn = document.getElementById('nk-order-summary-submit');
+            if (toggleBtn && detailEl) {
+                toggleBtn.addEventListener('click', () => {
+                    const nextOpen = detailEl.hidden;
+                    detailEl.hidden = !nextOpen;
+                    toggleBtn.setAttribute('aria-expanded', String(nextOpen));
+                    toggleBtn.textContent = nextOpen ? '내역 닫기' : '내역 보기';
+                });
+            }
+            if (submitBtn) {
+                submitBtn.addEventListener('click', () => {
+                    const f = document.getElementById('orderForm');
+                    if (!f) return;
+                    if (!f.reportValidity()) {
+                        const firstInvalid = f.querySelector(':invalid');
+                        if (firstInvalid) firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        return;
+                    }
+                    f.requestSubmit();
+                });
+            }
+            document.addEventListener('change', e => {
+                if (e.target && e.target.classList && e.target.classList.contains('age-select')) {
+                    updateOrderSummary();
+                }
+            });
+        })();
+
+        window.stepOrderQty = function (btn, delta) {
+            const stepper = btn.closest('.nk-qty-stepper');
+            if (!stepper) return;
+            const input = stepper.querySelector('.dynamic-qty-input');
+            if (!input) return;
+            const current = parseInt(input.value, 10) || 0;
+            const next = Math.max(0, current + delta);
+            input.value = next > 0 ? String(next) : '';
+            window.checkRowData(input);
+        };
+
         window.checkRowData = function (el) {
             const r = el.closest('.order-item-row');
             const inputs = r.querySelectorAll('.dynamic-qty-input');
-            let has = false; inputs.forEach(i => { if (i.value > 0) has = true; });
+            let has = false; inputs.forEach(i => { if (parseInt(i.value, 10) > 0) has = true; });
             if (has) r.classList.add('has-data'); else r.classList.remove('has-data');
 
             const w = r.closest('.category-wrapper');
             const h = w.querySelector('.order-category-header');
             const all = w.querySelectorAll('.dynamic-qty-input');
-            let t = 0; all.forEach(i => { if (i.value) t += parseInt(i.value) });
+            let t = 0; all.forEach(i => { const v = parseInt(i.value, 10); if (v > 0) t += v; });
             if (t > 0) h.classList.add('has-data'); else h.classList.remove('has-data');
+            updateOrderSummary();
         };
 
         window.addQtyRow = function (b) {
             const w = b.previousElementSibling;
             const d = document.createElement('div'); d.className = 'qty-row';
-            d.innerHTML = `<select class="age-select"><option value="1">1세</option><option value="2">2세</option><option value="3">3세</option><option value="4">4세</option><option value="5">5세</option><option value="6">6세</option><option value="7">7세</option></select><input type="number" min="0" class="dynamic-qty-input" placeholder="수량" oninput="checkRowData(this)"><button type="button" class="btn-remove-row" onclick="removeQtyRow(this)">×</button>`;
+            d.innerHTML = `<select class="age-select"><option value="1">1세</option><option value="2">2세</option><option value="3">3세</option><option value="4">4세</option><option value="5">5세</option><option value="6">6세</option><option value="7">7세</option></select><div class="nk-qty-stepper"><button type="button" class="nk-step-btn nk-step-minus" aria-label="수량 1 감소" onclick="stepOrderQty(this, -1)">−</button><input type="number" min="0" inputmode="numeric" class="dynamic-qty-input" placeholder="0" oninput="checkRowData(this)"><button type="button" class="nk-step-btn nk-step-plus" aria-label="수량 1 증가" onclick="stepOrderQty(this, 1)">+</button></div><button type="button" class="btn-remove-row" onclick="removeQtyRow(this)">×</button>`;
             w.appendChild(d);
         };
 
@@ -237,9 +350,10 @@
                 if (w) {
                     const h = w.querySelector('.order-category-header');
                     const all = w.querySelectorAll('.dynamic-qty-input');
-                    let t = 0; all.forEach(v => { if (v.value) t += parseInt(v.value) });
+                    let t = 0; all.forEach(v => { const q = parseInt(v.value, 10); if (q > 0) t += q; });
                     if (t > 0) h.classList.add('has-data'); else h.classList.remove('has-data');
                 }
+                updateOrderSummary();
             }
         };
 

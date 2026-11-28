@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>뉴키즈 - 견적 요청</title>
-    <link rel="stylesheet" href="style.css?v=20261026">
+    <link rel="stylesheet" href="style.css?v=20261127-1">
+    <link id="nk-subpage-theme" rel="stylesheet" href="subpage-theme.css?v=20261127-1">
 <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
 </head>
@@ -66,6 +67,22 @@
                     <textarea name="inquiry" class="form-input" style="height: 100px;" placeholder="궁금하신 점이나 요청사항을 적어주세요."></textarea>
                 </div>
 
+                <div id="nk-proposal-summary" class="nk-sticky-summary" hidden aria-live="polite">
+                    <div class="nk-summary-bar">
+                        <div class="nk-summary-info">
+                            <span class="nk-summary-badge">견적 선택</span>
+                            <strong class="nk-summary-count" id="nk-proposal-summary-text">선택된 프로그램 0개</strong>
+                        </div>
+                        <div class="nk-summary-actions">
+                            <button type="button" class="nk-summary-toggle" id="nk-proposal-summary-toggle" aria-expanded="false" aria-controls="nk-proposal-summary-detail">목록 보기</button>
+                            <button type="button" class="nk-summary-submit" id="nk-proposal-summary-submit">견적 요청하기</button>
+                        </div>
+                    </div>
+                    <div class="nk-summary-detail" id="nk-proposal-summary-detail" hidden>
+                        <div class="nk-summary-chips" id="nk-proposal-summary-chips"></div>
+                    </div>
+                </div>
+
                 <div class="btn-center-wrap">
                     <button type="submit" class="btn-action">견적 요청하기</button>
                 </div>
@@ -76,8 +93,8 @@
     <footer></footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="config.js?v=20261026"></script>
-    <script src="manager.js?v=20261102"></script>
+    <script src="config.js?v=20261127-1"></script>
+    <script src="manager.js?v=20261127-1"></script>
 
     <script>
         let CATEGORY_NAMES = {};
@@ -189,6 +206,67 @@
             }
         });
 
+        function updateProposalSummary() {
+            const summaryEl = document.getElementById('nk-proposal-summary');
+            const textEl = document.getElementById('nk-proposal-summary-text');
+            const chipsEl = document.getElementById('nk-proposal-summary-chips');
+            const detailEl = document.getElementById('nk-proposal-summary-detail');
+            const toggleBtn = document.getElementById('nk-proposal-summary-toggle');
+            if (!summaryEl || !textEl || !chipsEl) return;
+            const checkedBoxes = Array.from(document.querySelectorAll('#proposalForm input[name="items"]:checked'));
+            if (checkedBoxes.length === 0) {
+                summaryEl.hidden = true;
+                if (detailEl) detailEl.hidden = true;
+                if (toggleBtn) toggleBtn.setAttribute('aria-expanded', 'false');
+                document.body.classList.remove('nk-has-summary');
+                chipsEl.replaceChildren();
+                return;
+            }
+            summaryEl.hidden = false;
+            document.body.classList.add('nk-has-summary');
+            textEl.textContent = `선택된 프로그램 ${checkedBoxes.length}개`;
+            const frag = document.createDocumentFragment();
+            checkedBoxes.forEach(cb => {
+                const chip = document.createElement('button');
+                chip.type = 'button';
+                chip.className = 'nk-summary-chip';
+                chip.setAttribute('aria-label', cb.value + ' 선택 해제');
+                chip.textContent = cb.value + ' ×';
+                chip.addEventListener('click', () => {
+                    cb.checked = false;
+                    cb.dispatchEvent(new Event('change', { bubbles: true }));
+                });
+                frag.appendChild(chip);
+            });
+            chipsEl.replaceChildren(frag);
+        }
+
+        (function initProposalSummaryBar() {
+            const toggleBtn = document.getElementById('nk-proposal-summary-toggle');
+            const detailEl = document.getElementById('nk-proposal-summary-detail');
+            const submitBtn = document.getElementById('nk-proposal-summary-submit');
+            if (toggleBtn && detailEl) {
+                toggleBtn.addEventListener('click', () => {
+                    const nextOpen = detailEl.hidden;
+                    detailEl.hidden = !nextOpen;
+                    toggleBtn.setAttribute('aria-expanded', String(nextOpen));
+                    toggleBtn.textContent = nextOpen ? '목록 닫기' : '목록 보기';
+                });
+            }
+            if (submitBtn) {
+                submitBtn.addEventListener('click', () => {
+                    const f = document.getElementById('proposalForm');
+                    if (!f) return;
+                    if (!f.reportValidity()) {
+                        const firstInvalid = f.querySelector(':invalid');
+                        if (firstInvalid) firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        return;
+                    }
+                    f.requestSubmit();
+                });
+            }
+        })();
+
         document.addEventListener('change', function (e) {
             if (e.target.type === 'checkbox' && e.target.closest('.sub-cat-wrapper')) {
                 const wrapper = e.target.closest('.sub-cat-wrapper');
@@ -196,6 +274,7 @@
                 const checked = wrapper.querySelectorAll('input:checked').length > 0;
                 if (checked) header.classList.add('has-checked');
                 else header.classList.remove('has-checked');
+                updateProposalSummary();
             }
         });
 

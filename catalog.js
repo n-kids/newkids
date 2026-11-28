@@ -9,6 +9,10 @@
     const fallback = 'https://placehold.co/400x300/e0e0e0/666666?text=No+Image';
     let revision = 0;
     let ready = false;
+    let currentItems = [];
+    let searchQuery = '';
+    let chipBar = null;
+    let searchInput = null;
     const extras = {
         culture: {
             heading: '📸 체험 활동 현장',
@@ -31,10 +35,71 @@
         return first ? first.code : 'season';
     }
 
-    function state(error) {
-        const box = element('div', 'catalog-state' + (error ? ' catalog-state-error' : ''));
-        if (error) {
+    function ensureControls() {
+        if (chipBar || !list || !list.parentNode) return;
+        const bar = element('div', 'catalog-controls');
+        chipBar = element('nav', 'catalog-chip-bar');
+        chipBar.setAttribute('aria-label', isEvents ? '행사 프로그램 분류' : '교육 프로그램 분류');
+
+        const searchWrap = element('div', 'catalog-search-wrap');
+        searchInput = element('input', 'catalog-search-input');
+        searchInput.type = 'search';
+        searchInput.placeholder = isEvents ? '행사명 빠른 검색...' : '교재명 빠른 검색...';
+        searchInput.setAttribute('aria-label', searchInput.placeholder);
+        searchInput.addEventListener('input', () => {
+            searchQuery = searchInput.value.trim().toLowerCase();
+            renderCards();
+        });
+        searchWrap.appendChild(searchInput);
+
+        bar.append(chipBar, searchWrap);
+        list.parentNode.insertBefore(bar, list);
+    }
+
+    function syncChips(code) {
+        ensureControls();
+        if (!chipBar) return;
+        const targetType = isEvents ? 'EVENT' : 'EDU';
+        const cats = (window.GLOBAL_CATEGORIES || []).filter(c => c.type === targetType);
+        const frag = document.createDocumentFragment();
+        cats.forEach(c => {
+            const safeCode = typeof window.safeCategoryCode === 'function' ? window.safeCategoryCode(c.code) : String(c.code || '');
+            if (!safeCode) return;
+            const active = safeCode === code;
+            const label = String(c.name || safeCode).replace(/^[^\p{L}\p{N}]+/u, '').trim() || String(c.name || safeCode);
+            const btn = element('button', 'catalog-chip' + (active ? ' is-active' : ''), label);
+            btn.type = 'button';
+            btn.dataset.code = safeCode;
+            btn.setAttribute('aria-pressed', String(active));
+            btn.addEventListener('click', () => {
+                if (categoryCode() === safeCode) return;
+                if (searchInput && searchInput.value) {
+                    searchInput.value = '';
+                    searchQuery = '';
+                }
+                try {
+                    const nextUrl = new URL('#' + safeCode, location.href);
+                    history.replaceState(null, '', nextUrl.href);
+                    window.dispatchEvent(new HashChangeEvent('hashchange'));
+                } catch (_) {
+                    location.hash = '#' + safeCode;
+                }
+            });
+            frag.appendChild(btn);
+        });
+        chipBar.replaceChildren(frag);
+        const activeBtn = chipBar.querySelector('.catalog-chip.is-active');
+        if (activeBtn && typeof activeBtn.scrollIntoView === 'function') {
+            try { activeBtn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); } catch (_) {}
+        }
+    }
+
+    function state(kind) {
+        const box = element('div', 'catalog-state' + (kind === 'error' ? ' catalog-state-error' : ''));
+        if (kind === 'error') {
             box.textContent = '데이터를 불러오는 중 오류가 발생했습니다. 페이지를 새로고침해 주세요.';
+        } else if (kind === 'no-match') {
+            box.append(element('div', 'catalog-state-icon', '🔍'), element('h3', '', '검색 결과가 없습니다.'), element('p', '', '다른 검색어로 다시 찾아보시거나 검색어를 지워주세요.'));
         } else {
             box.append(element('div', 'catalog-state-icon', '📭'), element('h3', '', '현재 준비 중인 프로그램입니다.'), element('p', '', '새로운 콘텐츠가 곧 업데이트될 예정입니다. 조금만 기다려주세요!'));
         }
@@ -42,6 +107,7 @@
     }
 
     function syncPage(code) {
+        syncChips(code);
         const category = window.GLOBAL_CATEGORIES.find(item => item.code === code);
         const hero = document.getElementById('view-hero');
         if (category && hero) {
@@ -107,6 +173,17 @@
         return link;
     }
 
+    function renderCards() {
+        if (!currentItems.length) { state('empty'); return; }
+        const filtered = searchQuery
+            ? currentItems.filter(it => String(it.title || '').toLowerCase().includes(searchQuery))
+            : currentItems;
+        if (!filtered.length) { state('no-match'); return; }
+        const fragment = document.createDocumentFragment();
+        filtered.forEach(item => fragment.appendChild(card(item)));
+        list.replaceChildren(fragment);
+    }
+
     async function load() {
         if (!ready) return;
         const request = ++revision;
@@ -115,6 +192,7 @@
         loading.classList.add('is-loading');
         list.setAttribute('aria-busy', 'true');
         list.replaceChildren();
+        currentItems = [];
         try {
             const nowIso = new Date().toISOString();
             let query = window.sb.from('total_posts')
@@ -126,13 +204,10 @@
             if (request !== revision) return;
             if (error) throw error;
             const nowMs = Date.now();
-            const visibleData = (data || []).filter(item => item.is_draft !== true && (!item.publish_at || new Date(item.publish_at).getTime() <= nowMs));
-            if (!visibleData.length) { state(false); return; }
-            const fragment = document.createDocumentFragment();
-            visibleData.forEach(item => fragment.appendChild(card(item)));
-            list.replaceChildren(fragment);
+            currentItems = (data || []).filter(item => item.is_draft !== true && (!item.publish_at || new Date(item.publish_at).getTime() <= nowMs));
+            renderCards();
         } catch (error) {
-            if (request === revision) { console.error('목록 로드 오류:', error); state(true); }
+            if (request === revision) { console.error('목록 로드 오류:', error); state('error'); }
         } finally {
             if (request === revision) { loading.classList.remove('is-loading'); list.setAttribute('aria-busy', 'false'); }
         }
@@ -144,7 +219,7 @@
             if (window.sb && Array.isArray(window.GLOBAL_CATEGORIES) && window.GLOBAL_CATEGORIES.length) {
                 clearInterval(timer); ready = true; load();
             } else if (Date.now() >= deadline) {
-                clearInterval(timer); loading.classList.remove('is-loading'); state(true);
+                clearInterval(timer); loading.classList.remove('is-loading'); state('error');
             }
         }, 100);
         window.addEventListener('hashchange', load);

@@ -3196,9 +3196,6 @@ html body:is(#main-body,.nk-a).nk-a.nk-a.nk-a .hashtag-btn { background-color: #
 html body:is(#main-body,.nk-a).nk-a.nk-a.nk-a .hashtag-btn:hover { background-color: #fafbfd; border-color: #172451; color: #172451; transform: translateY(-1px); box-shadow: 0 3px 0 #c2cce0; }
 html body:is(#main-body,.nk-a).nk-a.nk-a.nk-a .hashtag-btn:active { transform: translateY(2px); box-shadow: 0 0 0 #c2cce0; }
 html body:is(#main-body,.nk-a).nk-a.nk-a.nk-a :is(.hashtag-btn.active,.hashtag-btn[aria-pressed="true"]) { background-color: #172451; background-image: linear-gradient(180deg, rgba(255,255,255,.16) 0%, rgba(255,255,255,0) 55%, rgba(0,0,0,.14) 100%); border-color: rgba(13,22,54,.45); color: #ffffff; box-shadow: 0 3px 0 rgba(13,22,54,.55), 0 6px 12px rgba(23,36,81,.18), inset 0 1px 0 rgba(255,255,255,.24); }
-html body:is(#main-body,.nk-a).nk-a.nk-a.nk-a header .nav-menu a.cta-menu { background-image: linear-gradient(180deg, rgba(255,255,255,.16) 0%, rgba(255,255,255,0) 55%, rgba(0,0,0,.12) 100%); border-radius: 12px; box-shadow: 0 3px 0 rgba(13,22,54,.45), inset 0 1px 0 rgba(255,255,255,.24); transition: transform .12s ease, box-shadow .12s ease, filter .15s ease; }
-html body:is(#main-body,.nk-a).nk-a.nk-a.nk-a header .nav-menu a.cta-menu:hover { filter: brightness(1.06); transform: translateY(-1px); box-shadow: 0 4px 0 rgba(13,22,54,.52), 0 6px 12px rgba(23,36,81,.18), inset 0 1px 0 rgba(255,255,255,.28); }
-html body:is(#main-body,.nk-a).nk-a.nk-a.nk-a header .nav-menu a.cta-menu:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(13,22,54,.52); }
 html body:is(#main-body,.nk-a).nk-a.nk-a.nk-a :is(input:not([type]),input[type=text],input[type=email],input[type=tel],input[type=password],input[type=number],input[type=search],input[type=url],input[type=date],select,textarea) { border-color: #dfe3ec; border-radius: 12px; }
 
 /* 게시판 목록 */
@@ -3270,7 +3267,7 @@ html body:is(#main-body,.nk-a).nk-a.nk-a.nk-a :is(.order-item-row.active,.order-
 .nk-file-dl-btn.is-locked { background-color: #d97706; box-shadow: 0 3px 0 #92400e, 0 5px 10px rgba(217,119,6,.18), inset 0 1px 0 rgba(255,255,255,.28); }
 .nk-file-preview-btn:hover, .nk-file-dl-btn:hover { filter: brightness(1.06); transform: translateY(-1px); }
 .nk-file-preview-btn:active, .nk-file-dl-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.35); }
-@media (prefers-reduced-motion: reduce) { html body:is(#main-body,.nk-a).nk-a.nk-a.nk-a :is(.btn,.btn-action,.btn-submit,.btn-list,.link-btn-style,.btn-white,.btn-ghost,.btn-load-more,.hashtag-btn,header .nav-menu a.cta-menu), .nk-summary-submit, .nk-file-preview-btn, .nk-file-dl-btn { transition: none; transform: none !important; } }
+@media (prefers-reduced-motion: reduce) { html body:is(#main-body,.nk-a).nk-a.nk-a.nk-a :is(.btn,.btn-action,.btn-submit,.btn-list,.link-btn-style,.btn-white,.btn-ghost,.btn-load-more,.hashtag-btn), .nk-summary-submit, .nk-file-preview-btn, .nk-file-dl-btn { transition: none; transform: none !important; } }
 
 @media (max-width: 768px) {
     .nk-sticky-summary {

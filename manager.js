@@ -478,12 +478,10 @@ function loadHeader() {
             const code = window.safeCategoryCode(c.code);
             if (code) groupHtml[c.type] += `<li><a href="notice.html#${code}" ${colorStyle}>${window.escapeHtml(c.name)}</a></li>`;
         } else if (c.type === 'PAGE') {
-            const isCta = (c.code === 'proposal') ? 'class="cta-menu"' : '';
-            const weight = (c.code === 'order') ? 'style="font-weight:bold;"' : '';
             const code = window.safeCategoryCode(c.code);
             if (code) {
                 const href = (code === 'order' || code === 'proposal') ? `${code}.html` : `page.html?id=${encodeURIComponent(code)}`;
-                groupHtml[c.type] += `<li><a href="${href}" ${isCta} ${weight}>${window.escapeHtml(c.name)}</a></li>`;
+                groupHtml[c.type] += `<li><a href="${href}" ${colorStyle}>${window.escapeHtml(c.name)}</a></li>`;
             }
         }
     });

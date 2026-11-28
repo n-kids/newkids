@@ -35,7 +35,8 @@ function buildMockSupabaseScript() {
     { id: 304, category: 'notice', title: '[초안] 비공개 임시저장 공지', content: '<p>초안</p>', link_url: '관리자', is_notice: false, is_visible: true, is_draft: true, download_count: 0, created_at: '2026-11-26T09:00:00Z' },
     { id: 302, category: 'reference', title: '[연간] 2026년 5~7세 정규 교육과정 연간교육계획안 모음집', content: '<p>첨부된 PDF 파일을 눌러 미리보거나 다운로드하실 수 있습니다.</p>', image_url: '/apple-touch-icon.png@@2026_뉴키즈_정규_연간교육계획안_유아용_최종본.pdf', link_url: '관리자', is_notice: false, is_visible: true, is_draft: false, download_count: 42, created_at: '2026-11-24T09:00:00Z' },
     { id: 303, category: 'reference', title: '[OT자료] 신학기 학부모 오리엔테이션 발표 PPT 템플릿', content: '<p>OT 자료입니다.</p>', link_url: '관리자', is_notice: false, is_visible: true, is_draft: false, download_count: 19, created_at: '2026-11-23T09:00:00Z' },
-    { id: 401, category: 'qna', title: '비밀 문의글 제목', content: '<p>비밀 본문</p><script>window.__xss=1;</script>', link_url: '홍길동', password: 'secret-pw', is_secret: true, is_visible: true, is_draft: false, created_at: '2026-11-25T10:00:00Z' }
+    { id: 401, category: 'qna', title: '비밀 문의글 제목', content: '<p>비밀 본문</p><script>window.__xss=1;</script>', link_url: '홍길동', password: 'secret-pw', is_secret: true, is_visible: true, is_draft: false, created_at: '2026-11-25T10:00:00Z' },
+    { id: 402, category: 'qna', title: '일반 원장님 문의글', content: '<p>교재 샘플 요청드립니다.</p>', link_url: '햇살어린이집', password: '1234', is_secret: false, is_visible: true, is_draft: false, created_at: '2026-11-25T11:00:00Z' }
   ];
   const popups = [
     { id: 1, image_url: '/m-hero.jpg', link_url: 'notice.html#notice', is_visible: true, order_num: 1, created_at: '2026-11-25T09:00:00Z' },
@@ -304,4 +305,23 @@ test('6. proposal, main notices, and write.html enforce public visibility and ed
   await expect(page.locator('#write-title')).toHaveValue('비밀 문의글 제목');
   const hasXss = await page.evaluate(() => Boolean(window.__xss) || document.querySelector('#editor-container script') !== null);
   expect(hasXss).toBe(false);
+
+  // 3) Admin-authored posts disable & hide edit/delete buttons on view.html, while visitor Q&A posts keep them active
+  await page.goto('/view.html?id=101');
+  await expect(page.locator('#v-title')).toContainText('쏙쏙 깨치는 뉴키즈 한글 1단계');
+  await expect(page.locator('#author-actions-area')).toBeHidden();
+  await expect(page.locator('#btn-post-edit')).toBeDisabled();
+  await expect(page.locator('#btn-post-delete')).toBeDisabled();
+
+  await page.goto('/view.html?id=302');
+  await expect(page.locator('#v-title')).toContainText('연간교육계획안');
+  await expect(page.locator('#author-actions-area')).toBeHidden();
+  await expect(page.locator('#btn-post-edit')).toBeDisabled();
+  await expect(page.locator('#btn-post-delete')).toBeDisabled();
+
+  await page.goto('/view.html?id=402');
+  await expect(page.locator('#v-title')).toHaveText('일반 원장님 문의글');
+  await expect(page.locator('#author-actions-area')).toBeVisible();
+  await expect(page.locator('#btn-post-edit')).toBeEnabled();
+  await expect(page.locator('#btn-post-delete')).toBeEnabled();
 });

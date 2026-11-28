@@ -96,8 +96,8 @@
                 </div>
 
                 <div id="author-actions-area" style="display:none; margin-top:30px; padding-top:15px; border-top:1px solid #1a3c6e; justify-content:flex-end; gap:10px;">
-                    <button onclick="openEditPost()" class="btn-action" style="background:#b85a17; padding:10px 25px; font-size:0.95rem;">수정</button>
-                    <button onclick="deleteCurrentPost()" class="btn-action" style="background:#d33b3b; padding:10px 25px; font-size:0.95rem;">삭제</button>
+                    <button id="btn-post-edit" type="button" onclick="openEditPost()" class="btn-action" style="background:#b85a17; padding:10px 25px; font-size:0.95rem;">수정</button>
+                    <button id="btn-post-delete" type="button" onclick="deleteCurrentPost()" class="btn-action" style="background:#d33b3b; padding:10px 25px; font-size:0.95rem;">삭제</button>
                 </div>
 
                 <div id="related-posts-area" style="display:none; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;"></div>
@@ -180,6 +180,23 @@
                 }
             }, 100);
         });
+
+        function isAdminCreatedPost(data, resolvedCatType) {
+            if (!data) return true;
+            const cat = String(data.category || '');
+            if (cat === 'notice') return true;
+            if (data.is_notice === true || String(data.is_notice) === 'true') return true;
+            const catList = (window.GLOBAL_CATEGORIES && window.GLOBAL_CATEGORIES.length > 0) ? window.GLOBAL_CATEGORIES : [];
+            const catInfo = catList.find(c => c.code === cat);
+            const catType = resolvedCatType || (catInfo && catInfo.type) || '';
+            if (catType && catType !== 'BOARD') return true;
+            const hasPassword = Boolean(String(data.password || '').trim());
+            if (!hasPassword) return true;
+            const rawLink = typeof data.link_url === 'string' ? data.link_url.trim() : '';
+            if (/^https?:\/\//i.test(rawLink) || /^(관리자|뉴키즈|new\s*kids|admin)$/i.test(rawLink)) return true;
+            if (String(data.video_url || '').trim() || String(data.download_password || '').trim()) return true;
+            return false;
+        }
 
         function getListUrl(categoryCode) {
             let targetUrl = 'notice.html';
@@ -296,17 +313,28 @@
                 }
             } catch (e) { /* localStorage 사용 불가 환경은 무시 */ }
 
+            let resolvedCatType = '';
+            const cachedCat = (window.GLOBAL_CATEGORIES || []).find(c => c.code === data.category);
+            if (cachedCat && cachedCat.type) {
+                resolvedCatType = cachedCat.type;
+            } else if (data.category) {
+                try {
+                    const { data: catRow } = await window.sb.from('program_categories').select('type').eq('code', data.category).maybeSingle();
+                    if (catRow && catRow.type) resolvedCatType = catRow.type;
+                } catch (_) {}
+            }
+
             postDataCache = data;
             postDataCache.actualPassword = data.password || '';
             postDataCache.dlPassword = data.download_password || '';
+            postDataCache.isAdminPost = isAdminCreatedPost(data, resolvedCatType);
 
             document.getElementById('v-title').innerText = data.title;
             document.title = "뉴키즈 - " + data.title;
 
-            const isNotice = data.category === 'notice';
             const rawLink = typeof data.link_url === 'string' ? data.link_url.trim() : '';
             const isExternalLink = /^https?:\/\//i.test(rawLink);
-            document.getElementById('v-author').innerText = "작성자: " + ((isNotice || isExternalLink) ? "관리자" : (rawLink || '익명'));
+            document.getElementById('v-author').innerText = "작성자: " + ((postDataCache.isAdminPost || isExternalLink) ? "관리자" : (rawLink || '익명'));
             document.getElementById('v-date').innerText = "작성일: " + new Date(data.created_at).toISOString().split('T')[0];
             document.getElementById('v-download-count').innerText = `📥 다운로드 ${data.download_count || 0}회`;
 
@@ -494,11 +522,17 @@
                 }
             }
 
-            const isNoticeCategory = postDataCache.category === 'notice';
-            if (isNoticeCategory) {
-                document.getElementById('author-actions-area').style.display = 'none';
+            const authorArea = document.getElementById('author-actions-area');
+            const editBtn = document.getElementById('btn-post-edit');
+            const deleteBtn = document.getElementById('btn-post-delete');
+            if (postDataCache.isAdminPost) {
+                if (authorArea) authorArea.style.display = 'none';
+                if (editBtn) editBtn.disabled = true;
+                if (deleteBtn) deleteBtn.disabled = true;
             } else {
-                document.getElementById('author-actions-area').style.display = 'flex';
+                if (authorArea) authorArea.style.display = 'flex';
+                if (editBtn) editBtn.disabled = false;
+                if (deleteBtn) deleteBtn.disabled = false;
             }
 
             loadAdminReplies();
@@ -730,7 +764,7 @@
         }
 
         async function openEditPost() {
-            if (postDataCache.category === 'notice') return alert("공지글은 수정할 수 없습니다.");
+            if (postDataCache.isAdminPost) return alert("관리자가 등록한 게시글은 관리자 페이지에서만 수정할 수 있습니다.");
             if (isAdminLoggedIn) {
                 location.href = `write.html?edit=${currentPostId}#${postDataCache.category}`;
                 return;
@@ -744,7 +778,7 @@
         }
 
         async function deleteCurrentPost() {
-            if (postDataCache.category === 'notice') return alert("공지글은 삭제할 수 없습니다.");
+            if (postDataCache.isAdminPost) return alert("관리자가 등록한 게시글은 관리자 페이지에서만 삭제할 수 있습니다.");
             if (isAdminLoggedIn) {
                 if (confirm("정말 이 게시글을 영구 삭제하시겠습니까?")) executeDeletePost();
                 return;

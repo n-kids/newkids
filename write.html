@@ -168,9 +168,18 @@
             }
 
             const isHiddenOrUnpublished = data.is_visible === false || data.is_draft === true || (data.publish_at && new Date(data.publish_at).getTime() > Date.now());
-            const actualPw = String(data.password || data.video_url || '').trim();
+            const actualPw = String(data.password || '').trim();
+            const rawLink = typeof data.link_url === 'string' ? data.link_url.trim() : '';
+            const catInfo = (window.GLOBAL_CATEGORIES || []).find(c => c.code === data.category);
+            const isAdminAuthored = data.category === 'notice' ||
+                data.is_notice === true || String(data.is_notice) === 'true' ||
+                (catInfo && catInfo.type !== 'BOARD') ||
+                !actualPw ||
+                /^https?:\/\//i.test(rawLink) ||
+                /^(관리자|뉴키즈|new\s*kids|admin)$/i.test(rawLink) ||
+                Boolean(String(data.video_url || '').trim() || String(data.download_password || '').trim());
             if (!isAdmin) {
-                if (isHiddenOrUnpublished || data.category === 'notice' || !actualPw) {
+                if (isHiddenOrUnpublished || isAdminAuthored) {
                     alert("수정 권한이 없는 게시글입니다.");
                     location.replace('notice.html');
                     return;

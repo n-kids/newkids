@@ -24,12 +24,17 @@
   </url>
   <url>
        <loc>https://n-kids.github.io/newkids/order.html</loc>
-       <lastmod>2026-10-26T11:40:12+00:00</lastmod>
+       <lastmod>2026-11-28T00:00:00+00:00</lastmod>
        <priority>0.5120</priority>
   </url>
   <url>
-       <loc>https://n-kids.github.io/newkids/admin.html</loc>
-       <lastmod>2026-10-26T11:40:12+00:00</lastmod>
-       <priority>0.5120</priority>
+       <loc>https://n-kids.github.io/newkids/notice.html</loc>
+       <lastmod>2026-11-28T00:00:00+00:00</lastmod>
+       <priority>0.7000</priority>
+  </url>
+  <url>
+       <loc>https://n-kids.github.io/newkids/app-install.html</loc>
+       <lastmod>2026-11-28T00:00:00+00:00</lastmod>
+       <priority>0.6000</priority>
   </url>
 </urlset>

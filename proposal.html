@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="어린이집·유치원 맞춤 영유아 교육 프로그램 및 행사 제안서·견적 요청 페이지입니다.">
     <title>뉴키즈 - 견적 요청</title>
     <link rel="stylesheet" href="style.css?v=20261127-1">
     <link id="nk-subpage-theme" rel="stylesheet" href="subpage-theme.css?v=20261127-1">
@@ -127,13 +128,23 @@
                 });
 
                 const { data: posts, error: postError } = await sb.from('total_posts')
-                    .select('title, category, order_num, video_url')
-                    .neq('video_url', 'ORDER_ITEM')
+                    .select('title, category, order_num, video_url, is_visible, is_draft, publish_at')
+                    .neq('is_visible', false)
+                    .neq('is_draft', true)
+                    .or('video_url.neq.ORDER_ITEM,video_url.is.null')
                     .order('order_num', { ascending: true });
 
                 document.getElementById('loading-msg').style.display = 'none';
 
-                const groupedData = (posts || []).reduce((acc, item) => {
+                const nowMs = Date.now();
+                const visiblePosts = (posts || []).filter(item =>
+                    item.is_visible !== false &&
+                    item.is_draft !== true &&
+                    item.video_url !== 'ORDER_ITEM' &&
+                    (!item.publish_at || new Date(item.publish_at).getTime() <= nowMs)
+                );
+
+                const groupedData = visiblePosts.reduce((acc, item) => {
                     const c = item.category || 'etc';
                     (acc[c] = acc[c] || []).push(item);
                     return acc;
@@ -147,7 +158,7 @@
                                     <div class="sub-cat-wrapper">
                                         <div class="sub-cat-header" onclick="toggleProposalCategory(this)">
                                             <div class="sub-cat-title">
-                                                <span>${CATEGORY_NAMES[code] || code}</span>
+                                                <span>${window.escapeHtml(CATEGORY_NAMES[code] || code)}</span>
                                             </div>
                                             <span class="sub-toggle-icon">▼</span>
                                         </div>
@@ -158,7 +169,7 @@
                                 const safeTitle = window.escapeHtml(post.title);
                                 html += `
                                                     <label class="proposal-item">
-                                                        <input type="checkbox" name="items" value="[${CATEGORY_NAMES[code]}] ${safeTitle}">
+                                                        <input type="checkbox" name="items" value="[${window.escapeHtml(CATEGORY_NAMES[code] || code)}] ${safeTitle}">
                                                         <span>${safeTitle}</span>
                                                     </label>`;
                             });

@@ -24,13 +24,18 @@ function buildMockSupabaseScript() {
   const posts = [
     { id: 101, category: 'korean', title: '쏙쏙 깨치는 뉴키즈 한글 1단계', thumbnail_url: '/m-hero.jpg', content: '<p>한글 소개</p>', video_url: '', order_num: 1, is_visible: true, is_draft: false, created_at: '2026-11-20T09:00:00Z' },
     { id: 102, category: 'korean', title: '재미있는 놀이 한글 워크북 2단계', thumbnail_url: '/m-ev-culture.jpg', content: '<p>워크북</p>', video_url: '', order_num: 2, is_visible: true, is_draft: false, created_at: '2026-11-21T09:00:00Z' },
-    { id: 103, category: 'reading', title: '그림책과 함께하는 생각 독서 5세', thumbnail_url: '/m-hero.jpg', content: '<p>독서</p>', video_url: '', order_num: 1, is_visible: true, is_draft: false, created_at: '2026-11-21T09:00:00Z' },
-    { id: 104, category: 'culture', title: '세계 전통의상 원어민 문화 체험', thumbnail_url: '/m-ev-culture.jpg', content: '<p>행사</p>', video_url: '', order_num: 1, is_visible: true, is_draft: false, created_at: '2026-11-21T09:00:00Z' },
+    { id: 103, category: 'reading', title: '그림책과 함께하는 생각 독서 5세', thumbnail_url: '/m-hero.jpg', content: '<p>독서</p>', video_url: null, order_num: 1, is_visible: true, is_draft: false, created_at: '2026-11-21T09:00:00Z' },
+    { id: 104, category: 'culture', title: '세계 전통의상 원어민 문화 체험', thumbnail_url: '/m-ev-culture.jpg', content: '<p>행사</p>', video_url: null, order_num: 1, is_visible: true, is_draft: false, created_at: '2026-11-21T09:00:00Z' },
+    { id: 105, category: 'korean', title: '숨김 처리된 한글 교재', thumbnail_url: '', content: '', video_url: null, order_num: 3, is_visible: false, is_draft: false, created_at: '2026-11-21T09:00:00Z' },
+    { id: 106, category: 'korean', title: '임시저장 초안 한글 교재', thumbnail_url: '', content: '', video_url: null, order_num: 4, is_visible: true, is_draft: true, created_at: '2026-11-21T09:00:00Z' },
+    { id: 107, category: 'korean', title: '예약 공개 예정 한글 교재', thumbnail_url: '', content: '', video_url: null, order_num: 5, is_visible: true, is_draft: false, publish_at: '2099-01-01T00:00:00Z', created_at: '2026-11-21T09:00:00Z' },
     { id: 201, category: 'korean', title: '뉴키즈 한글 1단계 (상/하)', thumbnail_url: '', content: '', video_url: 'ORDER_ITEM', order_num: 1, is_visible: true, is_draft: false, created_at: '2026-11-21T09:00:00Z' },
     { id: 202, category: 'reading', title: '생각 독서 그림책 패키지', thumbnail_url: '', content: '', video_url: 'ORDER_ITEM', order_num: 2, is_visible: true, is_draft: false, created_at: '2026-11-21T09:00:00Z' },
     { id: 301, category: 'notice', title: '[공지] 2027학년도 교재 OT 및 배송 일정 안내', content: '<p>원장님 안녕하세요. 김포·고양·파주 지역 배송과 https://n-kids.github.io/newkids/notice.html#reference 안내드립니다.</p>', link_url: '관리자', is_notice: true, is_visible: true, is_draft: false, download_count: 15, created_at: '2026-11-25T09:00:00Z' },
+    { id: 304, category: 'notice', title: '[초안] 비공개 임시저장 공지', content: '<p>초안</p>', link_url: '관리자', is_notice: false, is_visible: true, is_draft: true, download_count: 0, created_at: '2026-11-26T09:00:00Z' },
     { id: 302, category: 'reference', title: '[연간] 2026년 5~7세 정규 교육과정 연간교육계획안 모음집', content: '<p>첨부된 PDF 파일을 눌러 미리보거나 다운로드하실 수 있습니다.</p>', image_url: '/apple-touch-icon.png@@2026_뉴키즈_정규_연간교육계획안_유아용_최종본.pdf', link_url: '관리자', is_notice: false, is_visible: true, is_draft: false, download_count: 42, created_at: '2026-11-24T09:00:00Z' },
-    { id: 303, category: 'reference', title: '[OT자료] 신학기 학부모 오리엔테이션 발표 PPT 템플릿', content: '<p>OT 자료입니다.</p>', link_url: '관리자', is_notice: false, is_visible: true, is_draft: false, download_count: 19, created_at: '2026-11-23T09:00:00Z' }
+    { id: 303, category: 'reference', title: '[OT자료] 신학기 학부모 오리엔테이션 발표 PPT 템플릿', content: '<p>OT 자료입니다.</p>', link_url: '관리자', is_notice: false, is_visible: true, is_draft: false, download_count: 19, created_at: '2026-11-23T09:00:00Z' },
+    { id: 401, category: 'qna', title: '비밀 문의글 제목', content: '<p>비밀 본문</p><script>window.__xss=1;</script>', link_url: '홍길동', password: 'secret-pw', is_secret: true, is_visible: true, is_draft: false, created_at: '2026-11-25T10:00:00Z' }
   ];
   const popups = [
     { id: 1, image_url: '/m-hero.jpg', link_url: 'notice.html#notice', is_visible: true, order_num: 1, created_at: '2026-11-25T09:00:00Z' },
@@ -253,9 +258,44 @@ test('5. mobile slide drawer opens/closes with aria-expanded and view page stack
   await menuBtn.click();
   await expect(menuBtn).toHaveAttribute('aria-expanded', 'true');
   await expect(page.locator('#navMenu')).toHaveClass(/active/);
-  await page.locator('#nk-nav-backdrop').click({ force: true });
+  await page.locator('#nk-nav-backdrop').click({ position: { x: 20, y: 200 } });
   await expect(menuBtn).toHaveAttribute('aria-expanded', 'false');
 
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
   expect(overflow).toBe(false);
+});
+
+test('6. proposal, main notices, and write.html enforce public visibility and edit password guards', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/index.html');
+  await expect(page.locator('#m-notices')).toContainText('2027학년도 교재 OT');
+  await expect(page.locator('#m-notices')).not.toContainText('비공개 임시저장 공지');
+
+  await page.goto('/proposal.html');
+  await expect(page.locator('#proposal-grid-area')).toContainText('쏙쏙 깨치는 뉴키즈 한글 1단계');
+  await expect(page.locator('#proposal-grid-area')).toContainText('그림책과 함께하는 생각 독서 5세');
+  await expect(page.locator('#proposal-grid-area')).not.toContainText('숨김 처리된 한글 교재');
+  await expect(page.locator('#proposal-grid-area')).not.toContainText('임시저장 초안 한글 교재');
+  await expect(page.locator('#proposal-grid-area')).not.toContainText('예약 공개 예정 한글 교재');
+  await expect(page.locator('#proposal-grid-area')).not.toContainText('뉴키즈 한글 1단계 (상/하)');
+
+  // 1) write.html?edit=401 with wrong password blocks access and redirects away without leaking password/body
+  page.removeAllListeners('dialog');
+  const dialogs = [];
+  let promptReply = 'wrong-pw';
+  page.on('dialog', async d => {
+    dialogs.push(d.message());
+    if (d.type() === 'prompt') await d.accept(promptReply);
+    else await d.accept();
+  });
+  await page.goto('/write.html?edit=401#qna');
+  await page.waitForURL(/view\.html\?id=401/);
+  expect(dialogs.some(m => m.includes('비밀번호가 일치하지'))).toBe(true);
+
+  // 2) write.html?edit=401 with matching password opens edit form and strips <script> XSS
+  promptReply = 'secret-pw';
+  await page.goto('/write.html?edit=401#qna');
+  await expect(page.locator('#write-title')).toHaveValue('비밀 문의글 제목');
+  const hasXss = await page.evaluate(() => Boolean(window.__xss) || document.querySelector('#editor-container script') !== null);
+  expect(hasXss).toBe(false);
 });

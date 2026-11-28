@@ -11,7 +11,7 @@ if out.exists():
 out.mkdir()
 release = os.environ['GITHUB_SHA']
 allowed = {'.html', '.css', '.js', '.png', '.jpg', '.jpeg', '.webp', '.ico', '.txt', '.xml', '.json', '.webmanifest'}
-pattern = re.compile(r'(?<![\w/.-])(config\.js|manager\.js|board\.js|catalog\.js|style\.css|form-shared\.js|admin-forms\.js|admin-convenience\.js|admin\.css|page-design\.js|page-editor-audit\.js|page-editor-review\.js|page-editor-verify\.js|page-editor-schedule\.js|page-editor-tools\.js|page-editor-status\.js|page-editor-power\.js|page-editor-ui\.js|page-editor\.js|page-editor\.css)(?:\?v=[A-Za-z0-9_-]+)?')
+pattern = re.compile(r'(?<![\w/.-])(config\.js|manager\.js|board\.js|catalog\.js|style\.css|board\.css|catalog\.css|subpage-theme\.css|form-shared\.js|admin-forms\.js|admin-convenience\.js|admin-post-editor\.js|admin-static-pages\.js|admin\.css|page-design\.js|page-editor-audit\.js|page-editor-review\.js|page-editor-verify\.js|page-editor-schedule\.js|page-editor-tools\.js|page-editor-status\.js|page-editor-power\.js|page-editor-ui\.js|page-editor\.js|page-editor\.css)(?:\?v=[A-Za-z0-9_-]+)?')
 for source in root.iterdir():
     if not source.is_file() or source.suffix.lower() not in allowed:
         continue

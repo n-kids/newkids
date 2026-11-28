@@ -957,7 +957,7 @@
                             .or('video_url.neq.ORDER_ITEM,video_url.is.null')
                             .order('order_num', { ascending: true })
                             .order('created_at', { ascending: false })
-                            .limit(8);
+                            .limit(16);
                         if (seq !== eduPreviewSeq) return;
                         if (eduErr) throw eduErr;
                         const nowMs = Date.now();
@@ -1040,17 +1040,23 @@
                 applyEduConfig();
 
                 const nowIso = new Date().toISOString();
-                const { data: posts } = await window.sb.from('total_posts')
-                    .select('id,title,created_at,is_notice')
+                const { data: rawPosts } = await window.sb.from('total_posts')
+                    .select('id,title,created_at,is_notice,is_draft,publish_at')
                     .eq('category', 'notice')
                     .eq('is_visible', true)
+                    .neq('is_draft', true)
                     .or(`publish_at.is.null,publish_at.lte.${nowIso}`)
                     .order('is_notice', { ascending: false })
                     .order('created_at', { ascending: false })
-                    .limit(3);
+                    .limit(6);
+                const nowMs = Date.now();
+                const posts = (rawPosts || []).filter(p =>
+                    p.is_draft !== true &&
+                    (!p.publish_at || new Date(p.publish_at).getTime() <= nowMs)
+                ).slice(0, 3);
                 const list = document.getElementById('m-notices');
                 list.innerHTML = '';
-                if (!posts || !posts.length) {
+                if (!posts.length) {
                     document.getElementById('m-notice-sec').style.display = 'none';
                     return;
                 }

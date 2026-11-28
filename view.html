@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="뉴키즈(New Kids) 영유아 교재·행사 프로그램 및 공지·자료실 상세 안내 페이지입니다.">
     <title>뉴키즈 - 상세 보기</title>
     <!-- 공통 스타일 시트 로드 -->
     <link rel="stylesheet" href="style.css?v=20261127-1">
@@ -371,6 +372,7 @@
 
             if (inputPw === actualPw) {
                 isPostPasswordVerified = true;
+                try { sessionStorage.setItem('nk_edit_pw_' + String(currentPostId), inputPw); } catch (_) {}
 
                 if (pendingAction === 'view') {
                     document.getElementById('secret-lock-box').style.display = 'none';
@@ -537,18 +539,18 @@
             const orQuery = parts.map(tag => `title.ilike.%${tag}%`).join(',');
 
             const { data, error } = await window.sb.from('total_posts')
-                .select('id, title, created_at, is_secret, is_draft, publish_at')
+                .select('id, title, created_at, is_secret, is_draft, publish_at, video_url')
                 .eq('category', category)
                 .neq('id', currentId)
                 .neq('is_visible', false)
                 .neq('is_draft', true)
                 .or(orQuery)
                 .order('created_at', { ascending: false })
-                .limit(10);
+                .limit(15);
 
             const nowMs = Date.now();
             const visibleRelated = (data || [])
-                .filter(item => item.is_draft !== true && (!item.publish_at || new Date(item.publish_at).getTime() <= nowMs))
+                .filter(item => item.is_draft !== true && item.video_url !== 'ORDER_ITEM' && (!item.publish_at || new Date(item.publish_at).getTime() <= nowMs))
                 .slice(0, 5);
             if (error || visibleRelated.length === 0) return;
 
@@ -767,19 +769,24 @@
 
         // iframe 높이 자동 맞춤 수신 리스너
         window.addEventListener('message', function (event) {
+            if (event.origin !== window.location.origin) return;
             if (event.data && event.data.type === 'resizeIframe') {
-                let iframe = document.getElementById('form-iframe-' + event.data.formId);
+                const rawFormId = String(event.data.formId || '');
+                const rawHeight = Number(event.data.height);
+                if (!/^[a-zA-Z0-9_-]+$/.test(rawFormId) || !Number.isFinite(rawHeight) || rawHeight <= 0) return;
+                let iframe = document.getElementById('form-iframe-' + rawFormId);
                 if (!iframe) {
                     const iframes = document.querySelectorAll('iframe');
                     for (let f of iframes) {
-                        if (f.src && f.src.includes('id=' + event.data.formId)) {
+                        if (f.src && f.src.includes('id=' + rawFormId)) {
                             iframe = f;
                             break;
                         }
                     }
                 }
                 if (iframe) {
-                    iframe.style.height = (event.data.height + 40) + 'px';
+                    const clampedHeight = Math.min(20000, Math.max(100, Math.round(rawHeight) + 40));
+                    iframe.style.height = clampedHeight + 'px';
                 }
             }
         });

@@ -186,23 +186,37 @@ test('3. order touch steppers and proposal sticky summary bars update live', asy
   await expect(page.locator('#nk-proposal-summary-text')).toHaveText('선택된 프로그램 1개');
 });
 
-test('4. main home keeps quick cards hidden on PC and shows bottom-sheet popup on mobile while preserving hero-v2', async ({ page }) => {
+test('4. main home keeps quick cards hidden on PC, renders inline edu preview tabs, and shows bottom-sheet popup on mobile while preserving hero-v2', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/index.html');
   await expect(page.locator('#m-quick-sec')).toBeHidden();
   await expect(page.locator('.hero-v2 .hero-eyebrow')).toBeAttached();
 
+  await expect(page.locator('#m-edu button[role="tab"]')).toHaveCount(9);
+  await expect(page.locator('#m-edu-preview')).toBeVisible();
+  await expect(page.locator('#m-edu-preview-title')).toHaveText('한글');
+  await expect(page.locator('#m-edu-cards .m-edu-card')).toHaveCount(2);
+  await expect(page.locator('#m-edu-more-link')).toHaveAttribute('href', 'child.html#korean');
+
+  await page.locator('#m-edu button[data-code="reading"]').click();
+  await expect(page.locator('#m-edu-preview-title')).toHaveText('독서');
+  await expect(page.locator('#m-edu-cards .m-edu-card')).toHaveCount(1);
+  await expect(page.locator('#m-edu-cards .m-edu-card-title').first()).toContainText('독서');
+  await expect(page.locator('#m-edu-more-link')).toHaveAttribute('href', 'child.html#reading');
+
   await page.setViewportSize({ width: 390, height: 844 });
   await page.evaluate(() => localStorage.removeItem('hide_main_popup_date'));
   await page.reload();
   await expect(page.locator('#m-quick-sec')).toBeVisible();
+  await expect(page.locator('#m-edu-preview')).toBeVisible();
   await expect(page.locator('#popup-layer')).toBeVisible();
   const boxMetrics = await page.evaluate(() => {
     const rect = document.getElementById('popup-layer').getBoundingClientRect();
-    return { bottom: rect.bottom, top: rect.top, vh: window.innerHeight };
+    return { bottom: rect.bottom, top: rect.top, vh: window.innerHeight, overflow: document.documentElement.scrollWidth > window.innerWidth };
   });
   expect(boxMetrics.bottom).toBeLessThanOrEqual(boxMetrics.vh);
   expect(boxMetrics.top).toBeGreaterThan(150);
+  expect(boxMetrics.overflow).toBe(false);
 });
 
 test('5. mobile slide drawer opens/closes with aria-expanded and view page stacks attachment actions', async ({ page }) => {

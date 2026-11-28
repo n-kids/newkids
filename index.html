@@ -287,8 +287,33 @@
         .m-ev-body strong { font-size: 16px; font-weight: 700; color: #1b2a55; }
         .m-ev-body small { font-size: 13px; color: #5b6475; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .m-chips { display: flex; flex-wrap: wrap; gap: 8px; }
-        .m-chips a { min-height: 44px; padding: 0 18px; border-radius: 99px; background: #fff; border: 1px solid #dfe3ec; font-size: 15px; font-weight: 500; display: flex; align-items: center; color: #1b2433; text-decoration: none; }
-        .m-chips a:hover { border-color: #1b2a55; color: #1b2a55; }
+        .m-chips a,
+        .m-chips button { appearance: none; min-height: 40px; padding: 0 16px; border-radius: 99px; background: #fff; border: 1px solid #dfe3ec; font: inherit; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; color: #36415c; text-decoration: none; cursor: pointer; transition: background .16s, color .16s, border-color .16s, box-shadow .16s; }
+        .m-chips a:hover,
+        .m-chips button:hover { border-color: #1b2a55; color: #1b2a55; }
+        .m-chips button:focus-visible { outline: 3px solid #f2c14e; outline-offset: 2px; }
+        .m-chips button.is-active { background: #1b2a55; border-color: #1b2a55; color: #fff; font-weight: 700; box-shadow: 0 4px 12px rgba(27,42,85,.18); }
+        .m-edu-preview { margin-top: 14px; background: #fff; border: 1px solid #e6e9f0; border-radius: 18px; padding: 16px; box-shadow: 0 2px 10px rgba(27,42,85,.06); }
+        .m-edu-preview-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid #eef0f5; }
+        .m-edu-preview-meta { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
+        .m-edu-preview-icon { width: 40px; height: 40px; border-radius: 12px; background: #eef1f8; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .m-edu-preview-icon svg { width: 28px; height: 28px; }
+        .m-edu-preview-text { min-width: 0; }
+        .m-edu-preview-text strong { display: block; font-size: 16px; font-weight: 800; color: #1b2a55; line-height: 1.3; }
+        .m-edu-preview-text small { display: block; font-size: 13px; color: #5b6475; line-height: 1.45; word-break: keep-all; margin-top: 2px; }
+        .m-edu-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+        .m-edu-card { display: flex; flex-direction: column; border: 1px solid #e6e9f0; border-radius: 14px; overflow: hidden; background: #fff; text-decoration: none; color: #1b2433; transition: transform .16s, box-shadow .16s, border-color .16s; }
+        .m-edu-card:hover { transform: translateY(-2px); border-color: #1b2a55; box-shadow: 0 6px 16px rgba(27,42,85,.1); }
+        .m-edu-thumb { width: 100%; aspect-ratio: 4 / 3; background: #f3f5fa; overflow: hidden; }
+        .m-edu-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .m-edu-card-title { padding: 10px 9px; font-size: 13.5px; font-weight: 700; color: #172451; text-align: center; line-height: 1.35; word-break: keep-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 48px; align-items: center; justify-content: center; }
+        .m-edu-empty { grid-column: 1 / -1; text-align: center; padding: 26px 14px; background: #f7f8fb; border-radius: 12px; color: #5b6475; font-size: 13.5px; }
+        .m-edu-preview-foot { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+        .m-edu-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 0 16px; border-radius: 12px; font-size: 13.5px; font-weight: 700; text-decoration: none; transition: background .15s, border-color .15s; }
+        .m-edu-btn-primary { background: #1b2a55; color: #fff; }
+        .m-edu-btn-primary:hover { background: #25386e; color: #fff; }
+        .m-edu-btn-ghost { background: #f4f6fa; color: #1b2a55; border: 1px solid #dfe3ec; }
+        .m-edu-btn-ghost:hover { border-color: #1b2a55; color: #1b2a55; }
         .m-tabbar { display: none; }
 
         /* PC (769px 이상): 넓은 화면에 맞게 */
@@ -322,7 +347,11 @@
             .m-ev { min-height: 112px; }
             .m-ev img { width: 150px; min-height: 112px; }
             .m-ev-icon { width: 150px; }
-            .m-chips a { min-height: 48px; padding: 0 22px; font-size: 16px; }
+            .m-chips a,
+            .m-chips button { min-height: 44px; padding: 0 20px; font-size: 15px; }
+            .m-edu-preview { padding: 22px; }
+            .m-edu-cards { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+            .m-edu-card-title { font-size: 14.5px; padding: 12px 10px; }
         }
 
         /* 휴대폰 (768px 이하): 아래 메뉴 */
@@ -396,8 +425,24 @@
             </div>
         </div>
         <div class="m-sec" id="m-edu-sec">
-            <h2>교육 프로그램</h2>
-            <div class="m-chips" id="m-edu"></div>
+            <div class="m-head"><h2>교육 프로그램</h2><a href="child.html">전체보기</a></div>
+            <div class="m-chips" id="m-edu" role="tablist" aria-label="교육 프로그램 과목 선택"></div>
+            <div class="m-edu-preview" id="m-edu-preview" role="tabpanel" aria-live="polite" hidden>
+                <div class="m-edu-preview-head">
+                    <div class="m-edu-preview-meta">
+                        <span class="m-edu-preview-icon" id="m-edu-preview-icon" aria-hidden="true"></span>
+                        <div class="m-edu-preview-text">
+                            <strong id="m-edu-preview-title">교육 프로그램</strong>
+                            <small id="m-edu-preview-desc"></small>
+                        </div>
+                    </div>
+                </div>
+                <div class="m-edu-cards" id="m-edu-cards"></div>
+                <div class="m-edu-preview-foot">
+                    <a href="proposal.html" class="m-edu-btn m-edu-btn-ghost">📋 견적 요청</a>
+                    <a href="child.html" id="m-edu-more-link" class="m-edu-btn m-edu-btn-primary">전체 교재 보기 →</a>
+                </div>
+            </div>
         </div>
     </div>
     <nav class="m-tabbar" aria-label="아래 메뉴">
@@ -778,6 +823,123 @@
                     .order('order_num');
                 const evWrap = document.getElementById('m-events');
                 const eduWrap = document.getElementById('m-edu');
+                const eduCats = [];
+                const eduPreviewCache = new Map();
+                const eduFallbackThumb = 'https://placehold.co/400x300/eef1f8/5b6475?text=New+Kids';
+                let eduPreviewSeq = 0;
+
+                function getSafeEduThumb(raw) {
+                    if (!raw || typeof raw !== 'string') return eduFallbackThumb;
+                    const trimmed = raw.trim();
+                    if (!trimmed) return eduFallbackThumb;
+                    try {
+                        const url = new URL(trimmed, window.location.href);
+                        if (url.protocol !== 'http:' && url.protocol !== 'https:') return eduFallbackThumb;
+                        return url.href;
+                    } catch (_) {
+                        return eduFallbackThumb;
+                    }
+                }
+
+                function renderEduPreviewCards(items) {
+                    const cardsWrap = document.getElementById('m-edu-cards');
+                    if (!cardsWrap) return;
+                    if (!items.length) {
+                        const empty = document.createElement('div');
+                        empty.className = 'm-edu-empty';
+                        empty.textContent = '현재 준비 중인 프로그램입니다. 전체보기에서 곧 업데이트됩니다.';
+                        cardsWrap.replaceChildren(empty);
+                        return;
+                    }
+                    const frag = document.createDocumentFragment();
+                    items.forEach(item => {
+                        const card = document.createElement('a');
+                        card.className = 'm-edu-card';
+                        card.href = `view.html?id=${encodeURIComponent(item.id)}`;
+                        const thumb = document.createElement('div');
+                        thumb.className = 'm-edu-thumb';
+                        const img = document.createElement('img');
+                        img.src = getSafeEduThumb(item.thumbnail_url);
+                        img.alt = String(item.title || '');
+                        img.loading = 'lazy';
+                        img.addEventListener('error', () => { img.src = eduFallbackThumb; }, { once: true });
+                        thumb.appendChild(img);
+                        const title = document.createElement('span');
+                        title.className = 'm-edu-card-title';
+                        title.textContent = String(item.title || '');
+                        card.append(thumb, title);
+                        frag.appendChild(card);
+                    });
+                    cardsWrap.replaceChildren(frag);
+                }
+
+                async function selectEduPreview(cat) {
+                    const previewBox = document.getElementById('m-edu-preview');
+                    const iconEl = document.getElementById('m-edu-preview-icon');
+                    const titleEl = document.getElementById('m-edu-preview-title');
+                    const descEl = document.getElementById('m-edu-preview-desc');
+                    const moreEl = document.getElementById('m-edu-more-link');
+                    const cardsWrap = document.getElementById('m-edu-cards');
+                    if (!previewBox || !cardsWrap) return;
+
+                    const code = cat.code;
+                    const name = cat.cleanName;
+                    eduWrap.querySelectorAll('button[data-code]').forEach(btn => {
+                        const active = btn.dataset.code === code;
+                        btn.classList.toggle('is-active', active);
+                        btn.setAttribute('aria-selected', String(active));
+                    });
+
+                    previewBox.hidden = false;
+                    if (iconEl) iconEl.innerHTML = homeIcon(code);
+                    if (titleEl) titleEl.textContent = name;
+                    if (descEl) descEl.textContent = String(cat.hero_desc || `${name} 영역의 대표 교재를 미리 살펴보세요.`);
+                    if (moreEl) {
+                        moreEl.href = `child.html#${code}`;
+                        moreEl.textContent = `${name} 전체 교재 보기 →`;
+                    }
+
+                    const seq = ++eduPreviewSeq;
+                    if (eduPreviewCache.has(code)) {
+                        renderEduPreviewCards(eduPreviewCache.get(code));
+                        return;
+                    }
+
+                    const loadingEl = document.createElement('div');
+                    loadingEl.className = 'm-edu-empty';
+                    loadingEl.textContent = `${name} 교재를 불러오는 중이에요…`;
+                    cardsWrap.replaceChildren(loadingEl);
+
+                    try {
+                        const { data: eduPosts, error: eduErr } = await window.sb.from('total_posts')
+                            .select('id,title,thumbnail_url,video_url,publish_at,is_draft')
+                            .eq('category', code)
+                            .eq('is_visible', true)
+                            .neq('is_draft', true)
+                            .or('video_url.neq.ORDER_ITEM,video_url.is.null')
+                            .order('order_num', { ascending: true })
+                            .order('created_at', { ascending: false })
+                            .limit(8);
+                        if (seq !== eduPreviewSeq) return;
+                        if (eduErr) throw eduErr;
+                        const nowMs = Date.now();
+                        const visibleItems = (eduPosts || []).filter(item =>
+                            item.is_draft !== true &&
+                            item.video_url !== 'ORDER_ITEM' &&
+                            (!item.publish_at || new Date(item.publish_at).getTime() <= nowMs)
+                        ).slice(0, 4);
+                        eduPreviewCache.set(code, visibleItems);
+                        renderEduPreviewCards(visibleItems);
+                    } catch (err) {
+                        if (seq !== eduPreviewSeq) return;
+                        console.error('교육 미리보기 로드 실패:', err);
+                        const failEl = document.createElement('div');
+                        failEl.className = 'm-edu-empty';
+                        failEl.textContent = '교재 정보를 불러오지 못했습니다. 아래 전체 보기를 눌러 확인해 주세요.';
+                        cardsWrap.replaceChildren(failEl);
+                    }
+                }
+
                 (cats || []).forEach(cat => {
                     const code = String(cat.code || '');
                     if (!/^[a-z0-9_-]+$/i.test(code)) return;
@@ -808,12 +970,22 @@
                         card.appendChild(body);
                         evWrap.appendChild(card);
                     } else if (cat.type === 'EDU') {
-                        const chip = document.createElement('a');
-                        chip.href = `child.html#${code}`;
+                        const entry = { code, cleanName: name, hero_desc: cat.hero_desc || '' };
+                        eduCats.push(entry);
+                        const chip = document.createElement('button');
+                        chip.type = 'button';
+                        chip.setAttribute('role', 'tab');
+                        chip.setAttribute('aria-selected', 'false');
+                        chip.dataset.code = code;
                         chip.textContent = name;
+                        chip.addEventListener('click', () => selectEduPreview(entry));
                         eduWrap.appendChild(chip);
                     }
                 });
+
+                if (eduCats.length > 0) {
+                    selectEduPreview(eduCats[0]);
+                }
 
                 const nowIso = new Date().toISOString();
                 const { data: posts } = await window.sb.from('total_posts')

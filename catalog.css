@@ -10,8 +10,8 @@
 .catalog-page .catalog-cta { text-align: center; background: var(--primary-color); color: #fff; }
 .catalog-page .catalog-cta h2 { color: #fff; }
 .catalog-page .catalog-cta p { margin-bottom: 20px; }
-.catalog-page .catalog-controls { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 24px; padding: 12px 16px; background: #fff; border: 1px solid #e6e9f0; border-radius: 14px; box-shadow: 0 4px 16px rgba(27,42,85,.04); }
-.catalog-page .catalog-chip-bar { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; flex-wrap: wrap; scrollbar-width: none; }
+.catalog-page .catalog-controls { display: flex; align-items: center; justify-content: space-between; gap: 14px; width: 100%; max-width: 100%; box-sizing: border-box; overflow: hidden; margin-bottom: 24px; padding: 12px 16px; background: #fff; border: 1px solid #e6e9f0; border-radius: 14px; box-shadow: 0 4px 16px rgba(27,42,85,.04); }
+.catalog-page .catalog-chip-bar { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; max-width: 100%; flex-wrap: wrap; scrollbar-width: none; }
 .catalog-page .catalog-chip-bar::-webkit-scrollbar { display: none; }
 .catalog-page .catalog-chip { appearance: none; flex: 0 0 auto; white-space: nowrap; min-height: 38px; padding: 7px 14px; border-radius: 999px; border: 1px solid #dfe3ec; background: #f7f8fb; color: #36415c; font: inherit; font-size: .92rem; font-weight: 600; cursor: pointer; transition: background .18s, color .18s, border-color .18s, box-shadow .18s; }
 .catalog-page .catalog-chip:hover { border-color: #1b2a55; color: #1b2a55; }
@@ -37,8 +37,9 @@
 .catalog-page .catalog-state-error { color: #b42318; padding: 50px 20px; }
 @media (max-width: 768px) {
  .catalog-page .intro-box { padding: 22px 18px; border-radius: 16px; }
- .catalog-page .catalog-controls { flex-direction: column; align-items: stretch; gap: 10px; padding: 10px 12px; margin-bottom: 18px; position: sticky; top: 72px; z-index: 40; }
- .catalog-page .catalog-chip-bar { flex-wrap: nowrap; -webkit-overflow-scrolling: touch; padding-bottom: 2px; }
+ .catalog-page .catalog-controls { flex-direction: column; align-items: stretch; gap: 10px; padding: 12px; margin-bottom: 18px; position: static; }
+ .catalog-page .catalog-chip-bar { flex-wrap: wrap; gap: 6px; width: 100%; max-width: 100%; overflow-x: visible; padding-bottom: 0; }
+ .catalog-page .catalog-chip { min-height: 34px; padding: 5px 11px; font-size: .85rem; }
  .catalog-page .catalog-search-wrap { flex: none; width: 100%; }
  .catalog-page .catalog-card-body { padding: 11px 10px; min-height: 52px; }
  .catalog-page .catalog-card-title { font-size: .95rem; }

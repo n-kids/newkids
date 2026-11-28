@@ -89,8 +89,9 @@
         });
         chipBar.replaceChildren(frag);
         const activeBtn = chipBar.querySelector('.catalog-chip.is-active');
-        if (activeBtn && typeof activeBtn.scrollIntoView === 'function') {
-            try { activeBtn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); } catch (_) {}
+        if (activeBtn && chipBar.scrollWidth > chipBar.clientWidth) {
+            const targetLeft = activeBtn.offsetLeft - (chipBar.clientWidth - activeBtn.offsetWidth) / 2;
+            chipBar.scrollLeft = Math.max(0, targetLeft);
         }
     }
 

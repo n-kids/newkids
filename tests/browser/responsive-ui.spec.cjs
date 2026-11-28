@@ -12,8 +12,14 @@ function buildMockSupabaseScript() {
     { code: 'korean', name: '한글', type: 'EDU', hero_title: '한글', hero_desc: '신나는 한글 교재', is_visible: true, order_num: 3 },
     { code: 'reading', name: '독서', type: 'EDU', hero_title: '독서', hero_desc: '생각이 자라는 독서', is_visible: true, order_num: 4 },
     { code: 'english', name: '영어', type: 'EDU', hero_title: '영어', hero_desc: '재미있는 영어 프로그램', is_visible: true, order_num: 5 },
-    { code: 'culture', name: '문화체험', type: 'EVENT', hero_title: '원어민 문화체험', hero_desc: '세계 문화 탐험', is_visible: true, order_num: 6 },
-    { code: 'season', name: '시즌 행사', type: 'EVENT', hero_title: '시즌 행사', hero_desc: '즐거운 계절 행사', is_visible: true, order_num: 7 }
+    { code: 'math', name: '수학', type: 'EDU', hero_title: '수학', hero_desc: '창의 수학', is_visible: true, order_num: 6 },
+    { code: 'science', name: '과학', type: 'EDU', hero_title: '과학', hero_desc: '신나는 과학', is_visible: true, order_num: 7 },
+    { code: 'art', name: '미술', type: 'EDU', hero_title: '미술', hero_desc: '감성 미술', is_visible: true, order_num: 8 },
+    { code: 'environment', name: '환경', type: 'EDU', hero_title: '환경', hero_desc: '생태 환경', is_visible: true, order_num: 9 },
+    { code: 'nuri', name: '누리과정', type: 'EDU', hero_title: '누리과정', hero_desc: '누리과정 통합 프로그램', is_visible: true, order_num: 10 },
+    { code: 'infant', name: '영아', type: 'EDU', hero_title: '영아', hero_desc: '영아 프로그램', is_visible: true, order_num: 11 },
+    { code: 'culture', name: '문화체험', type: 'EVENT', hero_title: '원어민 문화체험', hero_desc: '세계 문화 탐험', is_visible: true, order_num: 12 },
+    { code: 'season', name: '시즌 행사', type: 'EVENT', hero_title: '시즌 행사', hero_desc: '즐거운 계절 행사', is_visible: true, order_num: 13 }
   ];
   const posts = [
     { id: 101, category: 'korean', title: '쏙쏙 깨치는 뉴키즈 한글 1단계', thumbnail_url: '/m-hero.jpg', content: '<p>한글 소개</p>', video_url: '', order_num: 1, is_visible: true, is_draft: false, created_at: '2026-11-20T09:00:00Z' },
@@ -113,11 +119,20 @@ test.beforeEach(async ({ context, page }) => {
   page.on('dialog', dialog => dialog.accept());
 });
 
-test('1. catalog sticky chip bar and instant search work without overflow', async ({ page }) => {
+test('1. catalog chip bar wraps cleanly inside controls and instant search works without overflow', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/child.html#korean');
-  await expect(page.locator('.catalog-controls .catalog-chip')).toHaveCount(3);
+  await expect(page.locator('.catalog-controls .catalog-chip')).toHaveCount(9);
   await expect(page.locator('#post-list .post-card')).toHaveCount(2);
+
+  const chipContainment = await page.evaluate(() => {
+    const box = document.querySelector('.catalog-controls').getBoundingClientRect();
+    const chips = Array.from(document.querySelectorAll('.catalog-controls .catalog-chip')).map(el => el.getBoundingClientRect());
+    const maxRight = Math.max(...chips.map(r => r.right));
+    return { boxRight: Math.round(box.right), maxRight: Math.round(maxRight), wrapped: chips.some(r => r.top > chips[0].top + 4) };
+  });
+  expect(chipContainment.maxRight).toBeLessThanOrEqual(chipContainment.boxRight + 1);
+  expect(chipContainment.wrapped).toBe(true);
 
   await page.locator('.catalog-search-input').fill('워크북');
   await expect(page.locator('#post-list .post-card')).toHaveCount(1);
@@ -153,7 +168,7 @@ test('2. board renders mobile 2-row cards with author while keeping desktop meta
 test('3. order touch steppers and proposal sticky summary bars update live', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/order.html');
-  await expect(page.locator('#product-list-area .category-wrapper')).toHaveCount(3);
+  await expect(page.locator('#product-list-area .category-wrapper')).toHaveCount(9);
   await page.locator('#product-list-area .order-category-header').first().click();
   await page.locator('#product-list-area .order-item-row').first().locator('.order-item-info').click();
 
@@ -164,7 +179,7 @@ test('3. order touch steppers and proposal sticky summary bars update live', asy
   await expect(page.locator('#nk-order-summary-text')).toHaveText('총 1종 · 2부');
 
   await page.goto('/proposal.html');
-  await expect(page.locator('#proposal-grid-area .sub-cat-wrapper')).toHaveCount(3);
+  await expect(page.locator('#proposal-grid-area .sub-cat-wrapper')).toHaveCount(9);
   await page.locator('#proposal-grid-area .sub-cat-header').first().click();
   await page.locator('#proposal-grid-area input[name="items"]').first().check();
   await expect(page.locator('#nk-proposal-summary')).toBeVisible();

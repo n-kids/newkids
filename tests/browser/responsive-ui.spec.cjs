@@ -270,6 +270,12 @@ test('6. proposal, main notices, and write.html enforce public visibility and ed
   await page.goto('/index.html');
   await expect(page.locator('#m-notices')).toContainText('2027학년도 교재 OT');
   await expect(page.locator('#m-notices')).not.toContainText('비공개 임시저장 공지');
+  const rightClickBlocked = await page.evaluate(() => {
+    const ev = new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2 });
+    document.body.dispatchEvent(ev);
+    return ev.defaultPrevented;
+  });
+  expect(rightClickBlocked).toBe(true);
 
   await page.goto('/proposal.html');
   await expect(page.locator('#proposal-grid-area')).toContainText('쏙쏙 깨치는 뉴키즈 한글 1단계');

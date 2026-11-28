@@ -665,6 +665,14 @@ function applyThemeA() {
 }
 
 // 7. 페이지 초기화 및 보안 이벤트
+(() => {
+    const pageName = (location.pathname.split('/').pop() || '').toLowerCase();
+    if (pageName === 'admin.html' || pageName === 'page-editor.html') return;
+    document.addEventListener('contextmenu', function (e) {
+        e.preventDefault();
+    }, true);
+})();
+
 document.addEventListener("DOMContentLoaded", function () {
     loadHeader();
     loadFooter();

@@ -493,3 +493,67 @@ test('all 10 power-user features work end-to-end (undo/redo, split drag, click-t
   await page.locator('[data-editor-view="banner"]').click();
   await expect(page.locator('#title')).toHaveValue('백업에서 복원된 제목');
 });
+
+test('main body editor controls the homepage subject-chip textbook preview panel live', async ({ page, context }) => {
+  await setupRoutes(context);
+  page.on('dialog', d => d.accept());
+  await page.goto('/page-editor.html');
+  await expect(page.locator('#save')).toBeEnabled();
+  const frame = page.frameLocator('#preview');
+  await expect(frame.locator('#m-edu button[data-code="korean"]')).toHaveClass(/is-active/);
+
+  await page.locator('[data-editor-view="body"]').click();
+  await page.locator('#main-sections-design summary').nth(2).click();
+  await expect(page.locator('#cu-preview-settings')).toBeVisible();
+  await expect(page.locator('#cuShowPreview')).toBeChecked();
+  await expect(page.locator('#cuQuoteVisible')).toBeChecked();
+  await expect(page.locator('#cuDefaultCode option[value="korean"]')).toHaveText('한글');
+
+  await page.locator('#cuMoreText').fill('{과목} 교재 더보기');
+  await expect(frame.locator('#m-edu-more-link')).toHaveText('한글 교재 더보기');
+  await page.locator('#cuQuoteText').fill('견적 받기');
+  await expect(frame.locator('#m-edu-quote-link')).toHaveText('견적 받기');
+  await page.locator('#cuQuoteVisible').uncheck();
+  await expect(frame.locator('#m-edu-quote-link')).toBeHidden();
+
+  await page.locator('#cuChipActiveBg').fill('#b85a17');
+  await expect.poll(() => frame.locator('#m-edu button.is-active').evaluate(el => getComputedStyle(el).backgroundColor)).toBe('rgb(184, 90, 23)');
+
+  await page.locator('#cuShowPreview').uncheck();
+  await expect(frame.locator('#m-edu-preview')).toBeHidden();
+  await expect(frame.locator('#m-edu button.is-active')).toHaveCount(0);
+  await page.locator('#cuShowPreview').check();
+  await expect(frame.locator('#m-edu-preview')).toBeVisible();
+
+  await page.locator('#cuDefaultCode').selectOption('korean');
+
+  // 메인 공지사항 섹션 편집 연동
+  await page.locator('#main-sections-design summary').nth(4).click();
+  await page.locator('#noTitle').fill('새 소식 안내');
+  await expect(frame.locator('#m-notice-sec h2')).toHaveText('새 소식 안내');
+  await page.locator('#noVisible').uncheck();
+  await expect(frame.locator('#m-notice-sec')).toBeHidden();
+  await page.locator('#noVisible').check();
+
+  // 변경 비교 대화상자에 한글 라벨이 노출되는지 확인
+  await page.locator('#compare').click();
+  await expect(page.locator('#diff')).toContainText('패널 전체 보기 버튼 문구:');
+  await expect(page.locator('#diff')).toContainText('메인 공지사항 제목:');
+  await expect(page.locator('#diff')).not.toContainText('mainSections.curriculum.');
+  await expect(page.locator('#diff')).not.toContainText('mainSections.notices.');
+  await page.locator('#close-diff').click();
+
+  await page.locator('#save').click();
+  await expect(page.locator('#status')).toContainText('초안 v1 저장 완료');
+  await expect(page.locator('#cuDefaultCode')).toHaveValue('korean');
+
+  // 서브 페이지(child.html#korean) 새 반응형 카테고리 칩·검색창 디자인 동기화 확인
+  await page.locator('#page').selectOption('page:korean');
+  await expect(page.locator('#preview-status')).toContainText('초안 미리보기 반영됨');
+  await page.locator('[data-editor-view="body"]').click();
+  await page.locator('#subAccentBgColor').fill('#0f766e');
+  await expect.poll(() => frame.locator('.catalog-chip.is-active').evaluate(el => getComputedStyle(el).backgroundColor)).toBe('rgb(15, 118, 110)');
+  await page.locator('#subpage-design-card summary').click();
+  await page.locator('#subPlaceholderText').fill('원하는 교재를 검색하세요');
+  await expect(frame.locator('.catalog-search-input')).toHaveAttribute('placeholder', '원하는 교재를 검색하세요');
+});

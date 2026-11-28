@@ -149,9 +149,18 @@
   if(target.closest('#view-hero,#page-hero,.hero,.m-hero,.ai-hero'))return focusField('banner','background');
   if(target.closest('#quick-links,#m-quick-sec,.m-app'))return focusField('body','qlAppTitle',0);
   if(target.closest('#events,#m-events-sec,#m-events'))return focusField('body','evTitle',1);
+  if(target.closest('#m-edu-quote-link'))return focusField('body','cuQuoteText',2);
+  if(target.closest('#m-edu-more-link'))return focusField('body','cuMoreText',2);
+  if(target.closest('#m-edu-cards'))return focusField('body','cuPreviewCount',2);
+  if(target.closest('#m-edu-preview'))return focusField('body','cuPreviewBgColor',2);
+  if(target.closest('#m-edu button'))return focusField('body','cuDefaultCode',2);
   if(target.closest('#curriculum,#m-edu-sec,#m-edu'))return focusField('body','cuTitle',2);
   if(target.closest('#contact'))return focusField('body','ctTitle',3);
-  if(target.closest('.card,.catalog-card,.proposal-box,.board-item,.ai-step,.ai-feat'))return focusField('body','subCardBgColor');
+  if(target.closest('#m-notice-sec,#m-notices'))return focusField('body','noTitle',4);
+  if(target.closest('.m-tabbar'))return focusField('layout','layPrimaryColor');
+  if(target.closest('.catalog-search-input,#search-input'))return focusField('body','subPlaceholderText');
+  if(target.closest('.catalog-chip,.nk-sticky-summary,.nk-file-dl-btn'))return focusField('body','subAccentBgColor');
+  if(target.closest('.card,.catalog-card,.catalog-controls,.nk-qty-stepper,.nk-file-row,.proposal-box,.board-item,.ai-step,.ai-feat'))return focusField('body','subCardBgColor');
  };
 
  /* ── 4. Per-Section Reset Buttons ─────────────────────────────────── */

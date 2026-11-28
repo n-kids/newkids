@@ -20,6 +20,22 @@
  const num=(v,f,min,max)=>v!==''&&v!==null&&v!==undefined&&Number.isFinite(Number(v))?Math.min(max,Math.max(min,Number(v))):f;
  const color=(v,f)=>/^#[0-9a-f]{6}$/i.test(String(v||''))?String(v):f;
  const optColor=v=>/^#[0-9a-f]{6}$/i.test(String(v||''))?String(v):'';
+ /* 메인 교육 프로그램 미리보기 패널 동작 설정 → index.html(loadMobileHome)로 전달 */
+ function publishEduPreviewConfig(sc){
+  const s=sc||{};const count=Number(s.previewCount);
+  const cfg={
+   showPreview:s.showPreview!==false,
+   defaultCode:/^[a-z0-9_-]+$/i.test(String(s.defaultCode||''))?String(s.defaultCode):'',
+   previewCount:[2,4,6,8].includes(count)?count:4,
+   quoteVisible:s.quoteVisible!==false,
+   quoteText:String(s.quoteText||'').trim().slice(0,30),
+   moreText:String(s.moreText||'').trim().slice(0,40)
+  };
+  const prev=window.__nkEduPreviewConfig;
+  if(prev&&JSON.stringify(prev)===JSON.stringify(cfg))return;
+  window.__nkEduPreviewConfig=cfg;
+  try{window.dispatchEvent(new CustomEvent('nk-edu-preview-config',{detail:cfg}));}catch(_){}
+ }
  const safeImg=v=>{const s=String(v||'').trim();if(!s||/^data:image\/(gif|svg\+xml)/i.test(s)||/via\.placeholder\.com/i.test(s))return '';return /^(https?:\/\/|\/|\.\/|data:image\/)/i.test(s)?s:'';};
  const toRgba=(hex,op)=>{const c=color(hex,'#1a3c6e').slice(1);const r=parseInt(c.slice(0,2),16),g=parseInt(c.slice(2,4),16),b=parseInt(c.slice(4,6),16);return `rgba(${r}, ${g}, ${b}, ${num(op,0.4,0,1)})`;};
  function hero(){return document.getElementById('view-hero')||document.getElementById('page-hero')||document.querySelector('.hero')||document.querySelector('.ai-hero');}
@@ -79,11 +95,11 @@
   const scaleCss=scaleVal!==100?`${root} h1{zoom:${(scaleVal/100).toFixed(2)}}`:'';
   const extraRules=[];
   const layout={...(shared.layout||{}),...(doc.layout||{})};
-  if(optColor(layout.primaryColor)){document.documentElement.style.setProperty('--primary-color',layout.primaryColor);document.documentElement.style.setProperty('--brand-navy',layout.primaryColor);}
+  if(optColor(layout.primaryColor)){document.documentElement.style.setProperty('--primary-color',layout.primaryColor);document.documentElement.style.setProperty('--brand-navy',layout.primaryColor);extraRules.push(`html body .m-tabbar a[aria-current="page"]{color:${layout.primaryColor}!important}`);}
   if(optColor(layout.accentColor)){document.documentElement.style.setProperty('--accent-color',layout.accentColor);document.documentElement.style.setProperty('--brand-coral',layout.accentColor);}
   if(optColor(layout.pageBgColor))extraRules.push(`html body{background-color:${layout.pageBgColor}!important}`);
   if(optColor(layout.pageTextColor))extraRules.push(`html body{color:${layout.pageTextColor}!important}`);
-  if(optColor(layout.headerBgColor))extraRules.push(`html body header{background:${layout.headerBgColor}!important}`);
+  if(optColor(layout.headerBgColor))extraRules.push(`html body header{background:${layout.headerBgColor}!important}@media(max-width:768px){html body header .nav-menu.active{background:${layout.headerBgColor}!important}}`);
   if(optColor(layout.headerTextColor))extraRules.push(`html body header .logo-text strong,html body header .logo-text small,html body header .nav-menu>li>a:not(.cta-menu),html body header .mobile-btn{color:${layout.headerTextColor}!important}`);
   if(optColor(layout.ctaBgColor))extraRules.push(`html body header .nav-menu a.cta-menu{background:${layout.ctaBgColor}!important;border-color:${layout.ctaBgColor}!important}`);
   if(optColor(layout.ctaTextColor))extraRules.push(`html body header .nav-menu a.cta-menu{color:${layout.ctaTextColor}!important}`);
@@ -160,10 +176,28 @@
      if(optColor(sc.cardTitleColor))extraRules.push(`html body #m-events .m-ev-body strong{color:${sc.cardTitleColor}!important}`);
      if(optColor(sc.cardDescColor))extraRules.push(`html body #m-events .m-ev-body small{color:${sc.cardDescColor}!important}`);
     }else{
-     if(optColor(sc.cardBgColor))extraRules.push(`html body #m-edu a{background:${sc.cardBgColor}!important}`);
-     if(optColor(sc.cardBorderColor))extraRules.push(`html body #m-edu a{border-color:${sc.cardBorderColor}!important}`);
-     if(optColor(sc.cardTitleColor))extraRules.push(`html body #m-edu a{color:${sc.cardTitleColor}!important}`);
+     /* 과목 칩(button[role=tab]) + 교재 미리보기 패널 */
+     if(optColor(sc.cardBgColor))extraRules.push(`html body #m-edu button:not(.is-active),html body #m-edu-cards .m-edu-card{background:${sc.cardBgColor}!important}`);
+     if(optColor(sc.cardBorderColor))extraRules.push(`html body #m-edu button:not(.is-active),html body #m-edu-cards .m-edu-card,html body #m-edu-preview{border-color:${sc.cardBorderColor}!important}`);
+     if(optColor(sc.cardTitleColor))extraRules.push(`html body #m-edu button:not(.is-active),html body #m-edu-cards .m-edu-card-title,html body #m-edu-preview-title{color:${sc.cardTitleColor}!important}`);
+     if(optColor(sc.cardDescColor))extraRules.push(`html body #m-edu-preview-desc,html body #m-edu-cards .m-edu-empty{color:${sc.cardDescColor}!important}`);
+     if(optColor(sc.chipActiveBg))extraRules.push(`html body #m-edu button.is-active{background:${sc.chipActiveBg}!important;border-color:${sc.chipActiveBg}!important}`);
+     if(optColor(sc.chipActiveText))extraRules.push(`html body #m-edu button.is-active{color:${sc.chipActiveText}!important}`);
+     if(optColor(sc.previewBgColor))extraRules.push(`html body #m-edu-preview{background:${sc.previewBgColor}!important}`);
+     if(optColor(sc.moreBtnBg))extraRules.push(`html body #m-edu-preview .m-edu-btn-primary{background:${sc.moreBtnBg}!important;border-color:${sc.moreBtnBg}!important}`);
     }
+   }
+   publishEduPreviewConfig(ms.curriculum||{});
+   if(ms.notices){
+    const no=ms.notices,noEl=document.getElementById('m-notice-sec');
+    if(noEl){
+     if(no.visible===false)noEl.style.display='none';
+     else if(noEl.style.display==='none'&&noEl.querySelector('#m-notices a, #m-notices .m-empty'))noEl.style.display='';
+     if(no.title)setText(noEl.querySelector('h2'),no.title);
+    }
+    if(optColor(no.bgColor))extraRules.push(`html body #m-notice-sec{background:${no.bgColor}!important;padding:16px!important;border-radius:16px!important}`);
+    if(optColor(no.titleColor))extraRules.push(`html body #m-notice-sec h2{color:${no.titleColor}!important}`);
+    if(optColor(no.cardBgColor))extraRules.push(`html body #m-notices{background:${no.cardBgColor}!important}`);
    }
    if(ms.contact){
     const ct=ms.contact,ctEl=document.querySelector('#contact');
@@ -198,22 +232,22 @@
   if(!isMain){
    const sub=doc.inherit?{...(doc.subpage||{}),...(shared.subpage||{})}:{...(shared.subpage||{}),...(doc.subpage||{})};
    if(optColor(sub.bodyBgColor))extraRules.push(`html body,html body>section:not(#view-hero):not(#page-hero):not(.hero):not(.ai-hero),html body main.board-container{background-color:${sub.bodyBgColor}!important}`);
-   if(optColor(sub.cardBgColor))extraRules.push(`html body .card,html body .catalog-card,html body .proposal-box,html body .board-list-head,html body .board-item,html body .reference-help-panel,html body .order-list-box,html body .ai-step,html body .ai-feat{background-color:${sub.cardBgColor}!important}`);
-   if(optColor(sub.cardBorderColor))extraRules.push(`html body .card,html body .catalog-card,html body .proposal-box,html body .board-list-head,html body .board-item,html body .reference-help-panel,html body .order-list-box,html body .form-input,html body .ai-step,html body .ai-feat{border-color:${sub.cardBorderColor}!important}`);
+   if(optColor(sub.cardBgColor))extraRules.push(`html body .card,html body .catalog-card,html body .catalog-controls,html body .proposal-box,html body .board-list-head,html body .board-item,html body .reference-help-panel,html body .order-list-box,html body .ai-step,html body .ai-feat{background-color:${sub.cardBgColor}!important}`);
+   if(optColor(sub.cardBorderColor))extraRules.push(`html body .card,html body .catalog-card,html body .catalog-controls,html body .catalog-chip:not(.is-active),html body .catalog-search-input,html body .nk-qty-stepper,html body .proposal-box,html body .board-list-head,html body .board-item,html body .reference-help-panel,html body .order-list-box,html body .form-input,html body .ai-step,html body .ai-feat{border-color:${sub.cardBorderColor}!important}`);
    if(sub.cardRadius!==''&&sub.cardRadius!==undefined&&sub.cardRadius!==null&&Number.isFinite(Number(sub.cardRadius))){
     const rad=num(sub.cardRadius,14,0,36);
-    extraRules.push(`html body .card,html body .catalog-card,html body .proposal-box,html body .reference-help-panel,html body .ai-step,html body .ai-feat{border-radius:${rad}px!important}`);
+    extraRules.push(`html body .card,html body .catalog-card,html body .catalog-controls,html body .proposal-box,html body .reference-help-panel,html body .ai-step,html body .ai-feat{border-radius:${rad}px!important}`);
    }
    if(optColor(sub.headingColor))extraRules.push(`html body .card h3,html body .catalog-card h3,html body .form-section-title,html body .proposal-box #page-title,html body .board-col-title,html body .board-item-title,html body .ai-step strong,html body .ai-feat strong{color:${sub.headingColor}!important}`);
-   if(optColor(sub.textColor))extraRules.push(`html body .card p,html body .catalog-card p,html body .form-label,html body .view-content,html body .board-item,html body .ai-step p,html body .ai-feat p{color:${sub.textColor}!important}`);
-   if(optColor(sub.accentBgColor))extraRules.push(`html body .btn-action,html body .hashtag-btn.active,html body .hashtag-btn[aria-pressed="true"],html body .ai-btn:not(.ghost){background-color:${sub.accentBgColor}!important;border-color:${sub.accentBgColor}!important}`);
-   if(optColor(sub.accentTextColor))extraRules.push(`html body .btn-action,html body .hashtag-btn.active,html body .hashtag-btn[aria-pressed="true"],html body .ai-btn:not(.ghost){color:${sub.accentTextColor}!important}`);
+   if(optColor(sub.textColor))extraRules.push(`html body .card p,html body .catalog-card p,html body .catalog-chip:not(.is-active),html body .form-label,html body .view-content,html body .board-item,html body .ai-step p,html body .ai-feat p{color:${sub.textColor}!important}`);
+   if(optColor(sub.accentBgColor))extraRules.push(`html body .btn-action,html body .hashtag-btn.active,html body .hashtag-btn[aria-pressed="true"],html body .catalog-chip.is-active,html body .nk-sticky-summary,html body .nk-file-dl-btn,html body .ai-btn:not(.ghost){background-color:${sub.accentBgColor}!important;border-color:${sub.accentBgColor}!important}`);
+   if(optColor(sub.accentTextColor))extraRules.push(`html body .btn-action,html body .hashtag-btn.active,html body .hashtag-btn[aria-pressed="true"],html body .catalog-chip.is-active,html body .nk-file-dl-btn,html body .ai-btn:not(.ghost){color:${sub.accentTextColor}!important}`);
    const titles=document.querySelectorAll('.form-section-title, .proposal-box #page-title');
    if(sub.section1Title&&titles[0])setText(titles[0],sub.section1Title);
    if(sub.section2Title&&titles[1])setText(titles[1],sub.section2Title);
    if(sub.section3Title&&titles[2])setText(titles[2],sub.section3Title);
    if(sub.submitText){const sb=document.querySelector('.proposal-box button[type="submit"], #board-search-form button[type="submit"], .ai-actions .ai-btn');if(sb)setText(sb,sub.submitText);}
-   if(sub.placeholderText){const inp=document.querySelector('#search-input, .proposal-box textarea.form-input');if(inp)inp.setAttribute('placeholder',sub.placeholderText);}
+   if(sub.placeholderText){document.querySelectorAll('#search-input, .catalog-search-input, .proposal-box textarea.form-input').forEach(inp=>inp.setAttribute('placeholder',sub.placeholderText));}
    if(sub.showHelpPanel!==undefined){const hp=document.getElementById('reference-help-panel');if(hp)hp.hidden=!sub.showHelpPanel;}
   }
 

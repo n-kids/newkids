@@ -69,7 +69,7 @@
 <label>앱 배너 설명<input id="qlAppDesc" maxlength="200" placeholder="교재·물품 주문, 견적서 요청, A/S 신청을 휴대폰에서 바로!"></label>
 <label>앱 배너 연결 주소<input id="qlAppUrl" placeholder="app-install.html"></label>
 <div class="pair"><label>앱 배너 배경색<input id="qlAppBgColor" type="color"></label><label>앱 배너 글자색<input id="qlAppTextColor" type="color"></label></div>
-<label class="check"><input id="qlShowRef" type="checkbox">자료실·공지·문의 바로가기 배너 표시</label>
+<label class="check"><input id="qlShowRef" type="checkbox">자료실·공지·문의 바로가기 배너 표시 (모바일 바로가기 카드 포함 · PC는 자동 숨김)</label>
 <div class="pair"><label>자료실 배너 제목<input id="qlRefTitle" maxlength="100" placeholder="자료실 바로가기"></label><label>자료실 열기 문구<input id="qlRefCta" maxlength="60" placeholder="자료실 열기"></label></div>
 <label>자료실 배너 설명<input id="qlRefDesc" maxlength="200" placeholder="연간계획안 · OT자료 등 수업에 필요한 자료를 내려받으세요"></label>
 <div class="pair"><label>보조 바로가기 1 문구<input id="qlSub1Text" maxlength="40" placeholder="공지사항"></label><label>보조 바로가기 2 문구<input id="qlSub2Text" maxlength="40" placeholder="문의사항"></label></div>
@@ -90,6 +90,16 @@
 <div class="pair"><label>섹션 제목색<input id="cuTitleColor" type="color"></label><label>섹션 설명색<input id="cuDescColor" type="color"></label></div>
 <div class="pair"><label>카드 배경색<input id="cuCardBgColor" type="color"></label><label>카드 테두리색<input id="cuCardBorderColor" type="color"></label></div>
 <div class="pair"><label>카드 제목색<input id="cuCardTitleColor" type="color"></label><label>카드 설명색<input id="cuCardDescColor" type="color"></label></div>
+<fieldset id="cu-preview-settings" class="nk-subgroup" style="border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;margin:10px 0 0">
+<legend style="font-weight:700;padding:0 6px">과목 칩 · 교재 미리보기 패널 (PC · 모바일 메인)</legend>
+<label class="check"><input id="cuShowPreview" type="checkbox">과목 칩을 누르면 아래에 교재 미리보기 패널 표시 (끄면 바로 과목 페이지로 이동)</label>
+<div class="pair"><label>처음 선택할 과목<select id="cuDefaultCode"><option value="">첫 번째 과목 (자동)</option></select></label><label>미리보기 교재 수<select id="cuPreviewCount"><option value="">4권 (기본)</option><option value="2">2권</option><option value="4">4권</option><option value="6">6권</option><option value="8">8권</option></select></label></div>
+<label class="check"><input id="cuQuoteVisible" type="checkbox">패널 하단 견적 요청 버튼 표시</label>
+<div class="pair"><label>견적 버튼 문구<input id="cuQuoteText" maxlength="30" placeholder="📋 견적 요청"></label><label>전체 보기 버튼 문구<input id="cuMoreText" maxlength="40" placeholder="{과목} 전체 교재 보기 →"></label></div>
+<p class="muted" style="margin:2px 0 8px;font-size:12px">전체 보기 문구에 <code>{과목}</code>을 넣으면 선택한 과목명으로 바뀝니다.</p>
+<div class="pair"><label>선택된 칩 배경색<input id="cuChipActiveBg" type="color"></label><label>선택된 칩 글자색<input id="cuChipActiveText" type="color"></label></div>
+<div class="pair"><label>미리보기 패널 배경색<input id="cuPreviewBgColor" type="color"></label><label>전체 보기 버튼 배경색<input id="cuMoreBtnBg" type="color"></label></div>
+</fieldset>
 </details>
 <details class="advanced"><summary>④ 하단 상담 안내 섹션</summary>
 <label>상담 섹션 제목<input id="ctTitle" maxlength="100" placeholder="궁금하신 점이 있으신가요?"></label>
@@ -100,10 +110,16 @@
 <div class="pair"><label>설명 글자색<input id="ctDescColor" type="color"></label><label>전화 버튼 배경색<input id="ctCardBgColor" type="color"></label></div>
 <label>전화 버튼 글자색<input id="ctCardTextColor" type="color"></label>
 </details>
+<details class="advanced"><summary>⑤ 메인 공지사항 섹션</summary>
+<label class="check"><input id="noVisible" type="checkbox">메인 화면 공지사항 섹션 표시</label>
+<label>공지 섹션 제목<input id="noTitle" maxlength="60" placeholder="공지사항"></label>
+<div class="pair"><label>섹션 배경색<input id="noBgColor" type="color"></label><label>섹션 제목색<input id="noTitleColor" type="color"></label></div>
+<label>공지 목록 카드 배경색<input id="noCardBgColor" type="color"></label>
+</details>
 </div>
 <div id="subpage-design-card" class="editor-card" data-view-group="body" hidden>
 <h2><svg class="ic"><use href="#pe-edit"/></svg>서브 페이지 본문 · 카드 · 양식 디자인</h2>
-<p class="muted">서브 페이지(교육·행사·게시판·발주·견적·고정 페이지)의 본문 배경, 카드, 버튼 색상 및 제목·문구를 편집합니다.</p>
+<p class="muted">서브 페이지(교육·행사·게시판·발주·견적·고정 페이지)의 본문 배경, 카드, 카테고리 필터 칩·검색바, 요약 바, 버튼 색상 및 문구를 편집합니다.</p>
 <div class="nk-theme-bar" role="group" aria-label="서브 페이지 본문 색상 테마">
 <button type="button" class="nk-theme-chip" data-sub-theme="clean"><span class="nk-swatch" style="background:linear-gradient(135deg,#f8f9fa 50%,#172451 50%)"></span>기본 클린</button>
 <button type="button" class="nk-theme-chip" data-sub-theme="cream"><span class="nk-swatch" style="background:linear-gradient(135deg,#fbf6ee 50%,#9a6b3c 50%)"></span>웜 크림</button>

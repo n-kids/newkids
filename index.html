@@ -439,7 +439,7 @@
                 </div>
                 <div class="m-edu-cards" id="m-edu-cards"></div>
                 <div class="m-edu-preview-foot">
-                    <a href="proposal.html" class="m-edu-btn m-edu-btn-ghost">📋 견적 요청</a>
+                    <a href="proposal.html" id="m-edu-quote-link" class="m-edu-btn m-edu-btn-ghost">📋 견적 요청</a>
                     <a href="child.html" id="m-edu-more-link" class="m-edu-btn m-edu-btn-primary">전체 교재 보기 →</a>
                 </div>
             </div>
@@ -825,6 +825,36 @@
                 const eduWrap = document.getElementById('m-edu');
                 const eduCats = [];
                 const eduPreviewCache = new Map();
+                let eduActiveCode = '';
+                let eduUserPicked = false;
+                // 관리자 페이지 편집기(page-design.js)가 window.__nkEduPreviewConfig 로 전달하는 설정
+                function getEduCfg() {
+                    const base = { showPreview: true, defaultCode: '', previewCount: 4, quoteVisible: true, quoteText: '', moreText: '' };
+                    const cfg = window.__nkEduPreviewConfig;
+                    if (!cfg || typeof cfg !== 'object') return base;
+                    const count = Number(cfg.previewCount);
+                    return {
+                        showPreview: cfg.showPreview !== false,
+                        defaultCode: /^[a-z0-9_-]+$/i.test(String(cfg.defaultCode || '')) ? String(cfg.defaultCode) : '',
+                        previewCount: [2, 4, 6, 8].includes(count) ? count : 4,
+                        quoteVisible: cfg.quoteVisible !== false,
+                        quoteText: String(cfg.quoteText || '').slice(0, 30),
+                        moreText: String(cfg.moreText || '').slice(0, 40)
+                    };
+                }
+                function pickDefaultEdu() {
+                    const cfg = getEduCfg();
+                    return eduCats.find(c => c.code === cfg.defaultCode) || eduCats[0];
+                }
+                function hideEduPreview() {
+                    const previewBox = document.getElementById('m-edu-preview');
+                    if (previewBox) previewBox.hidden = true;
+                    eduActiveCode = '';
+                    eduWrap.querySelectorAll('button[data-code]').forEach(btn => {
+                        btn.classList.remove('is-active');
+                        btn.setAttribute('aria-selected', 'false');
+                    });
+                }
                 const eduFallbackThumb = 'https://placehold.co/400x300/eef1f8/5b6475?text=New+Kids';
                 let eduPreviewSeq = 0;
 
@@ -844,6 +874,7 @@
                 function renderEduPreviewCards(items) {
                     const cardsWrap = document.getElementById('m-edu-cards');
                     if (!cardsWrap) return;
+                    items = (items || []).slice(0, getEduCfg().previewCount);
                     if (!items.length) {
                         const empty = document.createElement('div');
                         empty.className = 'm-edu-empty';
@@ -894,9 +925,16 @@
                     if (iconEl) iconEl.innerHTML = homeIcon(code);
                     if (titleEl) titleEl.textContent = name;
                     if (descEl) descEl.textContent = String(cat.hero_desc || `${name} 영역의 대표 교재를 미리 살펴보세요.`);
+                    const cfg = getEduCfg();
+                    eduActiveCode = code;
                     if (moreEl) {
                         moreEl.href = `child.html#${code}`;
-                        moreEl.textContent = `${name} 전체 교재 보기 →`;
+                        moreEl.textContent = cfg.moreText ? cfg.moreText.split('{과목}').join(name) : `${name} 전체 교재 보기 →`;
+                    }
+                    const quoteEl = document.getElementById('m-edu-quote-link');
+                    if (quoteEl) {
+                        quoteEl.style.display = cfg.quoteVisible ? '' : 'none';
+                        quoteEl.textContent = cfg.quoteText || '📋 견적 요청';
                     }
 
                     const seq = ++eduPreviewSeq;
@@ -927,7 +965,7 @@
                             item.is_draft !== true &&
                             item.video_url !== 'ORDER_ITEM' &&
                             (!item.publish_at || new Date(item.publish_at).getTime() <= nowMs)
-                        ).slice(0, 4);
+                        ).slice(0, 8);
                         eduPreviewCache.set(code, visibleItems);
                         renderEduPreviewCards(visibleItems);
                     } catch (err) {
@@ -978,14 +1016,28 @@
                         chip.setAttribute('aria-selected', 'false');
                         chip.dataset.code = code;
                         chip.textContent = name;
-                        chip.addEventListener('click', () => selectEduPreview(entry));
+                        chip.addEventListener('click', () => {
+                            if (!getEduCfg().showPreview) {
+                                window.location.href = `child.html#${code}`;
+                                return;
+                            }
+                            eduUserPicked = true;
+                            selectEduPreview(entry);
+                        });
                         eduWrap.appendChild(chip);
                     }
                 });
 
-                if (eduCats.length > 0) {
-                    selectEduPreview(eduCats[0]);
+                function applyEduConfig() {
+                    if (!eduCats.length) return;
+                    if (!getEduCfg().showPreview) { hideEduPreview(); return; }
+                    const current = eduUserPicked ? eduCats.find(c => c.code === eduActiveCode) : null;
+                    selectEduPreview(current || pickDefaultEdu());
                 }
+                if (window.__nkEduCfgHandler) window.removeEventListener('nk-edu-preview-config', window.__nkEduCfgHandler);
+                window.__nkEduCfgHandler = applyEduConfig;
+                window.addEventListener('nk-edu-preview-config', applyEduConfig);
+                applyEduConfig();
 
                 const nowIso = new Date().toISOString();
                 const { data: posts } = await window.sb.from('total_posts')

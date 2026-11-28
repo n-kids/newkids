@@ -204,6 +204,23 @@ test('4. main home keeps quick cards hidden on PC, renders inline edu preview ta
   await expect(page.locator('#m-edu-cards .m-edu-card-title').first()).toContainText('독서');
   await expect(page.locator('#m-edu-more-link')).toHaveAttribute('href', 'child.html#reading');
 
+  // 관리자 편집기 설정(page-design.js → window.__nkEduPreviewConfig) 반영
+  await page.evaluate(() => {
+    window.__nkEduPreviewConfig = { showPreview: true, defaultCode: 'korean', previewCount: 2, quoteVisible: false, quoteText: '', moreText: '{과목} 교재 모두 보기' };
+    window.dispatchEvent(new CustomEvent('nk-edu-preview-config'));
+  });
+  await expect(page.locator('#m-edu-preview-title')).toHaveText('독서');
+  await expect(page.locator('#m-edu-more-link')).toHaveText('독서 교재 모두 보기');
+  await expect(page.locator('#m-edu-quote-link')).toBeHidden();
+  await page.evaluate(() => {
+    window.__nkEduPreviewConfig = { ...window.__nkEduPreviewConfig, showPreview: false };
+    window.dispatchEvent(new CustomEvent('nk-edu-preview-config'));
+  });
+  await expect(page.locator('#m-edu-preview')).toBeHidden();
+  await page.evaluate(() => { delete window.__nkEduPreviewConfig; window.dispatchEvent(new CustomEvent('nk-edu-preview-config')); });
+  await expect(page.locator('#m-edu-preview')).toBeVisible();
+  await expect(page.locator('#m-edu-quote-link')).toBeVisible();
+
   await page.setViewportSize({ width: 390, height: 844 });
   await page.evaluate(() => localStorage.removeItem('hide_main_popup_date'));
   await page.reload();
